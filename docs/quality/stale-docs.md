@@ -23,12 +23,12 @@ related:
 
 没有已知 `stale` 节点；以下 `draft` 是有意状态：
 
-- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：project-a 工程已确认，M0-M5 玩法实现未落地。
+- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：M0 薄外壳已验证，M1-M5 领域内核未落地。
 - [KM:reference.state-command-lifecycle](../references/architecture/state-command-lifecycle.md)：M1 状态/命令/存档未落地。
-- [KM:reference.file-ownership](../references/indexes/file-ownership.md)：规划路径尚未验证。
+- [KM:reference.file-ownership](../references/indexes/file-ownership.md)：M0 路径已验证，其余规划路径未验证。
 - [KM:domain.battle-progression](../domains/battle-progression.md)：M3 战斗未落地。
-- [KM:domain.platform-persistence](../domains/platform-persistence.md)：M0/M1/M5 平台与持久化未落地。
-- [KM:runbook.game-verification](../runbooks/game-verification.md)：Godot/Android 命令未运行。
+- [KM:domain.platform-persistence](../domains/platform-persistence.md)：M0 生命周期壳已落地，M1/M5 持久化与设备证据未落地。
+- [KM:runbook.game-verification](../runbooks/game-verification.md)：M0 Godot 命令已运行，M1-M5/Android 命令待落地。
 
 ## 回填节奏
 

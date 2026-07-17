@@ -7,8 +7,9 @@ owner: verification
 last_verified: 2026-07-17
 source_of_truth:
   - .omx/plans/test-spec-fantasy-idle-expedition.md
+  - project-a/tools/verify_m0.sh
 validated_by:
-  - critic-plan-approval
+  - GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
 tags:
   - reference:verification-matrix
   - quality:acceptance-gate
@@ -21,13 +22,13 @@ related:
 
 ## 目标
 
-把批准的 milestone 退出条件路由到证据；当前除 docs lint 外均是待实现 gate，不代表已经通过。
+把批准的 milestone 退出条件路由到证据；M0 已通过，M1-M5 仍是待实现 gate。
 
 ## 事实
 
 | Milestone | 证据 |
 |---|---|
-| M0 | dirty baseline、批准路径 `project-a/addons/gut/**` 的 GUT gate、project-a headless shell、现有 plugin/autoload 与新增游戏 Autoload 共存、受保护 godot_ai addon 不变 |
+| M0（功能 PASS；历史 baseline 例外已记录） | GUT v9.7.1 10/10 tests、34 asserts；editor/mobile/compatibility headless shell 通过；plugin/autoload 共存；245 个 godot_ai 文件仅 R100 移动、0 内容差异；首次逐文件 untracked hash 缺失不可逆，已增强工具并冻结 post-M0 baseline |
 | M1 | command classification/fingerprint、internal lifecycle、crash matrix、20m+5m、600 replay、backup |
 | M2 | L1-L5 clamp/growth golden、固定 seed 8 heroes、formation、可读性观察 |
 | M3 | stable hash/tie-break、跨 FPS、1-1/1-2/1-3 绝对区间和 1-3 paired +30pp |
@@ -43,7 +44,7 @@ related:
 
 ## 验证
 
-使用 [CMD:game-verification](../../runbooks/game-verification.md#game-verification)；命令在 project-a 游戏 shell 落地前保持未验证。
+使用 [CMD:game-verification](../../runbooks/game-verification.md#game-verification)；M0 命令已验证，后续命令在对应 milestone 落地前保持未验证。
 
 ## 相关节点
 

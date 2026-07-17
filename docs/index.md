@@ -21,7 +21,7 @@ related:
 
 # 项目知识地图
 
-这是人和智能体共用的中文工作环境。当前项目处于“规划已批准、`project-a/` 工程已存在、玩法源码尚未创建”阶段；产品约束和工程根是已确认事实，未来玩法实现位置统一标记为 `draft`。
+这是人和智能体共用的中文工作环境。当前项目处于“规划已批准、M0 工程基座已落地、M1-M5 玩法待实现”阶段；产品约束、工程根、手机竖屏 shell 与测试门禁是已确认事实，未来玩法实现位置仍标记为 `draft`。
 
 ## 先读顺序
 
@@ -53,4 +53,4 @@ related:
 5. ADR 与 memory。
 6. 叙述性说明和规划草稿。
 
-当前尚无 `project-a/game/**` 玩法源码，因此规划事实以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据；任何实现节点不得把“计划路径”表述成“已经存在”。
+M0 的配置、Autoload、主场景、安全区和测试以 [CODE:project-config](../project-a/project.godot)、[CODE:main-scene](../project-a/game/scenes/app/main.tscn) 与 [CODE:m0-verifier](../project-a/tools/verify_m0.sh) 为事实源；M1-M5 规划仍以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据。

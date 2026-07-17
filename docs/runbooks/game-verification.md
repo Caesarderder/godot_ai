@@ -7,8 +7,9 @@ owner: verification
 last_verified: 2026-07-17
 source_of_truth:
   - .omx/plans/test-spec-fantasy-idle-expedition.md
+  - project-a/tools/verify_m0.sh
 validated_by:
-  - plan-review-only
+  - GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
 tags:
   - quality:game-verification
   - risk:planned-not-implemented
@@ -19,7 +20,7 @@ related:
 
 # 游戏验证 Runbook
 
-> `project-a/` 工程已存在，但游戏 shell/GUT 尚未就绪；以下命令来自批准测试规格且尚未全部成功运行。本节点保持 `draft`。
+> M0 游戏 shell/GUT 已就绪并实际运行；M1-M5 内容、模拟和 Android 命令尚未全部落地，因此本节点整体保持 `draft`。
 
 ## 目标
 
@@ -33,8 +34,12 @@ related:
 
 ```bash
 godot --version
-godot --headless --path project-a --editor --quit
-godot --headless --path project-a -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
+
+# 等价的 M0 GUT 核心命令
+godot --headless -d --path project-a -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+
+# M1-M5 待对应实现落地后启用
 godot --headless --path project-a -s tools/validate_content.gd
 godot --headless --path project-a -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
 ```
@@ -43,7 +48,7 @@ Android build/install/launch 命令以测试规格 §11 为准，必须限时收
 
 ## 预期结果
 
-每个 milestone 对应 [KM:reference.verification-matrix](../references/indexes/verification-matrix.md) 全部通过。
+M0 预期为三条 headless 启动链和全部 GUT 测试通过；后续 milestone 对应 [KM:reference.verification-matrix](../references/indexes/verification-matrix.md) 全部通过。
 
 ## 失败处理
 
