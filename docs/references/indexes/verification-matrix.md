@@ -27,7 +27,7 @@ related:
 
 | Milestone | 证据 |
 |---|---|
-| M0 | dirty baseline、GUT gate、headless shell、Autoload 顺序、`project-a` 不变 |
+| M0 | dirty baseline、批准路径 `project-a/addons/gut/**` 的 GUT gate、project-a headless shell、现有 plugin/autoload 与新增游戏 Autoload 共存、受保护 godot_ai addon 不变 |
 | M1 | command classification/fingerprint、internal lifecycle、crash matrix、20m+5m、600 replay、backup |
 | M2 | L1-L5 clamp/growth golden、固定 seed 8 heroes、formation、可读性观察 |
 | M3 | stable hash/tie-break、跨 FPS、1-1/1-2/1-3 绝对区间和 1-3 paired +30pp |
@@ -43,7 +43,7 @@ related:
 
 ## 验证
 
-使用 [CMD:game-verification](../../runbooks/game-verification.md#game-verification)；命令在 `game/` 落地前保持未验证。
+使用 [CMD:game-verification](../../runbooks/game-verification.md#game-verification)；命令在 project-a 游戏 shell 落地前保持未验证。
 
 ## 相关节点
 

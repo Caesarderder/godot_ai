@@ -31,4 +31,4 @@ related:
 | 实施或代码审查 | [KM:workflow.code-writing-review](../workflows/code-writing-review.md) |
 | 新增/更新/审查知识节点 | [KM:workflow.knowledge-map-maintenance](../workflows/knowledge-map-maintenance.md) |
 
-当前 `game/` 尚未实现。代码定位任务必须先检查路径存在性；不存在时报告“规划落点”，不得伪装成现有实现。
+当前 `project-a/` 工程已存在，但 `project-a/game/**` 玩法尚未实现。代码定位任务必须区分现有 addon 工具代码与规划玩法路径；不存在时报告“规划落点”，不得伪装成现有实现。

@@ -19,7 +19,7 @@ related:
 
 # 游戏验证 Runbook
 
-> `game/` 尚不存在，以下命令来自批准测试规格但均未在本仓库成功运行。本节点保持 `draft`。
+> `project-a/` 工程已存在，但游戏 shell/GUT 尚未就绪；以下命令来自批准测试规格且尚未全部成功运行。本节点保持 `draft`。
 
 ## 目标
 
@@ -27,16 +27,16 @@ related:
 
 ## 前置条件
 
-存在 `game/project.godot`、锁定 GUT 版本/许可/checksum、Godot 4.7.1 和相应 Android SDK/JDK/export templates。
+存在 `project-a/project.godot`、锁定 GUT 版本/许可/checksum、Godot 4.7.1 和相应 Android SDK/JDK/export templates；现有 godot_ai plugin/autoload 保持启用。
 
 ## game-verification
 
 ```bash
 godot --version
-godot --headless --path game --editor --quit
-godot --headless --path game -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
-godot --headless --path game -s tools/validate_content.gd
-godot --headless --path game -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
+godot --headless --path project-a --editor --quit
+godot --headless --path project-a -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+godot --headless --path project-a -s tools/validate_content.gd
+godot --headless --path project-a -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
 ```
 
 Android build/install/launch 命令以测试规格 §11 为准，必须限时收集 logcat，不能无限等待。

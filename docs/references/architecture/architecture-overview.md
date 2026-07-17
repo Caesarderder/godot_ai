@@ -14,13 +14,14 @@ tags:
   - risk:planned-not-implemented
 related:
   - decision.durable-domain-kernel
+  - decision.project-a-game-root
   - reference.state-command-lifecycle
   - reference.file-ownership
 ---
 
 # 架构总览
 
-> 架构已经规划批准，但 `game/` 尚不存在；本节点在实现和测试落地前保持 `draft`。
+> 架构已经规划批准，目标工程 `project-a/` 已存在，但 `project-a/game/**` 玩法尚不存在；本节点在实现和测试落地前保持 `draft`。
 
 ## 目标
 
@@ -32,6 +33,7 @@ related:
 - Node/场景可作为表现层，不得成为持久状态真值。
 - 不引入 DI 框架、ECS、数据库或自定义编辑器框架。
 - 计划中的 Autoload 顺序：SystemClock -> SaveManager -> ContentCatalog -> EventBus -> Game -> AppLifecycle。
+- 新增 Autoload 必须与现有 `_mcp_game_helper` 共存，不移除 `res://addons/godot_ai/plugin.cfg` EditorPlugin。
 - 持久 `GameState` 与临时 `BattleSession/BattleState` 分离；只有 `BattleResult` 进入结算。
 - 领域逻辑必须能 headless 运行；UI 通过 presenter/controller 投影状态。
 
@@ -46,3 +48,5 @@ M0 headless shell/Autoload，M1 state/save/commands，M2 heroes，M3 battle，M4
 ## 相关节点
 
 [KM:decision.durable-domain-kernel](../../decisions/ADR-0002-durable-domain-kernel.md)。
+
+[KM:decision.project-a-game-root](../../decisions/ADR-0003-project-a-game-root.md)。

@@ -31,7 +31,8 @@ related:
 
 ## 技术不变量（规划已批准、实现待落地）
 
-- 新游戏只能进入独立 `game/`；不得修改或清理现有 `project-a/**` 用户改动。
+- `project-a/` 是唯一目标 Godot 工程根；玩法代码进入 `project-a/game/**`，测试/工具进入 `project-a/tests/**` 与 `project-a/tools/**`。
+- 现有 `project-a/addons/godot_ai/**` 工具插件、EditorPlugin 和 `_mcp_game_helper` Autoload 必须保留；除非插件集成本身经确认需要修复，否则不得修改或清理。
 - Godot 4.7.1 stable、GDScript-first、2D、Android-first。
 - 静态定义使用只读 Resource；运行状态只保存稳定 ID 和实例字段。
 - executor 是 GameState 唯一写入口；价值命令先持久化再报告成功。

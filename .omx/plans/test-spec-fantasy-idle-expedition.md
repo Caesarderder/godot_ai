@@ -29,25 +29,25 @@
 
 ```bash
 godot --version
-godot --headless --path game --editor --quit
-godot --headless --path game -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
-godot --headless --path game -s tools/validate_content.gd
-godot --headless --path game -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
-git diff --check -- game .omx
+godot --headless --path project-a --editor --quit
+godot --headless --path project-a -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+godot --headless --path project-a -s tools/validate_content.gd
+godot --headless --path project-a -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
+git diff --check -- project-a/game project-a/tests project-a/tools project-a/addons/gut project-a/project.godot project-a/export_presets.cfg .omx docs
 ```
 
 ### Dirty-worktree evidence
 
-Pre-M0 baseline 必须保存：HEAD、`git status --porcelain=v2 -z --untracked-files=all`、unstaged/cached binary patch、各自 NUL path lists、dirty/untracked existing file SHA-256、MISSING sentinel、`project-a` 全文件 manifest、artifact hashes。
+Pre-M0 baseline 必须保存：HEAD、`git status --porcelain=v2 -z --untracked-files=all`、unstaged/cached binary patch、各自 NUL path lists、dirty/untracked existing file SHA-256、MISSING sentinel、`project-a/addons/godot_ai` manifest、`project-a/project.godot` hash 和既存 artifact hashes。
 
 - 路径全程 NUL；hash record 为 `sha256\0path\0`，禁止 newline 解析。
-- `project-a` path source：`git ls-files -z --cached --others --exclude-standard -- project-a`。
-- 每 milestone 重采。批准差异仅 `game/**`、`.omx/**`；发现其他差异则停工并请求重新确认 baseline，不回滚用户改动。
+- protected addon source：`git ls-files -z --cached --others --exclude-standard -- project-a/addons/godot_ai`。
+- 每 milestone 重采。批准差异仅 `project-a/game/**`、`project-a/tests/**`、`project-a/tools/**`、`project-a/build/**`、`project-a/addons/gut/**`、`project-a/project.godot`、`project-a/export_presets.cfg`、`.omx/**` 和 docs；`project-a/addons/godot_ai/**` 或其他用户路径变化则停工并请求重新确认 baseline，不回滚用户改动。
 
 ## 3. Test Inventory and File Map
 
 ```text
-game/tests/
+project-a/tests/
 ├── unit/
 │   ├── commands/test_command_class_registry.gd
 │   ├── commands/test_command_fingerprint.gd
@@ -257,12 +257,12 @@ Use `safe_area_transforms_v1.json` golden cases：portrait、landscape、notch o
 ### Build/install/launch
 
 ```bash
-godot --headless --path game --export-debug "Android Debug" game/build/android/fantasy_idle-debug.apk
-shasum -a 256 game/build/android/fantasy_idle-debug.apk
-adb install -r game/build/android/fantasy_idle-debug.apk
+godot --headless --path project-a --export-debug "Android Debug" project-a/build/android/fantasy_idle-debug.apk
+shasum -a 256 project-a/build/android/fantasy_idle-debug.apk
+adb install -r project-a/build/android/fantasy_idle-debug.apk
 adb shell am force-stop com.caesar.fantasyidle.prototype
 adb shell monkey -p com.caesar.fantasyidle.prototype -c android.intent.category.LAUNCHER 1
-adb logcat -d --pid="$(adb shell pidof -s com.caesar.fantasyidle.prototype)" > game/build/android/logcat.txt
+adb logcat -d --pid="$(adb shell pidof -s com.caesar.fantasyidle.prototype)" > project-a/build/android/logcat.txt
 ```
 
 - Finite `logcat -d`; runner timeout 60s for install/launch/pid；failure saves global latest 2000 lines。
@@ -345,13 +345,13 @@ Pass：critical（8英雄、2差异、2调整、稀有件、败后胜）各 >=4/
 
 | Milestone | Required evidence |
 |---|---|
-| M0 | baseline、GUT gate、headless shell、explicit Autoload tree、project-a unchanged |
+| M0 | baseline、GUT gate、project-a headless shell、existing godot_ai plugin/autoload coexists with explicit game Autoload tree、protected addon unchanged |
 | M1 | classification/fingerprint、internal lifecycle auth、crash matrix、20m+5m、600 replay、save backup |
 | M2 | L1-L5 clamp/growth golden、8 heroes、formation contracts、readability formative check |
 | M3 | hash/tie-break golden、cross-FPS；the signed common 1000-seed manifest proves 1-1 naked 95-100%、1-2 80-95%、1-3 before 15-30% and the single `set_formation` intervention >=30pp；1-3 canonical |
 | M4 | source/sink ledger、pity、claim once、soft task、facility；the same signed 1000-seed manifest proves 1-4 before 35-50% / after 75-90% with only the second `set_formation` change, plus 1-5 before 10-25% and only `equip_item(guaranteed_rare_id)` >=30pp |
 | M5 | 1-5、all headless、three device tiers、P01-P05 thresholds、final scope/hash audit |
-| M6 | only after M0-M5 pass: run `caesar-docs:init`; require all 17 locked Markdown files plus `tools/docs_lint.py`; docs writer -> facts reviewer -> independent verifier；`python3 tools/docs_lint.py` zero errors and repo-entry routing pass |
+| M6 | knowledge map already initialized；after M0-M5 run `caesar-docs:update` + `caesar-docs:review`; every planned draft is reconciled with real project-a code/tests/evidence；`python3 tools/docs_lint.py` zero errors and repo-entry routing pass |
 
 ## 15. Final Test Exit and Failure Handling
 
@@ -359,9 +359,9 @@ Pass：critical（8英雄、2差异、2调整、稀有件、败后胜）各 >=4/
 - Automated/device tests 100%；all six absolute distribution intervals and both >=30pp paired thresholds pass against the same signed 1000-seed manifest；P01-P05 critical and 45/50 pass。
 - Independent verifier, not authoring executor, signs final summary and attaches raw outputs/device logs/evidence references。
 - Failure remains milestone-active；fix owner cannot self-approve。Protocol changes return to Architect review；content/UI fixes rerun impacted manifests under retest rules。
-- Any unexplained `project-a/**` or out-of-scope worktree change blocks final approval。
-- M6 is blocked until M0-M5 evidence is frozen；knowledge-map facts must be derived from final code/tests/ADR/evidence, and `rg '^km_id:' docs`、`rg 'KM:|CODE:|CMD:' docs`、`find docs -name '*.md' -print` plus relative-link/path checks must pass。
-- Required M6 Markdown set is exact：`docs/index.md`；`docs/map/{index,schema,workflows,domains,invariants,glossary}.md`；`docs/workflows/{knowledge-query,code-locating,impact-map,code-writing-review,knowledge-map-maintenance}.md`；`docs/memory/index.md`；`docs/quality/{lint-rules,stale-docs}.md`；`docs/runbooks/docs-lint.md`；`docs/decisions/ADR-0001-knowledge-map-structure.md`。
+- Any unexplained `project-a/addons/godot_ai/**` or project-a path outside approved ownership blocks final approval；existing plugin and `_mcp_game_helper` must still load。
+- M6 update/review is blocked until M0-M5 evidence is frozen；knowledge-map facts must be derived from final code/tests/ADR/evidence, and `rg '^km_id:' docs`、`rg 'KM:|CODE:|CMD:' docs`、`find docs -name '*.md' -print` plus relative-link/path checks must pass。
+- Required M6 minimum startup set：`docs/index.md`；`docs/map/{index,schema,workflows,domains,invariants,glossary}.md`；`docs/workflows/{knowledge-query,code-locating,impact-map,code-writing-review,knowledge-map-maintenance}.md`；`docs/memory/index.md`；`docs/quality/{lint-rules,stale-docs}.md`；`docs/runbooks/docs-lint.md`；`docs/decisions/ADR-0001-knowledge-map-structure.md`。This is a floor, not the complete map；M6 update/review covers every existing `docs/**/*.md`, including all domain/reference/runbook/memory/ADR nodes and any nodes added during M0-M5。
 - `python3 tools/docs_lint.py` must fail on missing/invalid YAML frontmatter or required fields/enums/date、duplicate `km_id`、unresolved `related`、unregistered domain/tag、bad `KM:*` id target、broken relative/`CODE:*` path、missing `CMD:*` anchor、missing `source_of_truth` target or deleted/stale path；enumeration-only `rg/find` output cannot satisfy M6。
 - Existing README/AGENTS/ARCHITECTURE routing is checked according to repository-entry rules；missing AGENTS/ARCHITECTURE files are not created automatically。M6 cannot overlap M0-M5 implementation lanes；author cannot self-review or self-verify。
 
@@ -370,5 +370,6 @@ Pass：critical（8英雄、2差异、2调整、稀有件、败后胜）各 >=4/
 - Final verification amendment：`paired_1000_v1.json` now supplies one immutable 1000-seed set for every 1-1 through 1-5 distribution assertion。
 - Added explicit frozen before-state recipes and single-command after deltas；added absolute gates for 1-1、1-2、1-3 before、1-4 before/after and 1-5 before while retaining 1-3/1-5 paired >=30pp。
 - Updated PRD traceability、M3/M4 exits and final exit so no milestone can pass on paired delta alone or on a stage-specific resampled cohort。
-- User-added final gate：after the game is complete and verified, use `caesar-docs:init` to initialize and validate the repository's Chinese knowledge map as M6。
-- Locked the complete 17-file minimum startup set、failing `tools/docs_lint.py` contract and sequential docs writer/facts reviewer/independent verifier ownership。
+- User-added final gate：the map was initialized early；after the game is complete and verified, use `caesar-docs:update` + `caesar-docs:review` to reconcile it with real implementation as M6。
+- Locked the initial 17-file minimum startup set as a floor、required update/review of the full evolving map、failing `tools/docs_lint.py` contract and sequential docs writer/facts reviewer/independent verifier ownership。
+- Boundary correction：the target project is existing `project-a/`；gameplay lives under `project-a/game/**` while existing `project-a/addons/godot_ai/**` remains protected and operational。

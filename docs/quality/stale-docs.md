@@ -23,7 +23,7 @@ related:
 
 没有已知 `stale` 节点；以下 `draft` 是有意状态：
 
-- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：M0-M5 实现未落地。
+- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：project-a 工程已确认，M0-M5 玩法实现未落地。
 - [KM:reference.state-command-lifecycle](../references/architecture/state-command-lifecycle.md)：M1 状态/命令/存档未落地。
 - [KM:reference.file-ownership](../references/indexes/file-ownership.md)：规划路径尚未验证。
 - [KM:domain.battle-progression](../domains/battle-progression.md)：M3 战斗未落地。

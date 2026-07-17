@@ -21,7 +21,7 @@ related:
 
 # 项目知识地图
 
-这是人和智能体共用的中文工作环境。当前项目处于“规划已批准、游戏源码尚未创建”阶段；产品约束是已确认事实，未来实现位置统一标记为 `draft`。
+这是人和智能体共用的中文工作环境。当前项目处于“规划已批准、`project-a/` 工程已存在、玩法源码尚未创建”阶段；产品约束和工程根是已确认事实，未来玩法实现位置统一标记为 `draft`。
 
 ## 先读顺序
 
@@ -53,4 +53,4 @@ related:
 5. ADR 与 memory。
 6. 叙述性说明和规划草稿。
 
-当前尚无 `game/` 源码，因此规划事实以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据；任何实现节点不得把“计划路径”表述成“已经存在”。
+当前尚无 `project-a/game/**` 玩法源码，因此规划事实以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据；任何实现节点不得把“计划路径”表述成“已经存在”。

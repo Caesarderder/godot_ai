@@ -21,7 +21,8 @@
 
 ### 1.2 仓库与技术边界
 
-- 新游戏是独立 `game/` Godot 子项目。现有 `project-a/` 是无关 Godot AI 插件且工作树含用户改动；任何实施 lane 不得修改、移动、格式化、暂存或清理 `project-a/**`。
+- `project-a/` 是目标 Godot 工程根，现已验证为 Godot 4.7 Mobile 工程。游戏内容放在 `project-a/game/**`，测试与工具放在 `project-a/tests/**`、`project-a/tools/**`；允许按 milestone 修改 `project-a/project.godot` 与 `project-a/export_presets.cfg`。
+- 现有 `project-a/addons/godot_ai/**` 是工程内已存在的智能体工具插件，不属于游戏领域代码；必须保留其 EditorPlugin 与 `_mcp_game_helper` Autoload，除非插件集成本身出现经确认的问题，否则不得修改、移动、格式化或清理该目录。
 - 基线：Godot 4.7.1 stable、纯 GDScript、2D、Mobile renderer；Compatibility renderer 做兼容冒烟。原型可逆默认：竖屏 1080x1920、Android-first、灰盒美术。
 - `.tres` 只保存只读内容定义；persistent `GameState` 只保存稳定 ID 和实例字段，不保存 Node/Resource；用户存档为 `user://save_v1.json`；领域逻辑必须可 headless 测试（Source Spec L114-L145）。
 - 美术主题、最终朝向、商业化、发布平台组合或单机边界改变时必须重新确认（Source Spec L96-L112、L155-L164）。
@@ -86,7 +87,7 @@
 
 ### 3.3 0-30 分钟经济
 
-唯一 fixture：`game/tests/fixtures/economy/first_30m_v1.json`。
+唯一 fixture：`project-a/tests/fixtures/economy/first_30m_v1.json`。
 
 | 阶段 | Sources | Sinks |
 |---|---|---|
@@ -239,7 +240,7 @@ exact-once 仅承诺单设备、单 writer、应用崩溃/Android 杀进程；�
 
 - 每字段 UTF-8，编码 `uint32_be(length)||bytes`，顺序拼接后 SHA-256；取前 8 bytes 为 unsigned u64 big-endian；传 Godot signed int 时用 two's complement。
 - battle parts：`[battle-seed-v1, content_version, stage_id, decimal(attempt), run_seed_token]`。生产 token 为 unsigned run_seed 十进制；onboarding 为 literal `onboarding-v1`。save_id 永不进入 seed。
-- Golden fixture：`game/tests/fixtures/golden/seed_hash_v1.json`，至少包含：
+- Golden fixture：`project-a/tests/fixtures/golden/seed_hash_v1.json`，至少包含：
   - stage-1-3 SHA `871416107395887412f0fe2604e0bc00d5c958abe112a670d82455031480b532`，seed `0x8714161073958874`。
   - stage-1-5 SHA `7c3345f99bb534e9fc0affe8e81ca5250ce492daaadc6d487d801f3c6b380be2`，seed `0x7c3345f99bb534e9`。
 
@@ -252,7 +253,7 @@ exact-once 仅承诺单设备、单 writer、应用崩溃/Android 杀进程；�
 
 ### Paired 1000
 
-- `game/tests/fixtures/battle/paired_1000_v1.json` 预注册 1000 run seeds、content/stage/before hash、唯一 intervention command。
+- `project-a/tests/fixtures/battle/paired_1000_v1.json` 预注册 1000 run seeds、content/stage/before hash、唯一 intervention command。
 - 同 seed before/after 唯一变量：1-3 仅 set_formation；1-5 仅 equip guaranteed rare。`mean(after_win-before_win)>=.30`；不得事后换 seed/intervention。
 
 ## 9. Safe Area and Touch
@@ -260,33 +261,35 @@ exact-once 仅承诺单设备、单 writer、应用崩溃/Android 杀进程；�
 - PlatformMetrics 用 `Viewport.get_screen_transform().affine_inverse()` 把 physical safe rect 两角转逻辑坐标，Margin 取逻辑 rect 与 safe rect 差的非负值。
 - Android `px_per_dp=max(dpi,160)/160`，unknown fallback 1；`48*px_per_dp` 经 inverse basis 转逻辑宽高，取较大轴作为 tap token。
 - ready deferred、viewport size、orientation、screen/window、resume 重算；旋转后 100ms trailing debounce。
-- Golden fixture：`game/tests/fixtures/golden/safe_area_transforms_v1.json`；tie-break fixture：`game/tests/fixtures/golden/battle_tiebreak_v1.json`。
+- Golden fixture：`project-a/tests/fixtures/golden/safe_area_transforms_v1.json`；tie-break fixture：`project-a/tests/fixtures/golden/battle_tiebreak_v1.json`。
 
 ## 10. Proposed Files
 
 ```text
-game/
-├── project.godot / export_presets.cfg / README.md / CLAUDE.md / .gitignore / .gitattributes
+project-a/
+├── project.godot / export_presets.cfg
+├── addons/godot_ai/                    # existing protected tooling; retain plugin/autoload
 ├── addons/gut/                         # exact commit + LICENSE
-├── assets/{audio,fonts,sprites,ui}/
-├── resources/definitions/{classes,skills,traits,enemies,equipment,affixes,stages,quests,facilities}/
-├── scenes/{app,battle,screens,dialogs,ui}/
-├── scripts/
-│   ├── autoloads/{system_clock,save_manager,content_catalog,event_bus,game,app_lifecycle}.gd
-│   ├── app/{platform_metrics,screen_router}.gd
-│   ├── ports/{clock_port,rng_port,godot_rng,scripted_rng}.gd
-│   ├── commands/{command_class_registry,command_envelope,command_fingerprint,command_result,command_executor,command_receipt}.gd
-│   ├── state/{game_state,hero_state,item_state,formation_state,quest_state,camp_state,receipt_ledger}.gd
-│   ├── definitions/{class_def,skill_def,trait_def,item_def,affix_def,enemy_def,stage_def,quest_def,facility_def}.gd
-│   ├── domain/recruitment/{hero_generator,recruitment_service}.gd
-│   ├── domain/formation/formation_service.gd
-│   ├── domain/battle/{battle_session,battle_state,battle_unit,battle_simulator,battle_result,targeting,stable_seed}.gd
-│   ├── domain/loot/{loot_generator,equipment_service,pity_state}.gd
-│   ├── domain/progression/{hero_progression,stat_derive,economy_service,camp_service}.gd
-│   ├── domain/quests/{quest_reducer,quest_service,domain_event}.gd
-│   ├── domain/idle/{idle_reward_service,offline_settlement}.gd
-│   ├── persistence/{save_codec,save_migrations,save_validator,atomic_file_writer}.gd
-│   └── ui/{screen controllers and presenters}.gd
+├── game/
+│   ├── assets/{audio,fonts,sprites,ui}/
+│   ├── resources/definitions/{classes,skills,traits,enemies,equipment,affixes,stages,quests,facilities}/
+│   ├── scenes/{app,battle,screens,dialogs,ui}/
+│   └── scripts/
+│       ├── autoloads/{system_clock,save_manager,content_catalog,event_bus,game,app_lifecycle}.gd
+│       ├── app/{platform_metrics,screen_router}.gd
+│       ├── ports/{clock_port,rng_port,godot_rng,scripted_rng}.gd
+│       ├── commands/{command_class_registry,command_envelope,command_fingerprint,command_result,command_executor,command_receipt}.gd
+│       ├── state/{game_state,hero_state,item_state,formation_state,quest_state,camp_state,receipt_ledger}.gd
+│       ├── definitions/{class_def,skill_def,trait_def,item_def,affix_def,enemy_def,stage_def,quest_def,facility_def}.gd
+│       ├── domain/recruitment/{hero_generator,recruitment_service}.gd
+│       ├── domain/formation/formation_service.gd
+│       ├── domain/battle/{battle_session,battle_state,battle_unit,battle_simulator,battle_result,targeting,stable_seed}.gd
+│       ├── domain/loot/{loot_generator,equipment_service,pity_state}.gd
+│       ├── domain/progression/{hero_progression,stat_derive,economy_service,camp_service}.gd
+│       ├── domain/quests/{quest_reducer,quest_service,domain_event}.gd
+│       ├── domain/idle/{idle_reward_service,offline_settlement}.gd
+│       ├── persistence/{save_codec,save_migrations,save_validator,atomic_file_writer}.gd
+│       └── ui/{screen controllers and presenters}.gd
 ├── tests/
 │   ├── unit/{commands,progression,recruitment,formation,battle,loot,quests,idle,persistence,platform}/test_*.gd
 │   ├── integration/{test_new_game_30m,test_command_crash_matrix,test_offline_anchor,test_quest_replay_600,test_save_resume}.gd
@@ -300,19 +303,19 @@ game/
 
 | Milestone | 实施内容 | Exit criteria |
 |---|---|---|
-| M0 Baseline/project shell | 先采 dirty baseline；独立 project、显式 Autoload、SafeArea、GUT gate | game 独立 headless 启动；autoload 顺序测试；project-a manifest 不变 |
+| M0 Baseline/project shell | 先采 dirty baseline；在现有 project-a 中建立 game shell、显式 Autoload、SafeArea、GUT gate | project-a headless 启动；现有 godot_ai plugin/autoload 与新增 game autoload 共存；受保护 addon manifest 不变 |
 | M1 Transaction/time spine | registry/fingerprint/receipts、internal lifecycle commands、QuestReducer、SaveManager、四时间字段 | crash matrix、20m+5m、600 replay、backup/migration 全过 |
 | M2 Hero/formation | L1-L5 clamp、4 职业/资质、8 英雄、第一次调整 | progression golden；差异可读；固定 seed 8 人 |
 | M3 Deterministic 1-3 | stable seed、5Hz、golden fixtures、paired 1000 | 1-3 先败后胜；paired +30pp；跨 FPS digest 相同 |
 | M4 Full Meta | economy、pity、装备/强化、第二次调整、soft quest、设施 | ledger、稀有件、跳任务进关、claim once 全过 |
 | M5 Lifecycle/Boss/Android | 1-5、offline、三档设备、5 人观察 | 全部 Source Spec 验收和预注册阈值达标 |
-| M6 Caesar knowledge map | 仅在 M0-M5 全部完成且实现/测试事实冻结后执行 `caesar-docs:init`；以代码、测试、ADR 和 evidence 为事实源初始化中文知识地图 | 完整最小启动集、仓库入口同步和 `python3 tools/docs_lint.py` 全部通过；docs writer、事实 reviewer、独立 verifier 三方证据齐全 |
+| M6 Caesar knowledge map | 知识地图已提前初始化；M0-M5 全部完成且实现/测试事实冻结后执行 `caesar-docs:update` + `caesar-docs:review` | 所有规划 `draft` 已按真实 project-a 代码/测试/evidence 校准；`python3 tools/docs_lint.py` 通过；docs writer、事实 reviewer、独立 verifier 三方证据齐全 |
 
-M0-M5 skills：`godot-project-setup`、`resource-pattern`、`save-load`、`mobile-development`、`responsive-ui`、`godot-ui`、`component-system`、`event-bus`、`inventory-system`、`state-machine`、`animation-system`、`godot-testing`。M6 必须使用 `caesar-docs:init`，不得在实现完成前凭草案编造长期架构事实。
+M0-M5 skills：`godot-project-setup`、`resource-pattern`、`save-load`、`mobile-development`、`responsive-ui`、`godot-ui`、`component-system`、`event-bus`、`inventory-system`、`state-machine`、`animation-system`、`godot-testing`。M6 必须使用 `caesar-docs:update` 与 `caesar-docs:review`，不得把未验证规划升级为实现事实。
 
 ### M6 locked minimum set and ownership
 
-M6 必须创建并验证以下最小启动集，不得以笼统目录占位替代：
+以下最小启动集已经初始化；M6 必须保留、更新并验证，不得用笼统目录占位替代：
 
 ```text
 docs/index.md
@@ -325,7 +328,7 @@ docs/decisions/ADR-0001-knowledge-map-structure.md
 tools/docs_lint.py
 ```
 
-- docs/writer lane：仅在 M5 通过后顺序执行 `caesar-docs:init`，从最终 code/config/tests/scripts、已批准 ADR 和 evidence 提取事实；未知内容用 `draft`，不猜测。
+- docs/writer lane：仅在 M5 通过后顺序执行 `caesar-docs:update`，从最终 code/config/tests/scripts、已批准 ADR 和 evidence 校准现有地图；未知内容继续用 `draft`，不猜测。
 - facts reviewer：逐条核对 `source_of_truth`、`validated_by`、领域/反边界、文件归属和命令是否来自冻结实现；作者不得自批。
 - independent verifier：运行 `python3 tools/docs_lint.py`，检查每个 Markdown 的 YAML frontmatter/必填字段/枚举/日期、唯一 `km_id`、`related`、domain/tag 注册、`KM:*` 目标 id、相对链接、`CODE:*` 路径、`CMD:*` runbook anchor、`source_of_truth` 和 stale/deleted 路径；再检查 README 与所有已存在的 AGENTS/ARCHITECTURE 入口路由。
 - 不存在的 AGENTS.md/ARCHITECTURE.md 不因 M6 自动创建；已有 README 只补知识地图入口和维护提示，不改写产品正文。
@@ -336,11 +339,11 @@ tools/docs_lint.py
 
 ```bash
 godot --version
-godot --headless --path game --editor --quit
-godot --headless --path game -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
-godot --headless --path game -s tools/validate_content.gd
-godot --headless --path game -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
-git diff --check -- game .omx
+godot --headless --path project-a --editor --quit
+godot --headless --path project-a -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+godot --headless --path project-a -s tools/validate_content.gd
+godot --headless --path project-a -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
+git diff --check -- project-a/game project-a/tests project-a/tools project-a/addons/gut project-a/project.godot project-a/export_presets.cfg .omx docs
 rg '^km_id:' docs
 rg 'KM:|CODE:|CMD:' docs
 find docs -name '*.md' -print
@@ -349,9 +352,9 @@ python3 tools/docs_lint.py
 
 ### Dirty baseline
 
-- 创建 game 前保存 HEAD、porcelain-v2 NUL status、unstaged/cached binary patches、三类 NUL path list、dirty/untracked hashes、MISSING sentinel、project-a 全 manifest 和 artifact hashes。
+- M0 修改 project-a 前保存 HEAD、porcelain-v2 NUL status、unstaged/cached binary patches、三类 NUL path list、dirty/untracked hashes、MISSING sentinel、`project-a/addons/godot_ai/**` manifest、`project-a/project.godot` hash 和已存在 project-a artifact hashes。
 - 路径全程 NUL：`git diff --name-only -z`、cached `-z`、`git ls-files -z --others`；hash records 为 `sha256\0path\0`，禁止 newline 解析。
-- 每 milestone 重采；只允许批准的 game/.omx 差异。用户并行改动触发停工和 baseline 重确认，不回滚。
+- 每 milestone 重采；只允许批准的 `project-a/game/**`、`project-a/tests/**`、`project-a/tools/**`、`project-a/addons/gut/**`、project/export 配置、`.omx/**` 和 docs 差异。`project-a/addons/godot_ai/**` 或其他用户路径变化触发停工和 baseline 重确认，不回滚。
 
 ### GUT gate
 
@@ -360,13 +363,13 @@ python3 tools/docs_lint.py
 ### Android
 
 ```bash
-mkdir -p game/build/android
-godot --headless --path game --export-debug "Android Debug" game/build/android/fantasy_idle-debug.apk
-shasum -a 256 game/build/android/fantasy_idle-debug.apk
-adb install -r game/build/android/fantasy_idle-debug.apk
+mkdir -p project-a/build/android
+godot --headless --path project-a --export-debug "Android Debug" project-a/build/android/fantasy_idle-debug.apk
+shasum -a 256 project-a/build/android/fantasy_idle-debug.apk
+adb install -r project-a/build/android/fantasy_idle-debug.apk
 adb shell am force-stop com.caesar.fantasyidle.prototype
 adb shell monkey -p com.caesar.fantasyidle.prototype -c android.intent.category.LAUNCHER 1
-adb logcat -d --pid="$(adb shell pidof -s com.caesar.fantasyidle.prototype)" > game/build/android/logcat.txt
+adb logcat -d --pid="$(adb shell pidof -s com.caesar.fantasyidle.prototype)" > project-a/build/android/logcat.txt
 ```
 
 - finite `logcat -d`；runner 对 install/launch/pid 各 60s timeout，失败保存全局最近 2000 行。
@@ -375,7 +378,7 @@ adb logcat -d --pid="$(adb shell pidof -s com.caesar.fantasyidle.prototype)" > g
 
 ### 5-person pre-registration
 
-- RC commit 固定 `game/tests/fixtures/playtest/p01-p05-seeds-v1.json`：P01 `0123456789abcdef`、P02 `1020304050607080`、P03 `7ffffffffffffffe`、P04 `13579bdf2468ace0`、P05 `55aa55aa33cc33cc`。
+- RC commit 固定 `project-a/tests/fixtures/playtest/p01-p05-seeds-v1.json`：P01 `0123456789abcdef`、P02 `1020304050607080`、P03 `7ffffffffffffffe`、P04 `13579bdf2468ace0`、P05 `55aa55aa33cc33cc`。
 - 开测前 evidence manifest 冻结 HEAD、APK/PCK/content/所有 tres/economy/seed/golden hashes、Godot version、device 和 participant mapping，并自 hash/sign-off。
 - UI-only 且所有领域/content hash 不变可用同 seed 定向 retest但不混算；任何领域/content 变化启用新 P06-P10 cohort + 新 manifest，完整重测，不能只重跑失败者。
 - 10 checkpoint 固定；每个 critical >=4/5，总计 >=45/50，无任务硬锁/崩溃阻断。
@@ -400,7 +403,7 @@ adb logcat -d --pid="$(adb shell pidof -s com.caesar.fantasyidle.prototype)" > g
 
 ### Decision
 
-独立 `game/` 采用 Godot 4.7.1 GDScript 的 A1+B1：只读 Resource、persistent GameState、executor-enforced command classes、sealed internal lifecycle commands、canonical fingerprints、durability barrier、唯一 offline anchor、transient deterministic BattleSession、薄 Autoload/Control 表现，并按 vertical slice 交付。
+现有 `project-a/` 工程采用 Godot 4.7.1 GDScript 的 A1+B1：游戏内容隔离在 `res://game/**`，只读 Resource、persistent GameState、executor-enforced command classes、sealed internal lifecycle commands、canonical fingerprints、durability barrier、唯一 offline anchor、transient deterministic BattleSession、薄 Autoload/Control 表现，并按 vertical slice 交付；现有 godot_ai 插件保持独立。
 
 ### Drivers
 
@@ -455,7 +458,7 @@ $team .omx/plans/prd-fantasy-idle-expedition.md
 1. executor 提交需求映射、改动清单、测试和原始命令输出，不自批。
 2. code-reviewer 顺序审 class/fingerprint、time/receipt、seed/battle 和 Source Spec。
 3. independent verifier 从预注册 manifest 重跑 headless、golden、600 replay、paired 1000、经济、Android 和 NUL baseline scope。
-4. M5 通过后 docs/writer 独占 `docs/**`、`tools/docs_lint.py` 和已有仓库入口，执行 `caesar-docs:init`；不得与 M0-M5 实现 lane 并行。
+4. M5 通过后 docs/writer 独占 `docs/**`、`tools/docs_lint.py` 和已有仓库入口，执行 `caesar-docs:update`；不得与 M0-M5 实现 lane 并行。
 5. 独立 facts reviewer 核对知识节点仅来自最终 code/tests/ADR/evidence，独立 verifier 运行 docs lint、最小启动集和入口路由检查。
 6. leader 仅在 build/content/fixture hash、游戏 evidence 与 M6 docs evidence 齐全后关闭 Ultragoal checkpoint。
 
@@ -471,8 +474,8 @@ $team .omx/plans/prd-fantasy-idle-expedition.md
 
 - M0-M6 全部通过且 evidence 可追溯至同一 approved PRD/test spec、build/content/fixture hashes。
 - Source Spec L130-L145 每项都有自动或观察证据；技术硬门槛要求 100%，观察 critical >=4/5 且总 >=45/50。
-- M6 只能在 M0-M5 完成后从最终代码和验证证据初始化；上列 17 个必需 Markdown 与 `tools/docs_lint.py` 全部存在，lint 零错误；所有 `docs/**/*.md` 均有合法 frontmatter，`km_id` 唯一，`related`/domain/tag/source_of_truth 有效，`KM:*` 可解析，relative/`CODE:*` 路径与 `CMD:*` anchor 存在，README/已有仓库入口正确路由到知识地图。
-- `project-a/**` 与 pre-M0 manifest 一致；无越权写入、无未解释 GUT/license 或 Android 设备缺口。
+- M6 在 M0-M5 完成后从最终代码和验证证据执行 update/review；规划 `draft` 必须升级、改写或明确保留原因；lint 零错误，README/已有仓库入口正确路由到知识地图。
+- `project-a/addons/godot_ai/**` 与 pre-M0 manifest 一致；现有 plugin/autoload 仍可用；所有 project-a 其他变化都在批准 ownership 内，无未解释 GUT/license 或 Android 设备缺口。
 - 未经用户确认不得改变核心循环、系统主次、随机英雄模型、美术主题、商业化、平台或单机边界。
 
 ## 17. Changelog: v1 -> v2 -> v3 -> Final
@@ -495,5 +498,11 @@ $team .omx/plans/prd-fantasy-idle-expedition.md
 
 ### Final -> User-added M6
 
-- 在游戏、自动测试、真机和观察验收全部通过后，强制使用 `caesar-docs:init` 初始化中文知识地图；知识地图成为最终交付门禁，不以聊天或隐藏记忆代替仓库事实。
+- 用户最初要求最终执行 `caesar-docs:init`；该初始化随后被明确提前完成，因此最终门禁调整为基于真实实现的 `caesar-docs:update` + `caesar-docs:review`，不以聊天或隐藏记忆代替仓库事实。
 - 锁定 17 个 Markdown 的最小启动集、`tools/docs_lint.py` 可失败门禁，以及 docs writer -> facts reviewer -> independent verifier 的 M6 顺序所有权。
+
+### Post-Final boundary correction
+
+- 用户确认游戏直接在现有 `project-a/` Godot 工程内制作；游戏内容隔离在 `project-a/game/**`，测试与工具分别位于 `project-a/tests/**`、`project-a/tools/**`。
+- 保护边界从整个 `project-a/**` 收窄为现有 `project-a/addons/godot_ai/**` 及未分配的用户路径；`project.godot` 必须保留现有插件和 `_mcp_game_helper`，同时追加游戏 Autoload。
+- 知识地图已经提前初始化，最终 M6 从 `init` 改为 `update + review`。

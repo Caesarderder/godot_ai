@@ -31,7 +31,7 @@ related:
 
 1. 读 [KM:map.control-index](../map/index.md) 和 [KM:invariant.project-boundaries](../map/invariants.md)。
 2. 在 [KM:map.domains](../map/domains.md) 选择一个主领域。
-3. 优先读取实现索引和当前代码；若 `game/` 尚不存在，再读取规划参考。
+3. 优先读取实现索引和 `project-a/` 当前代码；若 `project-a/game/**` 尚不存在，再读取规划参考。
 4. 发现冲突时按事实优先级报告，不静默拼接。
 5. 回答中明确状态：`active`、`draft`、`stale` 或待用户确认。
 

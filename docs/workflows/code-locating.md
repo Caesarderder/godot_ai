@@ -30,8 +30,8 @@ related:
 
 1. 在 [KM:map.domains](../map/domains.md) 确认主领域。
 2. 读 [KM:reference.file-ownership](../references/indexes/file-ownership.md)。
-3. 使用 `rg --files game` 或 `rg '<symbol>' game` 验证路径和符号。
-4. 如果 `game/` 不存在或候选路径不存在，结论写“PRD 规划落点（draft）”。
+3. 使用 `rg --files project-a/game project-a/tests project-a/tools` 或在这些路径中 `rg '<symbol>'` 验证玩法路径和符号；检查工具插件时单独限定 `project-a/addons/godot_ai`。
+4. 如果 `project-a/game/**` 或候选路径不存在，结论写“PRD 规划落点（draft）”；不得把 addon 代码误当成游戏实现。
 5. 检查相关测试和 [KM:reference.verification-matrix](../references/indexes/verification-matrix.md)。
 
 ## 停止条件

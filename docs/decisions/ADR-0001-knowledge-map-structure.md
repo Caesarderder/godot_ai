@@ -36,7 +36,7 @@ Accepted，2026-07-17。
 ## 影响
 
 - 已批准产品约束可为 `active`。
-- 未来 `game/**` 实现节点在路径和测试落地前必须为 `draft`。
+- 未来 `project-a/game/**` 实现节点在路径和测试落地前必须为 `draft`。
 - 不存在的 AGENTS.md/ARCHITECTURE.md 不自动创建。
 - 所有文档变更必须通过 [CMD:docs-lint](../runbooks/docs-lint.md#docs-lint)。
 

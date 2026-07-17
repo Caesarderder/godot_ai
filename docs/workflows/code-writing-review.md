@@ -32,7 +32,7 @@ related:
 ## 步骤
 
 1. 开工前完成 [KM:workflow.impact-map](impact-map.md)。
-2. 只修改批准 owner 的路径；不得触碰 `project-a/**`。
+2. 只修改批准 owner 的 `project-a/game/**`、`project-a/tests/**`、`project-a/tools/**` 和必要 project/export 配置；默认不得触碰 `project-a/addons/godot_ai/**`。
 3. 静态 Resource、运行状态、UI 投影和 command executor 保持分层。
 4. 先写或冻结行为测试，再实现最小 vertical slice。
 5. 实施者运行最小测试，但不得自批。
