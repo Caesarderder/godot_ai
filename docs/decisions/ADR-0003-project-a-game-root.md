@@ -2,9 +2,9 @@
 km_id: decision.project-a-game-root
 km_type: decision
 domain: architecture
-status: active
+status: deprecated
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - .omx/plans/prd-fantasy-idle-expedition.md
 validated_by:
@@ -14,6 +14,7 @@ tags:
   - decision:project-root
   - risk:worktree-boundary
 related:
+  - decision.taptap-maker-game-root
   - reference.architecture-overview
   - reference.file-ownership
   - reference.implementation-status
@@ -23,7 +24,7 @@ related:
 
 ## 状态
 
-Accepted，2026-07-17。
+Deprecated，2026-07-20。历史决策保留；当前实现根由 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 替代。
 
 ## 决策
 

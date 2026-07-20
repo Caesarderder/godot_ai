@@ -4,12 +4,14 @@ km_type: domain
 domain: platform-persistence
 status: draft
 owner: platform
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - .omx/plans/prd-fantasy-idle-expedition.md
   - .omx/plans/test-spec-fantasy-idle-expedition.md
+  - taptap/scripts/game/GameState.lua
 validated_by:
-  - plan-review-only
+  - maker_build_current_directory
+  - code-review
 tags:
   - domain:platform-persistence
   - risk:mobile-lifecycle
@@ -21,7 +23,7 @@ related:
 
 # 移动平台与持久化领域
 
-> 当前是批准设计，实际 Godot 配置、Autoload、存档和 Android 包尚未存在。
+> TapTap 原型已有本地 JSON、`clientCloud` 和 8 小时离线收益；durable command、备份恢复和 Android 设备证据尚未落地，因此仍为 `draft`。
 
 ## 目标
 
@@ -29,15 +31,14 @@ related:
 
 ## 什么时候读
 
-实现项目配置、Autoload、SaveManager、AppLifecycle、离线、Safe Area、Android 导出或设备验证时。
+实现 Maker 生命周期、GameState、云/本地存档、离线、安全区或 Android 设备验证时。
 
 ## 职责
 
-- Godot 4.7.1 stable、GDScript-first、2D、Mobile renderer，Android-first。
-- 静态定义为只读 Resource；`GameState` 使用 versioned JSON 保存稳定 ID 与实例字段。
+- UrhoX Lua、2D、手机端优先；`GameState` 使用 versioned JSON 保存稳定 ID 与实例字段。
 - pause/resume/heartbeat 统一走 sealed internal durable command。
 - `offline_anchor_unix` 是唯一离线收益起点；回拨为 0，前跳封顶 8 小时。
-- UI 采用 Container、Safe Area，关键触控目标至少 48dp。
+- UI 已采用 `urhox-libs/UI` 与 `UI.Scale.DEFAULT`；`UI.SafeAreaView` 和至少 48 基准像素的主要触控目标是后续必须补齐的移动端门禁，当前原型尚未满足。
 
 ## 不是本层职责
 
@@ -53,7 +54,7 @@ related:
 
 ## 验证
 
-crash matrix、20m 前台+5m 后台、重复 resume、回拨/48h 跳时、Safe Area golden、三档 Android 真机。
+当前迁移构建已通过；后续补 crash matrix、20m 前台+5m 后台、重复 resume、回拨/48h 跳时、Safe Area golden、三档 Android 真机。
 
 ## 相关节点
 

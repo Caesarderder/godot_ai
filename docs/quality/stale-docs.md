@@ -4,7 +4,7 @@ km_type: quality
 domain: quality
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - docs/references/constraints/implementation-status.md
 validated_by:
@@ -21,18 +21,18 @@ related:
 
 ## 当前清单
 
-没有已知 `stale` 节点；以下 `draft` 是有意状态：
+ADR-0003 已明确标记 `deprecated`，由 ADR-0004 替代。以下 `draft` 是有意状态：
 
-- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：M0 薄外壳已验证，M1-M5 领域内核未落地。
+- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：TapTap 迁移原型已验证，批准领域内核仍未全部落地。
 - [KM:reference.state-command-lifecycle](../references/architecture/state-command-lifecycle.md)：M1 状态/命令/存档未落地。
-- [KM:reference.file-ownership](../references/indexes/file-ownership.md)：M0 路径已验证，其余规划路径未验证。
-- [KM:domain.battle-progression](../domains/battle-progression.md)：M3 战斗未落地。
-- [KM:domain.platform-persistence](../domains/platform-persistence.md)：M0 生命周期壳已落地，M1/M5 持久化与设备证据未落地。
-- [KM:runbook.game-verification](../runbooks/game-verification.md)：M0 Godot 命令已运行，M1-M5/Android 命令待落地。
+- [KM:reference.file-ownership](../references/indexes/file-ownership.md)：TapTap 当前路径已验证，其余规划路径未验证。
+- [KM:domain.battle-progression](../domains/battle-progression.md)：原型自动战斗已存在，可重放 seed 与统计门禁未落地。
+- [KM:domain.platform-persistence](../domains/platform-persistence.md)：原型存档/离线已存在，M1 durable 语义与设备证据未落地。
+- [KM:runbook.game-verification](../runbooks/game-verification.md)：TapTap 迁移构建和 Godot 历史 M0 已运行，M1-M5/Android 命令待落地。
 
 ## 回填节奏
 
-- M0：项目配置、renderer、Autoload、Safe Area、GUT。
+- M0：TapTap Maker 绑定、纯 2D 入口、手机 UI、MCP 构建；Godot 历史基线保留。
 - M1：command/time/save/offline/receipt。
 - M2：英雄/编队。
 - M3：战斗/seed/paired 1000。

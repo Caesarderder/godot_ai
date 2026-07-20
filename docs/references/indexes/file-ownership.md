@@ -4,12 +4,15 @@ km_type: reference
 domain: code
 status: draft
 owner: architecture
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - .omx/plans/prd-fantasy-idle-expedition.md
+  - taptap/README.md
+  - taptap/scripts/main.lua
 validated_by:
   - rg --files project-a/game project-a/tests project-a/tools
   - GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
+  - maker_build_current_directory
 tags:
   - reference:file-ownership
   - risk:planned-not-implemented
@@ -17,12 +20,13 @@ related:
   - reference.architecture-overview
   - reference.implementation-status
   - decision.project-a-game-root
+  - decision.taptap-maker-game-root
   - map.domains
 ---
 
 # 文件归属索引
 
-> `project-a/` 工程根、M0 shell/test/tool 和 godot_ai addon 已存在；下表继续区分已验证入口与 M1-M5 未来落点。
+> `taptap/` 是当前 Maker 实现根；`project-a/` 保留为 Godot 历史 M0。下表继续区分已验证入口与未来落点。
 
 ## 目标
 
@@ -30,32 +34,21 @@ related:
 
 ## 事实
 
-| 规划路径 | Owner | 用途 | 当前证据 |
+| 路径 | Owner | 用途 | 当前证据 |
 |---|---|---|---|
-| `project-a/project.godot` | platform | Godot 4.7 Mobile、portrait、主场景、plugin/autoload | present / M0 verifier |
-| `project-a/export_presets.cfg` | platform | Android 导出配置 | absent / PRD §10 |
+| `taptap/scripts/main.lua` | platform | Maker 生命周期、Update 主循环 | present / remote build |
+| `taptap/scripts/config/GameConfig.lua` | content | 当前角色、关卡、经济与素材配置 | present / remote build |
+| `taptap/scripts/game/GameState.lua` | domain-kernel | 当前战斗、成长、存档和离线结算 | present / remote build |
+| `taptap/scripts/game/BattleView2D.lua` | presentation | 纯 2D 战斗表现与动画 | present / remote build |
+| `taptap/scripts/ui/GameUI.lua` | presentation | 手机 HUD、培养和锻造 UI | present / remote build |
+| `taptap/assets/**` | content | 字体、角色、敌人、背景、视频素材 | present / Maker-managed assets |
+| `taptap/scripts/domain/recruitment/**` | hero-formation | 随机英雄生成 | absent / PRD §10 |
+| `taptap/scripts/domain/formation/**` | hero-formation | 四槽编队 | absent / PRD §10 |
+| `taptap/scripts/domain/equipment/**` | equipment-economy | 装备实例、词条和强化 | absent / PRD §10 |
+| `taptap/scripts/domain/quests/**`、`camp/**` | camp-quests | 任务软引导和三设施薄营地 | absent / PRD §10 |
+| `taptap/tests/**`、`tools/**` | independent-verifier | 内容、seed、经济和长期模拟 | absent / Test Spec §3 |
+| `project-a/project.godot`、`game/**`、`tests/**` | historical-baseline | Godot 4.7 M0、Safe Area、Autoload、GUT | present / historical M0 verifier |
 | `project-a/addons/godot_ai/**` | tooling | 既存智能体 EditorPlugin、runtime helper | present / protected |
-| `project-a/addons/gut/**` | verification | GUT v9.7.1 完整 vendor 与 MIT LICENSE | present / 259 files / manifest locked |
-| `project-a/game/resources/definitions/**` | content | 只读职业/技能/装备/任务/设施定义 | absent / PRD §10 |
-| `project-a/game/scenes/app/main.tscn` | presentation | M0 portrait shell 与 Safe Area 容器 | present / headless load |
-| `project-a/game/scenes/**`（其余） | presentation | Camp、Roster、Formation、Battle、Results | absent / PRD §10 |
-| `project-a/game/scripts/autoloads/**` | platform | SystemClock/SaveManager/ContentCatalog/EventBus/Game/AppLifecycle 薄契约 | present / integration test |
-| `project-a/game/scripts/app/**` | platform | M0 PlatformMetrics/SafeAreaContainer；ScreenRouter 待实现 | partial / unit test |
-| `project-a/game/scripts/ports/**` | platform | Clock、AppLifecycle ports | absent / PRD §10 |
-| `project-a/game/scripts/commands/**`、`state/**` | domain-kernel | command、receipt、GameState | absent / PRD §10 |
-| `project-a/game/scripts/domain/recruitment/**` | hero-formation | 随机英雄生成 | absent / PRD §10 |
-| `project-a/game/scripts/domain/formation/**` | hero-formation | 四槽编队 | absent / PRD §10 |
-| `project-a/game/scripts/domain/battle/**` | battle-progression | 5Hz 战斗与结算 | absent / PRD §10 |
-| `project-a/game/scripts/domain/loot/**`、`progression/**` | equipment-economy | 掉落、装备、强化、成长 | absent / PRD §10 |
-| `project-a/game/scripts/domain/quests/**` | camp-quests | DomainEvent/QuestReducer | absent / PRD §10 |
-| `project-a/game/scripts/domain/idle/**`、`persistence/**` | platform-persistence | 离线与存档 | absent / PRD §10 |
-| `project-a/game/scripts/ui/**` | presentation | controller/presenter；只投影状态 | absent / PRD §10 |
-| `project-a/tests/unit/platform/**`、`integration/**` | independent-verifier | M0 Safe Area 与 bootstrap contract | present / GUT 10/10 |
-| `project-a/tests/fixtures/**` | independent-verifier | M1-M5 fixtures | absent / Test Spec §3 |
-| `project-a/tools/capture_worktree_baseline.sh` | verification | NUL-safe dirty worktree/addon baseline | present / executed |
-| `project-a/tools/verify_m0.sh` | verification | editor/game/compatibility/GUT gate | present / executed |
-| `project-a/tools/**`（其余） | verification | 内容、经济与长期模拟工具 | absent / PRD §10 |
-| `project-a/build/**` | generated | APK、PCK、logs；不作事实源 | absent / generated |
 
 ## 入口或路径
 
@@ -63,7 +56,7 @@ related:
 
 ## 验证
 
-每个 milestone 用 `rg --files project-a/game project-a/tests project-a/tools`、`project-a/project.godot`、配置和测试确认；存在后将相关条目从 `absent` 改为实际入口，并更新 `last_verified/validated_by`。
+每个 milestone 用 `rg --files taptap/scripts taptap/assets` 和 Maker MCP 状态/构建确认；领域路径存在后将相关条目从 `absent` 改为实际入口。Godot 历史回归仍使用 `project-a/tools/verify_m0.sh`。
 
 ## 相关节点
 

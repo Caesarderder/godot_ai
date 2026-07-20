@@ -4,7 +4,7 @@ km_type: workflow
 domain: workflow
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - docs/references/indexes/file-ownership.md
 validated_by:
@@ -30,8 +30,8 @@ related:
 
 1. 在 [KM:map.domains](../map/domains.md) 确认主领域。
 2. 读 [KM:reference.file-ownership](../references/indexes/file-ownership.md)。
-3. 使用 `rg --files project-a/game project-a/tests project-a/tools` 或在这些路径中 `rg '<symbol>'` 验证玩法路径和符号；检查工具插件时单独限定 `project-a/addons/godot_ai`。
-4. 如果 `project-a/game/**` 或候选路径不存在，结论写“PRD 规划落点（draft）”；不得把 addon 代码误当成游戏实现。
+3. 使用 `rg --files taptap/scripts taptap/assets` 或在这些路径中 `rg '<symbol>'` 验证当前玩法路径和符号；只在回归历史 M0/工具插件时检查 `project-a/game`、`project-a/tests` 与 `project-a/addons/godot_ai`。
+4. 如果 `taptap/scripts/domain/**` 或候选路径不存在，结论写“PRD 规划落点（draft）”；不得把 Godot 历史基线或 Maker dev kit 代码误当成当前领域实现。
 5. 检查相关测试和 [KM:reference.verification-matrix](../references/indexes/verification-matrix.md)。
 
 ## 停止条件

@@ -4,7 +4,7 @@ km_type: map
 domain: cross-domain
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - .omx/plans/prd-fantasy-idle-expedition.md
   - .omx/plans/test-spec-fantasy-idle-expedition.md
@@ -21,7 +21,7 @@ related:
 
 # 项目知识地图
 
-这是人和智能体共用的中文工作环境。当前项目处于“规划已批准、M0 工程基座已落地、M1-M5 玩法待实现”阶段；产品约束、工程根、手机竖屏 shell 与测试门禁是已确认事实，未来玩法实现位置仍标记为 `draft`。
+这是人和智能体共用的中文工作环境。当前开发根已经迁移到 `taptap/` TapTap Maker 2D 工程；该工程已有自动战斗、离线收益、培养、薄锻造所和手机 UI 可玩基线。`project-a/` 的 Godot M0 保留为历史验证基线，随机英雄、四槽编队、随机装备与任务营地仍按后续里程碑推进。
 
 ## 先读顺序
 
@@ -53,4 +53,4 @@ related:
 5. ADR 与 memory。
 6. 叙述性说明和规划草稿。
 
-M0 的配置、Autoload、主场景、安全区和测试以 [CODE:project-config](../project-a/project.godot)、[CODE:main-scene](../project-a/game/scenes/app/main.tscn) 与 [CODE:m0-verifier](../project-a/tools/verify_m0.sh) 为事实源；M1-M5 规划仍以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据。
+当前可玩实现以 [CODE:taptap-entry](../taptap/scripts/main.lua)、[CODE:taptap-state](../taptap/scripts/game/GameState.lua) 和 [CODE:taptap-ui](../taptap/scripts/ui/GameUI.lua) 为事实源，提交与构建以 TapTap MCP 返回结果为准。Godot 历史 M0 仍以 [CODE:m0-verifier](../project-a/tools/verify_m0.sh) 为事实源；未落地玩法继续以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据。

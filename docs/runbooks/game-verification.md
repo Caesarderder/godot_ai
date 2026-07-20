@@ -4,12 +4,15 @@ km_type: runbook
 domain: quality
 status: draft
 owner: verification
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - .omx/plans/test-spec-fantasy-idle-expedition.md
   - project-a/tools/verify_m0.sh
+  - taptap/.maker-mcp/config.json
 validated_by:
   - GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
+  - maker_status_lite
+  - maker_build_current_directory
 tags:
   - quality:game-verification
   - risk:planned-not-implemented
@@ -20,35 +23,45 @@ related:
 
 # 游戏验证 Runbook
 
-> M0 游戏 shell/GUT 已就绪并实际运行；M1-M5 内容、模拟和 Android 命令尚未全部落地，因此本节点整体保持 `draft`。
+> TapTap 迁移基线已完成远端构建；M1-M5 内容、模拟和 Android 设备命令尚未全部落地，因此本节点整体保持 `draft`。
 
 ## 目标
 
-在 M0-M5 分阶段验证 Godot 项目、内容、经济、战斗和 Android 设备。
+在 M0-M5 分阶段验证 TapTap Maker 项目、内容、经济、战斗和 Android 设备，同时保留 Godot M0 历史回归。
 
 ## 前置条件
 
-存在 `project-a/project.godot`、锁定 GUT 版本/许可/checksum、Godot 4.7.1 和相应 Android SDK/JDK/export templates；现有 godot_ai plugin/autoload 保持启用。
+当前目录存在 `taptap/.maker-mcp/config.json`，TapTap MCP 鉴权、Maker 绑定和 AI dev kit 就绪。执行 Maker 提交/构建前先读取状态，不手工提交绑定工程。
 
 ## game-verification
 
+当前 Maker 工程通过 MCP 工具调用，不是 shell 命令：
+
+```text
+maker_status_lite
+  target_dir: /absolute/path/to/taptap
+
+maker_build_current_directory
+  target_dir: /absolute/path/to/taptap
+  entry: main.lua
+  scriptsPath: scripts
+```
+
+历史 Godot M0 与未来本地验证命令才在 shell 执行：
+
 ```bash
-godot --version
 GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
 
-# 等价的 M0 GUT 核心命令
-godot --headless -d --path project-a -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
-
 # M1-M5 待对应实现落地后启用
-godot --headless --path project-a -s tools/validate_content.gd
-godot --headless --path project-a -s tools/simulate_first_30m.gd -- --manifest=res://tests/fixtures/battle/paired_1000_v1.json
+taptap/tools/validate_content.lua
+taptap/tools/simulate_first_30m.lua --manifest=taptap/tests/fixtures/battle/paired_1000_v1.json
 ```
 
 Android build/install/launch 命令以测试规格 §11 为准，必须限时收集 logcat，不能无限等待。
 
 ## 预期结果
 
-M0 预期为三条 headless 启动链和全部 GUT 测试通过；后续 milestone 对应 [KM:reference.verification-matrix](../references/indexes/verification-matrix.md) 全部通过。
+当前 Maker 预期为项目同步、提交推送、远端构建和 preview refresh 全部成功；运行问题读取 MCP 返回的 `runtime_logs.local_file`。历史 Godot M0 仍预期 GUT 10/10 与三条 headless 启动链通过。
 
 ## 失败处理
 

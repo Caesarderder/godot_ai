@@ -4,7 +4,7 @@ km_type: workflow
 domain: workflow
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - .omx/plans/prd-fantasy-idle-expedition.md
   - .omx/plans/test-spec-fantasy-idle-expedition.md
@@ -23,7 +23,7 @@ related:
 
 ## 目标
 
-按 vertical slice 落地 Godot 游戏，并让写入者、审查者和验证者职责分离。
+按 vertical slice 落地 TapTap Maker 2D 游戏，并让写入者、审查者和验证者职责分离。
 
 ## 输入
 
@@ -32,10 +32,10 @@ related:
 ## 步骤
 
 1. 开工前完成 [KM:workflow.impact-map](impact-map.md)。
-2. 只修改批准 owner 的 `project-a/game/**`、`project-a/tests/**`、`project-a/tools/**` 和必要 project/export 配置；默认不得触碰 `project-a/addons/godot_ai/**`。
-3. 静态 Resource、运行状态、UI 投影和 command executor 保持分层。
+2. 只修改批准 owner 的 `taptap/scripts/**`、`taptap/assets/**` 与后续验证目录；默认不得修改 Maker dev kit、引擎库或 `project-a/**` 历史基线。
+3. 静态配置、运行状态、UI 投影和 command executor 保持分层。
 4. 先写或冻结行为测试，再实现最小 vertical slice。
-5. 实施者运行最小测试，但不得自批。
+5. 实施者先运行本地 Lua/内容检查；提交、推送、预览与构建只用 `maker_build_current_directory`，但不得自批。
 6. 独立审查者检查不变量、状态所有权、随机确定性和移动生命周期。
 7. 独立验证者按 [KM:reference.verification-matrix](../references/indexes/verification-matrix.md) 留原始证据。
 8. 实际路径稳定后执行 `caesar-docs:update`，将相应 `draft` 节点转为 `active`。

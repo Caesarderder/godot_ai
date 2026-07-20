@@ -4,7 +4,7 @@ km_type: map
 domain: workflow
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-20
 source_of_truth:
   - docs/workflows
 validated_by:
@@ -31,4 +31,4 @@ related:
 | 实施或代码审查 | [KM:workflow.code-writing-review](../workflows/code-writing-review.md) |
 | 新增/更新/审查知识节点 | [KM:workflow.knowledge-map-maintenance](../workflows/knowledge-map-maintenance.md) |
 
-当前 `project-a/` 工程已存在，但 `project-a/game/**` 玩法尚未实现。代码定位任务必须区分现有 addon 工具代码与规划玩法路径；不存在时报告“规划落点”，不得伪装成现有实现。
+当前实现优先定位 `taptap/scripts/**` 与 `taptap/assets/**`；提交和构建遵循 Maker MCP 工作流。`project-a/` 只作为 Godot 历史 M0 与工具插件基线读取；未来领域路径不存在时报告“规划落点”，不得伪装成现有实现。
