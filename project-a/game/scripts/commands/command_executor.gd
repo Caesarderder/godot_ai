@@ -8,12 +8,28 @@ const State := preload("res://game/scripts/state/game_state.gd")
 const Ledger := preload("res://game/scripts/state/receipt_ledger.gd")
 const Quests := preload("res://game/scripts/domain/quests/quest_reducer.gd")
 
-const INTERNAL_CAPABILITY := "m1-internal-capability-v1"
+class InternalGateway extends RefCounted:
+	var _executor: RefCounted
+	var _capability: RefCounted
+
+	func _init(executor: RefCounted, capability: RefCounted) -> void:
+		_executor = executor
+		_capability = capability
+
+	func execute_internal(
+		command_type: StringName,
+		payload: Dictionary,
+		business_key: String = ""
+	) -> Dictionary:
+		return _executor._execute_internal_authorized(
+			command_type, payload, business_key, _capability
+		)
 
 var _save_port: Variant
 var _clock_port: Variant
 var _state: Dictionary = {}
 var _reducers: Dictionary = {}
+var _internal_capability := RefCounted.new()
 
 
 func configure(save_port: Variant, clock_port: Variant, initial_state: Dictionary) -> void:
@@ -38,10 +54,25 @@ func execute(envelope: Dictionary) -> Dictionary:
 
 
 func execute_internal(
+	_command_type: StringName,
+	_payload: Dictionary,
+	_business_key: String = ""
+) -> Dictionary:
+	return Result.failure("INTERNAL_COMMAND_FORBIDDEN")
+
+
+func _create_internal_gateway() -> RefCounted:
+	return InternalGateway.new(self, _internal_capability)
+
+
+func _execute_internal_authorized(
 	command_type: StringName,
 	payload: Dictionary,
-	business_key: String = ""
+	business_key: String,
+	capability: RefCounted
 ) -> Dictionary:
+	if capability != _internal_capability:
+		return Result.failure("INTERNAL_COMMAND_FORBIDDEN")
 	if not Registry.is_internal(command_type):
 		return Result.failure("INTERNAL_COMMAND_REQUIRED")
 	var now := _now_unix()
@@ -53,10 +84,10 @@ func execute_internal(
 		"expected_revision": int(_state.get("revision", 0)),
 		"requested_at": now,
 	}
-	return _execute(envelope, INTERNAL_CAPABILITY)
+	return _execute(envelope, _internal_capability)
 
 
-func _execute(envelope: Dictionary, capability: String) -> Dictionary:
+func _execute(envelope: Dictionary, capability: Variant) -> Dictionary:
 	var envelope_error := _validate_envelope(envelope)
 	if not envelope_error.is_empty():
 		return Result.failure(envelope_error)
@@ -64,7 +95,7 @@ func _execute(envelope: Dictionary, capability: String) -> Dictionary:
 	var command_class := Registry.classify(command_type)
 	if command_class == Registry.UNKNOWN:
 		return Result.failure("UNKNOWN_COMMAND")
-	if command_class == Registry.INTERNAL_DURABLE and capability != INTERNAL_CAPABILITY:
+	if command_class == Registry.INTERNAL_DURABLE and capability != _internal_capability:
 		return Result.failure("INTERNAL_COMMAND_FORBIDDEN")
 	if int(envelope.expected_revision) != int(_state.get("revision", 0)):
 		return Result.failure("REVISION_MISMATCH")
