@@ -95,6 +95,13 @@ func test_failed_pause_does_not_advance_executor_owned_state() -> void:
 	lifecycle._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
 	assert_eq(executor.state["offline_anchor_unix"], 60)
 	assert_eq(executor.calls.size(), 1)
+	clock.ticks_msec = 249
+	lifecycle._process(0.0)
+	assert_eq(executor.calls.size(), 1)
+	clock.ticks_msec = 250
+	lifecycle._process(0.0)
+	assert_eq(executor.calls.size(), 2)
+	assert_eq(executor.state["offline_anchor_unix"], 120)
 
 
 func test_heartbeat_runs_once_per_sixty_seconds_and_retries_after_failure() -> void:

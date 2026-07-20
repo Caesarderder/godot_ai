@@ -7,12 +7,17 @@ signal back_navigation_requested
 
 const EDGE_DEBOUNCE_MSEC := 250
 const HEARTBEAT_INTERVAL_MSEC := 60_000
+const PAUSE_RETRY_INTERVAL_MSEC := 250
+const PAUSE_RETRY_BUDGET_MSEC := 5_000
 
 var _executor: Object
 var _clock: Object
 var _last_pause_edge_msec := -1
 var _last_resume_edge_msec := -1
 var _last_heartbeat_msec := 0
+var _pause_retry_pending := false
+var _pause_retry_deadline_msec := 0
+var _pause_retry_next_msec := 0
 
 
 func configure(executor: Object, clock: Object) -> void:
@@ -21,6 +26,7 @@ func configure(executor: Object, clock: Object) -> void:
 	_last_pause_edge_msec = -1
 	_last_resume_edge_msec = -1
 	_last_heartbeat_msec = _monotonic_msec()
+	_pause_retry_pending = false
 	set_process(true)
 
 
@@ -38,6 +44,7 @@ func poll_heartbeat() -> bool:
 
 
 func _process(_delta: float) -> void:
+	_poll_pause_retry()
 	poll_heartbeat()
 
 
@@ -45,7 +52,8 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_APPLICATION_PAUSED:
 			if _accept_edge(true):
-				_execute_internal(&"__lifecycle_pause_anchor")
+				if not _execute_internal(&"__lifecycle_pause_anchor"):
+					_schedule_pause_retry()
 				application_paused.emit()
 		NOTIFICATION_APPLICATION_RESUMED:
 			if _accept_edge(false):
@@ -88,6 +96,28 @@ func _execute_internal(command_type: StringName) -> bool:
 		return false
 	var result: Dictionary = raw_result
 	return bool(result.get("ok", false))
+
+
+func _schedule_pause_retry() -> void:
+	var current_msec := _monotonic_msec()
+	_pause_retry_pending = true
+	_pause_retry_next_msec = current_msec + PAUSE_RETRY_INTERVAL_MSEC
+	_pause_retry_deadline_msec = current_msec + PAUSE_RETRY_BUDGET_MSEC
+
+
+func _poll_pause_retry() -> void:
+	if not _pause_retry_pending:
+		return
+	var current_msec := _monotonic_msec()
+	if current_msec > _pause_retry_deadline_msec:
+		_pause_retry_pending = false
+		return
+	if current_msec < _pause_retry_next_msec:
+		return
+	if _execute_internal(&"__lifecycle_pause_anchor"):
+		_pause_retry_pending = false
+	else:
+		_pause_retry_next_msec = current_msec + PAUSE_RETRY_INTERVAL_MSEC
 
 
 func _monotonic_msec() -> int:
