@@ -30,6 +30,8 @@ var _clock_port: Variant
 var _state: Dictionary = {}
 var _reducers: Dictionary = {}
 var _internal_capability := RefCounted.new()
+var _reversible_pending := false
+var _reversible_due_msec := 0
 
 
 func configure(save_port: Variant, clock_port: Variant, initial_state: Dictionary) -> void:
@@ -38,6 +40,7 @@ func configure(save_port: Variant, clock_port: Variant, initial_state: Dictionar
 	_state = State.clone(initial_state)
 	if not _state.has("receipt_ledgers") or _state.receipt_ledgers.is_empty():
 		_state.receipt_ledgers = Ledger.create_empty()
+	_reversible_pending = false
 
 
 func register_reducer(command_type: StringName, reducer: Callable) -> void:
@@ -50,7 +53,21 @@ func current_state() -> Dictionary:
 
 
 func execute(envelope: Dictionary) -> Dictionary:
-	return _execute(envelope, "")
+	return _execute(envelope, null)
+
+
+func poll_reversible_save() -> bool:
+	if not _reversible_pending or _monotonic_msec() < _reversible_due_msec:
+		return false
+	var candidate := State.clone(_state)
+	var saved_at := _now_unix()
+	candidate["saved_at_unix"] = saved_at
+	var save_result: Dictionary = _save_port.save_candidate(candidate, saved_at)
+	if not save_result.get("ok", false):
+		return false
+	_state = candidate
+	_reversible_pending = false
+	return true
 
 
 func execute_internal(
@@ -95,8 +112,9 @@ func _execute(envelope: Dictionary, capability: Variant) -> Dictionary:
 	var command_class := Registry.classify(command_type)
 	if command_class == Registry.UNKNOWN:
 		return Result.failure("UNKNOWN_COMMAND")
-	if command_class == Registry.INTERNAL_DURABLE and capability != _internal_capability:
-		return Result.failure("INTERNAL_COMMAND_FORBIDDEN")
+	if command_class == Registry.INTERNAL_DURABLE:
+		if not capability is RefCounted or capability != _internal_capability:
+			return Result.failure("INTERNAL_COMMAND_FORBIDDEN")
 	if int(envelope.expected_revision) != int(_state.get("revision", 0)):
 		return Result.failure("REVISION_MISMATCH")
 
@@ -148,6 +166,8 @@ func _execute(envelope: Dictionary, capability: Variant) -> Dictionary:
 		return Result.failure("INVARIANT_FAILED", str(validation.code))
 	if command_class == Registry.REVERSIBLE_META:
 		_state = candidate
+		_reversible_pending = true
+		_reversible_due_msec = _monotonic_msec() + 1000
 		return Result.success(receipt.result, receipt)
 
 	var saved_at := _now_unix()
@@ -156,6 +176,7 @@ func _execute(envelope: Dictionary, capability: Variant) -> Dictionary:
 	if not save_result.get("ok", false):
 		return Result.failure("SAVE_FAILED", str(save_result.get("code", "")))
 	_state = candidate
+	_reversible_pending = false
 	return Result.success(receipt.result, receipt)
 
 
@@ -252,3 +273,9 @@ func _validate_envelope(envelope: Dictionary) -> String:
 
 func _now_unix() -> int:
 	return int(_clock_port.unix_time_seconds())
+
+
+func _monotonic_msec() -> int:
+	if _clock_port.has_method("monotonic_msec"):
+		return int(_clock_port.monotonic_msec())
+	return _now_unix() * 1000

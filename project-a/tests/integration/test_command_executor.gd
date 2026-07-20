@@ -7,9 +7,13 @@ const GameState := preload("res://game/scripts/state/game_state.gd")
 class FakeClock:
 	extends RefCounted
 	var now := 100
+	var ticks := 0
 
 	func unix_time_seconds() -> int:
 		return now
+
+	func monotonic_msec() -> int:
+		return ticks
 
 
 class FakeSavePort:
@@ -50,13 +54,25 @@ func _coin_reducer(candidate: Dictionary, payload: Dictionary) -> Dictionary:
 	}
 
 
-func _executor(save_port: FakeSavePort, initial_state := {}) -> RefCounted:
+func _formation_reducer(candidate: Dictionary, payload: Dictionary) -> Dictionary:
+	candidate["formation"]["front"] = str(payload["hero_id"])
+	return {"ok": true, "result": {"front": payload["hero_id"]}, "events": []}
+
+
+func _executor(
+	save_port: FakeSavePort,
+	initial_state := {},
+	clock: FakeClock = null
+) -> RefCounted:
 	var state: Dictionary = initial_state
 	if state.is_empty():
 		state = GameState.create_new(100, "save-1", 7)
+	if clock == null:
+		clock = FakeClock.new()
 	var executor := CommandExecutor.new()
-	executor.configure(save_port, FakeClock.new(), state)
+	executor.configure(save_port, clock, state)
 	executor.register_reducer(&"recruit_hero", _coin_reducer)
+	executor.register_reducer(&"set_formation", _formation_reducer)
 	return executor
 
 
@@ -141,3 +157,46 @@ func test_expected_revision_mismatch_is_rejected() -> void:
 
 	assert_eq(result.code, "REVISION_MISMATCH")
 	assert_eq(save_port.save_calls, 0)
+
+
+func test_reversible_metadata_swaps_immediately_and_saves_after_one_second() -> void:
+	var save_port := FakeSavePort.new()
+	var clock := FakeClock.new()
+	var executor := _executor(save_port, {}, clock)
+	var command := _envelope({
+		"type": "set_formation",
+		"payload": {"hero_id": "hero-1"},
+		"business_key": "",
+	})
+
+	assert_true(executor.execute(command).ok)
+	assert_eq(executor.current_state().formation.front, "hero-1")
+	assert_eq(save_port.save_calls, 0)
+	clock.ticks = 999
+	assert_false(executor.poll_reversible_save())
+	clock.ticks = 1000
+	assert_true(executor.poll_reversible_save())
+	assert_eq(save_port.save_calls, 1)
+
+
+func test_durable_barrier_absorbs_and_cancels_pending_reversible_save() -> void:
+	var save_port := FakeSavePort.new()
+	var clock := FakeClock.new()
+	var executor := _executor(save_port, {}, clock)
+	executor.execute(_envelope({
+		"type": "set_formation",
+		"payload": {"hero_id": "hero-1"},
+		"business_key": "",
+	}))
+	var durable: Dictionary = executor.execute(_envelope({
+		"command_id": "command-2",
+		"expected_revision": 1,
+		"business_key": "recruit:2",
+	}))
+
+	assert_true(durable.ok)
+	assert_eq(save_port.saved_state.formation.front, "hero-1")
+	assert_eq(save_port.save_calls, 1)
+	clock.ticks = 2000
+	assert_false(executor.poll_reversible_save())
+	assert_eq(save_port.save_calls, 1)
