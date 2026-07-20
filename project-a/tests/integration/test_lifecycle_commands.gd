@@ -9,8 +9,10 @@ class FakeClock extends RefCounted:
 	var unix_seconds := 0
 	var ticks_msec := 0
 
+
 	func unix_time_seconds() -> int:
 		return unix_seconds
+
 
 	func monotonic_msec() -> int:
 		return ticks_msec
@@ -19,6 +21,7 @@ class FakeClock extends RefCounted:
 class FakeExecutor extends RefCounted:
 	var calls: Array[Dictionary] = []
 	var fail_next := false
+	var fail_all := false
 	var state := {
 		"offline_anchor_unix": 0,
 		"last_seen_wall_unix": 0,
@@ -26,15 +29,22 @@ class FakeExecutor extends RefCounted:
 		"credited_seconds": 0,
 	}
 
+
 	func execute_internal(
-		command_type: StringName, payload: Dictionary, business_key: String
+			command_type: StringName,
+			payload: Dictionary,
+			business_key: String,
 	) -> Dictionary:
 		calls.append(
-			{"type": command_type, "payload": payload.duplicate(true), "business_key": business_key}
+				{
+					"type": command_type,
+					"payload": payload.duplicate(true),
+					"business_key": business_key,
+				}
 		)
-		if fail_next:
+		if fail_all or fail_next:
 			fail_next = false
-			return {"ok": false, "code": "SAVE_FAILED"}
+			return { "ok": false, "code": "SAVE_FAILED" }
 		var now_unix := int(payload["now_unix"])
 		match command_type:
 			&"__lifecycle_pause_anchor", &"__lifecycle_heartbeat_anchor":
@@ -45,10 +55,11 @@ class FakeExecutor extends RefCounted:
 				state["credited_seconds"] += settlement["credited_seconds"]
 				state["offline_anchor_unix"] = settlement["effective_end"]
 				state["last_settled_unix"] = maxi(
-					state["last_settled_unix"], settlement["effective_end"]
+						state["last_settled_unix"],
+						settlement["effective_end"],
 				)
 				state["last_seen_wall_unix"] = maxi(state["last_seen_wall_unix"], now_unix)
-		return {"ok": true, "code": "OK"}
+		return { "ok": true, "code": "OK" }
 
 
 func test_pause_and_resume_forward_only_through_internal_executor() -> void:
@@ -64,9 +75,9 @@ func test_pause_and_resume_forward_only_through_internal_executor() -> void:
 	lifecycle._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
 	assert_eq(executor.calls.size(), 2)
 	assert_eq(executor.calls[0]["type"], &"__lifecycle_pause_anchor")
-	assert_eq(executor.calls[0]["payload"], {"now_unix": 10})
+	assert_eq(executor.calls[0]["payload"], { "now_unix": 10 })
 	assert_eq(executor.calls[1]["type"], &"__lifecycle_resume_settle")
-	assert_eq(executor.calls[1]["payload"], {"now_unix": 20})
+	assert_eq(executor.calls[1]["payload"], { "now_unix": 20 })
 
 
 func test_pause_and_resume_edges_each_debounce_for_two_hundred_fifty_msec() -> void:
@@ -151,3 +162,76 @@ func test_twenty_heartbeats_then_resume_credits_three_hundred_seconds_once() -> 
 	assert_eq(executor.state["credited_seconds"], 300)
 	assert_eq(executor.state["offline_anchor_unix"], 1_500)
 	assert_eq(executor.state["last_settled_unix"], 1_500)
+
+
+func test_failed_resume_blocks_heartbeat_until_original_settlement_retries() -> void:
+	var clock := FakeClock.new()
+	var executor := FakeExecutor.new()
+	executor.state["offline_anchor_unix"] = 100
+	var lifecycle: Node = add_child_autofree(AppLifecycleScript.new())
+	lifecycle.configure(executor, clock)
+	clock.unix_seconds = 400
+	clock.ticks_msec = 300
+	executor.fail_all = true
+	lifecycle._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+	assert_eq(executor.state["offline_anchor_unix"], 100)
+	clock.ticks_msec = 549
+	lifecycle._process(0.0)
+	assert_eq(executor.calls.size(), 1)
+	clock.ticks_msec = 550
+	lifecycle._process(0.0)
+	assert_eq(executor.calls.size(), 2)
+
+	clock.unix_seconds = 460
+	clock.ticks_msec = 60_300
+	assert_false(lifecycle.poll_heartbeat())
+	assert_eq(executor.state["offline_anchor_unix"], 100)
+	executor.fail_all = false
+	lifecycle._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+
+	assert_eq(executor.state["credited_seconds"], 300)
+	assert_eq(executor.state["offline_anchor_unix"], 400)
+	assert_eq(executor.state["last_settled_unix"], 400)
+	assert_eq(executor.calls.size(), 3)
+	assert_eq(executor.calls[0]["payload"], { "now_unix": 400 })
+	assert_eq(executor.calls[1]["payload"], { "now_unix": 400 })
+	assert_eq(executor.calls[2]["payload"], { "now_unix": 400 })
+	clock.unix_seconds = 520
+	clock.ticks_msec = 120_300
+	assert_true(lifecycle.poll_heartbeat())
+	assert_eq(executor.state["offline_anchor_unix"], 520)
+	assert_eq(executor.state["credited_seconds"], 300)
+
+
+func test_pause_settles_pending_resume_before_advancing_pause_anchor() -> void:
+	var clock := FakeClock.new()
+	var executor := FakeExecutor.new()
+	executor.state["offline_anchor_unix"] = 100
+	var lifecycle: Node = add_child_autofree(AppLifecycleScript.new())
+	lifecycle.configure(executor, clock)
+	clock.unix_seconds = 400
+	clock.ticks_msec = 300
+	executor.fail_all = true
+	lifecycle._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+
+	clock.unix_seconds = 460
+	clock.ticks_msec = 600
+	lifecycle._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	assert_eq(executor.calls.size(), 2)
+	assert_eq(executor.calls[1]["type"], &"__lifecycle_resume_settle")
+	assert_eq(executor.calls[1]["payload"], { "now_unix": 400 })
+	assert_eq(executor.state["offline_anchor_unix"], 100)
+	assert_eq(executor.state["credited_seconds"], 0)
+
+	executor.fail_all = false
+	clock.unix_seconds = 470
+	clock.ticks_msec = 850
+	lifecycle._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	assert_eq(executor.calls.size(), 4)
+	assert_eq(executor.calls[2]["type"], &"__lifecycle_resume_settle")
+	assert_eq(executor.calls[2]["payload"], { "now_unix": 400 })
+	assert_eq(executor.calls[3]["type"], &"__lifecycle_pause_anchor")
+	assert_eq(executor.calls[3]["payload"], { "now_unix": 470 })
+	assert_eq(executor.state["credited_seconds"], 300)
+	assert_eq(executor.state["last_settled_unix"], 400)
+	assert_eq(executor.state["offline_anchor_unix"], 470)

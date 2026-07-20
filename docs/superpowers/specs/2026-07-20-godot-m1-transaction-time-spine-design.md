@@ -79,9 +79,13 @@ The persistent key is always `revision`. Internal writer variables may use
 - `EPHEMERAL`.
 
 The command envelope cannot carry a durability override. Unknown commands
-return `UNKNOWN_COMMAND`. Internal lifecycle commands are callable only through
-`execute_internal`, which injects an executor-owned capability that ordinary
-callers cannot construct.
+return `UNKNOWN_COMMAND`. During the executor's one permitted configuration,
+its internal lifecycle gateway is transferred directly to the composition root;
+there is no later gateway factory, and reconfiguration is rejected. The public
+`execute_internal` entry always rejects calls. This capability boundary protects
+ordinary callers using supported interfaces; it does not claim isolation from
+hostile in-process GDScript reflection, for which Godot provides no private
+method or field enforcement.
 
 Durable execution is ordered as follows:
 

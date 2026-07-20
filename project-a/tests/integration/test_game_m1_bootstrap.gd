@@ -83,8 +83,9 @@ class FakeExecutor:
 		order = shared_order
 
 
-	func configure(_save_port: Variant, _clock: Variant, initial_state: Dictionary) -> void:
+	func configure(_save_port: Variant, _clock: Variant, initial_state: Dictionary) -> Dictionary:
 		state = initial_state.duplicate(true)
+		return { "ok": true, "code": "OK", "internal_gateway": self }
 
 
 	func current_state() -> Dictionary:
@@ -95,10 +96,6 @@ class FakeExecutor:
 		order.append("execute")
 		last_envelope = envelope.duplicate(true)
 		return execution_result.duplicate(true)
-
-
-	func _create_internal_gateway() -> RefCounted:
-		return self
 
 
 	func poll_reversible_save() -> bool:

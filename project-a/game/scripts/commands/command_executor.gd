@@ -32,20 +32,31 @@ var _reducers: Dictionary = {}
 var _internal_capability := RefCounted.new()
 var _reversible_pending := false
 var _reversible_due_msec := 0
+var _configured := false
 
 
-func configure(save_port: Variant, clock_port: Variant, initial_state: Dictionary) -> void:
+func configure(save_port: Variant, clock_port: Variant, initial_state: Dictionary) -> Dictionary:
+	if _configured:
+		return Result.failure("ALREADY_CONFIGURED")
 	_save_port = save_port
 	_clock_port = clock_port
 	_state = State.clone(initial_state)
 	if not _state.has("receipt_ledgers") or _state.receipt_ledgers.is_empty():
 		_state.receipt_ledgers = Ledger.create_empty()
 	_reversible_pending = false
+	_configured = true
+	return {
+		"ok": true,
+		"code": "OK",
+		"internal_gateway": InternalGateway.new(self, _internal_capability),
+	}
 
 
-func register_reducer(command_type: StringName, reducer: Callable) -> void:
-	if Registry.classify(command_type) != Registry.UNKNOWN:
-		_reducers[command_type] = reducer
+func register_reducer(command_type: StringName, reducer: Callable) -> bool:
+	if _configured or Registry.classify(command_type) == Registry.UNKNOWN:
+		return false
+	_reducers[command_type] = reducer
+	return true
 
 
 func current_state() -> Dictionary:
@@ -76,10 +87,6 @@ func execute_internal(
 	_business_key: String = ""
 ) -> Dictionary:
 	return Result.failure("INTERNAL_COMMAND_FORBIDDEN")
-
-
-func _create_internal_gateway() -> RefCounted:
-	return InternalGateway.new(self, _internal_capability)
 
 
 func _execute_internal_authorized(
@@ -155,7 +162,9 @@ func _execute(envelope: Dictionary, capability: Variant) -> Dictionary:
 		"requested_at": int(envelope.requested_at),
 		"command_type": str(command_type),
 	}
-	if command_class == Registry.REVERSIBLE_META:
+	if command_class == Registry.REVERSIBLE_META and not events.is_empty():
+		Ledger.record_causal(candidate, receipt)
+	elif command_class == Registry.REVERSIBLE_META:
 		Ledger.record_reversible(candidate, receipt)
 	else:
 		Ledger.record_value(candidate, receipt)

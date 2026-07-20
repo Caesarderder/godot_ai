@@ -5,6 +5,8 @@ const CommandExecutor := preload("res://game/scripts/commands/command_executor.g
 @warning_ignore("shadowed_global_identifier")
 const GameState := preload("res://game/scripts/state/game_state.gd")
 
+var _causal_reduction_count := 0
+
 
 class FakeClock:
 	extends RefCounted
@@ -61,10 +63,24 @@ func _formation_reducer(candidate: Dictionary, payload: Dictionary) -> Dictionar
 	return {"ok": true, "result": {"front": payload["hero_id"]}, "events": []}
 
 
+func _causal_formation_reducer(candidate: Dictionary, payload: Dictionary) -> Dictionary:
+	candidate["formation"]["front"] = str(payload["hero_id"])
+	var events: Array[Dictionary] = []
+	if bool(payload.get("causal", false)):
+		_causal_reduction_count += 1
+		events.append({
+			"event_id": "formation-causal-%d" % _causal_reduction_count,
+			"type": "formation_changed",
+			"amount": 1,
+		})
+	return {"ok": true, "result": {"front": payload["hero_id"]}, "events": events}
+
+
 func _executor(
 	save_port: FakeSavePort,
 	initial_state := {},
-	clock: FakeClock = null
+	clock: FakeClock = null,
+	formation_reducer: Callable = _formation_reducer,
 ) -> RefCounted:
 	var state: Dictionary = initial_state
 	if state.is_empty():
@@ -72,9 +88,9 @@ func _executor(
 	if clock == null:
 		clock = FakeClock.new()
 	var executor := CommandExecutor.new()
-	executor.configure(save_port, clock, state)
 	executor.register_reducer(&"recruit_hero", _coin_reducer)
-	executor.register_reducer(&"set_formation", _formation_reducer)
+	executor.register_reducer(&"set_formation", formation_reducer)
+	executor.configure(save_port, clock, state)
 	return executor
 
 
@@ -88,6 +104,21 @@ func test_unknown_and_internal_commands_are_rejected_without_saving() -> void:
 		"INTERNAL_COMMAND_FORBIDDEN"
 	)
 	assert_eq(save_port.save_calls, 0)
+
+
+func test_reducer_registry_is_frozen_after_configuration() -> void:
+	var save_port := FakeSavePort.new()
+	var executor := _executor(save_port)
+	executor.register_reducer(
+		&"recruit_hero",
+		func(_candidate: Dictionary, _payload: Dictionary) -> Dictionary:
+			return { "ok": false, "code": "OVERRIDDEN" },
+	)
+
+	var result: Dictionary = executor.execute(_envelope())
+
+	assert_true(result.ok)
+	assert_eq(result.result.coins, 5)
 
 
 func test_durable_command_saves_candidate_before_swapping_memory() -> void:
@@ -202,3 +233,47 @@ func test_durable_barrier_absorbs_and_cancels_pending_reversible_save() -> void:
 	clock.ticks = 2000
 	assert_false(executor.poll_reversible_save())
 	assert_eq(save_port.save_calls, 1)
+
+
+func test_causal_reversible_receipt_survives_six_hundred_later_commands() -> void:
+	_causal_reduction_count = 0
+	var save_port := FakeSavePort.new()
+	var state: Dictionary = GameState.create_new(100, "save-1", 7)
+	state["quest"] = {
+		"quests": {
+			"formation-task": {
+				"event_type": "formation_changed",
+				"progress": 0,
+				"target": 10,
+				"terminal": false,
+				"consumed_event_ids": [],
+			}
+		}
+	}
+	var executor := _executor(save_port, state, null, _causal_formation_reducer)
+	var first_command := _envelope({
+		"command_id": "causal-formation",
+		"type": "set_formation",
+		"payload": {"hero_id": "hero-causal", "causal": true},
+		"business_key": "",
+	})
+	assert_true(executor.execute(first_command).ok)
+	for index: int in range(600):
+		var filler := _envelope({
+			"command_id": "formation-%d" % index,
+			"type": "set_formation",
+			"payload": {"hero_id": "hero-%d" % index},
+			"business_key": "",
+			"expected_revision": index + 1,
+		})
+		assert_true(executor.execute(filler).ok, "filler %d" % index)
+	var replay: Dictionary = executor.execute(
+		first_command.merged({"expected_revision": 601}, true)
+	)
+	assert_true(replay.ok)
+	assert_eq(_causal_reduction_count, 1)
+	assert_eq(
+		executor.current_state().quest.quests["formation-task"].progress,
+		1
+	)
+	assert_eq(executor.current_state().revision, 601)

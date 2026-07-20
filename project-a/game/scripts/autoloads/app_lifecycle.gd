@@ -18,6 +18,10 @@ var _last_heartbeat_msec := 0
 var _pause_retry_pending := false
 var _pause_retry_deadline_msec := 0
 var _pause_retry_next_msec := 0
+var _resume_retry_pending := false
+var _resume_retry_deadline_msec := 0
+var _resume_retry_next_msec := 0
+var _resume_retry_unix := 0
 
 
 func configure(executor: Object, clock: Object) -> void:
@@ -27,11 +31,14 @@ func configure(executor: Object, clock: Object) -> void:
 	_last_resume_edge_msec = -1
 	_last_heartbeat_msec = _monotonic_msec()
 	_pause_retry_pending = false
+	_resume_retry_pending = false
 	set_process(true)
 
 
 func poll_heartbeat() -> bool:
 	if _executor == null or _clock == null:
+		return false
+	if _resume_retry_pending:
 		return false
 	var current_msec := _monotonic_msec()
 	var elapsed_msec := current_msec - _last_heartbeat_msec
@@ -44,6 +51,7 @@ func poll_heartbeat() -> bool:
 
 
 func _process(_delta: float) -> void:
+	_poll_resume_retry()
 	_poll_pause_retry()
 	poll_heartbeat()
 
@@ -52,13 +60,22 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_APPLICATION_PAUSED:
 			if _accept_edge(true):
+				if _resume_retry_pending and not _retry_resume_settlement():
+					application_paused.emit()
+					return
 				if not _execute_internal(&"__lifecycle_pause_anchor"):
 					_schedule_pause_retry()
 				application_paused.emit()
 		NOTIFICATION_APPLICATION_RESUMED:
 			if _accept_edge(false):
-				_execute_internal(&"__lifecycle_resume_settle")
-				_last_heartbeat_msec = _monotonic_msec()
+				if _resume_retry_pending:
+					_retry_resume_settlement()
+				else:
+					var now_unix := int(_clock.call("unix_time_seconds"))
+					if _execute_internal_at(&"__lifecycle_resume_settle", now_unix):
+						_last_heartbeat_msec = _monotonic_msec()
+					else:
+						_schedule_resume_retry(now_unix)
 				application_resumed.emit()
 		NOTIFICATION_WM_CLOSE_REQUEST:
 			application_close_requested.emit()
@@ -72,8 +89,7 @@ func _accept_edge(is_pause: bool) -> bool:
 	var current_msec := _monotonic_msec()
 	var previous_msec := _last_pause_edge_msec if is_pause else _last_resume_edge_msec
 	if (
-		previous_msec >= 0
-		and current_msec >= previous_msec
+		previous_msec >= 0 and current_msec >= previous_msec
 		and current_msec - previous_msec < EDGE_DEBOUNCE_MSEC
 	):
 		return false
@@ -88,9 +104,16 @@ func _execute_internal(command_type: StringName) -> bool:
 	if _executor == null or _clock == null:
 		return false
 	var now_unix := int(_clock.call("unix_time_seconds"))
+	return _execute_internal_at(command_type, now_unix)
+
+
+func _execute_internal_at(command_type: StringName, now_unix: int) -> bool:
 	var business_key := "lifecycle:%s:%d" % [String(command_type), now_unix]
 	var raw_result: Variant = _executor.call(
-		"execute_internal", command_type, {"now_unix": now_unix}, business_key
+			"execute_internal",
+			command_type,
+			{ "now_unix": now_unix },
+			business_key,
 	)
 	if not raw_result is Dictionary:
 		return false
@@ -118,6 +141,34 @@ func _poll_pause_retry() -> void:
 		_pause_retry_pending = false
 	else:
 		_pause_retry_next_msec = current_msec + PAUSE_RETRY_INTERVAL_MSEC
+
+
+func _schedule_resume_retry(now_unix: int) -> void:
+	var current_msec := _monotonic_msec()
+	_resume_retry_pending = true
+	_resume_retry_unix = now_unix
+	_resume_retry_next_msec = current_msec + PAUSE_RETRY_INTERVAL_MSEC
+	_resume_retry_deadline_msec = current_msec + PAUSE_RETRY_BUDGET_MSEC
+
+
+func _poll_resume_retry() -> void:
+	if not _resume_retry_pending:
+		return
+	var current_msec := _monotonic_msec()
+	if current_msec > _resume_retry_deadline_msec:
+		return
+	if current_msec < _resume_retry_next_msec:
+		return
+	if not _retry_resume_settlement():
+		_resume_retry_next_msec = current_msec + PAUSE_RETRY_INTERVAL_MSEC
+
+
+func _retry_resume_settlement() -> bool:
+	if not _execute_internal_at(&"__lifecycle_resume_settle", _resume_retry_unix):
+		return false
+	_resume_retry_pending = false
+	_last_heartbeat_msec = _monotonic_msec()
+	return true
 
 
 func _monotonic_msec() -> int:

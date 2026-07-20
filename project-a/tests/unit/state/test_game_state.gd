@@ -103,3 +103,33 @@ func test_validate_rejects_missing_and_negative_revision() -> void:
 
 	state.revision = -1
 	assert_eq(GameState.validate(state), { "ok": false, "code": "INVALID_REVISION" })
+
+
+func test_validate_rejects_wrong_top_level_types_versions_and_times() -> void:
+	var state := GameState.create_new(100, "save-alpha", 42)
+	state.economy = "not-a-container"
+	assert_eq(GameState.validate(state).code, "INVALID_CONTAINER")
+	state.economy = { }
+	state.schema_version = 2
+	assert_eq(GameState.validate(state).code, "INVALID_SCHEMA_VERSION")
+	state.schema_version = 1
+	state.saved_at_unix = -1
+	assert_eq(GameState.validate(state).code, "INVALID_TIME")
+	state.saved_at_unix = 0
+	state.save_id = ""
+	assert_eq(GameState.validate(state).code, "INVALID_IDENTITY")
+
+
+func test_validate_rejects_malformed_receipt_ledger_shape() -> void:
+	var state := GameState.create_new(100, "save-alpha", 42)
+	state.receipt_ledgers = {
+		"value_by_command": [],
+		"value_by_business": { },
+		"causal_by_command": { },
+		"causal_by_business": { },
+		"reversible_by_command": { },
+		"reversible_by_business": { },
+		"reversible_order": [],
+	}
+
+	assert_eq(GameState.validate(state).code, "INVALID_RECEIPT_LEDGERS")

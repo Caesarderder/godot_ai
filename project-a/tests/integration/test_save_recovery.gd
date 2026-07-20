@@ -69,6 +69,20 @@ func test_invalid_backup_is_not_restored() -> void:
 	assert_eq(FileAccess.get_file_as_string(_base_path.path_join("save_v1.json")), corrupt)
 
 
+func test_semantically_invalid_primary_restores_valid_backup() -> void:
+	var invalid_primary := _state(9, "primary")
+	invalid_primary.economy = "not-a-container"
+	var backup := _state(7, "backup")
+	_write(_base_path.path_join("save_v1.json"), JSON.stringify(invalid_primary))
+	_write(_base_path.path_join("save_v1.json.bak"), SaveCodec.encode(backup))
+
+	var loaded: Dictionary = _manager.load_state()
+
+	assert_true(loaded.ok)
+	assert_eq(loaded.code, "RECOVERED_BACKUP")
+	assert_eq(loaded.state, backup)
+
+
 func test_save_candidate_flushes_installs_and_backs_up_previous_primary() -> void:
 	var first := _state(1, "save-alpha")
 	var second := _state(2, "save-alpha")

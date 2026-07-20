@@ -69,10 +69,13 @@ func configure_dependencies(
 			return _failure("FIRST_SAVE_FAILED", str(first_save.get("code", "")))
 		initial_state = Dictionary(first_save.get("state", initial_state)).duplicate(true)
 
-	_executor.configure(_save_port, _clock, initial_state)
+	var executor_configuration: Variant = _executor.configure(_save_port, _clock, initial_state)
 	var lifecycle_executor: Variant = _executor
-	if _executor.has_method("_create_internal_gateway"):
-		lifecycle_executor = _executor._create_internal_gateway()
+	if executor_configuration is Dictionary:
+		if not executor_configuration.get("ok", false):
+			_bootstrap_started = false
+			return _failure("EXECUTOR_CONFIGURATION_FAILED")
+		lifecycle_executor = executor_configuration.get("internal_gateway", _executor)
 	_lifecycle.configure(lifecycle_executor, _clock)
 	has_booted = true
 	_event_bus.emit_domain_event(

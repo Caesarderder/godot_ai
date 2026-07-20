@@ -34,12 +34,12 @@ func _configured() -> Dictionary:
 	var save_port := FakeSavePort.new()
 	var state := GameState.create_new(0, "save-1", 7)
 	var executor := CommandExecutor.new()
-	executor.configure(save_port, clock, state)
+	var configured: Dictionary = executor.configure(save_port, clock, state)
 	return {
 		"clock": clock,
 		"save_port": save_port,
 		"executor": executor,
-		"gateway": executor._create_internal_gateway(),
+		"gateway": configured.get("internal_gateway"),
 	}
 
 
@@ -51,6 +51,22 @@ func test_executor_public_api_does_not_authorize_internal_commands() -> void:
 	)
 
 	assert_eq(result.code, "INTERNAL_COMMAND_FORBIDDEN")
+	assert_false(executor.has_method("_create_internal_gateway"))
+
+
+func test_internal_gateway_is_transferred_only_during_initial_configuration() -> void:
+	var context := _configured()
+	assert_not_null(context.gateway)
+
+	var repeated: Dictionary = context.executor.configure(
+		context.save_port,
+		context.clock,
+		GameState.create_new(0, "replacement", 8),
+	)
+
+	assert_false(repeated.ok)
+	assert_eq(repeated.code, "ALREADY_CONFIGURED")
+	assert_false(repeated.has("internal_gateway"))
 
 
 func test_twenty_heartbeats_and_five_minutes_credit_once_after_restart_safe_receipt() -> void:

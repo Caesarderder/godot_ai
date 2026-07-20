@@ -34,8 +34,8 @@ func _reducer(candidate: Dictionary, _payload: Dictionary) -> Dictionary:
 
 func _new_executor(port: InstalledSavePort, state: Dictionary) -> RefCounted:
 	var executor := CommandExecutor.new()
-	executor.configure(port, FixedClock.new(), state)
 	executor.register_reducer(&"claim_reward", _reducer)
+	executor.configure(port, FixedClock.new(), state)
 	return executor
 
 
