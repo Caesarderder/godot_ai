@@ -1,6 +1,7 @@
 extends GutTest
 
 const GameScript := preload("res://game/scripts/autoloads/game.gd")
+@warning_ignore("shadowed_global_identifier")
 const GameState := preload("res://game/scripts/state/game_state.gd")
 
 
@@ -75,6 +76,7 @@ class FakeExecutor:
 	var execution_result := { "ok": true, "code": "OK", "result": { "gold": 5 } }
 	var last_envelope: Dictionary = { }
 	var order: Array[String]
+	var poll_calls := 0
 
 
 	func _init(shared_order: Array[String]) -> void:
@@ -97,6 +99,11 @@ class FakeExecutor:
 
 	func _create_internal_gateway() -> RefCounted:
 		return self
+
+
+	func poll_reversible_save() -> bool:
+		poll_calls += 1
+		return true
 
 
 func test_first_boot_durably_saves_before_game_ready_without_offline_credit() -> void:
@@ -219,3 +226,24 @@ func test_execute_command_is_a_facade_and_emits_only_after_success() -> void:
 	executor.execution_result = { "ok": false, "code": "SAVE_FAILED", "result": { } }
 	game.execute_command(envelope)
 	assert_eq(events.events.size(), 1)
+
+
+func test_process_polls_pending_reversible_save_after_boot() -> void:
+	var order: Array[String] = []
+	var existing := GameState.create_new(500, "existing", 77)
+	var save_port := FakeSavePort.new(order)
+	save_port.load_result = { "ok": true, "state": existing, "code": "OK" }
+	var executor := FakeExecutor.new(order)
+	var game: Node = autofree(GameScript.new())
+	var configured: Dictionary = game.configure_dependencies(
+		FakeClock.new(),
+		save_port,
+		FakeEventBus.new(order),
+		FakeLifecycle.new(),
+		executor,
+	)
+	assert_true(configured.ok)
+
+	game._process(0.0)
+
+	assert_eq(executor.poll_calls, 1)

@@ -1,6 +1,7 @@
 extends GutTest
 
 const AppLifecycleScript := preload("res://game/scripts/autoloads/app_lifecycle.gd")
+@warning_ignore("shadowed_global_identifier")
 const OfflineSettlement := preload("res://game/scripts/domain/idle/offline_settlement.gd")
 
 

@@ -1,6 +1,8 @@
 extends GutTest
 
+@warning_ignore("shadowed_global_identifier")
 const GameState := preload("res://game/scripts/state/game_state.gd")
+@warning_ignore("shadowed_global_identifier")
 const SaveCodec := preload("res://game/scripts/persistence/save_codec.gd")
 const SaveManagerScript := preload("res://game/scripts/autoloads/save_manager.gd")
 

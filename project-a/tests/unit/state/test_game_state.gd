@@ -1,5 +1,6 @@
 extends GutTest
 
+@warning_ignore("shadowed_global_identifier")
 const GameState := preload("res://game/scripts/state/game_state.gd")
 
 const EXPECTED_KEYS := [

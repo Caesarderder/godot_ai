@@ -2,6 +2,7 @@ extends Node
 
 signal save_requested(reason: StringName)
 
+@warning_ignore("shadowed_global_identifier")
 const SaveCodec := preload("res://game/scripts/persistence/save_codec.gd")
 
 const SAVE_PATH := "user://save_v1.json"

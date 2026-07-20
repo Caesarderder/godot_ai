@@ -28,6 +28,11 @@ func _ready() -> void:
 	)
 
 
+func _process(_delta: float) -> void:
+	if has_booted and _executor != null and _executor.has_method("poll_reversible_save"):
+		_executor.poll_reversible_save()
+
+
 func configure_dependencies(
 		clock: Variant,
 		save_port: Variant,

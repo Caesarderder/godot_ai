@@ -1,5 +1,6 @@
 extends GutTest
 
+@warning_ignore("shadowed_global_identifier")
 const QuestReducer := preload("res://game/scripts/domain/quests/quest_reducer.gd")
 
 

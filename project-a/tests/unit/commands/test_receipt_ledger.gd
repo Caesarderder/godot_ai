@@ -1,5 +1,6 @@
 extends GutTest
 
+@warning_ignore("shadowed_global_identifier")
 const ReceiptLedger := preload("res://game/scripts/state/receipt_ledger.gd")
 
 

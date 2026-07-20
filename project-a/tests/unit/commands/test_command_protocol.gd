@@ -1,8 +1,10 @@
 extends GutTest
 
+@warning_ignore("shadowed_global_identifier")
 const CommandClassRegistry := preload(
 	"res://game/scripts/commands/command_class_registry.gd"
 )
+@warning_ignore("shadowed_global_identifier")
 const CommandFingerprint := preload("res://game/scripts/commands/command_fingerprint.gd")
 
 

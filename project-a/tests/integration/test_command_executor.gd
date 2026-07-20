@@ -1,6 +1,8 @@
 extends GutTest
 
+@warning_ignore("shadowed_global_identifier")
 const CommandExecutor := preload("res://game/scripts/commands/command_executor.gd")
+@warning_ignore("shadowed_global_identifier")
 const GameState := preload("res://game/scripts/state/game_state.gd")
 
 
@@ -119,11 +121,11 @@ func test_duplicate_returns_original_receipt_without_saving_again() -> void:
 	var save_port := FakeSavePort.new()
 	var executor := _executor(save_port)
 	var first: Dictionary = executor.execute(_envelope())
-	var duplicate: Dictionary = executor.execute(_envelope({"expected_revision": 1}))
+	var replayed: Dictionary = executor.execute(_envelope({"expected_revision": 1}))
 
 	assert_true(first.ok)
-	assert_true(duplicate.ok)
-	assert_eq(duplicate.result, first.result)
+	assert_true(replayed.ok)
+	assert_eq(replayed.result, first.result)
 	assert_eq(save_port.save_calls, 1)
 	assert_eq(executor.current_state().economy.coins, 5)
 

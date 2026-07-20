@@ -1,6 +1,8 @@
 extends GutTest
 
+@warning_ignore("shadowed_global_identifier")
 const CommandExecutor := preload("res://game/scripts/commands/command_executor.gd")
+@warning_ignore("shadowed_global_identifier")
 const GameState := preload("res://game/scripts/state/game_state.gd")
 
 
