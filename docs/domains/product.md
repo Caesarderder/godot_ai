@@ -4,13 +4,17 @@ km_type: domain
 domain: product
 status: active
 owner: product-design
-last_verified: 2026-07-17
+last_verified: 2026-07-23
 source_of_truth:
   - .omx/specs/deep-interview-fantasy-idle-expedition.md
   - .omx/plans/prd-fantasy-idle-expedition.md
+  - docs/references/product-design/skibidi-toilet-idle-siege-gdd.md
+  - docs/references/product-design/skibidi-toilet-lore-research.md
 validated_by:
   - deep-interview
   - ralplan-consensus
+  - user-confirmed-design-session
+  - python3 tools/docs_lint.py
 tags:
   - domain:product
   - decision:core-loop
@@ -19,6 +23,8 @@ related:
   - domain.equipment-economy
   - domain.camp-quests
   - reference.product-boundaries
+  - reference.skibidi-toilet-idle-siege-gdd
+  - reference.skibidi-toilet-lore-research
 ---
 
 # 产品领域
@@ -49,6 +55,10 @@ related:
 ## 入口
 
 [KM:reference.product-boundaries](../references/constraints/product-boundaries.md)、[KM:reference.first-30m-contract](../references/constraints/first-30m-contract.md)。
+
+## 分支级候选方向
+
+`codex/toilet-man-3d-idle` 上的公开免费 Web 同人游戏方向仍处于策划草案状态，不替换本节点记录的当前奇幻产品事实。已确认的工厂生产、永久合成、六人自走棋攻城和主动技能契约见 [KM:reference.skibidi-toilet-idle-siege-gdd](../references/product-design/skibidi-toilet-idle-siege-gdd.md)；原作世界观、故事阶段、阵营关系、角色与形态边界见 [KM:reference.skibidi-toilet-lore-research](../references/product-design/skibidi-toilet-lore-research.md)。
 
 ## 验证
 
