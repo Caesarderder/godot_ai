@@ -29,7 +29,7 @@ related:
 
 ## Global Constraints
 
-- Work only in `project-a/game/**`, `project-a/tests/**`, and this plan's evidence; do not change the declared TapTap/Godot route.
+- Work only in `project-a/game/**`, `project-a/tests/**`, and this plan's evidence; ADR-0005 fixes Godot as the current route, while `taptap/**` remains an out-of-scope paused prototype.
 - Do not modify `project-a/addons/godot_ai/**`.
 - Preserve existing unrelated worktree changes, including `project-a/project.godot`.
 - Persist only null/bool/int/String/Array/string-key Dictionary values; never persist Node or Resource.

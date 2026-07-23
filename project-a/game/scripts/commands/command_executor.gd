@@ -7,6 +7,7 @@ const Result := preload("res://game/scripts/commands/command_result.gd")
 const State := preload("res://game/scripts/state/game_state.gd")
 const Ledger := preload("res://game/scripts/state/receipt_ledger.gd")
 const Quests := preload("res://game/scripts/domain/quests/quest_reducer.gd")
+const M4Reducers := preload("res://game/scripts/commands/m4_command_reducers.gd")
 
 class InternalGateway extends RefCounted:
 	var _executor: RefCounted
@@ -43,6 +44,7 @@ func configure(save_port: Variant, clock_port: Variant, initial_state: Dictionar
 	_state = State.clone(initial_state)
 	if not _state.has("receipt_ledgers") or _state.receipt_ledgers.is_empty():
 		_state.receipt_ledgers = Ledger.create_empty()
+	_register_builtin_reducers()
 	_reversible_pending = false
 	_configured = true
 	return {
@@ -122,8 +124,6 @@ func _execute(envelope: Dictionary, capability: Variant) -> Dictionary:
 	if command_class == Registry.INTERNAL_DURABLE:
 		if not capability is RefCounted or capability != _internal_capability:
 			return Result.failure("INTERNAL_COMMAND_FORBIDDEN")
-	if int(envelope.expected_revision) != int(_state.get("revision", 0)):
-		return Result.failure("REVISION_MISMATCH")
 
 	var fingerprint_result := Fingerprint.calculate(
 		str(command_type), envelope.payload, str(envelope.business_key)
@@ -142,6 +142,8 @@ func _execute(envelope: Dictionary, capability: Variant) -> Dictionary:
 		return Result.success(prior.get("result", {}), prior)
 	if replay.status != Ledger.STATUS_MISS:
 		return Result.failure(str(replay.status))
+	if int(envelope.expected_revision) != int(_state.get("revision", 0)):
+		return Result.failure("REVISION_MISMATCH")
 
 	if command_class == Registry.EPHEMERAL:
 		return _execute_ephemeral(command_type, envelope.payload)
@@ -288,3 +290,15 @@ func _monotonic_msec() -> int:
 	if _clock_port.has_method("monotonic_msec"):
 		return int(_clock_port.monotonic_msec())
 	return _now_unix() * 1000
+
+
+func _register_builtin_reducers() -> void:
+	for command_type: StringName in M4Reducers.supported_commands():
+		_register_builtin_reducer(command_type)
+
+
+func _register_builtin_reducer(command_type: StringName) -> void:
+	if _reducers.has(command_type):
+		return
+	_reducers[command_type] = func(candidate: Dictionary, payload: Dictionary) -> Dictionary:
+		return M4Reducers.reduce(command_type, candidate, payload)

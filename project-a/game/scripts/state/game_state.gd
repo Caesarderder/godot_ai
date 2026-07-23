@@ -1,6 +1,12 @@
 class_name GameState
 extends RefCounted
 
+const CampService := preload("res://game/scripts/domain/camp/camp_service.gd")
+const QuestService := preload("res://game/scripts/domain/quests/quest_service.gd")
+const HeroGenerator := preload("res://game/scripts/domain/heroes/hero_generator.gd")
+const FormationReducer := preload("res://game/scripts/domain/formation/formation_reducer.gd")
+const PityState := preload("res://game/scripts/domain/loot/pity_state.gd")
+
 const SCHEMA_VERSION := 1
 const CONTENT_VERSION := 1
 
@@ -56,19 +62,28 @@ const TIME_KEYS := [
 
 
 static func create_new(now_unix: int, save_id: String, run_seed: int) -> Dictionary:
+	var roster := _initial_roster(run_seed)
 	return {
 		"schema_version": SCHEMA_VERSION,
 		"content_version": CONTENT_VERSION,
 		"save_id": save_id,
 		"run_seed": run_seed,
 		"revision": 0,
-		"roster": { },
-		"inventory": { },
-		"formation": { },
-		"economy": { },
-		"camp": { },
-		"quest": { },
-		"pity": { },
+		"roster": roster,
+		"inventory": { "items": { } },
+		"formation": { "slots": _initial_formation(roster) },
+		"economy": {
+			"gold": 250,
+			"recruit_ticket": 4,
+			"xp_book": 2,
+			"forge_stone": 0,
+			"recruit_tickets": 4,
+			"experience_books": 2,
+			"forge_stones": 0,
+		},
+		"camp": { "facilities": CampService.create_default() },
+		"quest": QuestService.create_default(),
+		"pity": PityState.create_empty(),
 		"stage_progress": { },
 		"attempt_counters": { },
 		"receipt_ledgers": { },
@@ -81,6 +96,23 @@ static func create_new(now_unix: int, save_id: String, run_seed: int) -> Diction
 
 static func clone(state: Dictionary) -> Dictionary:
 	return state.duplicate(true)
+
+
+static func _initial_roster(run_seed: int) -> Dictionary:
+	var roster: Dictionary = {}
+	for hero: Dictionary in HeroGenerator.generate_roster(run_seed, 4):
+		hero["equipment"] = {}
+		roster[str(hero.id)] = hero
+	return roster
+
+
+static func _initial_formation(roster: Dictionary) -> Dictionary:
+	var hero_ids: Array = roster.keys()
+	hero_ids.sort()
+	var slots: Dictionary = {}
+	for index: int in FormationReducer.SLOT_ORDER.size():
+		slots[FormationReducer.SLOT_ORDER[index]] = str(hero_ids[index])
+	return slots
 
 
 static func validate(state: Dictionary) -> Dictionary:

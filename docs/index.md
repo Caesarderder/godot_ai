@@ -21,7 +21,7 @@ related:
 
 # 项目知识地图
 
-这是人和智能体共用的中文工作环境。当前开发根已经迁移到 `taptap/` TapTap Maker 2D 工程；该工程已有自动战斗、离线收益、培养、薄锻造所和手机 UI 可玩基线。`project-a/` 的 Godot M0 保留为历史验证基线，随机英雄、四槽编队、随机装备与任务营地仍按后续里程碑推进。
+这是人和智能体共用的中文工作环境。当前开发根是 `project-a/` Godot 4.7.1 纯 2D 工程；M1-M5 的规划、实现、测试与验证统一落在该工程。`taptap/` Maker 原型暂时搁置，只保留历史参考，不得作为当前功能事实或验收入口。
 
 ## 先读顺序
 
@@ -53,4 +53,4 @@ related:
 5. ADR 与 memory。
 6. 叙述性说明和规划草稿。
 
-当前可玩实现以 [CODE:taptap-entry](../taptap/scripts/main.lua)、[CODE:taptap-state](../taptap/scripts/game/GameState.lua) 和 [CODE:taptap-ui](../taptap/scripts/ui/GameUI.lua) 为事实源，提交与构建以 TapTap MCP 返回结果为准。Godot 历史 M0 仍以 [CODE:m0-verifier](../project-a/tools/verify_m0.sh) 为事实源；未落地玩法继续以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据。
+当前实现以 `project-a/project.godot`、`project-a/game/**`、`project-a/tests/**` 和 [CODE:m0-verifier](../project-a/tools/verify_m0.sh) 为代码与验证事实源；未落地玩法继续以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为规划证据。暂停的 `taptap/` 内容不得覆盖 Godot 路线事实。

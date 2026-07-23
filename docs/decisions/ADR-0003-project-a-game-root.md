@@ -15,6 +15,7 @@ tags:
   - risk:worktree-boundary
 related:
   - decision.taptap-maker-game-root
+  - decision.godot-game-root-restored
   - reference.architecture-overview
   - reference.file-ownership
   - reference.implementation-status
@@ -24,7 +25,7 @@ related:
 
 ## 状态
 
-Deprecated，2026-07-20。历史决策保留；当前实现根由 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 替代。
+Deprecated，2026-07-20。历史上曾由 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 替代；其 `project-a/` 路径结论已由 [KM:decision.godot-game-root-restored](ADR-0005-godot-game-root-restored.md) 重新确认。
 
 ## 决策
 
@@ -41,7 +42,7 @@ Deprecated，2026-07-20。历史决策保留；当前实现根由 [KM:decision.t
 - M0 从“新建工程”改为“在现有工程建立玩法 shell”。
 - 保护边界从整个 `project-a/**` 收窄为现有 addon 和未分配用户路径。
 - 所有 Godot/GUT/Android 命令使用 `--path project-a`。
-- 当前 gameplay/test/tool 路径仍未创建，因此相关实现节点保持 `draft`。
+- M1-M5 的规划、实现、测试和验证统一落在 `project-a/`；具体完成状态以实现状态索引和真实测试证据为准。
 
 ## 相关节点
 

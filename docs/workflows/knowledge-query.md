@@ -4,7 +4,7 @@ km_type: workflow
 domain: workflow
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-21
 source_of_truth:
   - docs/index.md
   - docs/map/index.md
@@ -31,7 +31,7 @@ related:
 
 1. 读 [KM:map.control-index](../map/index.md) 和 [KM:invariant.project-boundaries](../map/invariants.md)。
 2. 在 [KM:map.domains](../map/domains.md) 选择一个主领域。
-3. 优先读取实现索引和 `taptap/scripts/**` 当前代码；只有查询历史 M0/工具插件时才进入 `project-a/**`。当前 Maker 领域路径不存在时再读取规划参考。
+3. 优先读取实现索引和 `project-a/game/**`、`project-a/tests/**` 当前代码；只有明确查询暂停原型时才进入 `taptap/**`。Godot 领域路径不存在时再读取规划参考。
 4. 发现冲突时按事实优先级报告，不静默拼接。
 5. 回答中明确状态：`active`、`draft`、`stale` 或待用户确认。
 

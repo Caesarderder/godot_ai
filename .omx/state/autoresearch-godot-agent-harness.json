@@ -1,0 +1,7 @@
+{
+  "validation_mode": "prompt-architect-artifact",
+  "completion_artifact_path": ".omx/specs/autoresearch-godot-agent-harness/result.json",
+  "validator_prompt": "Review the Godot agent-first harness report for factual grounding, Godot-specific correctness, bounded vibecoding scope, executable feedback loops, testability, recovery, and repository-boundary compliance. Approve only if the architecture is implementable and the report clearly separates facts from recommendations.",
+  "output_artifact_path": ".omx/specs/autoresearch-godot-agent-harness/report.md",
+  "status": "complete"
+}

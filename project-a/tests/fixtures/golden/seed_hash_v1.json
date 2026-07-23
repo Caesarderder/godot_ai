@@ -1,0 +1,10 @@
+{
+  "parts": ["battle-seed-v1", "content-v1", "stage-1-3", "0", "onboarding-v1"],
+  "sha256": "871416107395887412f0fe2604e0bc00d5c958abe112a670d82455031480b532",
+  "signed_seed": "-8713315119140599692",
+  "stage_1_5": {
+    "parts": ["battle-seed-v1", "content-v1", "stage-1-5", "0", "onboarding-v1"],
+    "sha256": "7c3345f99bb534e9fc0affe8e81ca5250ce492daaadc6d487d801f3c6b380be2",
+    "signed_seed": "8949573822876824809"
+  }
+}

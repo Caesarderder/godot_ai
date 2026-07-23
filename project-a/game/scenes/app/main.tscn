@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://game/scripts/app/safe_area_container.gd" id="1_safe"]
 [ext_resource type="Script" path="res://game/scripts/app/main_screen.gd" id="2_main"]
+[ext_resource type="Script" path="res://game/scripts/presentation/battle_arena.gd" id="3_arena"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -34,65 +35,180 @@ theme_override_constants/margin_right = 48
 theme_override_constants/margin_bottom = 48
 script = ExtResource("1_safe")
 
-[node name="Content" type="VBoxContainer" parent="SafeArea"]
+[node name="BattleScreen" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="SafeArea/Content"]
+[node name="Header" type="HBoxContainer" parent="SafeArea/BattleScreen"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 54
-text = "奇幻放置远征队"
+
+[node name="Title" type="Label" parent="SafeArea/BattleScreen/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.94, 0.82, 0.48, 1)
+theme_override_font_sizes/font_size = 42
+text = "远征战场"
+
+[node name="Phase" type="Label" parent="SafeArea/BattleScreen/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.72, 0.91, 1)
+theme_override_font_sizes/font_size = 24
+text = "M3 · 自动战斗"
+vertical_alignment = 1
+
+[node name="StageSelector" type="HBoxContainer" parent="SafeArea/BattleScreen"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Stage11" type="Button" parent="SafeArea/BattleScreen/StageSelector"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "1-1"
+
+[node name="Stage12" type="Button" parent="SafeArea/BattleScreen/StageSelector"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "1-2"
+
+[node name="Stage13" type="Button" parent="SafeArea/BattleScreen/StageSelector"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "1-3"
+
+[node name="Stage14" type="Button" parent="SafeArea/BattleScreen/StageSelector"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "1-4"
+
+[node name="Stage15" type="Button" parent="SafeArea/BattleScreen/StageSelector"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "1-5"
+
+[node name="Arena" type="Control" parent="SafeArea/BattleScreen"]
+custom_minimum_size = Vector2(0, 660)
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("3_arena")
+
+[node name="BattleInfo" type="PanelContainer" parent="SafeArea/BattleScreen"]
+layout_mode = 2
+
+[node name="InfoRows" type="VBoxContainer" parent="SafeArea/BattleScreen/BattleInfo"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StageName" type="Label" parent="SafeArea/BattleScreen/BattleInfo/InfoRows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "关卡 1-1 · 边境遭遇"
 horizontal_alignment = 1
+
+[node name="Status" type="Label" parent="SafeArea/BattleScreen/BattleInfo/InfoRows"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.8, 0.91, 1)
+theme_override_font_sizes/font_size = 23
+text = "选择关卡后开始自动战斗"
+horizontal_alignment = 1
+
+[node name="ActionButtons" type="HBoxContainer" parent="SafeArea/BattleScreen"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StartButton" type="Button" parent="SafeArea/BattleScreen/ActionButtons"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "开始战斗"
+
+[node name="FormationButton" type="Button" parent="SafeArea/BattleScreen/ActionButtons"]
+visible = false
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+text = "调整编队再战"
+
+[node name="FormationHint" type="Label" parent="SafeArea/BattleScreen"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.33, 1)
+theme_override_font_sizes/font_size = 21
+text = "提示：让守护者站前排，保护主力输出。"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="LogPanel" type="PanelContainer" parent="SafeArea/BattleScreen"]
+custom_minimum_size = Vector2(0, 230)
+layout_mode = 2
+
+[node name="LogRows" type="VBoxContainer" parent="SafeArea/BattleScreen/LogPanel"]
+layout_mode = 2
+
+[node name="LogTitle" type="Label" parent="SafeArea/BattleScreen/LogPanel/LogRows"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.82, 0.48, 1)
+theme_override_font_sizes/font_size = 22
+text = "战斗日志"
+
+[node name="BattleLog" type="RichTextLabel" parent="SafeArea/BattleScreen/LogPanel/LogRows"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.7, 0.78, 0.88, 1)
+theme_override_font_sizes/normal_font_size = 19
+bbcode_enabled = true
+text = "等待远征指令……"
+fit_content = false
+scroll_active = true
+scroll_following = true
+
+; Kept as a hidden compatibility dashboard for M1 save/bootstrap tests.
+[node name="Content" type="VBoxContainer" parent="SafeArea"]
+visible = false
+layout_mode = 2
 
 [node name="Subtitle" type="Label" parent="SafeArea/Content"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.68, 0.73, 0.83, 1)
-theme_override_font_sizes/font_size = 26
 text = "M1 · 事务与时间脊柱在线"
-horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="SafeArea/Content"]
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
 
 [node name="Status" type="Label" parent="SafeArea/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
 text = "正在读取持久化状态…"
-horizontal_alignment = 1
-autowrap_mode = 2
 
 [node name="StateCard" type="PanelContainer" parent="SafeArea/Content"]
 layout_mode = 2
 
 [node name="StateContent" type="VBoxContainer" parent="SafeArea/Content/StateCard"]
 layout_mode = 2
-theme_override_constants/separation = 12
 
 [node name="Persistence" type="Label" parent="SafeArea/Content/StateCard/StateContent"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
 text = "持久化：等待 Game 就绪"
 
 [node name="SaveId" type="Label" parent="SafeArea/Content/StateCard/StateContent"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.68, 0.73, 0.83, 1)
-theme_override_font_sizes/font_size = 22
 text = "存档：—"
-text_overrun_behavior = 3
 
 [node name="Revision" type="Label" parent="SafeArea/Content/StateCard/StateContent"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "状态版本：—"
 
 [node name="OfflineCredit" type="Label" parent="SafeArea/Content/StateCard/StateContent"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "累计离线收益：—"
 
 [node name="RefreshButton" type="Button" parent="SafeArea/Content"]
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
 text = "刷新 M1 状态"

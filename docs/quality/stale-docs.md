@@ -21,18 +21,18 @@ related:
 
 ## 当前清单
 
-ADR-0003 已明确标记 `deprecated`，由 ADR-0004 替代。以下 `draft` 是有意状态：
+ADR-0003 与 ADR-0004 均作为历史决策保留；当前路线由 ADR-0005 恢复为 `project-a/` Godot。以下 `draft` 是有意状态：
 
-- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：TapTap 迁移原型已验证，批准领域内核仍未全部落地。
-- [KM:reference.state-command-lifecycle](../references/architecture/state-command-lifecycle.md)：M1 状态/命令/存档未落地。
-- [KM:reference.file-ownership](../references/indexes/file-ownership.md)：TapTap 当前路径已验证，其余规划路径未验证。
-- [KM:domain.battle-progression](../domains/battle-progression.md)：原型自动战斗已存在，可重放 seed 与统计门禁未落地。
-- [KM:domain.platform-persistence](../domains/platform-persistence.md)：原型存档/离线已存在，M1 durable 语义与设备证据未落地。
-- [KM:runbook.game-verification](../runbooks/game-verification.md)：TapTap 迁移构建和 Godot 历史 M0 已运行，M1-M5/Android 命令待落地。
+- [KM:reference.architecture-overview](../references/architecture/architecture-overview.md)：Godot 路线已恢复，批准领域内核仍未全部验证完成。
+- [KM:reference.state-command-lifecycle](../references/architecture/state-command-lifecycle.md)：M1 相关路径已出现，但状态/命令/存档里程碑尚未完成验证。
+- [KM:reference.file-ownership](../references/indexes/file-ownership.md)：Godot 当前路径与规划落点并存，完成状态需按 milestone 验证。
+- [KM:domain.battle-progression](../domains/battle-progression.md)：M3 相关路径已出现，可重放 seed 与统计门禁尚未完成验证。
+- [KM:domain.platform-persistence](../domains/platform-persistence.md)：M1 相关路径已出现，durable 语义与设备证据尚未完成验证。
+- [KM:runbook.game-verification](../runbooks/game-verification.md)：Godot M0 已运行，M1-M5/Android 命令与证据待逐步确认。
 
 ## 回填节奏
 
-- M0：TapTap Maker 绑定、纯 2D 入口、手机 UI、MCP 构建；Godot 历史基线保留。
+- M0：Godot 工程 shell、Safe Area、Autoload、GUT 与 headless baseline。
 - M1：command/time/save/offline/receipt。
 - M2：英雄/编队。
 - M3：战斗/seed/paired 1000。

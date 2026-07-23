@@ -1,0 +1,6 @@
+{
+  "validation_mode": "prompt-architect-artifact",
+  "completion_artifact_path": ".omx/specs/autoresearch-ai-3d-art-pipeline/result.json",
+  "validator_prompt": "Review the report for end-to-end coverage, production feasibility, file-format handoffs, source quality, and honest treatment of AI limitations.",
+  "output_artifact_path": ".omx/specs/autoresearch-ai-3d-art-pipeline/report.md"
+}

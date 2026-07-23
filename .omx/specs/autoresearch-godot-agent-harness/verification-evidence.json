@@ -1,0 +1,39 @@
+{
+  "evidence_version": 1,
+  "command": [
+    "powershell",
+    "-File",
+    "project-a/tools/verify_m1.ps1"
+  ],
+  "started_from_head": "2fe7177c5f8e90811036c0779371c89ae6e33459",
+  "completed_at": "2026-07-21T00:48:35.9523872+08:00",
+  "exit_code": 0,
+  "engine": "Godot Engine v4.7.1.stable.official.a13da4feb",
+  "gut_version": "9.7.1",
+  "steps": [
+    "editor import",
+    "mobile startup",
+    "compatibility startup",
+    "complete GUT suite"
+  ],
+  "summary": {
+    "scripts": 21,
+    "tests": 96,
+    "passing_tests": 96,
+    "assertions": 9135,
+    "result": "M1 verification passed"
+  },
+  "digests": {
+    "before_status_sha256": "2D05C5BA8EDB158BAE341FEAB93847B41710239901801E6A24293749A8E87526",
+    "after_status_sha256": "2D05C5BA8EDB158BAE341FEAB93847B41710239901801E6A24293749A8E87526",
+    "before_project_godot_sha256": "1E8FD928919F3428582F5112B9F00BA5080C116689DC03D51FFE0D22230A5399",
+    "after_project_godot_sha256": "1E8FD928919F3428582F5112B9F00BA5080C116689DC03D51FFE0D22230A5399",
+    "verify_m1_ps1_sha256": "3E8824FEB9F9270099199832DA9F8FF362C20C6E69B288790D23FDE5ED4568FA",
+    "plugin_cfg_sha256": "101760F14E5465EA24710A72C56CD3A156222BA1EF3FC9D824198B2043093E66"
+  },
+  "limitations": [
+    "This artifact preserves the exact command, exit code, version, summary and relevant digests, not the full verbose GUT stdout.",
+    "The worktree was already dirty before this evidence run; equality of before/after digests proves this run added no worktree-status or project.godot change, not that the baseline was clean.",
+    "An earlier non-evidence run had no persisted pre-run baseline and is intentionally excluded from the trusted claim."
+  ]
+}

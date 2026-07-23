@@ -4,7 +4,7 @@ km_type: invariant
 domain: cross-domain
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-21
 source_of_truth:
   - .omx/specs/deep-interview-fantasy-idle-expedition.md
   - .omx/plans/prd-fantasy-idle-expedition.md
@@ -31,12 +31,12 @@ related:
 
 ## 技术不变量
 
-- `taptap/` 是当前 TapTap Maker 2D 实现根；代码进入 `taptap/scripts/**`，素材进入 `taptap/assets/**`。
-- `project-a/` 是历史 Godot M0 基线；现有 addon、EditorPlugin 和 Autoload 必须保留，但不再承接默认玩法开发。
-- UrhoX Lua、`urhox-libs/UI`、2D、手机端优先；UI 已使用 `UI.Scale.DEFAULT`，后续新界面必须补齐 `UI.SafeAreaView` 且主要触控目标不得低于 48 基准像素。当前迁移原型尚未满足后两项。
+- `project-a/` 是当前 Godot 4.7.1 Mobile 2D 实现根；代码与资源进入 `project-a/game/**`，测试进入 `project-a/tests/**`，工具进入 `project-a/tools/**`。
+- `project-a/addons/godot_ai/**`、现有 EditorPlugin 和 `_mcp_game_helper` Autoload 属于受保护工具层，默认不得修改、移动、格式化或清理。
+- GDScript、Godot Resource/Node/Control、Mobile renderer 和 GUT 是当前技术基线；Compatibility renderer 保留兼容冒烟，触控目标遵守 48dp 与安全区契约。
 - 静态定义与运行实例分离；运行状态只保存稳定 ID 和实例字段。
 - executor 是 GameState 唯一写入口；价值命令先持久化再报告成功。
 - 离线收益只认 `offline_anchor_unix`；战斗只认稳定 seed 和 5Hz tick。
 - UI 是状态投影，不直接修改领域状态。
-- Maker 状态、提交、推送、预览和构建只走 TapTap MCP；不得把普通 Git 提交流程用于绑定的 Maker 工程。
+- `taptap/` Maker 原型暂时搁置；不得把其代码、构建或 Maker MCP 结果计入当前 Godot milestone exit。
 - 实现事实必须由代码、测试和命令重新验证；计划路径不等于已存在路径。

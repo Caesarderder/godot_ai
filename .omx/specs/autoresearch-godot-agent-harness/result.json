@@ -1,0 +1,9 @@
+{
+  "validator_prompt": "Review the Godot agent-first harness report for factual grounding, Godot-specific correctness, bounded vibecoding scope, executable feedback loops, testability, recovery, and repository-boundary compliance. Approve only if the architecture is implementable and the report clearly separates facts from recommendations.",
+  "architect_review": {
+    "verdict": "approved",
+    "summary": "RNG replay and checkpoint semantics are correct; trusted boundaries, canonical serialization and hash rules, cold-start and migration gates, executable visual rubric, target-specific export smoke, and verification evidence are implementable and sufficient."
+  },
+  "output_artifact_path": ".omx/specs/autoresearch-godot-agent-harness/report.md",
+  "verification_artifact_path": ".omx/specs/autoresearch-godot-agent-harness/verification-evidence.json"
+}

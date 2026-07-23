@@ -23,8 +23,8 @@ related:
 ## Status and scope
 
 This design implements milestone M1 inside `project-a/` on Godot 4.7.1 with
-GDScript and GUT. It does not change the repository's declared development
-route, TapTap documents, or `project-a/addons/godot_ai/**`. Existing unrelated
+GDScript and GUT. ADR-0005 confirms this as the current development route;
+the paused TapTap prototype and `project-a/addons/godot_ai/**` remain out of scope. Existing unrelated
 working-tree changes are preserved.
 
 M1 establishes the durable state, command, persistence, quest-event, and

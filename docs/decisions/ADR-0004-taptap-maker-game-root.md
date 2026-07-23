@@ -2,13 +2,12 @@
 km_id: decision.taptap-maker-game-root
 km_type: decision
 domain: architecture
-status: active
+status: deprecated
 owner: maintainers
 last_verified: 2026-07-20
 source_of_truth:
-  - taptap/.maker-mcp/config.json
-  - taptap/scripts/main.lua
-  - taptap/README.md
+  - README.md
+  - docs/decisions/ADR-0005-godot-game-root-restored.md
 validated_by:
   - user-confirmation
   - maker_status_lite
@@ -18,6 +17,7 @@ tags:
   - risk:worktree-boundary
 related:
   - decision.project-a-game-root
+  - decision.godot-game-root-restored
   - reference.architecture-overview
   - reference.file-ownership
   - reference.implementation-status
@@ -27,13 +27,13 @@ related:
 
 ## 状态
 
-Accepted，2026-07-20；替代 [KM:decision.project-a-game-root](ADR-0003-project-a-game-root.md) 的当前实现根结论。
+Deprecated，2026-07-21。已由 [KM:decision.godot-game-root-restored](ADR-0005-godot-game-root-restored.md) 替代；TapTap Maker 路线暂时搁置。本 ADR 只保留迁移历史，不再指导新功能落点。
 
 ## 决策
 
-后续可玩版本优先在独立的 `taptap/` TapTap Maker 工程开发，运行时采用 UrhoX Lua 和 `urhox-libs/UI`，保持手机端、单机、纯 2D。`project-a/` 不删除，继续作为已验证的 Godot M0 历史基线和迁移对照，不再是默认玩法落点。
+2026-07-20 曾决定优先在独立的 `taptap/` TapTap Maker 工程开发。2026-07-21 用户决定暂时搁置该路线，后续规划与实现全部回到 `project-a/` Godot 工程。
 
-TapTap 工程拥有独立 Maker Git 边界。状态、提交、推送、预览与构建统一使用 `maker_status_lite` 和 `maker_build_current_directory`，不得用父仓库普通 Git 流程替代 Maker 提交。
+`taptap/` 及其 Maker Git 边界继续保留，除非用户重新启用该路线，否则不得把它作为 M1-M5 的实现、测试或验收入口。
 
 ## 原因
 
@@ -41,11 +41,11 @@ TapTap 工程拥有独立 Maker Git 边界。状态、提交、推送、预览�
 
 ## 影响
 
-- 新的运行入口是 `taptap/scripts/main.lua`。
-- 领域、UI、配置和素材分别进入 `taptap/scripts/**` 与 `taptap/assets/**`。
-- Godot 专属 Resource、Node、Autoload 和 GUT 约束只适用于历史基线，不再约束新的 Maker 实现。
+- `taptap/scripts/**` 与 `taptap/assets/**` 作为暂停原型保留，不接收当前里程碑功能。
+- Godot Resource、Node、Autoload、GDScript 和 GUT 再次约束当前实现。
+- 规划代码、资源、测试和工具分别进入 `project-a/game/**`、`project-a/tests/**` 与 `project-a/tools/**`。
 - 领域不变量继续有效：随机英雄、四槽编队、装备优先于薄营地、任务自由引导。
-- 迁移后的首次 Maker 提交与远端构建已成功，提交为 `cd5fa47`。
+- 历史 Maker 提交 `cd5fa47` 与远端构建证据继续保留，但不计入当前 Godot milestone exit。
 
 ## 相关节点
 
