@@ -17,18 +17,6 @@ func _physics_process(_delta: float) -> void:
         var point := ray.get_collision_point()
 ```
 
-```csharp
-private RayCast2D _ray;
-public override void _Ready() => _ray = GetNode<RayCast2D>("RayCast2D");
-public override void _PhysicsProcess(double delta)
-{
-    if (_ray.IsColliding())
-    {
-        var collider = _ray.GetCollider();
-        var point = _ray.GetCollisionPoint();
-    }
-}
-```
 ### 3D Mouse Picking (Ray from Screen)
 
 ```gdscript
@@ -60,35 +48,6 @@ func _physics_process(_delta: float) -> void:
     _mouse_pos = Vector2.ZERO
 ```
 
-```csharp
-private const float RayLength = 1000f;
-private Vector2 _mousePos;
-
-public override void _UnhandledInput(InputEvent @event)
-{
-    if (@event is InputEventMouseButton mb && mb.Pressed)
-        _mousePos = mb.Position;
-}
-
-public override void _PhysicsProcess(double delta)
-{
-    if (_mousePos == Vector2.Zero) return;
-
-    var camera = GetViewport().GetCamera3D();
-    var origin = camera.ProjectRayOrigin(_mousePos);
-    var end = origin + camera.ProjectRayNormal(_mousePos) * RayLength;
-
-    var space = GetWorld3D().DirectSpaceState;
-    var query = PhysicsRayQueryParameters3D.Create(origin, end);
-    query.CollideWithAreas = true;
-
-    var result = space.IntersectRay(query);
-    if (result.Count > 0)
-        GD.Print($"Clicked: {((Node)result["collider"]).Name} at {result["position"]}");
-
-    _mousePos = Vector2.Zero;
-}
-```
 
 
 ## Code-Based Raycasting (PhysicsDirectSpaceState)
@@ -110,27 +69,4 @@ func _physics_process(_delta: float) -> void:
         var hit_point: Vector2 = result.position
         var hit_normal: Vector2 = result.normal
         var hit_collider: Object = result.collider
-```
-
-```csharp
-public override void _PhysicsProcess(double delta)
-{
-    var space = GetWorld2D().DirectSpaceState;
-    var query = PhysicsRayQueryParameters2D.Create(
-        GlobalPosition,
-        GlobalPosition + new Vector2(0, 100)
-    );
-    var exclude = new Godot.Collections.Array<Rid>();
-    exclude.Add(GetRid());
-    query.Exclude = exclude;
-    query.CollisionMask = 0b0100;
-
-    var result = space.IntersectRay(query);
-    if (result.Count > 0)
-    {
-        var hitPoint = (Vector2)result["position"];
-        var hitNormal = (Vector2)result["normal"];
-        var hitCollider = (GodotObject)result["collider"];
-    }
-}
 ```

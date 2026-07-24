@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Level Design"
+  short_description: "设计关卡空间路径教学节奏遭遇导航无障碍与灰盒试玩验证合同"
+  default_prompt: "Use $game-level-design to design and validate a playable level for this game."

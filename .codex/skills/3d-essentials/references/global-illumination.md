@@ -1,6 +1,6 @@
 # Global Illumination
 
-Reference for `skills/3d-essentials/SKILL.md` — GI methods comparison, ReflectionProbe, LightmapGI, SDFGI deep dive. The 4.5+ Specular Occlusion and Bent Normal Maps notes stay in core SKILL.md.
+Reference for `skills/3d-essentials/SKILL.md` — Compatibility-safe ambient and reflection lighting.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -13,9 +13,6 @@ Reference for `skills/3d-essentials/SKILL.md` — GI methods comparison, Reflect
 |-----------------|-----------|-------------|---------|-----------|----------------------------|
 | None (ambient)  | Low       | Free        | Yes     | All       | Simple/stylized games      |
 | `ReflectionProbe` | Medium  | Low         | Optional | All      | Localized reflections      |
-| `LightmapGI`   | High      | Free at runtime | No   | Forward+  | Static scenes (archviz)    |
-| `VoxelGI`       | High      | High        | Yes     | Forward+  | Small-medium dynamic scenes |
-| `SDFGI`         | Medium-High | Medium    | Yes     | Forward+  | Large open-world scenes    |
 
 ### ReflectionProbe
 
@@ -36,40 +33,4 @@ func _ready() -> void:
     probe.update_mode = ReflectionProbe.UPDATE_ONCE  # bake once, free at runtime
 ```
 
-```csharp
-public override void _Ready()
-{
-    var probe = GetNode<ReflectionProbe>("ReflectionProbe");
-    probe.Size = new Vector3(10.0f, 4.0f, 10.0f);
-    probe.UpdateMode = ReflectionProbe.UpdateModeEnum.Once;
-}
-```
-
-### LightmapGI (Baked)
-
-Best quality, zero runtime cost. Requires UV2 on meshes (auto-generated on import).
-
-1. Add a **LightmapGI** node to the scene
-2. Set all static lights to **Bake Mode: Static**
-3. Set all static meshes to **GI Mode: Static** in the GeometryInstance3D section
-4. Select LightmapGI → click **Bake Lightmaps** in the toolbar
-5. Baked data is saved as a `LightmapGIData` resource — commit it with your project
-
-### SDFGI (Real-Time)
-
-Enable on the Environment resource — no nodes needed:
-
-```gdscript
-var env: Environment = $WorldEnvironment.environment
-env.sdfgi_enabled = true
-env.sdfgi_cascades = 4
-env.sdfgi_use_occlusion = true
-```
-
-```csharp
-var env = GetNode<WorldEnvironment>("WorldEnvironment").Environment;
-env.SdfgiEnabled = true;
-env.SdfgiCascades = 4;
-env.SdfgiUseOcclusion = true;
-```
-
+Keep indirect lighting simple for Compatibility Web: tune the Environment's ambient source, a sky, restrained direct lights, and reflection probes. Do not route this target to `LightmapGI`, `VoxelGI`, or `SDFGI` recipes without first changing and validating the renderer contract.

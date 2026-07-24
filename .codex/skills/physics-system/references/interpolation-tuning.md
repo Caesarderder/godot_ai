@@ -16,13 +16,6 @@ func teleport_to(pos: Vector2) -> void:
     reset_physics_interpolation()
 ```
 
-```csharp
-public void TeleportTo(Vector2 pos)
-{
-    GlobalPosition = pos;
-    ResetPhysicsInterpolation();
-}
-```
 
 ## Per-Node Control & Tick Rate
 

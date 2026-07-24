@@ -17,16 +17,6 @@ func _unhandled_input(event: InputEvent) -> void:
         get_viewport().set_input_as_handled()
 ```
 
-```csharp
-public override void _UnhandledInput(InputEvent @event)
-{
-    if (@event.IsActionPressed("interact"))
-    {
-        Interact();
-        GetViewport().SetInputAsHandled();
-    }
-}
-```
 
 ### Node Processing Order
 
@@ -46,11 +36,5 @@ func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
 ```
 
-```csharp
-public override void _Ready()
-{
-    ProcessMode = ProcessModeEnum.Always;
-}
-```
 
 ---

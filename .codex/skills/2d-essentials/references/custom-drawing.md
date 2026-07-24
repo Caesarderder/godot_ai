@@ -20,18 +20,6 @@ func _draw() -> void:
     draw_line(Vector2(-100, 0), Vector2(100, 0), Color.WHITE, 2.0, true)
 ```
 
-```csharp
-public partial class CustomDraw : Node2D
-{
-    public override void _Draw()
-    {
-        DrawCircle(Vector2.Zero, 50f, Colors.Red);
-        DrawRect(new Rect2(-25, -25, 50, 50), Colors.Blue, false, 2f);
-        DrawLine(new Vector2(-100, 0), new Vector2(100, 0), Colors.White, 2f, true);
-    }
-}
-```
-
 ### Redrawing
 
 `_draw()` is called once and cached. Call `queue_redraw()` to trigger a redraw.
@@ -44,21 +32,6 @@ public partial class CustomDraw : Node2D
 
 func _draw() -> void:
     draw_circle(Vector2.ZERO, radius, Color.RED)
-```
-
-```csharp
-private float _radius = 50f;
-[Export]
-public float Radius
-{
-    get => _radius;
-    set { _radius = value; QueueRedraw(); }
-}
-
-public override void _Draw()
-{
-    DrawCircle(Vector2.Zero, _radius, Colors.Red);
-}
 ```
 
 For per-frame animation, call `queue_redraw()` from `_process()`.
@@ -87,18 +60,9 @@ func _draw() -> void:
     draw_string(font, Vector2(10, 30), "Score: 100", HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
 ```
 
-```csharp
-private Font _font = ThemeDB.FallbackFont;
-
-public override void _Draw()
-{
-    DrawString(_font, new Vector2(10, 30), "Score: 100", HorizontalAlignment.Left, -1, 16);
-}
-```
-
 ### Editor Preview with @tool
 
-Add `@tool` (GDScript) or `[Tool]` (C#) to see custom drawing in the editor. Requires scene reload after adding/removing the annotation.
+Add `@tool` to see custom drawing in the editor. Requires a scene reload after adding or removing the annotation. This editor-only path is outside the default runtime workflow; use it only when an editor preview is explicitly required.
 
 ### Line Width Tip
 

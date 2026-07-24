@@ -18,12 +18,6 @@ var target_angle: float = global_position.angle_to_point(target.global_position)
 rotation = lerp_angle(rotation, target_angle, 10.0 * delta)
 ```
 
-```csharp
-Rotation = GlobalPosition.AngleToPoint(target.GlobalPosition);
-
-float targetAngle = GlobalPosition.AngleToPoint(target.GlobalPosition);
-Rotation = Mathf.LerpAngle(Rotation, targetAngle, 10.0f * (float)delta);
-```
 
 ### Orbit Around a Point
 
@@ -33,13 +27,6 @@ func _process(delta: float) -> void:
     position = center + Vector2(cos(angle), sin(angle)) * orbit_radius
 ```
 
-```csharp
-public override void _Process(double delta)
-{
-    float angle = Time.GetTicksMsec() / 1000.0f * orbitSpeed;
-    Position = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * orbitRadius;
-}
-```
 
 ### Sine Wave Bob (Floating Effect)
 
@@ -53,18 +40,6 @@ func _process(delta: float) -> void:
     position.y = _base_y + sin(Time.get_ticks_msec() / 1000.0 * bob_speed) * bob_amplitude
 ```
 
-```csharp
-private float _baseY;
-
-public override void _Ready() => _baseY = Position.Y;
-
-public override void _Process(double delta)
-{
-    Vector2 pos = Position;
-    pos.Y = _baseY + Mathf.Sin(Time.GetTicksMsec() / 1000.0f * bobSpeed) * bobAmplitude;
-    Position = pos;
-}
-```
 
 ### Angle Wrapping
 
@@ -80,11 +55,6 @@ var diff: float = angle_difference(current_angle, target_angle)
 rotation = lerp_angle(rotation, target_rotation, 5.0 * delta)
 ```
 
-```csharp
-float wrapped = Mathf.Wrap(angle, -Mathf.Pi, Mathf.Pi);
-float diff = Mathf.AngleDifference(currentAngle, targetAngle);
-Rotation = Mathf.LerpAngle(Rotation, targetRotation, 5.0f * (float)delta);
-```
 
 ### Clamped Approach with Deadzone
 
@@ -98,4 +68,3 @@ func approach_with_deadzone(current: Vector2, target: Vector2, speed: float, dea
 ```
 
 ---
-

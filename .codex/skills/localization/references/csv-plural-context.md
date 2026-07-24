@@ -1,8 +1,8 @@
 > ← Back to [SKILL.md](../SKILL.md)
 
-# CSV Plural and Context Support (Godot 4.6+)
+# CSV Plural and Context Support (Godot 4.6)
 
-Godot 4.6 extends the CSV translation format with three optional header columns that enable features previously only available in PO files.
+Godot 4.6 extends CSV translations with a `?plural` header column, a special `?pluralrule` row, and an optional `?context` header column.
 
 ## New CSV Columns
 
@@ -10,16 +10,20 @@ Godot 4.6 extends the CSV translation format with three optional header columns 
 |---------------|---------|
 | `?context` | Disambiguates keys with the same string but different meanings (e.g. "file" as a noun vs. "to file" as a verb) |
 | `?plural` | Provides the plural form of the string (for the source locale) |
-| `?pluralrule` | CLDR plural rule index for the source locale (0 = one, 1 = other, etc.) |
+| `?pluralrule` | A special value in the first column of a row; that row stores each locale's gettext-style `nplurals=...; plural=...;` rule |
 
 ## Example CSV with Context and Plural
 
 ```csv
-keys,?context,?plural,en,cs,de
-ITEM_FILE,noun,,File,Soubor,Datei
-ITEM_FILE,verb,,File,Uložit,Ablegen
-ENEMY_COUNT,,{n} enemies,{n} enemy / {n} enemies,{n} nepřítel / {n} nepřátelé,{n} Feind / {n} Feinde
+keys,?plural,?context,en,fr
+?pluralrule,,,nplurals=2; plural=(n != 1);,nplurals=2; plural=(n > 1);
+ITEM_FILE,,noun,File,Fichier
+ITEM_FILE,,verb,File,Classer
+ENEMY_COUNT_ONE,ENEMY_COUNT_OTHER,,%d enemy,Il y a %d pomme
+,,,%d enemies,Il y a %d pommes
 ```
+
+The `?pluralrule` marker belongs in the first column, not in the header. Each additional plural form uses another row with empty key/plural/context cells; do not join forms with `/` inside one cell.
 
 ## Using Context in Code
 
@@ -32,24 +36,15 @@ var file_verb: String = tr("ITEM_FILE", "verb")    # "File" (action)
 var file_default: String = tr("ITEM_FILE")
 ```
 
-```csharp
-// Translate with context
-string fileNoun = Tr("ITEM_FILE", "noun");
-string fileVerb = Tr("ITEM_FILE", "verb");
-```
 
 ## Using Plural in Code
 
 ```gdscript
 # Pluralize with tr_n() — works with CSV plural columns in 4.6+
 var enemy_count := 3
-var msg: String = tr_n("ENEMY_COUNT", "ENEMY_COUNT", enemy_count)
+var msg: String = tr_n("ENEMY_COUNT_ONE", "ENEMY_COUNT_OTHER", enemy_count)
 # Godot substitutes the correct plural form based on the current locale's rules
 ```
 
-```csharp
-int enemyCount = 3;
-string msg = TrN("ENEMY_COUNT", "ENEMY_COUNT", enemyCount);
-```
 
-> **When to use PO vs CSV:** If you only need context and simple one/other plural rules, the new CSV columns cover most cases. For languages with three or more plural forms (Russian, Polish, Arabic), continue using PO format with full `msgstr[n]` plural arrays.
+> **When to use PO vs CSV:** CSV can represent multiple plural forms by adding rows, but PO often remains easier to audit for languages such as Russian, Polish, or Arabic. Choose one format deliberately; do not collapse several forms into one CSV cell.

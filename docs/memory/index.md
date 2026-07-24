@@ -4,7 +4,7 @@ km_type: memory
 domain: agent-memory
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-23
 source_of_truth:
   - docs/workflows/knowledge-map-maintenance.md
 validated_by:
@@ -24,8 +24,9 @@ related:
 
 ## 已验证经验
 
-- 用户已把当前实现根迁移到 `taptap/` TapTap Maker 2D 工程；玩法进入 `taptap/scripts/**`，素材进入 `taptap/assets/**`，提交/构建只走 Maker MCP。
-- `project-a/` 保留为 Godot 历史 M0 和工具插件基线，不再承接默认玩法开发；规划路径、命令和测试结果仍不能提前宣称已实现。
+- 用户已把当前工作目标、工程核心和默认实现根转回 `project-a/` Godot 4.7.1 工程；后续玩法、UI、测试和构建优先进入该工程。
+- `taptap/` 完整保留为 Maker 2D 参考原型，不再承接默认开发；参考原型已有功能不能提前宣称为 Godot 已实现。
+- `project-a/addons/godot_ai/**` 与相关 EditorPlugin/Autoload 是受保护工具层；规划路径、命令和测试结果仍不能提前宣称已实现。
 
 ## 触发条件
 

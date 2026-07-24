@@ -17,15 +17,6 @@ func flash_hit() -> void:
     tween.tween_property(_sprite, "modulate", Color.WHITE, 0.1)
 ```
 
-```csharp
-public void FlashHit()
-{
-    var tween = CreateTween();
-    tween.TweenProperty(_sprite, "modulate", new Color(3f, 3f, 3f, 1f), 0.05);
-    tween.TweenProperty(_sprite, "modulate", Colors.White, 0.1);
-}
-```
-
 For a true white-out flash that overrides the sprite texture, use a `canvas_item` shader with a `flash_amount` uniform — see **shader-basics**.
 
 ## Attack Combo

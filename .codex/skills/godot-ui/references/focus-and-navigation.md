@@ -36,20 +36,7 @@ $QuitButton.focus_neighbor_bottom  = $StartButton.get_path()
 $StartButton.focus_neighbor_top    = $QuitButton.get_path()
 ```
 
-**C#:**
 
-```csharp
-var start   = GetNode<Button>("StartButton");
-var options = GetNode<Button>("OptionsButton");
-var quit    = GetNode<Button>("QuitButton");
-
-start.FocusNeighborBottom   = options.GetPath();
-options.FocusNeighborTop    = start.GetPath();
-options.FocusNeighborBottom = quit.GetPath();
-quit.FocusNeighborTop       = options.GetPath();
-quit.FocusNeighborBottom    = start.GetPath();
-start.FocusNeighborTop      = quit.GetPath();
-```
 
 ### UI Navigation with Gamepad/Keyboard
 
@@ -71,14 +58,6 @@ func _ready() -> void:
     $StartButton.grab_focus()
 ```
 
-**C#:**
 
-```csharp
-public override void _Ready()
-{
-    GetNode<Button>("StartButton").GrabFocus();
-}
-```
 
 ---
-

@@ -1,6 +1,5 @@
 # Subemitters
 
-Reference for `skills/particles-vfx/SKILL.md` — trigger modes, scene setup, limitations. **GDScript + C# parity** (v1.6.0).
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -35,26 +34,7 @@ $ParentParticles.process_material = parent_mat
 parent_mat.sub_emitter_node = $ChildParticles.get_path()
 ```
 
-```csharp
-public partial class Explosion : GpuParticles3D
-{
-    [Export] public GpuParticles3D ChildParticles { get; set; }
 
-    public override void _Ready()
-    {
-        var parentMat = new ParticleProcessMaterial
-        {
-            SubEmitterMode = ParticleProcessMaterial.SubEmitterModeEnum.AtEnd,
-            SubEmitterAmountAtEnd = 8,
-            SubEmitterKeepVelocity = true,
-        };
-        ProcessMaterial = parentMat;
-        parentMat.SubEmitterNode = ChildParticles.GetPath();
-    }
-}
-```
-
-> Most projects configure subemitters in the Inspector (drag the child node onto the `SubEmitterNode` slot of the `ParticleProcessMaterial`). The C# code above is only needed when building particle effects programmatically.
 
 ### Limitations
 
@@ -64,4 +44,3 @@ public partial class Explosion : GpuParticles3D
 - Subemitters can chain (sub-sub-emitters) but watch performance
 
 ---
-

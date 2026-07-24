@@ -1,147 +1,124 @@
 ---
 name: godot-testing
-description: Use when writing tests for Godot projects — TDD workflow with GUT and gdUnit4, covers both GDScript and C#
+description: Use when detecting, writing, and running tests for Godot 4.6 GDScript projects, preferring an existing GUT or gdUnit4 setup and headless verification
 ---
 
-# Godot Testing
+# Godot Testing for Builda Web
 
-This skill covers test-driven development (TDD) for Godot 4.3+ projects using GUT (Godot Unit Testing) and gdUnit4. It includes framework selection, full RED-GREEN-REFACTOR examples, test structure, running tests in CI, and common testing patterns.
+Builda defaults to Godot 4.6.x and GDScript. Reuse the project's existing test framework and commands. Never install, download, enable, or upgrade a test addon automatically.
 
-> **Related skills:** **godot-code-review** for review checklists, **dependency-injection** for test-friendly architecture, **export-pipeline** for CI/CD test automation.
+## 1. Detect the Existing Test Setup
 
-## Framework Selection
+Before writing tests, inspect the repository:
 
-| Feature               | GUT                              | gdUnit4                           |
-|-----------------------|----------------------------------|-----------------------------------|
-| Language              | GDScript-first, limited C#       | GDScript + C# (first-class)       |
-| Install               | AssetLib or git submodule        | AssetLib or git submodule         |
-| Editor integration    | Built-in GUT panel               | Built-in inspector + panel        |
-| Mocking               | `double()` / `stub()` API        | `mock()` / `spy()` API            |
-| Scene testing         | `add_child_autofree()`           | `auto_free()` + scene runner      |
-| CI support            | `gut_cmdln.gd` CLI script        | `gdunit4_runner` CLI script       |
-| C# support            | Minimal (GDScript wrappers only) | Native C# assertions + lifecycle  |
-| Maturity              | Established (Godot 3 + 4)        | Godot 4 focused, actively updated |
-| Best for              | Pure GDScript projects           | Mixed GDScript/C# or C#-only      |
-
-**Rule of thumb:** Use GUT for GDScript-only projects. Use gdUnit4 for C# projects or when you need first-class C# support and scene runner utilities.
-
----
-
-## TDD Workflow: RED-GREEN-REFACTOR
-
-The standard Test-Driven Development cycle: write a failing test (RED), write minimal code to pass (GREEN), then refactor without breaking the test. Each step has its own discipline — don't skip RED (you'll write tests that pass trivially), and don't skip REFACTOR (technical debt compounds).
-
-> See [references/tdd-workflow.md](references/tdd-workflow.md) for a worked GDScript + C# example walking through all three steps on a HealthComponent.
-
----
-
-## Test Directory Structure
-
-```
-res://
-├── src/
-│   └── components/
-│       ├── health_component.gd
-│       └── HealthComponent.cs
-└── tests/
-    ├── unit/
-    │   ├── test_health_component.gd      # GUT: test_ prefix required
-    │   └── HealthComponentTest.cs        # gdUnit4 C#: [TestSuite] attribute
-    ├── integration/
-    │   ├── test_player_scene.gd
-    │   └── PlayerSceneTest.cs
-    └── gut_config.json                   # GUT configuration (optional)
+```bash
+rg -n "gut|gdUnit4|GdUnit" project.godot addons tests .github 2>/dev/null
+rg --files addons tests 2>/dev/null | rg "(gut|gdUnit4|test_)"
 ```
 
-### Naming conventions
+Check, in order:
 
-| Framework | GDScript file       | C# file              | Test method prefix/attribute |
-|-----------|---------------------|----------------------|------------------------------|
-| GUT       | `test_*.gd`         | N/A                  | `func test_*()`              |
-| gdUnit4   | `test_*.gd`         | `*Test.cs`           | `func test_*()` / `[TestCase]` |
+1. repository scripts and CI commands;
+2. `addons/gut/plugin.cfg` or `addons/gdUnit4/plugin.cfg`;
+3. enabled plugins in `project.godot`;
+4. existing test base classes and naming conventions;
+5. test configuration files and report directories.
 
----
+If both frameworks appear, follow the framework already used by the nearest tests. Do not migrate frameworks as part of an ordinary feature fix.
 
-## Running Tests
+If no framework exists, run the project's existing headless smoke checks and report the gap. Propose a framework separately; addon installation requires explicit user authorization and project review.
 
-Both frameworks ship a CLI runner. **GUT:** `addons/gut/gut_cmdln.gd` invoked via `godot --headless --path . -s addons/gut/gut_cmdln.gd`. **gdUnit4:** `--add-gdunit-test-runner` argument, or via the editor "GdUnit Tests" dock. CI: tag-triggered or PR-triggered GitHub Action that installs Godot, runs the suite, exits non-zero on failure.
+## 2. Default Framework Path
 
-> See [references/running-tests.md](references/running-tests.md) for full GUT and gdUnit4 CLI invocations + a copy-pasteable GitHub Actions workflow.
+For a GDScript project with no conflicting established convention, prefer GUT after it has been explicitly approved and added to the project. If gdUnit4 is already installed and used by nearby GDScript tests, keep using it.
 
----
+| Existing evidence | Action |
+|---|---|
+| GUT addon/config/tests | Write a GUT test matching nearby files |
+| gdUnit4 addon/config/tests | Write a gdUnit4 GDScript test matching nearby files |
+| Both | Follow the closest subsystem's established framework |
+| Neither | Do not install; run smoke checks and request a separate setup decision |
 
-## Testing Patterns
+## 3. Write the Smallest Regression Test
 
-Four common patterns: **scenes with nodes** (instantiate via `add_child` in `before_each`, free in `after_each`), **signal testing** (assert that emitting works and connect-then-emit fires), **mocking/doubling** (gdUnit4 `Mock<T>` or hand-rolled fakes via `@export` injection), **async** (await yields, signals, frames in tests).
+A test should reproduce one public behavior and fail for the original bug. For GUT:
 
-> See [references/testing-patterns.md](references/testing-patterns.md) for full code on each pattern (GDScript + C# where applicable).
+```gdscript
+extends GutTest
 
----
+var subject: HealthComponent
 
-## Common Assertions
 
-### GUT assertions
+func before_each() -> void:
+    subject = add_child_autofree(HealthComponent.new())
+    subject.max_health = 100
+    subject.current_health = 100
 
-| Assertion                                    | Description                        |
-|----------------------------------------------|------------------------------------|
-| `assert_eq(actual, expected)`                | Equality                           |
-| `assert_ne(actual, expected)`                | Not equal                          |
-| `assert_true(value)`                         | Is truthy                          |
-| `assert_false(value)`                        | Is falsy                           |
-| `assert_null(value)`                         | Is null                            |
-| `assert_not_null(value)`                     | Is not null                        |
-| `assert_gt(actual, expected)`                | Greater than                       |
-| `assert_lt(actual, expected)`                | Less than                          |
-| `assert_gte(actual, expected)`               | Greater than or equal              |
-| `assert_lte(actual, expected)`               | Less than or equal                 |
-| `assert_has(collection, item)`               | Collection contains item           |
-| `assert_does_not_have(collection, item)`     | Collection does not contain item   |
-| `assert_string_contains(str, sub)`           | String contains substring          |
-| `assert_almost_eq(actual, expected, margin)` | Float equality within margin       |
-| `assert_signal_emitted(obj, signal_name)`    | Signal was emitted                 |
-| `assert_signal_not_emitted(obj, signal_name)`| Signal was not emitted             |
 
-### gdUnit4 assertions (GDScript + C#)
+func test_damage_clamps_health_at_zero() -> void:
+    subject.apply_damage(150)
+    assert_eq(subject.current_health, 0)
+```
 
-| GDScript                                           | C#                                              | Description                     |
-|----------------------------------------------------|-------------------------------------------------|---------------------------------|
-| `assert_that(val).is_equal(exp)`                   | `AssertThat(val).IsEqual(exp)`                  | Equality                        |
-| `assert_that(val).is_not_equal(exp)`               | `AssertThat(val).IsNotEqual(exp)`               | Not equal                       |
-| `assert_that(val).is_true()`                       | `AssertThat(val).IsTrue()`                      | Is true                         |
-| `assert_that(val).is_false()`                      | `AssertThat(val).IsFalse()`                     | Is false                        |
-| `assert_that(val).is_null()`                       | `AssertThat(val).IsNull()`                      | Is null                         |
-| `assert_that(val).is_not_null()`                   | `AssertThat(val).IsNotNull()`                   | Is not null                     |
-| `assert_that(val).is_greater(exp)`                 | `AssertThat(val).IsGreater(exp)`                | Greater than                    |
-| `assert_that(val).is_less(exp)`                    | `AssertThat(val).IsLess(exp)`                   | Less than                       |
-| `assert_that(val).is_between(min, max)`            | `AssertThat(val).IsBetween(min, max)`           | In range (inclusive)            |
-| `assert_that(arr).contains([a, b])`                | `AssertThat(arr).Contains(a, b)`                | Array contains elements         |
-| `assert_that(str).contains("sub")`                 | `AssertThat(str).Contains("sub")`               | String contains substring       |
-| `assert_that(val).is_approximately(exp, margin)`   | `AssertThat(val).IsApproximately(exp, margin)`  | Float within margin             |
-| `assert_signal(mon).is_emitted("name")`            | `AssertSignal(mon).IsEmitted("name")`           | Signal emitted                  |
+Keep Arrange, Act, and Assert visible. Prefer behavior through the public API over private-state assertions.
 
----
+For scene tests, instantiate only the minimum scene under test. Use the framework's auto-free facility so teardown is deterministic.
 
-## What NOT to Test
+## 4. TDD Loop
 
-Avoid testing things that add noise without catching real bugs:
+1. **Red:** run the narrow test and confirm it fails for the intended reason.
+2. **Green:** implement the smallest behavior change.
+3. **Refactor:** clean up without changing the contract.
+4. Rerun the narrow test, related suite, and project smoke gate.
 
-- **Godot engine internals** — do not assert that `Node.add_child()` works or that `@export` variables show up in the editor
-- **Private implementation details** — test behavior through the public API; if a refactor breaks a test that covers only private state, the test is wrong
-- **Visual/rendering output** — pixel-level rendering results are brittle; test the data driving the visuals instead
-- **Timing-sensitive floats without margins** — use `assert_almost_eq` / `IsApproximately` for physics values
-- **One-liners that wrap a built-in** — a property getter that just returns a field needs no test
-- **Every possible invalid input** — test the documented contract, not every imaginable misuse
+Do not accept a test that starts green unless it is documenting already-correct behavior for a separate reason. See [references/tdd-workflow.md](references/tdd-workflow.md) for the longer workflow; adapt examples to the detected GDScript framework.
 
----
+## 5. Run Headlessly
+
+Prefer repository scripts. When GUT is installed at its standard path, the narrow baseline is:
+
+```bash
+godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://tests
+```
+
+Use the exact gdUnit4 runner command already present in repository scripts or CI because addon versions differ. Do not guess a runner path and do not fetch a newer addon to make a command work.
+
+Record the command, exit code, passed/failed count, and first failure. A headless suite does not prove Web rendering, browser input, storage, or lifecycle behavior; add the appropriate Web-preview check for those surfaces.
+
+See [references/running-tests.md](references/running-tests.md) only after confirming which framework and addon version are installed.
+
+## 6. Common GUT Assertions
+
+| Assertion | Purpose |
+|---|---|
+| `assert_eq(actual, expected)` | Equality |
+| `assert_true(value)` / `assert_false(value)` | Boolean contract |
+| `assert_null(value)` / `assert_not_null(value)` | Optional values |
+| `assert_almost_eq(actual, expected, margin)` | Float tolerance |
+| `assert_has(collection, item)` | Membership |
+| `watch_signals(object)` + `assert_signal_emitted()` | Signal behavior |
+
+Watch signals before performing the action. For async behavior, await a specific signal/frame with a bounded framework timeout; do not use arbitrary sleeps.
+
+Additional patterns are in [references/testing-patterns.md](references/testing-patterns.md).
+
+## 7. What Not to Test
+
+- Godot engine internals such as whether `add_child()` works;
+- private implementation details that can change without behavior changing;
+- pixel-perfect rendering in a unit suite;
+- timing-sensitive values without a tolerance;
+- unrelated invalid inputs outside the documented contract;
+- addon installation or editor state as a side effect of running a test.
 
 ## Checklist
 
-- [ ] Each test file matches the naming convention for the chosen framework (`test_*.gd` / `*Test.cs`)
-- [ ] Tests extend the correct base class (`GutTest` / `GdUnit4.GdUnitTestSuite`)
-- [ ] Nodes added to the scene tree use `add_child_autofree` or `auto_free` — never manual `queue_free()`
-- [ ] Signals are watched before the action that triggers them
-- [ ] Mocks/doubles are used for external dependencies, not for the unit under test
-- [ ] Each test covers exactly one behavior (one logical assertion per test)
-- [ ] CI workflow runs tests headlessly on every push and PR
-- [ ] Flaky async tests use explicit timeouts, not arbitrary sleep durations
-- [ ] Tests pass before merging (RED is only acceptable while actively implementing)
+- [ ] Existing framework, version, runner, and naming convention were detected first.
+- [ ] No addon was installed, enabled, upgraded, or downloaded automatically.
+- [ ] New test matches the nearest GDScript test convention.
+- [ ] The regression test failed for the intended reason before the fix.
+- [ ] Test covers one public behavior and has deterministic cleanup.
+- [ ] Signals are watched before the triggering action.
+- [ ] Async waits are bounded by framework timeouts, not sleeps.
+- [ ] Narrow test, related suite, and project smoke gate pass headlessly.
+- [ ] Web-specific behavior has separate runtime evidence where needed.

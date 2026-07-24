@@ -2,9 +2,9 @@
 km_id: decision.taptap-maker-game-root
 km_type: decision
 domain: architecture
-status: active
+status: deprecated
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-23
 source_of_truth:
   - taptap/.maker-mcp/config.json
   - taptap/scripts/main.lua
@@ -18,6 +18,7 @@ tags:
   - risk:worktree-boundary
 related:
   - decision.project-a-game-root
+  - decision.return-to-project-a
   - reference.architecture-overview
   - reference.file-ownership
   - reference.implementation-status
@@ -27,7 +28,7 @@ related:
 
 ## 状态
 
-Accepted，2026-07-20；替代 [KM:decision.project-a-game-root](ADR-0003-project-a-game-root.md) 的当前实现根结论。
+Deprecated，2026-07-23。该决策曾在 2026-07-20 替代 [KM:decision.project-a-game-root](ADR-0003-project-a-game-root.md)，现由 [KM:decision.return-to-project-a](ADR-0005-return-to-project-a.md) 替代。
 
 ## 决策
 

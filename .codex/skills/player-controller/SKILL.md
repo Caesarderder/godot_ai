@@ -1,13 +1,15 @@
 ---
 name: player-controller
-description: Use when implementing player movement — CharacterBody2D/3D patterns, input handling, physics, common movement recipes
+description: Use when implementing CharacterBody2D or CharacterBody3D movement, input, jumping, acceleration, and common controller recipes in Godot 4.6 GDScript Web projects
 ---
 
-# Player Controllers in Godot 4.3+
+# Player Controllers in Godot 4.6
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Use Godot 4.6.x GDScript APIs that work in Builda's single-threaded Web export.
 
-> **Related skills:** **physics-system** for RigidBody, Area, raycasting, and collision shapes, **2d-essentials** for TileMaps, parallax, and 2D lighting, **3d-essentials** for CharacterBody3D and 3D movement setup, **state-machine** for movement state management, **camera-system** for camera follow and shake, **component-system** for hitbox/hurtbox integration, **animation-system** for animation driven by movement state, **input-handling** for InputMap actions and controller support, **ai-navigation** for enemy movement and pathfinding.
+> **Related skills:** **physics-system** for RigidBody, Area, raycasting, collision shapes, and hitbox/hurtbox integration, **2d-essentials** for TileMaps, parallax, and 2D lighting, **3d-essentials** for CharacterBody3D and 3D movement setup, **state-machine** for movement state management, **camera-system** for camera follow and shake, **animation-system** for animation driven by movement state, **input-handling** for InputMap actions and controller support, and **ai-navigation** for enemy movement and pathfinding.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -63,34 +65,6 @@ func _physics_process(delta: float) -> void:
 
     # 4. Move and resolve collisions
     move_and_slide()
-```
-
-### C#
-
-```csharp
-using Godot;
-
-public partial class TopDownPlayer : CharacterBody2D
-{
-    [Export] public float Speed { get; set; } = 200.0f;
-    [Export] public float Acceleration { get; set; } = 1500.0f;
-    [Export] public float Friction { get; set; } = 1200.0f;
-
-    public override void _PhysicsProcess(double delta)
-    {
-        // 1. Read input (normalized 4-directional vector)
-        Vector2 inputDir = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
-
-        // 2 & 3. Apply acceleration or friction
-        if (inputDir != Vector2.Zero)
-            Velocity = Velocity.MoveToward(inputDir * Speed, Acceleration * (float)delta);
-        else
-            Velocity = Velocity.MoveToward(Vector2.Zero, Friction * (float)delta);
-
-        // 4. Move and resolve collisions
-        MoveAndSlide();
-    }
-}
 ```
 
 ---
@@ -155,80 +129,6 @@ func _physics_process(delta: float) -> void:
     move_and_slide()
 ```
 
-### C#
-
-```csharp
-using Godot;
-
-public partial class PlatformerPlayer : CharacterBody2D
-{
-    [Export] public float Speed { get; set; } = 200.0f;
-    [Export] public float JumpVelocity { get; set; } = -400.0f;
-    [Export] public float Acceleration { get; set; } = 1200.0f;
-    [Export] public float Deceleration { get; set; } = 900.0f;
-    [Export] public float CoyoteTime { get; set; } = 0.12f;
-    [Export] public float JumpBufferTime { get; set; } = 0.12f;
-
-    private float _gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
-    private float _coyoteTimer;
-    private float _jumpBufferTimer;
-
-    public override void _PhysicsProcess(double delta)
-    {
-        float dt = (float)delta;
-
-        // Coyote time
-        if (IsOnFloor())
-            _coyoteTimer = CoyoteTime;
-        else
-            _coyoteTimer -= dt;
-
-        // Jump buffer
-        if (Input.IsActionJustPressed("ui_accept"))
-            _jumpBufferTimer = JumpBufferTime;
-        else
-            _jumpBufferTimer -= dt;
-
-        // Gravity
-        if (!IsOnFloor())
-        {
-            Vector2 vel = Velocity;
-            vel.Y += _gravity * dt;
-            Velocity = vel;
-        }
-
-        // Jump
-        if (_jumpBufferTimer > 0f && _coyoteTimer > 0f)
-        {
-            Vector2 vel = Velocity;
-            vel.Y = JumpVelocity;
-            Velocity = vel;
-            _coyoteTimer = 0f;
-            _jumpBufferTimer = 0f;
-        }
-
-        // Variable jump height
-        if (Input.IsActionJustReleased("ui_accept") && Velocity.Y < 0f)
-        {
-            Vector2 vel = Velocity;
-            vel.Y *= 0.5f;
-            Velocity = vel;
-        }
-
-        // Horizontal movement
-        float inputX = Input.GetAxis("ui_left", "ui_right");
-        Vector2 velocity = Velocity;
-        if (inputX != 0f)
-            velocity.X = Mathf.MoveToward(velocity.X, inputX * Speed, Acceleration * dt);
-        else
-            velocity.X = Mathf.MoveToward(velocity.X, 0f, Deceleration * dt);
-
-        Velocity = velocity;
-        MoveAndSlide();
-    }
-}
-```
-
 ---
 
 ## 4. 3D First-Person Controller
@@ -239,6 +139,7 @@ public partial class PlatformerPlayer : CharacterBody2D
 extends CharacterBody3D
 
 @export var move_speed: float = 5.0
+@export var deceleration: float = 20.0
 @export var jump_velocity: float = 5.0
 @export var mouse_sensitivity: float = 0.002
 
@@ -277,91 +178,19 @@ func _physics_process(delta: float) -> void:
         velocity.x = direction.x * move_speed
         velocity.z = direction.z * move_speed
     else:
-        velocity.x = move_toward(velocity.x, 0.0, move_speed)
-        velocity.z = move_toward(velocity.z, 0.0, move_speed)
+        velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
+        velocity.z = move_toward(velocity.z, 0.0, deceleration * delta)
 
     move_and_slide()
-```
-
-### C#
-
-```csharp
-using Godot;
-
-public partial class FPSController : CharacterBody3D
-{
-    [Export] public float MoveSpeed { get; set; } = 5.0f;
-    [Export] public float JumpVelocity { get; set; } = 5.0f;
-    [Export] public float MouseSensitivity { get; set; } = 0.002f;
-
-    private float _gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
-    private Node3D _head;
-
-    public override void _Ready()
-    {
-        _head = GetNode<Node3D>("Head");
-        Input.MouseMode = Input.MouseModeEnum.Captured;
-    }
-
-    public override void _UnhandledInput(InputEvent @event)
-    {
-        if (@event is InputEventMouseMotion motion
-            && Input.MouseMode == Input.MouseModeEnum.Captured)
-        {
-            // Horizontal look (yaw on body)
-            RotateY(-motion.Relative.X * MouseSensitivity);
-            // Vertical look (pitch on head), clamped to ±90°
-            _head.RotateX(-motion.Relative.Y * MouseSensitivity);
-            Vector3 rot = _head.Rotation;
-            rot.X = Mathf.Clamp(rot.X, -Mathf.Pi / 2f, Mathf.Pi / 2f);
-            _head.Rotation = rot;
-        }
-
-        if (@event.IsActionPressed("ui_cancel"))
-            Input.MouseMode = Input.MouseModeEnum.Visible;
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        float dt = (float)delta;
-        Vector3 vel = Velocity;
-
-        // Gravity
-        if (!IsOnFloor())
-            vel.Y -= _gravity * dt;
-
-        // Jump
-        if (Input.IsActionJustPressed("ui_accept") && IsOnFloor())
-            vel.Y = JumpVelocity;
-
-        // Movement relative to facing direction
-        Vector2 inputDir = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
-        Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
-
-        if (direction != Vector3.Zero)
-        {
-            vel.X = direction.X * MoveSpeed;
-            vel.Z = direction.Z * MoveSpeed;
-        }
-        else
-        {
-            vel.X = Mathf.MoveToward(vel.X, 0f, MoveSpeed);
-            vel.Z = Mathf.MoveToward(vel.Z, 0f, MoveSpeed);
-        }
-
-        Velocity = vel;
-        MoveAndSlide();
-    }
-}
 ```
 
 ---
 
 ## 5. Common Movement Recipes
 
-Beyond the basic locomotion patterns above, two recipes come up so often that they deserve their own block: **Dash** (timer-based velocity override for a short burst) and **Wall Jump** (vertical wall slide + bounce off `GetWallNormal()` when jump is pressed). Both apply to a `CharacterBody2D` and slot into the standard `_physics_process` loop alongside gravity and horizontal movement.
+Beyond the basic locomotion patterns above, two recipes come up so often that they deserve their own block: **Dash** (timer-based velocity override for a short burst) and **Wall Jump** (vertical wall slide + bounce off `get_wall_normal()` when jump is pressed). Both apply to a `CharacterBody2D` and slot into the standard `_physics_process` loop alongside gravity and horizontal movement.
 
-See [references/common-movement-recipes.md](references/common-movement-recipes.md) for full GDScript and C# implementations of both recipes.
+See [references/common-movement-recipes.md](references/common-movement-recipes.md) for the GDScript implementations of both recipes.
 
 ---
 

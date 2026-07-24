@@ -1,6 +1,6 @@
 # Minimap
 
-Reference for `skills/hud-system/SKILL.md` — minimap via SubViewport + dedicated Camera2D, with circular mask option. GDScript + C#.
+Reference for `skills/hud-system/SKILL.md` — minimap via SubViewport + dedicated Camera2D, with circular mask option. GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -47,28 +47,7 @@ func _process(delta: float) -> void:
     global_position = global_position.lerp(follow_target.global_position, follow_speed * delta)
 ```
 
-### C# — MinimapCamera
 
-```csharp
-// MinimapCamera.cs — attach to the Camera2D inside the SubViewport
-using Godot;
-
-public partial class MinimapCamera : Camera2D
-{
-    /// <summary>The target node the minimap camera tracks (usually the player).</summary>
-    [Export] public Node2D FollowTarget { get; set; }
-
-    /// <summary>How tightly the minimap tracks the target (0 = no follow, 1 = instant snap).</summary>
-    [Export] public float FollowSpeed { get; set; } = 10.0f;
-
-    public override void _Process(double delta)
-    {
-        if (FollowTarget == null)
-            return;
-        GlobalPosition = GlobalPosition.Lerp(FollowTarget.GlobalPosition, FollowSpeed * (float)delta);
-    }
-}
-```
 
 ### SubViewport Settings
 
@@ -96,4 +75,3 @@ To clip the minimap to a circle, wrap the `SubViewportContainer` in a `TextureRe
 ```
 
 ---
-

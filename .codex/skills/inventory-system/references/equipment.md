@@ -1,6 +1,6 @@
 # Equipment Extension
 
-Reference for `skills/inventory-system/SKILL.md` — equipment slot system (paperdoll), `EquipmentSlotType` enum, GDScript + C# implementations.
+Reference for `skills/inventory-system/SKILL.md` — equipment slot system (paperdoll), `EquipmentSlotType` enum, GDScript implementations.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -72,81 +72,6 @@ func get_total_stat(stat_name: String) -> float:
     return total
 ```
 
-### C#
 
-```csharp
-// Equipment.cs
-using Godot;
-using Godot.Collections;
-
-public partial class Equipment : Node
-{
-    [Signal] public delegate void EquipmentChangedEventHandler(int slot, ItemData item);
-
-    public enum SlotType
-    {
-        Head,
-        Chest,
-        Legs,
-        Hands,
-        Feet,
-        Weapon,
-        OffHand,
-        Accessory,
-    }
-
-    // Maps SlotType → ItemData (null = empty)
-    private readonly Dictionary<SlotType, ItemData> _equipmentSlots = new();
-
-    public override void _Ready()
-    {
-        foreach (SlotType slot in System.Enum.GetValues<SlotType>())
-            _equipmentSlots[slot] = null;
-    }
-
-    /// <summary>Equips item into slot. Returns the previously equipped item (may be null).</summary>
-    public ItemData Equip(ItemData item, SlotType slot)
-    {
-        if (item.Type != ItemData.ItemType.Equipment)
-        {
-            GD.PushWarning($"Equip: '{item.Name}' is not an Equipment item");
-            return null;
-        }
-
-        var previous          = _equipmentSlots[slot];
-        _equipmentSlots[slot] = item;
-        EmitSignal(SignalName.EquipmentChanged, (int)slot, item);
-        return previous;
-    }
-
-    /// <summary>Unequips the item in slot. Returns the removed item (may be null).</summary>
-    public ItemData Unequip(SlotType slot)
-    {
-        var item              = _equipmentSlots[slot];
-        _equipmentSlots[slot] = null;
-        if (item != null)
-            EmitSignal(SignalName.EquipmentChanged, (int)slot, default(Variant));
-        return item;
-    }
-
-    public ItemData GetEquipped(SlotType slot) => _equipmentSlots[slot];
-
-    /// <summary>Aggregate a numeric stat from all currently equipped items.</summary>
-    public float GetTotalStat(string statName)
-    {
-        float total = 0f;
-        foreach (var item in _equipmentSlots.Values)
-        {
-            if (item == null) continue;
-            // Expects ItemData to expose a Stats Dictionary property
-            if (item.Get("stats").Obj is Godot.Collections.Dictionary stats
-                && stats.ContainsKey(statName))
-                total += stats[statName].As<float>();
-        }
-        return total;
-    }
-}
-```
 
 ---
-

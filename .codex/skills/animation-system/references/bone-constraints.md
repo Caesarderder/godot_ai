@@ -44,20 +44,6 @@ func _ready() -> void:
     aim.symmetry_limitation = deg_to_rad(90.0)
 ```
 
-```csharp
-public override void _Ready()
-{
-    var skeleton = GetNode<Skeleton3D>("Skeleton3D");
-    var aim = new AimModifier3D();
-    skeleton.AddChild(aim);
-    aim.BoneName = "RightArm";
-    aim.TargetBoneName = "RightHand";
-    aim.PrimaryRotationAxis = Vector3.Right;
-    aim.UseAngleLimitation = true;
-    aim.SymmetryLimitation = Mathf.DegToRad(90f);
-}
-```
-
 **CopyTransformModifier3D — mirror/bind bones:**
 
 ```gdscript
@@ -69,16 +55,6 @@ func _ready() -> void:
     copy.copy_position = false
     copy.copy_rotation = true
     copy.copy_scale = false
-```
-
-```csharp
-var copy = new CopyTransformModifier3D();
-skeleton.AddChild(copy);
-copy.BoneName = "LeftArm";
-copy.SourceBoneName = "RightArm";
-copy.CopyPosition = false;
-copy.CopyRotation = true;
-copy.CopyScale = false;
 ```
 
 > **Note:** API property names were finalized at Godot 4.5 release. If property names differ in your Godot version, verify via the built-in Inspector on the modifier node. See [PR #100984](https://github.com/godotengine/godot/pull/100984) for the authoritative property list.

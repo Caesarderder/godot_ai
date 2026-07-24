@@ -70,15 +70,7 @@ func _ready() -> void:
 Engine.max_physics_steps_per_frame = 4
 ```
 
-**C#:**
 
-```csharp
-public override void _Ready()
-{
-    Engine.PhysicsTicksPerSecond = 30;
-    Engine.MaxPhysicsStepsPerFrame = 4;
-}
-```
 
 Change project-wide defaults in **Project Settings > Physics > Common > Physics Ticks Per Second** and **Max Physics Steps Per Frame**.
 
@@ -103,31 +95,7 @@ func _on_body_exited(body: Node2D) -> void:
         _end_aggro()
 ```
 
-**C#:**
 
-```csharp
-// PREFER Area2D for "is the player in range?" checks
-public partial class AggroZone : Area2D
-{
-    public override void _Ready()
-    {
-        BodyEntered += OnBodyEntered;
-        BodyExited += OnBodyExited;
-    }
-
-    private void OnBodyEntered(Node2D body)
-    {
-        if (body.IsInGroup("player"))
-            BeginAggro(body);
-    }
-
-    private void OnBodyExited(Node2D body)
-    {
-        if (body.IsInGroup("player"))
-            EndAggro();
-    }
-}
-```
 
 ```gdscript
 # Use raycasts only when you need directionality or line-of-sight checks,
@@ -138,22 +106,4 @@ public partial class AggroZone : Area2D
 func _physics_process(_delta: float) -> void:
     if _ray.is_colliding():
         _handle_hit(_ray.get_collider())
-```
-
-**C#:**
-
-```csharp
-// Cache the RayCast3D node — do NOT create PhysicsRayQueryParameters every frame
-private RayCast3D _ray;
-
-public override void _Ready()
-{
-    _ray = GetNode<RayCast3D>("RayCast3D");
-}
-
-public override void _PhysicsProcess(double delta)
-{
-    if (_ray.IsColliding())
-        HandleHit(_ray.GetCollider());
-}
 ```

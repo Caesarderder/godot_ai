@@ -25,23 +25,6 @@ func _on_body_entered(body: Node) -> void:
         body.take_damage(10)
 ```
 
-```csharp
-public partial class PhysicsCrate : RigidBody3D
-{
-    public override void _Ready()
-    {
-        ContactMonitor = true;
-        MaxContactsReported = 4;
-        BodyEntered += OnBodyEntered;
-    }
-
-    private void OnBodyEntered(Node body)
-    {
-        if (body.HasMethod("TakeDamage"))
-            body.Call("TakeDamage", 10);
-    }
-}
-```
 
 ### PhysicsMaterial
 
@@ -92,24 +75,6 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
         state.angular_velocity = forward.cross(to_target).normalized() * turn_angle / state.step
 ```
 
-```csharp
-public partial class HomingBody : RigidBody3D
-{
-    [Export] public float TurnSpeed { get; set; } = 0.1f;
-
-    public override void _IntegrateForces(PhysicsDirectBodyState3D state)
-    {
-        var targetPos = GetNode<Node3D>("../Target").GlobalPosition;
-        var forward = -GlobalTransform.Basis.Z.Normalized();
-        var toTarget = (targetPos - GlobalPosition).Normalized();
-        float dot = Mathf.Clamp(forward.Dot(toTarget), -1f, 1f);
-        float angleToTarget = Mathf.Acos(dot);
-        float turnAngle = Mathf.Min(TurnSpeed, angleToTarget);
-        if (angleToTarget > 1e-4f)
-            state.AngularVelocity = forward.Cross(toTarget).Normalized() * turnAngle / state.Step;
-    }
-}
-```
 
 ---
 
@@ -133,24 +98,6 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
     state.apply_torque(rotation_dir * torque_force)
 ```
 
-```csharp
-public partial class Ship : RigidBody2D
-{
-    private Vector2 _thrust = new(0, -250);
-    private float _torqueForce = 20000f;
-
-    public override void _IntegrateForces(PhysicsDirectBodyState2D state)
-    {
-        if (Input.IsActionPressed("ui_up"))
-            state.ApplyForce(_thrust.Rotated(Rotation));
-        else
-            state.ApplyForce(new Vector2());
-
-        float rotDir = Input.GetAxis("ui_left", "ui_right");
-        state.ApplyTorque(rotDir * _torqueForce);
-    }
-}
-```
 
 > **Warning:** `_integrate_forces()` is NOT called while the body is sleeping. Enable `can_sleep = false` if you need continuous callbacks, but prefer letting bodies sleep for performance.
 
@@ -171,21 +118,4 @@ func _physics_process(_delta: float) -> void:
     # Torque — continuous rotation force
     var turn: float = Input.get_axis("ui_left", "ui_right")
     apply_torque(turn * 20000.0)
-```
-
-```csharp
-public partial class Ship : RigidBody2D
-{
-    public override void _PhysicsProcess(double delta)
-    {
-        if (Input.IsActionPressed("thrust"))
-            ApplyForce(new Vector2(0, -500).Rotated(Rotation));
-
-        if (Input.IsActionJustPressed("explode"))
-            ApplyCentralImpulse(new Vector2(0, -800));
-
-        float turn = Input.GetAxis("ui_left", "ui_right");
-        ApplyTorque(turn * 20000.0f);
-    }
-}
 ```

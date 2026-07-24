@@ -1,6 +1,6 @@
 # IK Recipes
 
-Reference for `skills/animation-system/SKILL.md` — full GDScript and C# recipes for IKModifier3D solvers (Godot 4.6+).
+Reference for `skills/animation-system/SKILL.md` — GDScript recipes for IKModifier3D solvers in Godot 4.6.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -38,28 +38,6 @@ func _process(delta: float) -> void:
     var want_ik := target != null and target.global_position.distance_to(global_position) < reach_range
     _blend = move_toward(_blend, 1.0 if want_ik else 0.0, blend_speed * delta)
     ccdik.influence = _blend
-```
-
-```csharp
-// ArmIKController.cs
-using Godot;
-
-public partial class ArmIKController : Node3D
-{
-    [Export] public Node3D Target { get; set; }
-    [Export] public Ccdik3D Ccdik { get; set; }
-    [Export] public float BlendSpeed { get; set; } = 4.0f;
-    [Export] public float ReachRange { get; set; } = 2.0f;
-
-    private float _blend;
-
-    public override void _Process(double delta)
-    {
-        bool wantIk = Target != null && Target.GlobalPosition.DistanceTo(GlobalPosition) < ReachRange;
-        _blend = Mathf.MoveToward(_blend, wantIk ? 1.0f : 0.0f, BlendSpeed * (float)delta);
-        Ccdik.Influence = _blend;
-    }
-}
 ```
 
 **Verification:** Move the `Target` node in the editor while the game runs. The hand should chase the target when within 2 m, and return to the keyframed pose when out of range. Watch `CCDIK3D.influence` ramp 0 → 1.
@@ -105,36 +83,6 @@ func _process(_delta: float) -> void:
         foot_target.global_position = bone_xform.origin
 ```
 
-```csharp
-// FootIK.cs
-using Godot;
-
-public partial class FootIK : Node3D
-{
-    [Export] public Skeleton3D Skeleton { get; set; }
-    [Export] public string FootBone { get; set; } = "FootL";
-    [Export] public RayCast3D Ray { get; set; }
-    [Export] public Node3D FootTarget { get; set; }
-    [Export] public float MaxOffset { get; set; } = 0.4f;
-
-    public override void _Process(double delta)
-    {
-        if (Skeleton == null || Ray == null || FootTarget == null)
-            return;
-
-        int boneIdx = Skeleton.FindBone(FootBone);
-        Transform3D boneXform = Skeleton.GlobalTransform * Skeleton.GetBoneGlobalPose(boneIdx);
-        Ray.GlobalPosition = boneXform.Origin + Vector3.Up * 0.5f;
-        Ray.TargetPosition = Vector3.Down * (0.5f + MaxOffset);
-
-        if (Ray.IsColliding())
-            FootTarget.GlobalPosition = Ray.GetCollisionPoint();
-        else
-            FootTarget.GlobalPosition = boneXform.Origin;
-    }
-}
-```
-
 **Verification:** Place the character on a slope or staircase. Both feet should plant on the ground polygons rather than floating or clipping. Toggle `FABRIK3D.influence` between 0 and 1 to compare.
 
 **Perf cost:** One raycast and one `FABRIK3D` per leg every frame. Two-leg humanoid → 2 raycasts + 2 IK solves. For background NPCs, gate this behind a distance check or run on `_physics_process` at 30 Hz instead of `_process`. For exactly-2-bone humanoid legs, `TwoBoneIK3D` solves in roughly half the time of `FABRIK3D`.
@@ -159,18 +107,5 @@ func _ready() -> void:
     # Set the IK target — a Node3D in the scene
     ik.target_node = $"../IKTarget"
 ```
-
-```csharp
-public override void _Ready()
-{
-    var skeleton = GetNode<Skeleton3D>("Skeleton3D");
-    var ik = new Fabrik3D();
-    skeleton.AddChild(ik);
-    ik.BoneChain = new string[] { "Shoulder", "Elbow", "Wrist" };
-    ik.TargetNode = GetNode("../IKTarget").GetPath();
-}
-```
-
-> **Note:** `IKModifier3D` was introduced in Godot 4.6 beta 1 and is still being finalized. Property names, subclass count, and C# binding names may change before the stable release. The C# names here follow Godot's standard binding convention (acronyms PascalCased: `Fabrik3D`, `Ccdik3D`, `JacobianIk3D`, `TwoBoneIk3D`) — verify against your local 4.6 build before relying on them. See the [4.6 release announcement](https://godotengine.org/article/dev-snapshot-godot-4-6-beta-1/) for details.
 
 > **When to use:** `IKModifier3D` subclasses replace custom IK scripts and third-party IK plugins. Use `TwoBoneIK3D` for leg/arm IK (fastest, exact), `FABRIK3D` for longer chains and natural-looking reach, `CCDIK3D` for tentacles or tails.

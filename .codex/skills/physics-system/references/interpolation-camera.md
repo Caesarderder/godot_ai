@@ -27,25 +27,5 @@ func _process(delta: float) -> void:
     look_at(_smooth_pos, Vector3.UP)
 ```
 
-```csharp
-public partial class FollowCamera : Camera3D
-{
-    private Node3D _target;
-    private Vector3 _smoothPos;
-
-    public override void _Ready()
-    {
-        _target = GetNode<Node3D>("../Player");
-        PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
-    }
-
-    public override void _Process(double delta)
-    {
-        var targetTransform = _target.GetGlobalTransformInterpolated();
-        _smoothPos = _smoothPos.Lerp(targetTransform.Origin, Mathf.Min((float)delta * 5f, 1f));
-        LookAt(_smoothPos, Vector3.Up);
-    }
-}
-```
 
 > **Note:** `get_global_transform_interpolated()` should only be used for special cases like cameras (1–2 calls per frame). Regular game logic should use `global_transform` inside `_physics_process()`.

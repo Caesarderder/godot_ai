@@ -1,491 +1,246 @@
 ---
 name: state-machine
-description: Use when implementing state machines in Godot — enum-based, node-based, and resource-based FSM patterns with trade-offs
+description: Use when implementing or repairing finite state machines in Godot 4.6 GDScript, including enum, node, Resource-driven, hierarchical, and parallel state patterns; covers lifecycle-safe startup, transitions, input/update routing, and inactive nested machines.
 ---
 
-# State Machines in Godot 4.3+
+# State Machines in Godot 4.6
 
-Choose the right FSM pattern for your complexity level. All examples target Godot 4.3+ with no deprecated APIs.
+Choose the smallest FSM that makes transitions and ownership explicit. Target typed GDScript and the single-threaded Web runtime.
 
-> **Related skills:** **player-controller** for movement state integration, **ai-navigation** for AI state patterns, **resource-pattern** for resource-based state configuration, **animation-system** for AnimationTree states driven by FSM, **dialogue-system** for dialogue flow as a state machine, **ability-system** for caster state gating (casting/stunned), **limboai** for the LimboAI addon's HSM (`BTState`) if you need a behavior tree alongside your FSM, **beehave** for a GDScript-only BT alternative.
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
-> **When to reach for an addon:** This skill covers the built-in FSM patterns (enum, node-based, resource-based). If your agent needs a full behavior tree, see **limboai** (C++ + HSM, Godot 4.6+) or **beehave** (pure GDScript, Godot 4.1+) instead.
+## Choose a shape
 
----
+| Shape | Use when |
+| --- | --- |
+| Enum in one script | A few states, little enter/exit behavior |
+| Node states | States own distinct behavior, signals, or child nodes |
+| Resource definitions plus runner | Designers configure data while one node owns runtime state |
+| Hierarchical | A parent mode owns mutually exclusive substates |
+| Parallel | Independent concerns must update together |
 
-## 1. Approach Comparison
+Do not select a pattern from a numeric threshold alone. Split when one machine mixes unrelated transition graphs or state lifecycle becomes hard to follow.
 
-| Approach       | Complexity | Best For                              |
-|----------------|------------|---------------------------------------|
-| Enum-Based     | Low        | Simple objects, fewer than 5 states   |
-| Node-Based     | Medium     | Characters with complex behavior      |
-| Resource-Based | High       | Data-driven or editor-configurable AI |
+## Minimal enum FSM
 
----
-
-## 2. Approach 1: Enum-Based (Simplest)
-
-Use when you have a small number of states and no significant enter/exit logic.
-
-### GDScript
+Keep transition side effects in one function:
 
 ```gdscript
 extends CharacterBody2D
 
-enum State { IDLE, PATROL, CHASE, ATTACK }
+enum State { IDLE, CHASE }
 
-@export var patrol_range: float = 200.0
-@export var chase_range: float = 300.0
-@export var attack_range: float = 50.0
-@export var speed: float = 80.0
-
-var current_state: State = State.IDLE
-var patrol_target: Vector2 = Vector2.ZERO
-
-@onready var player: Node2D = get_tree().get_first_node_in_group("player")
+var state := State.IDLE
 
 
-func _physics_process(delta: float) -> void:
-	match current_state:
+func _physics_process(_delta: float) -> void:
+	match state:
 		State.IDLE:
-			_state_idle()
-		State.PATROL:
-			_state_patrol()
+			velocity = Vector2.ZERO
 		State.CHASE:
-			_state_chase()
-		State.ATTACK:
-			_state_attack()
-
+			_update_chase()
 	move_and_slide()
 
 
-func _state_idle() -> void:
-	velocity = Vector2.ZERO
-	if _player_in_range(chase_range):
-		current_state = State.CHASE
-	elif randf() < 0.005:
-		patrol_target = global_position + Vector2(randf_range(-patrol_range, patrol_range), 0.0)
-		current_state = State.PATROL
-
-
-func _state_patrol() -> void:
-	var direction := (patrol_target - global_position)
-	if direction.length() < 4.0:
-		current_state = State.IDLE
+func transition_to(next: State) -> void:
+	if next == state:
 		return
-	velocity = direction.normalized() * speed
-	if _player_in_range(chase_range):
-		current_state = State.CHASE
-
-
-func _state_chase() -> void:
-	if not is_instance_valid(player):
-		current_state = State.IDLE
-		return
-	if _player_in_range(attack_range):
-		current_state = State.ATTACK
-		return
-	if not _player_in_range(chase_range):
-		current_state = State.PATROL
-		return
-	velocity = (player.global_position - global_position).normalized() * speed
-
-
-func _state_attack() -> void:
-	velocity = Vector2.ZERO
-	if not _player_in_range(attack_range):
-		current_state = State.CHASE
-
-
-func _player_in_range(range: float) -> bool:
-	if not is_instance_valid(player):
-		return false
-	return global_position.distance_to(player.global_position) <= range
+	state = next
 ```
 
-### C# Equivalent
+Upgrade to node states when transition hooks or state-local dependencies start accumulating.
 
-```csharp
-using Godot;
+## Lifecycle-safe node FSM
 
-public partial class SimpleEnemy : CharacterBody2D
-{
-    private enum State { Idle, Patrol, Chase, Attack }
-
-    [Export] public float PatrolRange { get; set; } = 200f;
-    [Export] public float ChaseRange  { get; set; } = 300f;
-    [Export] public float AttackRange { get; set; } = 50f;
-    [Export] public float Speed       { get; set; } = 80f;
-
-    private State _currentState = State.Idle;
-    private Vector2 _patrolTarget = Vector2.Zero;
-    private Node2D _player;
-
-    public override void _Ready()
-    {
-        _player = GetTree().GetFirstNodeInGroup("player") as Node2D;
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        switch (_currentState)
-        {
-            case State.Idle:   StateIdle();   break;
-            case State.Patrol: StatePatrol(); break;
-            case State.Chase:  StateChase();  break;
-            case State.Attack: StateAttack(); break;
-        }
-        MoveAndSlide();
-    }
-
-    private void StateIdle()
-    {
-        Velocity = Vector2.Zero;
-        if (PlayerInRange(ChaseRange))
-        {
-            _currentState = State.Chase;
-        }
-        else if (GD.Randf() < 0.005f)
-        {
-            _patrolTarget = GlobalPosition + new Vector2(GD.RandRange(-PatrolRange, PatrolRange), 0f);
-            _currentState = State.Patrol;
-        }
-    }
-
-    private void StatePatrol()
-    {
-        var direction = _patrolTarget - GlobalPosition;
-        if (direction.Length() < 4f) { _currentState = State.Idle; return; }
-        Velocity = direction.Normalized() * Speed;
-        if (PlayerInRange(ChaseRange)) _currentState = State.Chase;
-    }
-
-    private void StateChase()
-    {
-        if (!IsInstanceValid(_player)) { _currentState = State.Idle; return; }
-        if (PlayerInRange(AttackRange)) { _currentState = State.Attack; return; }
-        if (!PlayerInRange(ChaseRange)) { _currentState = State.Patrol; return; }
-        Velocity = (_player.GlobalPosition - GlobalPosition).Normalized() * Speed;
-    }
-
-    private void StateAttack()
-    {
-        Velocity = Vector2.Zero;
-        if (!PlayerInRange(AttackRange)) _currentState = State.Chase;
-    }
-
-    private bool PlayerInRange(float range) =>
-        IsInstanceValid(_player) && GlobalPosition.DistanceTo(_player.GlobalPosition) <= range;
-}
-```
-
-> **When to upgrade away from enum-based:**
-> - Enter/exit logic starts duplicating across state methods
-> - Animation sync requires explicit enter/exit hooks
-> - The `match`/`switch` block grows beyond ~100 lines
-
----
-
-## 3. Approach 2: Node-Based (Recommended for Characters)
-
-Each state is its own node. The `StateMachine` node delegates input and process calls to whichever state is active, and states trigger transitions by name.
-
-### Scene Tree
-
-```
-Player (CharacterBody2D)
-└── StateMachine (Node)
-    ├── Idle  (State)
-    ├── Run   (State)
-    ├── Jump  (State)
-    └── Attack (State)
-```
-
-### State Base Class
-
-**GDScript (`state.gd`)**
+Each machine owns exactly one active state. It validates its initial state before enabling callbacks and guards every route against a missing current state.
 
 ```gdscript
+# state.gd
 class_name State
 extends Node
 
-## Populated by StateMachine._ready()
-var entity: CharacterBody2D
-var state_machine: StateMachine
+var actor: Node
 
 
-## Called when this state becomes active.
-func enter() -> void:
+func enter(_previous: State) -> void:
 	pass
 
 
-## Called when this state is deactivated.
-func exit() -> void:
+func exit(_next: State) -> void:
 	pass
 
 
-## Mirrors _process. Return a state name string to transition, or "" to stay.
-func update(delta: float) -> String:
-	return ""
+func update(_delta: float) -> StringName:
+	return &""
 
 
-## Mirrors _physics_process. Return a state name string to transition, or "".
-func physics_update(delta: float) -> String:
-	return ""
+func physics_update(_delta: float) -> StringName:
+	return &""
 
 
-## Mirrors _unhandled_input.
-func handle_input(event: InputEvent) -> String:
-	return ""
+func handle_input(_event: InputEvent) -> StringName:
+	return &""
 ```
-
-**C# (`State.cs`)**
-
-```csharp
-using Godot;
-
-public partial class State : Node
-{
-    /// Populated by StateMachine._Ready()
-    public CharacterBody2D Entity { get; set; }
-    public StateMachine StateMachine { get; set; }
-
-    public virtual void Enter() { }
-    public virtual void Exit() { }
-    public virtual string Update(double delta) => string.Empty;
-    public virtual string PhysicsUpdate(double delta) => string.Empty;
-    public virtual string HandleInput(InputEvent @event) => string.Empty;
-}
-```
-
-### StateMachine Class
-
-**GDScript (`state_machine.gd`)**
 
 ```gdscript
+# state_machine.gd
 class_name StateMachine
 extends Node
 
+signal transitioned(previous: StringName, current: StringName)
+
+@export var actor: Node
 @export var initial_state: State
+@export var start_active := true
 
 var current_state: State
-var states: Dictionary = {}
+var _states: Dictionary[StringName, State] = {}
+var _active := false
 
 
 func _ready() -> void:
 	for child in get_children():
 		if child is State:
-			states[child.name] = child
-			child.entity = owner as CharacterBody2D
-			child.state_machine = self
+			var state := child as State
+			_states[state.name] = state
+			state.actor = actor
 
-	if initial_state:
-		current_state = initial_state
-		current_state.enter()
+	set_active(false)
+	if start_active:
+		if initial_state == null or not _states.values().has(initial_state):
+			push_error("StateMachine requires an initial child State")
+			return
+		start(initial_state.name)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	var next := current_state.handle_input(event)
-	if next:
-		transition_to(next)
+func start(state_name: StringName) -> bool:
+	if not _states.has(state_name):
+		push_error("Unknown initial state: %s" % state_name)
+		return false
+	if current_state != null:
+		push_error("Stop the active machine before starting it again")
+		return false
+	current_state = _states[state_name]
+	set_active(true)
+	current_state.enter(null)
+	transitioned.emit(&"", current_state.name)
+	return true
+
+
+func stop() -> void:
+	if current_state != null:
+		current_state.exit(null)
+	current_state = null
+	set_active(false)
+
+
+func set_active(value: bool) -> void:
+	_active = value
+	set_process(value)
+	set_physics_process(value)
+	set_process_unhandled_input(value)
+
+
+func transition_to(state_name: StringName) -> bool:
+	if not _active or current_state == null:
+		return false
+	if not _states.has(state_name):
+		push_error("Unknown state: %s" % state_name)
+		return false
+	var next: State = _states[state_name]
+	if next == current_state:
+		return false
+	var previous := current_state
+	previous.exit(next)
+	current_state = next
+	current_state.enter(previous)
+	transitioned.emit(previous.name, current_state.name)
+	return true
 
 
 func _process(delta: float) -> void:
-	var next := current_state.update(delta)
-	if next:
-		transition_to(next)
+	_route(current_state.update(delta))
 
 
 func _physics_process(delta: float) -> void:
-	var next := current_state.physics_update(delta)
-	if next:
+	_route(current_state.physics_update(delta))
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	_route(current_state.handle_input(event))
+
+
+func _route(next: StringName) -> void:
+	if next != &"":
 		transition_to(next)
-
-
-func transition_to(state_name: String) -> void:
-	if not states.has(state_name):
-		push_error("StateMachine: unknown state '%s'" % state_name)
-		return
-	current_state.exit()
-	current_state = states[state_name]
-	current_state.enter()
 ```
 
-**C# (`StateMachine.cs`)**
+Assign `actor` explicitly in the scene. Do not assume `owner` is a particular body type. `set_active(false)` disables process, physics, and unhandled-input callbacks together, preventing an inactive nested machine from running in the background.
 
-```csharp
-using System.Collections.Generic;
-using Godot;
+## Complete Resource-driven FSM
 
-public partial class StateMachine : Node
-{
-    [Export] public State InitialState { get; set; }
-
-    public State CurrentState { get; private set; }
-    private readonly Dictionary<string, State> _states = new();
-
-    public override void _Ready()
-    {
-        foreach (var child in GetChildren())
-        {
-            if (child is State state)
-            {
-                _states[state.Name] = state;
-                state.Entity = Owner as CharacterBody2D;
-                state.StateMachine = this;
-            }
-        }
-
-        if (InitialState != null)
-        {
-            CurrentState = InitialState;
-            CurrentState.Enter();
-        }
-    }
-
-    public override void _UnhandledInput(InputEvent @event)
-    {
-        var next = CurrentState.HandleInput(@event);
-        if (!string.IsNullOrEmpty(next)) TransitionTo(next);
-    }
-
-    public override void _Process(double delta)
-    {
-        var next = CurrentState.Update(delta);
-        if (!string.IsNullOrEmpty(next)) TransitionTo(next);
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        var next = CurrentState.PhysicsUpdate(delta);
-        if (!string.IsNullOrEmpty(next)) TransitionTo(next);
-    }
-
-    public void TransitionTo(string stateName)
-    {
-        if (!_states.TryGetValue(stateName, out var next))
-        {
-            GD.PushError($"StateMachine: unknown state '{stateName}'");
-            return;
-        }
-        CurrentState.Exit();
-        CurrentState = next;
-        CurrentState.Enter();
-    }
-}
-```
-
-### Concrete Example: IdleState
-
-**GDScript (`idle_state.gd`)**
+Resources define transition data; a node still owns mutable runtime state and behavior. Do not mutate shared definition Resources.
 
 ```gdscript
-class_name IdleState
-extends State
-
-
-func enter() -> void:
-	entity.get_node("AnimationPlayer").play("idle")
-
-
-func physics_update(delta: float) -> String:
-	if not entity.is_on_floor():
-		return "Jump"
-	if Input.get_axis("move_left", "move_right") != 0.0:
-		return "Run"
-	return ""
-
-
-func handle_input(event: InputEvent) -> String:
-	if event.is_action_pressed("jump") and entity.is_on_floor():
-		return "Jump"
-	if event.is_action_pressed("attack"):
-		return "Attack"
-	return ""
-```
-
----
-
-## 4. Approach 3: Resource-Based (Data-Driven)
-
-Use when designers need to configure states in the Godot Inspector without modifying code.
-
-### StateData Resource
-
-```gdscript
-class_name StateData
+# state_definition.gd
+class_name StateDefinition
 extends Resource
 
-@export var state_name: String = ""
-@export var animation_name: String = ""
-@export var move_speed: float = 0.0
-@export var can_transition_to: Array[String] = []
+@export var id: StringName
+@export var animation: StringName
+@export var allowed_targets: Array[StringName] = []
 ```
 
-Export an `Array[StateData]` on your AI controller. Designers populate each entry in the Inspector — no code changes needed to tune behavior or add states. The runtime reads `can_transition_to` to validate transitions and picks `animation_name` / `move_speed` for each active state.
+```gdscript
+# resource_state_machine.gd
+class_name ResourceStateMachine
+extends Node
 
-```csharp
-using Godot;
+signal transitioned(previous: StringName, current: StringName)
 
-[GlobalClass]
-public partial class StateData : Resource
-{
-    [Export] public string StateName { get; set; } = string.Empty;
-    [Export] public string AnimationName { get; set; } = string.Empty;
-    [Export] public float MoveSpeed { get; set; } = 0f;
-    [Export] public Godot.Collections.Array<string> CanTransitionTo { get; set; } = new();
-}
+@export var definitions: Array[StateDefinition] = []
+@export var initial_state: StringName
+
+var current: StateDefinition
+var _by_id: Dictionary[StringName, StateDefinition] = {}
+
+
+func _ready() -> void:
+	for definition in definitions:
+		if definition == null or definition.id == &"" or _by_id.has(definition.id):
+			push_error("State definitions require unique non-empty IDs")
+			return
+		_by_id[definition.id] = definition
+	if not transition_to(initial_state, true):
+		push_error("Resource FSM has an invalid initial state")
+
+
+func transition_to(target: StringName, force := false) -> bool:
+	if not _by_id.has(target):
+		return false
+	if current != null and not force and target not in current.allowed_targets:
+		return false
+	var previous: StringName = current.id if current != null else &""
+	current = _by_id[target]
+	transitioned.emit(previous, current.id)
+	return true
 ```
 
-Attach an `Array[StateData]` export on your AI controller class (`[Export] public Godot.Collections.Array<StateData> States`). At runtime, look up the active `StateData` by `StateName` and read `AnimationName` / `MoveSpeed` to drive behavior; use `CanTransitionTo` to guard `TransitionTo` calls.
+Let an owning controller map `current.id` to behavior or pair definitions with explicit strategy nodes. The Resource alone is configuration, not a functioning FSM.
 
----
+## Hierarchical and parallel machines
 
-## 5. Hierarchical and Parallel State Machines
+Read [references/hierarchical-and-parallel.md](references/hierarchical-and-parallel.md) before nesting machines. The key invariant is one lifecycle owner: only `start()` enters a nested machine and only `stop()` exits it. Never manually call both the nested machine and its current state's hooks.
 
-When a flat FSM grows beyond ~8 states or spans multiple concerns (movement + combat + animation), split into **hierarchical** machines (states own sub-state machines, e.g. `OnGround` containing `Idle/Walk/Run`) or **parallel** machines (independent FSMs for movement, combat, animation running side-by-side). Both keep state counts additive instead of multiplicative.
+For parallel machines, keep write ownership disjoint. For example, movement may write velocity while combat writes attack availability; do not let both overwrite velocity or animation in the same tick. Put conflict resolution in their common owner.
 
-See [references/hierarchical-and-parallel.md](references/hierarchical-and-parallel.md) for full scene trees, `HierarchicalState` base class, parallel-machine character example, and a "which to choose" comparison table — GDScript and C# for each.
+## Checklist
 
----
-
-## 6. Decision Flowchart
-
-```
-Start
-  │
-  ▼
-Fewer than 5 states?
-  ├─ Yes ──────────────────────────────────► Enum-Based
-  └─ No
-       │
-       ▼
-     Multiple independent concerns
-     (movement + combat + animation)?
-       ├─ Yes ──────────────────────────────► Parallel State Machines
-       └─ No
-            │
-            ▼
-          States naturally nest
-          (sub-states within states)?
-            ├─ Yes ────────────────────────► Hierarchical State Machine
-            └─ No
-                 │
-                 ▼
-               Designers need to configure
-               states in the Inspector?
-                 ├─ Yes ──────────────────► Resource-Based
-                 └─ No ──────────────────► Node-Based
-```
-
----
-
-## 7. Implementation Checklist
-
-- [ ] Chose the approach that matches actual complexity (enum / node / resource)
-- [ ] Every state has explicit `enter()` and `exit()` methods (or equivalent)
-- [ ] All transitions are named explicitly — no implicit fallthrough between states
-- [ ] Animations are started in `enter()` and cleaned up in `exit()` where needed
-- [ ] No circular transition loops that could cause infinite recursion in a single frame
-- [ ] Flat FSM is replaced with hierarchical or parallel when states exceed ~8 or span multiple concerns
-- [ ] Parallel state machines don't modify the same state (e.g., both setting velocity) — one concern per machine
+- [ ] Initial state is present, belongs to the machine, and is validated before callbacks run.
+- [ ] `_process`, `_physics_process`, and input routes cannot dereference a null current state.
+- [ ] A transition exits once and enters once; self-transition behavior is explicit.
+- [ ] Inactive nested machines disable all callbacks and have no current state.
+- [ ] Resource definitions are immutable shared data; the runner owns mutable state.
+- [ ] Transition IDs are unique and unknown targets fail visibly.
+- [ ] Parallel machines do not write the same property without an owner resolving precedence.
+- [ ] Scripts use Godot 4.6 GDScript and require no threads.

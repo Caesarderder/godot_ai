@@ -22,22 +22,6 @@ func fade_out_and_free(node: CanvasItem, duration: float = 0.3) -> void:
     tween.tween_callback(node.queue_free)
 ```
 
-```csharp
-public Tween FadeIn(CanvasItem node, float duration = 0.3f)
-{
-    node.Modulate = new Color(node.Modulate, 0.0f);
-    var tween = node.CreateTween();
-    tween.TweenProperty(node, "modulate:a", 1.0f, duration);
-    return tween;
-}
-
-public void FadeOutAndFree(CanvasItem node, float duration = 0.3f)
-{
-    var tween = node.CreateTween();
-    tween.TweenProperty(node, "modulate:a", 0.0f, duration);
-    tween.TweenCallback(Callable.From(node.QueueFree));
-}
-```
 
 ### UI Panel Slide In / Out
 
@@ -67,16 +51,6 @@ func bounce_press(button: Control) -> void:
     tween.tween_property(button, "scale", Vector2.ONE, 0.1)
 ```
 
-```csharp
-public void BouncePress(Control button)
-{
-    var tween = button.CreateTween();
-    tween.TweenProperty(button, "scale", new Vector2(0.9f, 0.9f), 0.05f);
-    tween.TweenProperty(button, "scale", new Vector2(1.05f, 1.05f), 0.1f)
-        .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
-    tween.TweenProperty(button, "scale", Vector2.One, 0.1f);
-}
-```
 
 ### Damage Number Popup
 
@@ -96,23 +70,6 @@ func spawn_damage_number(value: int, pos: Vector2) -> void:
     tween.chain().tween_callback(label.queue_free)
 ```
 
-```csharp
-public void SpawnDamageNumber(int value, Vector2 pos)
-{
-    var label = new Label();
-    label.Text = value.ToString();
-    label.Position = pos;
-    label.ZIndex = 100;
-    AddChild(label);
-
-    var tween = label.CreateTween().SetParallel(true);
-    tween.TweenProperty(label, "position:y", pos.Y - 50.0f, 0.6f)
-        .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
-    tween.TweenProperty(label, "modulate:a", 0.0f, 0.4f)
-        .SetDelay(0.3f);
-    tween.Chain().TweenCallback(Callable.From(label.QueueFree));
-}
-```
 
 ### Pulsing / Breathing Effect
 
@@ -125,16 +82,6 @@ func start_pulse(node: CanvasItem) -> void:
         .set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 ```
 
-```csharp
-public void StartPulse(CanvasItem node)
-{
-    var tween = node.CreateTween().SetLoops();
-    tween.TweenProperty(node, "modulate:a", 0.4f, 0.8f)
-        .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
-    tween.TweenProperty(node, "modulate:a", 1.0f, 0.8f)
-        .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
-}
-```
 
 ### Screen Shake
 
@@ -161,15 +108,5 @@ func dissolve(sprite: Sprite2D, duration: float = 1.0) -> void:
     tween.tween_callback(sprite.queue_free)
 ```
 
-```csharp
-public void Dissolve(Sprite2D sprite, float duration = 1.0f)
-{
-    var mat = sprite.Material as ShaderMaterial;
-    var tween = CreateTween();
-    tween.TweenProperty(mat, "shader_parameter/dissolve_amount", 1.0f, duration);
-    tween.TweenCallback(Callable.From(sprite.QueueFree));
-}
-```
 
 ---
-

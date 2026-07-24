@@ -1,6 +1,6 @@
 # Export Annotations
 
-Reference for `skills/gdscript-patterns/SKILL.md` — `@export`, range/hint variants, export groups, node and Resource exports.
+Reference for `gdscript-patterns/SKILL.md` — `@export`, range/hint variants, export groups, node and Resource exports.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -71,4 +71,3 @@ enum Weapon { SWORD, BOW, STAFF }
 ```
 
 ---
-

@@ -24,16 +24,6 @@ func _ready() -> void:
     get_tree().root.print_tree_pretty()
 ```
 
-```csharp
-// Print the full subtree of a node in a readable format
-public override void _Ready()
-{
-    PrintTreePretty();
-
-    // Print the entire scene tree from root
-    GetTree().Root.PrintTreePretty();
-}
-```
 
 ### Remote Scene Tree in the Editor
 
@@ -57,25 +47,6 @@ func _input(event: InputEvent) -> void:
             print(enemy.name, " HP: ", enemy.health, " pos: ", enemy.global_position)
 ```
 
-```csharp
-// Tag nodes at runtime for batch inspection
-public override void _Ready()
-{
-    AddToGroup("debug_enemies");
-}
-
-public override void _Input(InputEvent @event)
-{
-    if (@event.IsActionPressed("debug_dump_enemies"))
-    {
-        foreach (var node in GetTree().GetNodesInGroup("debug_enemies"))
-        {
-            if (node is Enemy enemy)
-                GD.Print($"{enemy.Name} HP: {enemy.Health} pos: {enemy.GlobalPosition}");
-        }
-    }
-}
-```
 
 ### _get_configuration_warnings() for @tool Scripts
 
@@ -98,23 +69,5 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 ### C\#
 
-```csharp
-#if TOOLS
-[Tool]
-public partial class EnemySpawner : Node3D
-{
-    [Export] public NodePath TargetPath { get; set; }
-
-    public override string[] _GetConfigurationWarnings()
-    {
-        var warnings = new System.Collections.Generic.List<string>();
-        if (TargetPath == null || TargetPath.IsEmpty)
-            warnings.Add("TargetPath must be set.");
-        return warnings.ToArray();
-    }
-}
-#endif
-```
 
 ---
-

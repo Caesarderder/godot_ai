@@ -1,6 +1,8 @@
 # Action Rebinding at Runtime
 
-Reference for `skills/input-handling/SKILL.md` — adding actions in code, plus the full action-rebinding flow with GDScript and C#: capture new key, swap action's events, persist via ConfigFile, restore on launch.
+Reference for `skills/input-handling/SKILL.md` — adding actions in code, plus a safe
+GDScript rebinding flow: capture a supported event, validate it, replace the action,
+and persist only an explicit field allowlist.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -17,18 +19,6 @@ func _ready() -> void:
         InputMap.action_add_event("move_left", event)
 ```
 
-```csharp
-public override void _Ready()
-{
-    if (!InputMap.HasAction("move_left"))
-    {
-        InputMap.AddAction("move_left");
-        var ev = new InputEventKey();
-        ev.PhysicalKeycode = Key.A;
-        InputMap.ActionAddEvent("move_left", ev);
-    }
-}
-```
 
 > **Best practice:** Define actions in the editor Input Map. Only add actions in code for dynamically generated bindings or mod support.
 
@@ -61,6 +51,11 @@ func _unhandled_input(event: InputEvent) -> void:
     if not _is_listening:
         return
 
+    if not InputMap.has_action(action_name):
+        push_error("Unknown input action: %s" % action_name)
+        _is_listening = false
+        return
+
     # Accept keyboard, mouse button, and gamepad button events
     if not (event is InputEventKey or event is InputEventMouseButton or event is InputEventJoypadButton):
         return
@@ -86,75 +81,93 @@ func _update_label() -> void:
         text = "%s: (unbound)" % action_name
 ```
 
-### C#
-
-```csharp
-using Godot;
-
-public partial class RebindButton : Button
-{
-    [Export] public string ActionName { get; set; } = "jump";
-
-    private bool _isListening;
-
-    public override void _Ready()
-    {
-        UpdateLabel();
-        Pressed += OnPressed;
-    }
-
-    private void OnPressed()
-    {
-        _isListening = true;
-        Text = "Press a key...";
-    }
-
-    public override void _UnhandledInput(InputEvent @event)
-    {
-        if (!_isListening)
-            return;
-
-        if (@event is not (InputEventKey or InputEventMouseButton or InputEventJoypadButton))
-            return;
-
-        if (@event is InputEventKey keyEvent &&
-            keyEvent.Keycode is Key.Shift or Key.Ctrl or Key.Alt or Key.Meta)
-            return;
-
-        InputMap.ActionEraseEvents(ActionName);
-        InputMap.ActionAddEvent(ActionName, @event);
-
-        _isListening = false;
-        UpdateLabel();
-        GetViewport().SetInputAsHandled();
-    }
-
-    private void UpdateLabel()
-    {
-        var events = InputMap.ActionGetEvents(ActionName);
-        Text = events.Count > 0
-            ? $"{ActionName}: {events[0].AsText()}"
-            : $"{ActionName}: (unbound)";
-    }
-}
-```
-
 ### Saving & Loading Bindings
 
 ```gdscript
-# Save current bindings to ConfigFile
+# Only these event families and fields are persisted. Never deserialize an
+# arbitrary Variant or Object from a user-writable ConfigFile.
+func _encode_event(event: InputEvent) -> Dictionary:
+    if event is InputEventKey:
+        var key := event as InputEventKey
+        return {
+            "type": "key",
+            "physical_keycode": key.physical_keycode,
+            "keycode": key.keycode,
+            "shift": key.shift_pressed,
+            "alt": key.alt_pressed,
+            "ctrl": key.ctrl_pressed,
+            "meta": key.meta_pressed,
+        }
+    if event is InputEventMouseButton:
+        var mouse := event as InputEventMouseButton
+        return {"type": "mouse_button", "button_index": mouse.button_index}
+    if event is InputEventJoypadButton:
+        var joy := event as InputEventJoypadButton
+        return {
+            "type": "joypad_button",
+            "button_index": joy.button_index,
+            "device": joy.device,
+        }
+    return {}
+
+
+func _decode_event(data: Variant) -> InputEvent:
+    if not data is Dictionary or not data.has("type"):
+        return null
+    match data["type"]:
+        "key":
+            if not data.has_all(["physical_keycode", "keycode", "shift", "alt", "ctrl", "meta"]):
+                return null
+            if typeof(data["physical_keycode"]) != TYPE_INT or typeof(data["keycode"]) != TYPE_INT:
+                return null
+            for field in ["shift", "alt", "ctrl", "meta"]:
+                if typeof(data[field]) != TYPE_BOOL:
+                    return null
+            if data["physical_keycode"] < 0 or data["keycode"] < 0:
+                return null
+            if data["physical_keycode"] == 0 and data["keycode"] == 0:
+                return null
+            var key := InputEventKey.new()
+            key.physical_keycode = int(data["physical_keycode"])
+            key.keycode = int(data["keycode"])
+            key.shift_pressed = bool(data["shift"])
+            key.alt_pressed = bool(data["alt"])
+            key.ctrl_pressed = bool(data["ctrl"])
+            key.meta_pressed = bool(data["meta"])
+            return key
+        "mouse_button":
+            if not data.has("button_index") or typeof(data["button_index"]) != TYPE_INT:
+                return null
+            if data["button_index"] < MOUSE_BUTTON_LEFT or data["button_index"] > MOUSE_BUTTON_XBUTTON2:
+                return null
+            var mouse := InputEventMouseButton.new()
+            mouse.button_index = int(data["button_index"])
+            return mouse
+        "joypad_button":
+            if not data.has_all(["button_index", "device"]):
+                return null
+            if typeof(data["button_index"]) != TYPE_INT or typeof(data["device"]) != TYPE_INT:
+                return null
+            if data["button_index"] < 0 or data["button_index"] >= JOY_BUTTON_MAX:
+                return null
+            if data["device"] < -1:
+                return null
+            var joy := InputEventJoypadButton.new()
+            joy.button_index = int(data["button_index"])
+            joy.device = int(data["device"])
+            return joy
+    return null
+
+
 func save_bindings(config: ConfigFile) -> void:
     for action in InputMap.get_actions():
-        # Skip built-in ui_* actions
         if action.begins_with("ui_"):
             continue
-        var events := InputMap.action_get_events(action)
         var event_data: Array[Dictionary] = []
-        for event in events:
-            event_data.append({
-                "type": event.get_class(),
-                "data": var_to_str(event)
-            })
+        for event in InputMap.action_get_events(action):
+            var encoded := _encode_event(event)
+            if not encoded.is_empty():
+                event_data.append(encoded)
         config.set_value("input", action, event_data)
     config.save("user://input_bindings.cfg")
 
@@ -165,61 +178,25 @@ func load_bindings() -> void:
     if config.load("user://input_bindings.cfg") != OK:
         return
     for action in config.get_section_keys("input"):
-        if not InputMap.has_action(action):
+        var action_name := StringName(action)
+        if action.begins_with("ui_") or not InputMap.has_action(action_name):
             continue
-        InputMap.action_erase_events(action)
-        var event_data: Array = config.get_value("input", action, [])
+        var raw_event_data: Variant = config.get_value("input", action_name, [])
+        if typeof(raw_event_data) != TYPE_ARRAY:
+            continue
+        var event_data: Array = raw_event_data
+        var validated: Array[InputEvent] = []
         for entry in event_data:
-            var event: InputEvent = str_to_var(entry["data"])
-            if event:
-                InputMap.action_add_event(action, event)
+            var event := _decode_event(entry)
+            if event != null:
+                validated.append(event)
+        # Do not erase a working binding when the persisted value is malformed.
+        if validated.is_empty():
+            continue
+        InputMap.action_erase_events(action_name)
+        for event in validated:
+            InputMap.action_add_event(action_name, event)
 ```
 
-```csharp
-public void SaveBindings()
-{
-    var config = new ConfigFile();
-    foreach (StringName action in InputMap.GetActions())
-    {
-        if (((string)action).StartsWith("ui_"))
-            continue;
-        var events = InputMap.ActionGetEvents(action);
-        var eventData = new Godot.Collections.Array();
-        foreach (var ev in events)
-        {
-            var dict = new Godot.Collections.Dictionary
-            {
-                { "type", ev.GetClass() },
-                { "data", GD.VarToStr(ev) }
-            };
-            eventData.Add(dict);
-        }
-        config.SetValue("input", action, eventData);
-    }
-    config.Save("user://input_bindings.cfg");
-}
-
-public void LoadBindings()
-{
-    var config = new ConfigFile();
-    if (config.Load("user://input_bindings.cfg") != Error.Ok)
-        return;
-    foreach (string action in config.GetSectionKeys("input"))
-    {
-        if (!InputMap.HasAction(action))
-            continue;
-        InputMap.ActionEraseEvents(action);
-        var eventData = (Godot.Collections.Array)config.GetValue("input", action, new Godot.Collections.Array());
-        foreach (var entry in eventData)
-        {
-            var dict = (Godot.Collections.Dictionary)entry;
-            var ev = GD.StrToVar((string)dict["data"]).As<InputEvent>();
-            if (ev != null)
-                InputMap.ActionAddEvent(action, ev);
-        }
-    }
-}
-```
 
 ---
-

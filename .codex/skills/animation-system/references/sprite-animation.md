@@ -34,37 +34,3 @@ func _physics_process(delta: float) -> void:
 
     move_and_slide()
 ```
-
-```csharp
-using Godot;
-
-public partial class Character : CharacterBody2D
-{
-    private AnimatedSprite2D _sprite;
-
-    public override void _Ready()
-    {
-        _sprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        Vector2 inputDir = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
-
-        if (inputDir != Vector2.Zero)
-        {
-            Velocity = inputDir * 200.0f;
-            _sprite.Play("walk");
-            if (inputDir.X != 0.0f)
-                _sprite.FlipH = inputDir.X < 0.0f;
-        }
-        else
-        {
-            Velocity = Vector2.Zero;
-            _sprite.Play("idle");
-        }
-
-        MoveAndSlide();
-    }
-}
-```

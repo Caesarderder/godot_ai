@@ -26,20 +26,6 @@ func _on_enemy_died() -> void:
     print("Enemy died at frame: ", _frame_of_crash)
 ```
 
-```csharp
-// Add a counter to catch intermittent bugs
-private long _frameOfCrash = 0;
-
-public override void _Process(double delta)
-{
-    _frameOfCrash = Engine.GetProcessFrames();
-}
-
-private void OnEnemyDied()
-{
-    GD.Print("Enemy died at frame: ", _frameOfCrash);
-}
-```
 
 ### Step 2 — Isolate
 
@@ -53,13 +39,6 @@ func _ready() -> void:
     $SuspectNode.set_script(null)  # removes script, node becomes a plain Node
 ```
 
-```csharp
-// Quick isolation — disable a node's script temporarily at runtime
-public override void _Ready()
-{
-    GetNode("SuspectNode").SetScript(default);
-}
-```
 
 ### Step 3 — Form a Hypothesis
 
@@ -82,16 +61,6 @@ func take_damage(amount: int) -> void:
         die()
 ```
 
-```csharp
-public void TakeDamage(int amount)
-{
-    GD.Print($"[TRACE] TakeDamage called — amount: {amount}, health before: {_health}");
-    _health -= amount;
-    GD.Print($"[TRACE] health after: {_health}");
-    if (_health <= 0)
-        Die();
-}
-```
 
 ### Step 5 — Fix
 
@@ -102,16 +71,13 @@ public void TakeDamage(int amount)
 ### Step 6 — Verify
 
 - Reproduce the original steps — confirm the bug is gone.
-- Run any existing tests: `gut -gdir=res://tests` or `gdunit4_runner`.
+- Run the repository's documented test command using the framework and version
+  already installed in the project.
 - Check for regressions in related functionality.
 
-```bash
-# Run GUT tests headless
-godot --headless --script res://addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
-
-# Run gdUnit4 tests headless
-godot --headless -s res://addons/gdUnit4/bin/GdUnit4CmdTool.gd
-```
+Do not guess an add-on runner path: GUT and gdUnit4 layouts and command-line entry
+points vary by installed version. Inspect the project's add-on documentation or
+existing CI command first.
 
 ### Step 7 — Add a Test
 
@@ -127,16 +93,5 @@ func test_take_damage_does_not_go_below_zero_regression() -> void:
         "Health must clamp to 0, not go negative on overkill")
 ```
 
-```csharp
-// tests/HealthComponentTest.cs (using GdUnit4 or similar C# test framework)
-[TestCase]
-public void TakeDamage_DoesNotGoBelowZero_Regression()
-{
-    // Regression: health could go negative when overkill damage was applied
-    _health.TakeDamage(9999);
-    AssertThat(_health.CurrentHealth).IsEqual(0);
-}
-```
 
 ---
-

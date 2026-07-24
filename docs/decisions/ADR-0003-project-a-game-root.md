@@ -15,6 +15,7 @@ tags:
   - risk:worktree-boundary
 related:
   - decision.taptap-maker-game-root
+  - decision.return-to-project-a
   - reference.architecture-overview
   - reference.file-ownership
   - reference.implementation-status
@@ -24,7 +25,7 @@ related:
 
 ## 状态
 
-Deprecated，2026-07-20。历史决策保留；当前实现根由 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 替代。
+Deprecated，2026-07-20。历史决策保留；它曾由 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 替代。2026-07-23 恢复 Godot 主线的当前决策见 [KM:decision.return-to-project-a](ADR-0005-return-to-project-a.md)。
 
 ## 决策
 

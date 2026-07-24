@@ -1,13 +1,15 @@
 ---
 name: hud-system
-description: Use when building in-game HUDs — health bars, score displays, minimap, notifications, and damage numbers
+description: Use when building health bars, score displays, minimaps, notifications, and damage numbers in Godot 4.6 GDScript Web projects
 ---
 
-# HUD Systems in Godot 4.3+
+# HUD Systems in Godot 4.6
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Use Godot 4.6.x GDScript APIs that work in Builda's single-threaded Web export.
 
-> **Related skills:** **godot-ui** for Control node layout and themes, **component-system** for HealthComponent integration, **event-bus** for score/notification signals, **inventory-system** for inventory UI patterns, **2d-essentials** for CanvasLayer setup and draw order, **ability-system** for cooldown bar and resource bar binding patterns.
+> **Related skills:** **godot-ui** for Control node layout and themes, **godot-architecture** for health ownership and local signal boundaries, **inventory-system** for inventory UI patterns, and **2d-essentials** for CanvasLayer setup and draw order.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -46,7 +48,7 @@ World (Node2D / Node3D)
 **Key rules:**
 - Keep all HUD scenes under a single `CanvasLayer`. Do not mix HUD nodes into the game world tree.
 - Use `layer = 1` for the main HUD. Use higher values (e.g. `10`) for overlays or pause menus that must appear above the HUD.
-- Damage numbers are an exception — they can live in a `Node2D` child of the `CanvasLayer` and use `get_viewport().get_screen_transform()` to convert world positions to screen positions.
+- Damage numbers are an exception — they can live in a `Node2D` child of an identity-transform `CanvasLayer`. Convert world coordinates to HUD/viewport canvas coordinates with `get_viewport().get_canvas_transform()`; do not use OS screen coordinates for a CanvasLayer child.
 
 ---
 
@@ -113,59 +115,6 @@ func _animate_to(target_value: float) -> void:
     _tween.tween_property(self, "value", target_value, tween_duration)
 ```
 
-### C#
-
-```csharp
-// HealthBar.cs — attach to a ProgressBar or TextureProgressBar
-using Godot;
-
-public partial class HealthBar : ProgressBar
-{
-    [Export] public HealthComponent HealthComponent { get; set; }
-    [Export] public float TweenDuration { get; set; } = 0.25f;
-
-    private Tween _tween;
-
-    public override void _Ready()
-    {
-        Step = 0.0;
-        if (HealthComponent != null)
-            ConnectComponent(HealthComponent);
-    }
-
-    /// <summary>Call this when the HealthComponent is not available at _Ready time.</summary>
-    public void Bind(HealthComponent component)
-    {
-        if (HealthComponent != null)
-            HealthComponent.HealthChanged -= OnHealthChanged;
-        HealthComponent = component;
-        ConnectComponent(component);
-    }
-
-    private void ConnectComponent(HealthComponent component)
-    {
-        MaxValue = component.MaxHealth;
-        Value    = component.CurrentHealth;
-        component.HealthChanged += OnHealthChanged;
-    }
-
-    private void OnHealthChanged(int current, int maximum)
-    {
-        MaxValue = maximum;
-        AnimateTo(current);
-    }
-
-    private void AnimateTo(float targetValue)
-    {
-        _tween?.Kill();
-        _tween = CreateTween();
-        _tween.SetEase(Tween.EaseType.Out);
-        _tween.SetTrans(Tween.TransitionType.Quad);
-        _tween.TweenProperty(this, "value", targetValue, TweenDuration);
-    }
-}
-```
-
 **Tip:** If you use `TextureProgressBar`, set `fill_mode` to `FILL_LEFT_TO_RIGHT` and assign your bar texture to `texture_progress`. The `value` / `max_value` ratio drives how much of the texture is revealed.
 
 ---
@@ -211,62 +160,11 @@ func _set_counter_value(value: float) -> void:
     text = str(_displayed_score)
 ```
 
-### C#
-
-```csharp
-// ScoreDisplay.cs — attach to a Label
-using Godot;
-
-public partial class ScoreDisplay : Label
-{
-    [Export] public float CountDuration { get; set; } = 0.4f;
-
-    private int _displayedScore = 0;
-    private Tween _tween;
-
-    public override void _Ready()
-    {
-        EventBus.Instance.ScoreChanged += OnScoreChanged;
-        Text = "0";
-    }
-
-    private void OnScoreChanged(int newScore)
-    {
-        AnimateCounter(_displayedScore, newScore);
-    }
-
-    private void AnimateCounter(int from, int to)
-    {
-        _tween?.Kill();
-        _tween = CreateTween();
-        _tween.SetEase(Tween.EaseType.Out);
-        _tween.SetTrans(Tween.TransitionType.Quad);
-        _tween.TweenMethod(
-            Callable.From<double>(SetCounterValue),
-            (double)from,
-            (double)to,
-            CountDuration
-        );
-    }
-
-    private void SetCounterValue(double value)
-    {
-        _displayedScore = (int)value;
-        Text = _displayedScore.ToString();
-    }
-}
-```
-
 **EventBus signals needed:**
 
 ```gdscript
 # autoloads/event_bus.gd
 signal score_changed(new_score: int)
-```
-
-```csharp
-// EventBus.cs (partial — score signal)
-[Signal] public delegate void ScoreChangedEventHandler(int newScore);
 ```
 
 Emit from wherever points are awarded:
@@ -276,18 +174,13 @@ Emit from wherever points are awarded:
 EventBus.score_changed.emit(GameState.score)
 ```
 
-```csharp
-// Inside a collectible or enemy death handler
-EventBus.Instance.EmitSignal(EventBus.SignalName.ScoreChanged, GameState.Score);
-```
-
 ---
 
 ## 4. Damage Numbers
 
-Floating "−25" labels that rise and fade above the hit point. Pooled in a HUD-side spawner; world position converted to screen via `get_viewport().get_canvas_transform()`. Optional crit colorization before spawn.
+Floating "−25" labels that rise and fade above the hit point. Pooled in a HUD-side spawner; world position is converted to viewport/HUD canvas coordinates via `get_viewport().get_canvas_transform()`. Optional crit colorization before spawn.
 
-> See [references/damage-numbers.md](references/damage-numbers.md) for the full GDScript and C# DamageNumber scene + pooled spawner.
+> See [references/damage-numbers.md](references/damage-numbers.md) for the GDScript DamageNumber scene and pooled spawner.
 
 ---
 
@@ -295,7 +188,7 @@ Floating "−25" labels that rise and fade above the hit point. Pooled in a HUD-
 
 Toast / notification stack — a `VBoxContainer` anchored top-right with `max_visible` clamping and queue-driven dismissal. New toasts wait for an old one to expire before showing.
 
-> See [references/notifications.md](references/notifications.md) for the full GDScript and C# stack with auto-dismiss timers.
+> See [references/notifications.md](references/notifications.md) for the GDScript stack with auto-dismiss timers.
 
 ---
 
@@ -303,15 +196,15 @@ Toast / notification stack — a `VBoxContainer` anchored top-right with `max_vi
 
 Render a top-down view via a dedicated `SubViewport` + `Camera2D` that follows the player. Display the SubViewport texture in a `TextureRect` inside the HUD. Optional circular mask via `ColorRect` shader. Set `render_target_update_mode = UPDATE_ALWAYS`.
 
-> See [references/minimap.md](references/minimap.md) for the SubViewport setup, MinimapCamera GDScript + C#, and circular-mask shader.
+> See [references/minimap.md](references/minimap.md) for the SubViewport setup, GDScript MinimapCamera, and circular-mask shader.
 
 ---
 
 ## 7. Interaction Prompts
 
-Screen-space "Press [E] to interact" prompt — a `Label` inside the HUD that follows an interactable's screen position each frame. Driven by `body_entered` / `body_exited` on the interactable's `Area2D`. Use `InputMap.action_get_events(name)` to display the correct key for the player's current binding.
+HUD-space "Press [E] to interact" prompt — a `Label` inside an identity-transform HUD `CanvasLayer` that follows an interactable's viewport position each frame. Driven by `body_entered` / `body_exited` on the interactable's `Area2D`. Use `InputMap.action_get_events(name)` to display the correct key for the player's current binding.
 
-> See [references/interaction-prompts.md](references/interaction-prompts.md) for the full GDScript and C# prompt + Interactable Area2D pair.
+> See [references/interaction-prompts.md](references/interaction-prompts.md) for the GDScript prompt and Interactable Area2D pair.
 
 ---
 
@@ -322,7 +215,7 @@ Screen-space "Press [E] to interact" prompt — a `Label` inside the HUD that fo
 - [ ] Health bar binds to `HealthComponent.health_changed` signal — does not poll in `_process`
 - [ ] Tween is killed (`_tween.kill()`) before starting a new one so rapid damage does not stack animations
 - [ ] Score counter uses `tween_method` to interpolate the displayed integer — not a jump cut
-- [ ] Damage number positions are converted from world space to screen space using `get_viewport().get_canvas_transform()`
+- [ ] World-following HUD positions are converted to viewport/HUD canvas space with `get_viewport().get_canvas_transform()`; OS screen transforms are not assigned to CanvasLayer children
 - [ ] Damage number pool size is large enough that labels are not recycled before their tween completes
 - [ ] Notification stack enforces `max_visible` and re-checks the queue after each dismissal
 - [ ] Toast auto-dismiss uses a `Timer` node — not `await get_tree().create_timer()`

@@ -43,19 +43,6 @@ func _physics_process(delta: float) -> void:
     # path_follow.progress_ratio += 0.1 * delta
 ```
 
-```csharp
-private PathFollow2D _pathFollow;
-
-public override void _Ready()
-{
-    _pathFollow = GetNode<PathFollow2D>("Path2D/PathFollow2D");
-}
-
-public override void _PhysicsProcess(double delta)
-{
-    _pathFollow.Progress += speed * (float)delta;
-}
-```
 
 ### PathFollow Properties
 
@@ -68,4 +55,3 @@ public override void _PhysicsProcess(double delta)
 | `cubic_interp`   | Use cubic interpolation for smoother following   |
 
 ---
-

@@ -1,203 +1,65 @@
-# Draw Call Optimization
-
-Reference for `skills/godot-optimization/SKILL.md` — reducing per-frame draw calls via batching, atlases, materials, culling, and LOD.
+# Draw-Call Diagnosis and Optimization
 
 > ← Back to [SKILL.md](../SKILL.md)
 
----
+Draw-call cost depends on target GPU/browser, resolution, materials, overdraw, and shader work. Capture the same Web scenario before and after a change; do not optimize toward a universal count.
 
-Every distinct mesh, sprite, or canvas item that cannot be batched with its neighbours costs one draw call. Reducing draw calls is one of the highest-leverage optimisations, especially on mobile.
+## CanvasGroup Is a Compositing Tool
 
-### 2D Batching with CanvasGroup
+`CanvasGroup` draws its children into an intermediate buffer so effects such as group opacity, clipping, or a group material can be applied to the combined result. It is not an automatic one-draw-call batching switch and can add framebuffer and fill-rate cost.
 
-Wrap sibling nodes inside a `CanvasGroup` so Godot batches them into a single draw call. This is most effective for HUD elements, tile layers, and groups of sprites that share the same texture.
+Use it when group compositing is required. If considering it for performance, compare draw calls, frame time, and visual output on the target Web device before keeping the change.
 
-```gdscript
-# In the scene tree, add a CanvasGroup parent node.
-# CanvasGroup batches all children into one draw call automatically.
-# No code is required — the node type itself enables batching.
-# Ensure children share the same texture and blend mode for maximum benefit.
-```
+## Share Compatible Render State
 
-Constraints for batching to occur:
-- Children must share the same texture (use a texture atlas).
-- Children must use the same blend mode and shader (or none).
-- No `CanvasItem.clip_children` or light occluder between them.
-
-### Reducing Unique Materials
-
-Each unique material combination breaks a batch. Keep the material count low:
+Unique materials and texture switches can prevent efficient renderer submission. Prefer a shared material and instance uniforms when per-instance variation is required:
 
 ```gdscript
-# WRONG — creating a new material per instance duplicates draw calls
-func _ready() -> void:
-    var mat := StandardMaterial3D.new()
-    mat.albedo_color = Color(randf(), randf(), randf())
-    $MeshInstance3D.material_override = mat  # unique material = unique draw call
-
-# RIGHT — vary colour via a shader parameter on a shared material
+# Shader declares: instance uniform vec4 tint : source_color = vec4(1.0);
 @export var shared_material: ShaderMaterial
 
+
 func _ready() -> void:
-    # All instances share the same material; vary only the instance parameter
-    var mat := shared_material.duplicate()  # only duplicate when variance is truly needed
-    mat.set_shader_parameter("tint", Color(randf(), randf(), randf()))
-    $MeshInstance3D.material_override = mat
+    $Sprite2D.material = shared_material
+    $Sprite2D.set_instance_shader_parameter("tint", Color(1.0, 0.5, 0.2))
 ```
 
-**C#:**
+Duplicating a material creates distinct render state; do not describe that as preserving batching. Validate whether the chosen renderer can combine the actual nodes/materials in the captured scene.
 
-```csharp
-// WRONG — creating a new material per instance duplicates draw calls
-public override void _Ready()
-{
-    var mat = new StandardMaterial3D();
-    mat.AlbedoColor = new Color(GD.Randf(), GD.Randf(), GD.Randf());
-    GetNode<MeshInstance3D>("MeshInstance3D").MaterialOverride = mat; // unique draw call
-}
+## Atlases
 
-// RIGHT — vary colour via a shader parameter on a shared material
-[Export] public ShaderMaterial SharedMaterial { get; set; }
+Atlases can reduce texture switches and asset overhead for compatible sprites, tiles, and UI icons. They do not guarantee a single draw call when materials, blend modes, clipping, lighting, or canvas state differ.
 
-public override void _Ready()
-{
-    var mat = (ShaderMaterial)SharedMaterial.Duplicate();
-    mat.SetShaderParameter("tint", new Color(GD.Randf(), GD.Randf(), GD.Randf()));
-    GetNode<MeshInstance3D>("MeshInstance3D").MaterialOverride = mat;
-}
-```
+- Use a coherent TileSet atlas for related tiles.
+- Use `AtlasTexture` regions for compatible UI/sprite assets.
+- Avoid giant atlases that increase memory residency or upload cost.
+- Re-measure draw calls and frame time after packing.
 
-For 3D scenes, enable **Rendering > Mesh LOD** and use `GeometryInstance3D.gi_mode = BAKE_STATIC` where possible to let the engine merge static geometry.
+## Cull Processing and Rendering Work
 
-### Texture Atlases
-
-Pack multiple sprites into a single atlas texture so all sprites sharing that atlas batch into one draw call.
-
-- In the editor: **Import > Sprite Frames** supports atlas import.
-- For tilemaps, use a single TileSet with one atlas texture per tile layer.
-- For UI, pack icons into a single `AtlasTexture` or use `StyleBoxTexture` regions.
-
-### Visibility Culling
-
-Stop processing and rendering objects that are off-screen.
+Use visibility notifiers to stop expensive custom processing only when off-screen behavior is not required:
 
 ```gdscript
-# 2D — VisibleOnScreenNotifier2D pauses processing when the node leaves the viewport
 extends Sprite2D
 
-@onready var _vis: VisibleOnScreenNotifier2D = $VisibleOnScreenNotifier2D
+@onready var visibility_notifier: VisibleOnScreenNotifier2D = $VisibleOnScreenNotifier2D
+
 
 func _ready() -> void:
-    _vis.screen_entered.connect(_on_screen_entered)
-    _vis.screen_exited.connect(_on_screen_exited)
-    set_process(false)  # start paused; enable only when visible
-
-func _on_screen_entered() -> void:
-    set_process(true)
-
-func _on_screen_exited() -> void:
-    set_process(false)
+    visibility_notifier.screen_entered.connect(func() -> void: set_process(true))
+    visibility_notifier.screen_exited.connect(func() -> void: set_process(false))
 ```
 
-**C#:**
+Visibility callbacks do not replace gameplay simulation for objects that must continue acting off-screen. Separate visual work from authoritative logic when only rendering-related processing can pause.
 
-```csharp
-// 2D — VisibleOnScreenNotifier2D pauses processing when the node leaves the viewport
-public partial class CulledSprite : Sprite2D
-{
-    private VisibleOnScreenNotifier2D _vis;
+## 3D LOD
 
-    public override void _Ready()
-    {
-        _vis = GetNode<VisibleOnScreenNotifier2D>("VisibleOnScreenNotifier2D");
-        _vis.ScreenEntered += OnScreenEntered;
-        _vis.ScreenExited += OnScreenExited;
-        SetProcess(false); // start paused; enable only when visible
-    }
+Use imported mesh LOD or explicit distance-based variants only after measuring geometry/render cost. Validate transitions, collision ownership, and memory; keeping several LOD meshes resident can trade GPU work for memory.
 
-    private void OnScreenEntered() => SetProcess(true);
-    private void OnScreenExited() => SetProcess(false);
-}
-```
+## Verification Checklist
 
-```gdscript
-# 3D — VisibleOnScreenNotifier3D works identically
-extends Node3D
-
-@onready var _vis: VisibleOnScreenNotifier3D = $VisibleOnScreenNotifier3D
-
-func _ready() -> void:
-    _vis.screen_entered.connect(func(): set_process(true))
-    _vis.screen_exited.connect(func(): set_process(false))
-    set_process(false)
-```
-
-**C#:**
-
-```csharp
-// 3D — VisibleOnScreenNotifier3D works identically
-public partial class CulledNode3D : Node3D
-{
-    public override void _Ready()
-    {
-        var vis = GetNode<VisibleOnScreenNotifier3D>("VisibleOnScreenNotifier3D");
-        vis.ScreenEntered += () => SetProcess(true);
-        vis.ScreenExited += () => SetProcess(false);
-        SetProcess(false);
-    }
-}
-```
-
-You can also query visibility directly:
-
-```gdscript
-# Only update expensive logic when the node is visible on screen
-func _process(_delta: float) -> void:
-    if not $VisibleOnScreenNotifier2D.is_on_screen():
-        return
-    _run_expensive_animation_logic()
-```
-
-**C#:**
-
-```csharp
-// Only update expensive logic when the node is visible on screen
-public override void _Process(double delta)
-{
-    if (!GetNode<VisibleOnScreenNotifier2D>("VisibleOnScreenNotifier2D").IsOnScreen())
-        return;
-    RunExpensiveAnimationLogic();
-}
-```
-
-### LOD for 3D
-
-Use `VisibleOnScreenNotifier3D` distance thresholds or Godot's built-in LOD system to swap high-poly meshes for low-poly equivalents at range.
-
-```gdscript
-# Manually swap mesh at distance
-@export var lod_distance: float = 50.0
-@onready var _camera := get_viewport().get_camera_3d()
-
-func _process(_delta: float) -> void:
-    var dist := global_position.distance_to(_camera.global_position)
-    $HighPolyMesh.visible = dist < lod_distance
-    $LowPolyMesh.visible = dist >= lod_distance
-```
-
-**C#:**
-
-```csharp
-// Manually swap mesh at distance
-[Export] public float LodDistance { get; set; } = 50.0f;
-
-public override void _Process(double delta)
-{
-    var camera = GetViewport().GetCamera3D();
-    float dist = GlobalPosition.DistanceTo(camera.GlobalPosition);
-    GetNode<MeshInstance3D>("HighPolyMesh").Visible = dist < LodDistance;
-    GetNode<MeshInstance3D>("LowPolyMesh").Visible = dist >= LodDistance;
-}
-```
-
-For automatic LOD: set `GeometryInstance3D.lod_bias` and enable **Rendering > Mesh LOD** in Project Settings. Godot 4 generates LOD levels automatically during import if **Import > Generate LODs** is enabled on the mesh asset.
+- [ ] Baseline and after captures use the same Web scene and interaction.
+- [ ] Material/atlas changes preserve visual output.
+- [ ] `CanvasGroup` is justified by compositing semantics or measured evidence.
+- [ ] Off-screen culling does not pause required gameplay logic.
+- [ ] Draw-call change is evaluated with frame time and overdraw, not alone.

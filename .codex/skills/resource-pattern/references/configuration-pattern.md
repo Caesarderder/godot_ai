@@ -1,6 +1,5 @@
 # Resource as Configuration
 
-Reference for `skills/resource-pattern/SKILL.md` — Resources for game data (loot tables, enemy stats, item catalogs). GDScript + C# implementation.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -40,7 +39,7 @@ var _current_health: int
 
 
 func _ready() -> void:
-    # make_unique() so this instance has its own mutable copy
+    # duplicate() returns an instance-local mutable copy.
     stats = stats.duplicate()
     _current_health = stats.health
 
@@ -64,70 +63,7 @@ func _roll_drops() -> void:
         pass
 ```
 
-### C#
 
-```csharp
-// EnemyStats.cs
-using Godot;
-using Godot.Collections;
 
-[GlobalClass]
-public partial class EnemyStats : Resource
-{
-    [ExportGroup("Combat")]
-    [Export(PropertyHint.Range, "1,5000,1")]     public int   Health         { get; set; } = 100;
-    [Export(PropertyHint.Range, "0,500,0.1")]    public float Speed          { get; set; } = 80.0f;
-    [Export(PropertyHint.Range, "0,999,1")]      public int   Damage         { get; set; } = 10;
-    [Export(PropertyHint.Range, "0,1,0.01")]     public float CritChance     { get; set; } = 0.05f;
-    [Export(PropertyHint.Range, "0.1,10,0.1")]   public float AttackInterval { get; set; } = 1.5f;
-
-    [ExportGroup("Drops")]
-    [Export] public Array<Resource> DropTable  { get; set; } = new();
-    [Export(PropertyHint.Range, "0,1,0.01")]
-    public float DropChance { get; set; } = 0.3f;
-}
-```
-
-```csharp
-// Enemy.cs — consumes EnemyStats
-using Godot;
-
-public partial class Enemy : CharacterBody2D
-{
-    [Export] public EnemyStats Stats { get; set; }
-
-    private int _currentHealth;
-
-    public override void _Ready()
-    {
-        // Duplicate so this instance has its own mutable copy
-        Stats = (EnemyStats)Stats.Duplicate();
-        _currentHealth = Stats.Health;
-    }
-
-    public void TakeDamage(int amount)
-    {
-        _currentHealth -= amount;
-        if (_currentHealth <= 0)
-            Die();
-    }
-
-    private void Die()
-    {
-        RollDrops();
-        QueueFree();
-    }
-
-    private void RollDrops()
-    {
-        if (GD.Randf() > Stats.DropChance) return;
-        foreach (var drop in Stats.DropTable)
-        {
-            // Spawn drop — implementation depends on project drop system
-        }
-    }
-}
-```
 
 ---
-

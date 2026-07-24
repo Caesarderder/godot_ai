@@ -52,37 +52,6 @@ func _setup_viewport(viewport: SubViewport, player_index: Vector2i) -> void:
         player.set_device(player_index.x)
 ```
 
-```csharp
-// SplitScreenSetup.cs — attach to the root node of your split-screen scene
-using Godot;
-
-public partial class SplitScreenSetup : Node
-{
-    [Export] public PackedScene PlayerScene;
-
-    public override void _Ready()
-    {
-        SetupViewport(GetNode<SubViewport>("HBoxContainer/P1Container/P1Viewport"), new Vector2I(0, 0));
-        SetupViewport(GetNode<SubViewport>("HBoxContainer/P2Container/P2Viewport"), new Vector2I(1, 0));
-    }
-
-    private void SetupViewport(SubViewport viewport, Vector2I playerIndex)
-    {
-        // Match viewport size to half the window
-        var windowSize = DisplayServer.WindowGetSize();
-        viewport.Size = new Vector2I(windowSize.X / 2, windowSize.Y);
-
-        var player = PlayerScene.Instantiate<Node>();
-        viewport.AddChild(player);
-
-        // Each player uses a separate input device (gamepad index via playerIndex.X)
-        // Wire up device index through an exported property on your player script
-        if (player.HasMethod("SetDevice"))
-            player.Call("SetDevice", playerIndex.X);
-    }
-}
-```
-
 **Key settings for each `SubViewport`:**
 
 | Property | Value | Reason |
@@ -93,4 +62,3 @@ public partial class SplitScreenSetup : Node
 | `handle_input_locally` | `false` | Let the root scene handle input routing |
 
 ---
-

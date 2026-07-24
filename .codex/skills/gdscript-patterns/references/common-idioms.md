@@ -1,6 +1,6 @@
 # Common GDScript Idioms
 
-Reference for `skills/gdscript-patterns/SKILL.md` — ternary expressions, string formatting, null/empty checks, dictionary access patterns, array operations, setget/properties.
+Reference for `gdscript-patterns/SKILL.md` — ternary expressions, string formatting, validity checks, dictionary access, array operations, and properties.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -29,15 +29,15 @@ var text := "Score: %d / %d" % [current_score, max_score]
 ### Null / Empty Checks
 
 ```gdscript
-# Check if a node reference is valid
+# Check a reference that may point to a freed Object
 if is_instance_valid(target):
     target.take_damage(10)
 
-# Check if a variable is null
+# Check a RefCounted/value that cannot become a freed Object reference
 if weapon != null:
     weapon.attack()
 
-# Shorthand for non-null (works because null is falsy)
+# Objects are false in boolean context when null or freed
 if weapon:
     weapon.attack()
 
@@ -102,4 +102,3 @@ var health: int = 100:
 ```
 
 ---
-

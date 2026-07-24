@@ -1,13 +1,15 @@
 ---
 name: 2d-essentials
-description: Use when working with 2D-specific systems — TileMaps, parallax scrolling, 2D lights and shadows, canvas layers, particles 2D, custom drawing, and 2D meshes in Godot 4.3+
+description: Use when working with TileMapLayer, parallax, 2D lights and shadows, canvas layers, particles, custom drawing, and 2D meshes in Godot 4.6 GDScript Web projects
 ---
 
-# 2D Essentials in Godot 4.3+
+# 2D Essentials in Godot 4.6
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Use Godot 4.6.x GDScript APIs that work in Builda's single-threaded Web export.
 
 > **Related skills:** **player-controller** for CharacterBody2D movement patterns, **animation-system** for AnimatedSprite2D and sprite animation, **physics-system** for collision shapes and raycasting, **camera-system** for Camera2D follow and shake, **shader-basics** for 2D shaders and post-processing, **godot-optimization** for rendering and draw call tuning.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -21,8 +23,11 @@ Within a single canvas layer, nodes draw in **scene tree order** — nodes liste
 # Draw this node above siblings (default z_index is 0)
 z_index = 10
 
-# Make z_index relative to parent (default: false = global)
+# Keep z_index relative to the parent (default: true)
 z_as_relative = true
+
+# Set false only when this node needs an absolute canvas-layer Z index.
+# z_as_relative = false
 ```
 
 ### CanvasLayer
@@ -70,29 +75,20 @@ var local_pos: Vector2 = get_global_transform().affine_inverse() * world_pos
 var screen_pos: Vector2 = get_viewport().get_screen_transform() * get_global_transform_with_canvas() * local_pos
 ```
 
-```csharp
-// Local to canvas (world) coordinates
-Vector2 worldPos = GetGlobalTransform() * localPos;
-Vector2 localFromWorld = GetGlobalTransform().AffineInverse() * worldPos;
-
-// Local to screen coordinates
-Vector2 screenPos = GetViewport().GetScreenTransform() * GetGlobalTransformWithCanvas() * localPos;
-```
-
 ---
 
 
 ## 2. TileMap System
 
-`TileMapLayer` (Godot 4.5+) is the modern API — one tilemap = one node = one layer. Drive painting with a `TileSet` resource (atlas + properties + physics + custom data). Use **terrain autotiling** for biome-aware tile selection, **scene collection tiles** for placing scene instances on tiles.
+`TileMapLayer` is the Godot 4.6 API — one tilemap = one node = one layer. Drive painting with a `TileSet` resource (atlas + properties + physics + custom data). Use **terrain autotiling** for biome-aware tile selection and **scene collection tiles** for placing scene instances on tiles.
 
-> See [references/tilemap.md](references/tilemap.md) for full TileSet setup, atlas / physics / terrain configuration, custom data on tiles, scene collection tiles, and the 4.5+ tile-collision-bump auto-merge fix.
+> See [references/tilemap.md](references/tilemap.md) for TileSet setup, atlas/physics/terrain configuration, custom tile data, scene collection tiles, and the Godot 4.6 tile-collision-bump behavior.
 
 ---
 
 ## 3. Parallax Scrolling
 
-`Parallax2D` (Godot 4.4+) replaces the older `ParallaxBackground`/`ParallaxLayer` pair. Set `scroll_scale` per layer (0 = static, 1 = follows camera 1:1, fractional values for depth). Add `repeat_size` for infinite tiling.
+Use `Parallax2D` in Godot 4.6 instead of the older `ParallaxBackground`/`ParallaxLayer` pair. Set `scroll_scale` per layer (0 = static, 1 = follows camera 1:1, fractional values for depth). Add `repeat_size` for infinite tiling.
 
 > See [references/parallax.md](references/parallax.md) for `Parallax2D` setup, side-scroller layer example, infinite repeat, split-screen parallax, common mistakes.
 
@@ -119,8 +115,6 @@ Vector2 screenPos = GetViewport().GetScreenTransform() * GetGlobalTransformWithC
 Override `_draw()` on any `CanvasItem` to draw lines, polygons, text, or arbitrary shapes. Call `queue_redraw()` to trigger a re-render (never call `_draw()` directly).
 
 > See [references/custom-drawing.md](references/custom-drawing.md) for the `_draw()` method, redrawing patterns, full drawing-methods reference, default font usage, `@tool` editor preview, line-width gotchas.
-
-> **Godot 4.7+:** `DrawableTexture2D` — a runtime-drawable texture type — shipped experimental in 4.7 and is not yet recommended for production.
 
 ---
 
@@ -155,34 +149,9 @@ Many drawing methods support an `antialiased` parameter:
 draw_line(Vector2.ZERO, Vector2(100, 50), Color.WHITE, 2.0, true)  # antialiased = true
 ```
 
-```csharp
-// Equivalent in a CanvasItem subclass (e.g., a custom Control or Node2D):
-public override void _Draw()
-{
-    DrawLine(new Vector2(0, 0), new Vector2(100, 50), Colors.White, width: 2.0f, antialiased: true);
-}
-```
+`Line2D` has an `antialiased` property; enable it in the Inspector or set `line.antialiased = true`. This generates additional geometry, so it does not require MSAA.
 
-`Line2D` has an `Antialiased` property in the inspector — set it via `line2D.Antialiased = true` in C# or as an Inspector toggle in the editor. This works by generating additional geometry — no MSAA needed.
-
-> ⚠️ **Changed in Godot 4.7:** `CanvasItem` antialiased line drawing no longer adds the antialiasing feather. The feather made `draw_line()`-style lines appear thicker than intended, so antialiased lines render thinner after upgrading — projects that relied on the old look must draw a thicker `width`. See the [4.7 migration guide](https://docs.godotengine.org/en/latest/tutorials/migrating/upgrading_to_godot_4.7.html).
-
-### MSAA 2D
-
-Available in Forward+ and Mobile renderers only (NOT Compatibility).
-
-**Project Settings → Rendering → Anti Aliasing → Quality → MSAA 2D**
-
-Levels: 2x, 4x, 8x.
-
-| MSAA affects | MSAA does NOT affect |
-|-------------|---------------------|
-| Geometry edges (lines, polygons) | Aliasing within nearest-neighbor textures |
-| Sprite edges touching texture edges | Custom 2D shader output |
-| | Font rendering |
-| | Specular aliasing with Light2D |
-
-> **For pixel art:** Do NOT enable MSAA 2D — it blurs intentionally sharp edges. Use the per-node `antialiased` parameter selectively.
+Compatibility Web projects should use per-node antialiasing and asset-appropriate filtering rather than renderer-specific MSAA. For pixel art, leave antialiasing off where deliberately sharp edges are part of the style.
 
 ---
 

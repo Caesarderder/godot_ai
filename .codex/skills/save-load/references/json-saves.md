@@ -1,367 +1,213 @@
-# JSON — Game Saves
+# Safe JSON save slots
 
-Reference for `skills/save-load/SKILL.md` — `JSON.stringify` / `JSON.parse_string` for game save state. Full GDScript and C# implementation.
+This reference provides the file boundary for a Godot 4.6 GDScript save manager. Keep scene-specific snapshot/apply logic outside this boundary.
 
-> ← Back to [SKILL.md](../SKILL.md)
-
----
-## 3. JSON — Game Saves
-
-Use JSON for game saves. It is portable, debuggable, and easy to version-migrate.
-
-### GDScript
+## Paths and limits
 
 ```gdscript
-# save_manager.gd — add as autoload named SaveManager
 extends Node
 
-const SAVE_DIR       := "user://saves/"
+const SAVE_DIR := "user://saves"
 const SAVE_EXTENSION := ".json"
-const CURRENT_VERSION := 2
+const BACKUP_EXTENSION := ".bak"
+const TEMP_EXTENSION := ".tmp"
+const CURRENT_VERSION := 3
+const MAX_SAVE_BYTES := 2 * 1024 * 1024
+const MAX_SLOT_LENGTH := 32
+const MAX_INVENTORY_ITEMS := 500
 
 
 func _ready() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
+	var error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(SAVE_DIR))
+	if error != OK:
+		push_error("Cannot create save directory: %s" % error_string(error))
+```
 
+Validate the ID before constructing any path:
 
-# ── Save ──────────────────────────────────────────────────────────────────────
-
-func save_game(slot_name: String) -> bool:
-	var player := get_tree().get_first_node_in_group("player")
-	var world  := get_tree().get_first_node_in_group("world")
-
-	var data: Dictionary = {
-		"version":   CURRENT_VERSION,
-		"timestamp": Time.get_unix_time_from_system(),
-		"player":    _serialize_player(player),
-		"world":     _serialize_world(world),
-	}
-
-	var json_string := JSON.stringify(data, "\t")
-	var path        := SAVE_DIR + slot_name + SAVE_EXTENSION
-	var file        := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		push_error("SaveManager: cannot open '%s' for writing — error %d" % [path, FileAccess.get_open_error()])
+```gdscript
+func _is_valid_slot(slot: String) -> bool:
+	if slot.is_empty() or slot.length() > MAX_SLOT_LENGTH:
 		return false
-
-	file.store_string(json_string)
+	for index in slot.length():
+		var code := slot.unicode_at(index)
+		var is_digit := code >= 48 and code <= 57
+		var is_upper := code >= 65 and code <= 90
+		var is_lower := code >= 97 and code <= 122
+		if not is_digit and not is_upper and not is_lower and code != 45 and code != 95:
+			return false
 	return true
 
 
-func _serialize_player(player: Node) -> Dictionary:
+func _paths(slot: String) -> Dictionary:
+	assert(_is_valid_slot(slot))
+	var primary := "%s/%s%s" % [SAVE_DIR, slot, SAVE_EXTENSION]
 	return {
-		"position":  {"x": player.global_position.x, "y": player.global_position.y},
-		"health":    player.health,
-		"inventory": player.inventory.duplicate(),
+		"primary": primary,
+		"backup": primary + BACKUP_EXTENSION,
+		"temporary": primary + TEMP_EXTENSION,
 	}
+```
 
+This allowlist rejects separators, traversal, absolute paths, whitespace, and suffix injection.
 
-func _serialize_world(world: Node) -> Dictionary:
-	var enemies: Array = []
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		enemies.append({
-			"scene_path": enemy.scene_file_path,
-			"position":   {"x": enemy.global_position.x, "y": enemy.global_position.y},
-			"health":     enemy.health,
-		})
-	return {"enemies": enemies}
+## Atomic publication with backup
 
-
-# ── Load ──────────────────────────────────────────────────────────────────────
-
-func load_game(slot_name: String) -> bool:
-	var path := SAVE_DIR + slot_name + SAVE_EXTENSION
-	if not FileAccess.file_exists(path):
-		push_error("SaveManager: save file not found at '%s'" % path)
+```gdscript
+func save_snapshot(slot: String, data: Dictionary) -> bool:
+	if not _is_valid_slot(slot):
+		push_error("Invalid save slot")
+		return false
+	if not _validate_current_schema(data):
 		return false
 
+	var encoded := JSON.stringify(data)
+	if encoded.to_utf8_buffer().size() > MAX_SAVE_BYTES:
+		push_error("Save exceeds byte limit")
+		return false
+
+	var paths := _paths(slot)
+	_remove_if_present(paths.temporary)
+	var file := FileAccess.open(paths.temporary, FileAccess.WRITE)
+	if file == null:
+		push_error("Cannot open temporary save: %s" % FileAccess.get_open_error())
+		return false
+	file.store_string(encoded)
+	file.flush()
+	file.close()
+
+	if FileAccess.file_exists(paths.backup):
+		var remove_error := DirAccess.remove_absolute(ProjectSettings.globalize_path(paths.backup))
+		if remove_error != OK:
+			_remove_if_present(paths.temporary)
+			return false
+
+	var moved_primary := false
+	if FileAccess.file_exists(paths.primary):
+		var backup_error := DirAccess.rename_absolute(
+			ProjectSettings.globalize_path(paths.primary),
+			ProjectSettings.globalize_path(paths.backup),
+		)
+		if backup_error != OK:
+			_remove_if_present(paths.temporary)
+			return false
+		moved_primary = true
+
+	var publish_error := DirAccess.rename_absolute(
+		ProjectSettings.globalize_path(paths.temporary),
+		ProjectSettings.globalize_path(paths.primary),
+	)
+	if publish_error == OK:
+		return true
+
+	push_error("Cannot publish save: %s" % error_string(publish_error))
+	if moved_primary:
+		var rollback_error := DirAccess.rename_absolute(
+			ProjectSettings.globalize_path(paths.backup),
+			ProjectSettings.globalize_path(paths.primary),
+		)
+		if rollback_error != OK:
+			push_error("Cannot restore backup: %s" % error_string(rollback_error))
+	_remove_if_present(paths.temporary)
+	return false
+
+
+func _remove_if_present(path: String) -> void:
+	if FileAccess.file_exists(path):
+		var error := DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+		if error != OK:
+			push_warning("Cannot remove '%s': %s" % [path, error_string(error)])
+```
+
+Keep temporary and primary files in the same directory so publication does not cross filesystem boundaries. This sequence retains the previous complete primary as a backup; it cannot promise stronger durability than the platform filesystem or browser storage provides.
+
+## Bounded load and recovery
+
+```gdscript
+func load_snapshot(slot: String) -> Dictionary:
+	if not _is_valid_slot(slot):
+		push_error("Invalid save slot")
+		return {}
+	var paths := _paths(slot)
+	var data := _read_and_validate(paths.primary)
+	if not data.is_empty():
+		return data
+	data = _read_and_validate(paths.backup)
+	if not data.is_empty():
+		push_warning("Recovered save slot '%s' from backup" % slot)
+	return data
+
+
+func _read_and_validate(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		push_error("SaveManager: cannot open '%s' for reading — error %d" % [path, FileAccess.get_open_error()])
-		return false
+		return {}
+	var length := file.get_length()
+	if length <= 0 or length > MAX_SAVE_BYTES:
+		file.close()
+		return {}
+	var text := file.get_as_text()
+	file.close()
 
-	var json   := JSON.new()
-	var err    := json.parse(file.get_as_text())
-	if err != OK:
-		push_error("SaveManager: JSON parse error in '%s': %s" % [path, json.get_error_message()])
-		return false
-
-	var data: Dictionary = json.data
-	data = _migrate(data)
-
-	var player := get_tree().get_first_node_in_group("player")
-	var world  := get_tree().get_first_node_in_group("world")
-	_deserialize_player(player, data["player"])
-	_deserialize_world(world, data["world"])
-	return true
-
-
-func _deserialize_player(player: Node, data: Dictionary) -> void:
-	player.global_position = Vector2(data["position"]["x"], data["position"]["y"])
-	player.health          = data["health"]
-	player.inventory       = data["inventory"].duplicate()
-
-
-func _deserialize_world(world: Node, data: Dictionary) -> void:
-	# Remove existing enemies spawned at runtime
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		enemy.queue_free()
-
-	for entry: Dictionary in data["enemies"]:
-		var scene: PackedScene = load(entry["scene_path"])
-		if scene == null:
-			push_error("SaveManager: missing scene '%s'" % entry["scene_path"])
-			continue
-		var enemy: Node = scene.instantiate()
-		world.add_child(enemy)
-		enemy.global_position = Vector2(entry["position"]["x"], entry["position"]["y"])
-		enemy.health          = entry["health"]
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-func get_save_slots() -> Array[String]:
-	var slots: Array[String] = []
-	var dir := DirAccess.open(SAVE_DIR)
-	if dir == null:
-		return slots
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(SAVE_EXTENSION):
-			slots.append(file_name.trim_suffix(SAVE_EXTENSION))
-		file_name = dir.get_next()
-	return slots
-
-
-func delete_save(slot_name: String) -> bool:
-	var path := SAVE_DIR + slot_name + SAVE_EXTENSION
-	var err  := DirAccess.remove_absolute(path)
-	if err != OK:
-		push_error("SaveManager: failed to delete '%s' — error %d" % [path, err])
-		return false
-	return true
-
-
-# ── Migration ─────────────────────────────────────────────────────────────────
-
-func _migrate(data: Dictionary) -> Dictionary:
-	var version: int = data.get("version", 0)
-
-	if version < 1:
-		# v0 → v1: add inventory array
-		data["player"]["inventory"] = []
-		version = 1
-
-	if version < 2:
-		# v1 → v2: add skills array to player
-		data["player"]["skills"] = []
-		version = 2
-
-	data["version"] = CURRENT_VERSION
+	var parsed: Variant = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {}
+	var data := parsed as Dictionary
+	if not _validate_version_envelope(data):
+		return {}
+	data["version"] = int(data["version"])
+	data = _migrate(data.duplicate(true))
+	if not _validate_current_schema(data):
+		return {}
 	return data
 ```
 
-### C#
+Using `{}` as failure requires the current schema to reject an empty dictionary. A production API may return a result object with an error enum so the UI can distinguish missing, corrupt, unsupported, and recovered saves.
 
-```csharp
-// SaveManager.cs — add as autoload named SaveManager
-using System.Collections.Generic;
-using Godot;
+## Schema gates
 
-public partial class SaveManager : Node
-{
-    private const string SaveDir        = "user://saves/";
-    private const string SaveExtension  = ".json";
-    private const int    CurrentVersion = 2;
+```gdscript
+func _validate_version_envelope(data: Dictionary) -> bool:
+	if not data.has("version") or not _is_json_integer(data.version):
+		return false
+	var version := int(data.version)
+	return version >= 1 and version <= CURRENT_VERSION
 
-    public override void _Ready()
-    {
-        DirAccess.MakeDirRecursiveAbsolute(SaveDir);
-    }
 
-    // ── Save ─────────────────────────────────────────────────────────────────
+func _validate_current_schema(data: Dictionary) -> bool:
+	if not _validate_version_envelope(data) or data.version != CURRENT_VERSION:
+		return false
+	if not data.has("player") or typeof(data.player) != TYPE_DICTIONARY:
+		return false
+	var player := data.player as Dictionary
+	if not player.has("health") or not _is_json_integer(player.health):
+		return false
+	var health := int(player.health)
+	if health < 0 or health > 100000:
+		return false
+	if not player.has("inventory") or typeof(player.inventory) != TYPE_ARRAY:
+		return false
+	if player.inventory.size() > MAX_INVENTORY_ITEMS:
+		return false
+	for item_id in player.inventory:
+		if typeof(item_id) != TYPE_STRING or (item_id as String).length() > 64:
+			return false
+	return true
 
-    public bool SaveGame(string slotName)
-    {
-        var player = GetTree().GetFirstNodeInGroup("player");
-        var world  = GetTree().GetFirstNodeInGroup("world");
 
-        var data = new Godot.Collections.Dictionary
-        {
-            ["version"]   = CurrentVersion,
-            ["timestamp"] = Time.GetUnixTimeFromSystem(),
-            ["player"]    = SerializePlayer(player),
-            ["world"]     = SerializeWorld(world),
-        };
-
-        string json = Json.Stringify(data, "\t");
-        string path = SaveDir + slotName + SaveExtension;
-
-        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Write);
-        if (file == null)
-        {
-            GD.PushError($"SaveManager: cannot open '{path}' for writing — error {FileAccess.GetOpenError()}");
-            return false;
-        }
-
-        file.StoreString(json);
-        return true;
-    }
-
-    private Godot.Collections.Dictionary SerializePlayer(Node player)
-    {
-        var p = (CharacterBody2D)player;
-        var health = p.GetNode<Node>("HealthComponent");
-        return new Godot.Collections.Dictionary
-        {
-            ["position"]  = new Godot.Collections.Dictionary { ["x"] = p.GlobalPosition.X, ["y"] = p.GlobalPosition.Y },
-            ["health"]    = health.Get("current_health"),
-        };
-    }
-
-    private Godot.Collections.Dictionary SerializeWorld(Node world)
-    {
-        var enemies = new Godot.Collections.Array();
-        foreach (Node enemy in GetTree().GetNodesInGroup("enemies"))
-        {
-            var e = (Node2D)enemy;
-            var health = e.GetNode<Node>("HealthComponent");
-            enemies.Add(new Godot.Collections.Dictionary
-            {
-                ["scene_path"] = enemy.SceneFilePath,
-                ["position"]   = new Godot.Collections.Dictionary { ["x"] = e.GlobalPosition.X, ["y"] = e.GlobalPosition.Y },
-                ["health"]     = health.Get("current_health"),
-            });
-        }
-        return new Godot.Collections.Dictionary { ["enemies"] = enemies };
-    }
-
-    // ── Load ─────────────────────────────────────────────────────────────────
-
-    public bool LoadGame(string slotName)
-    {
-        string path = SaveDir + slotName + SaveExtension;
-        if (!FileAccess.FileExists(path))
-        {
-            GD.PushError($"SaveManager: save file not found at '{path}'");
-            return false;
-        }
-
-        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
-        if (file == null)
-        {
-            GD.PushError($"SaveManager: cannot open '{path}' for reading — error {FileAccess.GetOpenError()}");
-            return false;
-        }
-
-        var json    = new Json();
-        var err     = json.Parse(file.GetAsText());
-        if (err != Error.Ok)
-        {
-            GD.PushError($"SaveManager: JSON parse error in '{path}': {json.GetErrorMessage()}");
-            return false;
-        }
-
-        var data = json.Data.AsGodotDictionary();
-        data = Migrate(data);
-
-        var player = GetTree().GetFirstNodeInGroup("player");
-        var world  = GetTree().GetFirstNodeInGroup("world");
-        DeserializePlayer(player, data["player"].AsGodotDictionary());
-        DeserializeWorld(world,   data["world"].AsGodotDictionary());
-        return true;
-    }
-
-    private void DeserializePlayer(Node player, Godot.Collections.Dictionary data)
-    {
-        var p = (CharacterBody2D)player;
-        var pos = data["position"].AsGodotDictionary();
-        p.GlobalPosition = new Vector2(pos["x"].As<float>(), pos["y"].As<float>());
-        var health = p.GetNode<Node>("HealthComponent");
-        health.Set("current_health", data["health"].As<int>());
-    }
-
-    private void DeserializeWorld(Node world, Godot.Collections.Dictionary data)
-    {
-        foreach (Node enemy in GetTree().GetNodesInGroup("enemies"))
-            enemy.QueueFree();
-
-        foreach (Variant entry in data["enemies"].AsGodotArray())
-        {
-            var e     = entry.AsGodotDictionary();
-            var scene = GD.Load<PackedScene>(e["scene_path"].As<string>());
-            if (scene == null)
-            {
-                GD.PushError($"SaveManager: missing scene '{e["scene_path"]}'");
-                continue;
-            }
-            var enemy  = scene.Instantiate();
-            world.AddChild(enemy);
-            var pos    = e["position"].AsGodotDictionary();
-            var node   = (Node2D)enemy;
-            node.GlobalPosition = new Vector2(pos["x"].As<float>(), pos["y"].As<float>());
-            var health = enemy.GetNode<Node>("HealthComponent");
-            health.Set("current_health", e["health"].As<int>());
-        }
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    public List<string> GetSaveSlots()
-    {
-        var slots = new List<string>();
-        using var dir = DirAccess.Open(SaveDir);
-        if (dir == null) return slots;
-
-        dir.ListDirBegin();
-        string fileName = dir.GetNext();
-        while (fileName != "")
-        {
-            if (!dir.CurrentIsDir() && fileName.EndsWith(SaveExtension))
-                slots.Add(fileName[..^SaveExtension.Length]);
-            fileName = dir.GetNext();
-        }
-        return slots;
-    }
-
-    public bool DeleteSave(string slotName)
-    {
-        string path = SaveDir + slotName + SaveExtension;
-        var err     = DirAccess.RemoveAbsolute(path);
-        if (err != Error.Ok)
-        {
-            GD.PushError($"SaveManager: failed to delete '{path}' — error {err}");
-            return false;
-        }
-        return true;
-    }
-
-    // ── Migration ─────────────────────────────────────────────────────────────
-
-    private Godot.Collections.Dictionary Migrate(Godot.Collections.Dictionary data)
-    {
-        int version = data.ContainsKey("version") ? data["version"].As<int>() : 0;
-
-        if (version < 1)
-        {
-            // v0 → v1: add inventory array
-            data["player"].AsGodotDictionary()["inventory"] = new Godot.Collections.Array();
-            version = 1;
-        }
-
-        if (version < 2)
-        {
-            // v1 → v2: add skills array to player
-            data["player"].AsGodotDictionary()["skills"] = new Godot.Collections.Array();
-            version = 2;
-        }
-
-        data["version"] = CurrentVersion;
-        return data;
-    }
-}
+func _is_json_integer(value: Variant) -> bool:
+	if typeof(value) == TYPE_INT:
+		return true
+	if typeof(value) != TYPE_FLOAT:
+		return false
+	var number := value as float
+	return is_finite(number) and number == floorf(number)
 ```
 
----
+Extend the validator for every field consumed by apply logic. Saved scene paths should be replaced by stable IDs resolved through an application-owned allowlist.
 
+## Migration boundary
+
+Run one migration per historical version and increment the version after each successful step. Reject future versions. Never apply a partially migrated dictionary to live nodes. See [version-migration.md](version-migration.md) for the migration shape, then validate the current schema again.

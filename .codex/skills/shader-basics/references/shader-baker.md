@@ -28,4 +28,4 @@ Shader baking is configured per export preset:
 
 > **When to use:** Enable Shader Baker for all release builds targeting desktop (macOS, Windows/D3D12) or mobile. The extra export time is worth the stutter-free player experience. For development builds, leave it off to keep iteration fast.
 
-Shader Baker operates at the Godot export pipeline level — see the **export-pipeline** skill for how to configure export presets.
+Shader Baker operates at the Godot export pipeline level; configure it in each target platform's export preset.

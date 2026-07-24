@@ -1,86 +1,54 @@
-# Version Migration
+# Defensive version migration
 
-Reference for `skills/save-load/SKILL.md` — incremental migration from older save versions on load.
-
-> ← Back to [SKILL.md](../SKILL.md)
-
----
-## 6. Version Migration
-
-Always store a `version` integer in every save file. Apply migrations incrementally so any old save can be brought forward to the current format regardless of how many versions it has missed.
+Run migrations only after the loader has confirmed that the root is a dictionary and `version` is an integer-valued number in the supported range. Migrate a deep duplicate, never live scene state.
 
 ```gdscript
-func _migrate(data: Dictionary) -> Dictionary:
-	var version: int = data.get("version", 0)
+func _migrate(source: Dictionary) -> Dictionary:
+	var data := source.duplicate(true)
+	var version := int(data.get("version", -1))
 
-	if version < 1:
-		# v0 → v1: inventory did not exist, add empty array
-		data["player"]["inventory"] = []
-		version = 1
+	while version < CURRENT_VERSION:
+		var migrated := false
+		match version:
+			1:
+				migrated = _migrate_v1_to_v2(data)
+			2:
+				migrated = _migrate_v2_to_v3(data)
+			_:
+				push_error("No migration from save version %s" % version)
+				return {}
+		if not migrated:
+			push_error("Invalid schema while migrating version %s" % version)
+			return {}
+		version += 1
+		data["version"] = version
 
-	if version < 2:
-		# v1 → v2: skills system added, seed from empty array
-		data["player"]["skills"] = []
-		version = 2
-
-	# v2 → v3: add stamina stat with default value
-	if version < 3:
-		data["player"]["stamina"] = 100
-		version = 3
-
-	data["version"] = CURRENT_VERSION
 	return data
+
+
+func _migrate_v1_to_v2(data: Dictionary) -> bool:
+	if not data.has("player") or typeof(data.player) != TYPE_DICTIONARY:
+		return false
+	var player := data.player as Dictionary
+	if not player.has("inventory"):
+		player["inventory"] = []
+	elif typeof(player.inventory) != TYPE_ARRAY:
+		return false
+	return true
+
+
+func _migrate_v2_to_v3(data: Dictionary) -> bool:
+	if not data.has("player") or typeof(data.player) != TYPE_DICTIONARY:
+		return false
+	var player := data.player as Dictionary
+	if not player.has("health"):
+		if not player.has("hp"):
+			return false
+		player["health"] = player["hp"]
+		player.erase("hp")
+	return true
 ```
 
-```csharp
-using Godot;
-using Godot.Collections;
+Each step accepts exactly one historical schema and advances exactly one version. After the loop, run the complete current-schema validator, including byte, collection, type, identifier, and numeric-range limits.
 
-public partial class SaveMigrator : Node
-{
-    private const int CurrentVersion = 3;
-
-    public Dictionary Migrate(Dictionary data)
-    {
-        int version = data.ContainsKey("version") ? (int)data["version"] : 0;
-
-        if (version < 1)
-        {
-            // v0 → v1: inventory did not exist, add empty array
-            if (!data.ContainsKey("player"))
-                data["player"] = new Dictionary();
-            ((Dictionary)data["player"])["inventory"] = new Array();
-            version = 1;
-        }
-
-        if (version < 2)
-        {
-            // v1 → v2: skills system added, seed from empty array
-            if (!data.ContainsKey("player"))
-                data["player"] = new Dictionary();
-            ((Dictionary)data["player"])["skills"] = new Array();
-            version = 2;
-        }
-
-        if (version < 3)
-        {
-            // v2 → v3: add stamina stat with default value
-            if (!data.ContainsKey("player"))
-                data["player"] = new Dictionary();
-            ((Dictionary)data["player"])["stamina"] = 100;
-            version = 3;
-        }
-
-        data["version"] = CurrentVersion;
-        return data;
-    }
-}
-```
-
-Key rules:
-- Each migration block is additive — it only adds or transforms, never removes data
-- Use `data.get("key", default)` defensively within migration blocks
-- The version field must be written back before returning
-
----
-
+Never silently coerce a future version. A newer save may contain semantics the current build cannot preserve; return a clear unsupported-version error and leave runtime state unchanged.

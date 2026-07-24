@@ -16,12 +16,6 @@ var ranged: float = randf_range(1.0, 10.0)  # 1.0 to 10.0
 var ranged_int: int = randi_range(1, 6)   # 1 to 6 (inclusive)
 ```
 
-```csharp
-float f = GD.Randf();
-int i = GD.Randi();
-float ranged = GD.RandfRange(1.0f, 10.0f);
-int rangedInt = GD.RandiRange(1, 6);
-```
 
 ### RandomNumberGenerator (Seeded)
 
@@ -36,14 +30,6 @@ var roll: int = rng.randi_range(1, 20)
 var normal: float = rng.randfn(0.0, 1.0)  # Gaussian distribution
 ```
 
-```csharp
-var rng = new RandomNumberGenerator();
-rng.Seed = 12345;
-
-float value = rng.RandfRange(0.0f, 100.0f);
-int roll = rng.RandiRange(1, 20);
-float normal = rng.Randfn(0.0f, 1.0f);
-```
 
 ### Weighted Random Selection
 
@@ -65,24 +51,6 @@ func weighted_random(table: Array[Dictionary]) -> Dictionary:
     return table.back()
 ```
 
-```csharp
-public Dictionary WeightedRandom(Godot.Collections.Array<Godot.Collections.Dictionary> table)
-{
-    float totalWeight = 0.0f;
-    foreach (var entry in table)
-        totalWeight += (float)entry["weight"];
-
-    float roll = GD.Randf() * totalWeight;
-    float cumulative = 0.0f;
-    foreach (var entry in table)
-    {
-        cumulative += (float)entry["weight"];
-        if (roll <= cumulative)
-            return entry;
-    }
-    return table[^1];
-}
-```
 
 ### Noise (Procedural Generation)
 
@@ -96,13 +64,5 @@ noise.seed = randi()
 var height: float = noise.get_noise_2d(x, y)  # returns -1.0 to 1.0
 ```
 
-```csharp
-var noise = new FastNoiseLite();
-noise.NoiseType = FastNoiseLite.NoiseTypeEnum.SimplexSmooth;
-noise.Frequency = 0.05f;
-noise.Seed = (int)GD.Randi();
-float height = noise.GetNoise2D(x, y);
-```
 
 ---
-

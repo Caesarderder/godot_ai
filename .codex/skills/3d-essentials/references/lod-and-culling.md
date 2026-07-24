@@ -19,10 +19,6 @@ Control LOD aggressiveness:
 $MeshInstance3D.lod_bias = 1.5
 ```
 
-```csharp
-GetNode<MeshInstance3D>("MeshInstance3D").LodBias = 1.5f;
-```
-
 Global LOD threshold: **Project Settings > Rendering > Mesh LOD > LOD Change > Threshold Pixels** (default 1.0 — perceptually lossless).
 
 ### Visibility Ranges (Manual LOD)
@@ -79,32 +75,6 @@ func spawn_grass(positions: PackedVector3Array) -> void:
     var mmi := MultiMeshInstance3D.new()
     mmi.multimesh = mm
     add_child(mmi)
-```
-
-#### C#
-
-```csharp
-public void SpawnGrass(Vector3[] positions)
-{
-    var mm = new MultiMesh();
-    mm.TransformFormat = MultiMesh.TransformFormatEnum.Transform3D;
-    mm.Mesh = GD.Load<Mesh>("res://meshes/grass_blade.tres");
-    mm.InstanceCount = positions.Length;
-
-    for (int i = 0; i < positions.Length; i++)
-    {
-        var xform = Transform3D.Identity;
-        xform.Origin = positions[i];
-        xform = xform.Rotated(Vector3.Up, (float)GD.RandRange(0, Mathf.Tau));
-        float s = (float)GD.RandRange(0.8, 1.2);
-        xform = xform.Scaled(new Vector3(s, s, s));
-        mm.SetInstanceTransform(i, xform);
-    }
-
-    var mmi = new MultiMeshInstance3D();
-    mmi.Multimesh = mm;
-    AddChild(mmi);
-}
 ```
 
 ---

@@ -94,16 +94,6 @@ if tile_data:
     var damage: float = tile_data.get_custom_data("damage")
 ```
 
-```csharp
-var tileMap = GetNode<TileMapLayer>("TileMapLayer");
-Vector2I cell = tileMap.LocalToMap(GlobalPosition);
-TileData tileData = tileMap.GetCellTileData(cell);
-if (tileData != null)
-{
-    float damage = tileData.GetCustomData("damage").AsSingle();
-}
-```
-
 ### Scene Collection Tiles
 
 Place entire scenes as tiles (e.g. doors, chests, spawn points with AudioStreamPlayer2D or particles). Greater performance overhead — each is instanced individually. Use for gameplay elements, not mass terrain.
@@ -118,4 +108,3 @@ Characters snagging on edges between adjacent tile colliders is a common issue:
 > See **physics-system** for more collision troubleshooting.
 
 ---
-

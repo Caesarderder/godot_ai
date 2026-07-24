@@ -28,18 +28,6 @@ $MusicPlayer.stream = playlist
 $MusicPlayer.play()
 ```
 
-```csharp
-var playlist = new AudioStreamPlaylist();
-playlist.StreamCount = 2;
-playlist.SetListStream(0, GD.Load<AudioStream>("res://audio/music/boss_intro.ogg"));
-playlist.SetListStream(1, GD.Load<AudioStream>("res://audio/music/boss_loop.ogg"));
-playlist.Shuffle = false;
-playlist.Loop = true;
-
-GetNode<AudioStreamPlayer>("MusicPlayer").Stream = playlist;
-GetNode<AudioStreamPlayer>("MusicPlayer").Play();
-```
-
 ### AudioStreamSynchronized
 
 Plays multiple streams in perfect sync, allowing you to blend layers. Use for adaptive music — e.g. a base track with combat percussion that fades in when enemies appear.
@@ -71,28 +59,6 @@ func _on_combat_started() -> void:
     )
 ```
 
-```csharp
-var sync = new AudioStreamSynchronized();
-sync.StreamCount = 3;
-sync.SetSyncStream(0, GD.Load<AudioStream>("res://audio/music/ambient_base.ogg"));
-sync.SetSyncStream(1, GD.Load<AudioStream>("res://audio/music/ambient_drums.ogg"));
-sync.SetSyncStream(2, GD.Load<AudioStream>("res://audio/music/ambient_intense.ogg"));
-sync.SetSyncStreamVolume(0, 0.0f);
-sync.SetSyncStreamVolume(1, -80.0f);
-sync.SetSyncStreamVolume(2, -80.0f);
-
-GetNode<AudioStreamPlayer>("MusicPlayer").Stream = sync;
-GetNode<AudioStreamPlayer>("MusicPlayer").Play();
-
-// When combat starts — fade in drums layer
-public void OnCombatStarted()
-{
-    var playback = GetNode<AudioStreamPlayer>("MusicPlayer").GetStreamPlayback() as AudioStreamPlaybackSynchronized;
-    var tween = CreateTween();
-    tween.TweenMethod(Callable.From<float>(db => playback.SetStreamVolume(1, db)), -80.0f, 0.0f, 1.5);
-}
-```
-
 ### AudioStreamInteractive
 
 Transitions between music clips based on triggers (e.g. exploration → combat → boss). Define transition rules: crossfade, fade-to-silence, or immediate switch. Set transitions between clips by index with configurable fade times.
@@ -104,41 +70,6 @@ Transitions between music clips based on triggers (e.g. exploration → combat �
 var playback: AudioStreamPlaybackInteractive = $MusicPlayer.get_stream_playback()
 playback.switch_to_clip(2)
 ```
-
-```csharp
-var playback = GetNode<AudioStreamPlayer>("MusicPlayer").GetStreamPlayback() as AudioStreamPlaybackInteractive;
-playback.SwitchToClip(2);
-```
-
-#### Resume-Position Transitions (Godot 4.7+)
-
-`add_transition()`'s `to_time` parameter takes a `TransitionToTime` value. Godot 4.7 exposes `TRANSITION_TO_TIME_PREVIOUS_POSITION` (`2`) to scripts: the destination clip resumes from the last position a previous transition left it at, or plays from its start if it never played. Classic use — exploration ↔ combat music that picks up where it left off:
-
-```gdscript
-# Clip 0 = exploration, clip 1 = combat.
-# Combat → exploration: resume exploration where it left off.
-var interactive: AudioStreamInteractive = $MusicPlayer.stream
-interactive.add_transition(
-    1, 0,
-    AudioStreamInteractive.TRANSITION_FROM_TIME_NEXT_BEAT,
-    AudioStreamInteractive.TRANSITION_TO_TIME_PREVIOUS_POSITION,
-    AudioStreamInteractive.FADE_CROSS,
-    4.0  # fade over 4 beats
-)
-```
-
-```csharp
-var interactive = (AudioStreamInteractive)GetNode<AudioStreamPlayer>("MusicPlayer").Stream;
-interactive.AddTransition(
-    1, 0,
-    AudioStreamInteractive.TransitionFromTime.NextBeat,
-    AudioStreamInteractive.TransitionToTime.PreviousPosition,
-    AudioStreamInteractive.FadeMode.Cross,
-    4.0f
-);
-```
-
-The same option is available in the Inspector's transition editor.
 
 ### When to Use Which
 
@@ -170,4 +101,3 @@ func load_wav_from_path(path: String) -> AudioStreamWAV:
 > **Warning:** Runtime-loaded audio bypasses Godot's import system. You must set `format`, `mix_rate`, and `stereo` manually to match the actual file. Incorrect values produce garbled audio.
 
 ---
-

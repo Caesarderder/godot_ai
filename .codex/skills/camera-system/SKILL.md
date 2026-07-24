@@ -1,306 +1,105 @@
 ---
 name: camera-system
-description: Use when implementing cameras — smooth follow, screen shake, camera zones, and transitions for 2D and 3D
+description: Implement or review Camera2D and Camera3D behavior in Godot 4.6.x GDScript for Builda's single-threaded Web runtime. Use for follow, smoothing, limits, look-ahead, shake, zoom, transitions, camera zones, and target handoff with frame-rate-safe interpolation.
 ---
 
-# Camera Systems in Godot 4.3+
+# Camera System
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Target Godot 4.6.x, GDScript, single-threaded Web, and the Compatibility renderer.
 
-> **Related skills:** **player-controller** for first-person camera setup, **state-machine** for camera state transitions, **godot-optimization** for camera culling and performance, **physics-system** for physics interpolation and camera smoothing, **2d-essentials** for canvas layers, parallax scrolling, and coordinate conversion, **math-essentials** for smoothstep and lerp-based interpolation, **tween-animation** for camera shake and cinematic transitions.
+## Ownership
 
----
+Keep one active camera owner per viewport. Gameplay systems expose targets or camera requests; they should not compete by writing the camera transform directly.
 
-## 1. Camera2D Basics
+Use built-in `Camera2D` position smoothing and limits when they express the desired behavior. Use custom smoothing when you need target handoff, look-ahead, or explicit damping.
 
-### Key Properties
+## Frame-rate-safe smoothing
 
-| Property | Type | Description |
-|---|---|---|
-| `position_smoothing_enabled` | `bool` | Enables built-in position smoothing (lerp toward target) |
-| `position_smoothing_speed` | `float` | Speed of built-in smoothing (default `5.0`) |
-| `drag_horizontal_enabled` | `bool` | Enables a horizontal drag zone; camera only moves when target exits zone |
-| `drag_vertical_enabled` | `bool` | Enables a vertical drag zone |
-| `limit_left` | `int` | Left pixel boundary — camera will not scroll past this |
-| `limit_right` | `int` | Right pixel boundary |
-| `limit_top` | `int` | Top pixel boundary |
-| `limit_bottom` | `int` | Bottom pixel boundary |
-| `zoom` | `Vector2` | Zoom level; `Vector2(2, 2)` = 2× zoom in, `Vector2(0.5, 0.5)` = zoom out |
+Never pass an unclamped `speed * delta` directly to `lerp()` or `Vector*.lerp()`: frame spikes can produce a weight above `1.0` and overshoot.
 
-Set limits to match your tilemap or level bounds so the camera never shows outside the world. Limits are in world pixels, not tiles.
-
----
-
-## 2. Smooth Follow
-
-A manual follow camera gives more control than the built-in smoothing — you can add look-ahead, offset, and custom easing.
-
-### GDScript
+Linear clamped weight:
 
 ```gdscript
-extends Camera2D
-
-## Target node to follow (assign in Inspector or via code)
+@export_range(0.0, 30.0, 0.1) var follow_speed: float = 8.0
 @export var target: Node2D
 
-## How quickly the camera catches up to the target (higher = snappier)
-@export var follow_speed: float = 8.0
-
-## How far ahead the camera leads in the movement direction
-@export var look_ahead_distance: float = 80.0
-
-## How quickly the look-ahead offset responds to direction changes
-@export var look_ahead_speed: float = 4.0
-
-var _look_ahead_offset: Vector2 = Vector2.ZERO
-var _previous_target_pos: Vector2 = Vector2.ZERO
-
-func _ready() -> void:
-    # Disable built-in smoothing — we handle it manually
-    position_smoothing_enabled = false
-    if target:
-        _previous_target_pos = target.global_position
-        global_position = target.global_position
-
 func _process(delta: float) -> void:
-    if not target:
+    if not is_instance_valid(target):
         return
-
-    # Compute movement direction from last frame
-    var move_delta: Vector2 = target.global_position - _previous_target_pos
-    _previous_target_pos = target.global_position
-
-    # Smoothly steer look-ahead offset toward movement direction
-    var desired_ahead: Vector2 = move_delta.normalized() * look_ahead_distance if move_delta.length() > 0.5 else Vector2.ZERO
-    _look_ahead_offset = _look_ahead_offset.lerp(desired_ahead, look_ahead_speed * delta)
-
-    # Lerp camera position toward target + look-ahead
-    var desired_pos: Vector2 = target.global_position + _look_ahead_offset
-    global_position = global_position.lerp(desired_pos, follow_speed * delta)
+    var weight := clampf(follow_speed * delta, 0.0, 1.0)
+    global_position = global_position.lerp(target.global_position, weight)
 ```
 
-### C#
-
-```csharp
-using Godot;
-
-public partial class SmoothFollowCamera : Camera2D
-{
-    [Export] public Node2D Target { get; set; }
-    [Export] public float FollowSpeed { get; set; } = 8.0f;
-    [Export] public float LookAheadDistance { get; set; } = 80.0f;
-    [Export] public float LookAheadSpeed { get; set; } = 4.0f;
-
-    private Vector2 _lookAheadOffset = Vector2.Zero;
-    private Vector2 _previousTargetPos = Vector2.Zero;
-
-    public override void _Ready()
-    {
-        PositionSmoothingEnabled = false;
-        if (Target != null)
-        {
-            _previousTargetPos = Target.GlobalPosition;
-            GlobalPosition = Target.GlobalPosition;
-        }
-    }
-
-    public override void _Process(double delta)
-    {
-        if (Target == null)
-            return;
-
-        float dt = (float)delta;
-
-        Vector2 moveDelta = Target.GlobalPosition - _previousTargetPos;
-        _previousTargetPos = Target.GlobalPosition;
-
-        Vector2 desiredAhead = moveDelta.Length() > 0.5f
-            ? moveDelta.Normalized() * LookAheadDistance
-            : Vector2.Zero;
-
-        _lookAheadOffset = _lookAheadOffset.Lerp(desiredAhead, LookAheadSpeed * dt);
-
-        Vector2 desiredPos = Target.GlobalPosition + _lookAheadOffset;
-        GlobalPosition = GlobalPosition.Lerp(desiredPos, FollowSpeed * dt);
-    }
-}
-```
-
----
-
-## 3. Screen Shake
-
-A trauma-based system produces more natural-looking shake than a simple sine wave. High trauma = violent shake; trauma decays over time; offset scales with `trauma^2` so small trauma values feel subtle.
-
-### GDScript
+For damping that is more consistent across frame rates, use an exponential weight and still clamp it:
 
 ```gdscript
-extends Camera2D
-
-## Maximum pixel offset during maximum trauma
-@export var max_offset: Vector2 = Vector2(20.0, 15.0)
-
-## Maximum rotation offset in degrees during maximum trauma
-@export var max_roll: float = 3.0
-
-## Rate at which trauma decays per second (0–1 range)
-@export var decay_rate: float = 1.5
-
-var _trauma: float = 0.0  # 0.0 = no shake, 1.0 = maximum shake
-
-# Optional: use noise for smooth, organic shake
-var _noise: FastNoiseLite
-var _noise_time: float = 0.0
-@export var use_noise: bool = true
-@export var noise_speed: float = 60.0
-
-func _ready() -> void:
-    _noise = FastNoiseLite.new()
-    _noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-    _noise.seed = randi()
-
-## Call this from any node to trigger a shake (amount in 0–1 range; can stack)
-func add_trauma(amount: float) -> void:
-    _trauma = minf(_trauma + amount, 1.0)
-
-func _process(delta: float) -> void:
-    if _trauma <= 0.0:
-        offset = Vector2.ZERO
-        rotation = 0.0
-        return
-
-    # Decay trauma over time
-    _trauma = maxf(_trauma - decay_rate * delta, 0.0)
-    _noise_time += delta * noise_speed
-
-    var shake: float = _trauma * _trauma  # squaring gives subtle feel at low trauma
-
-    if use_noise:
-        offset.x = max_offset.x * shake * _noise.get_noise_2d(_noise_time, 0.0)
-        offset.y = max_offset.y * shake * _noise.get_noise_2d(0.0, _noise_time)
-        rotation = deg_to_rad(max_roll) * shake * _noise.get_noise_2d(_noise_time, _noise_time)
-    else:
-        offset.x = max_offset.x * shake * randf_range(-1.0, 1.0)
-        offset.y = max_offset.y * shake * randf_range(-1.0, 1.0)
-        rotation = deg_to_rad(max_roll) * shake * randf_range(-1.0, 1.0)
+var weight := clampf(1.0 - exp(-follow_speed * delta), 0.0, 1.0)
+global_position = global_position.lerp(target.global_position, weight)
 ```
 
-**Triggering shake from another node:**
+Apply the same rule to zoom, offset, and 3D transforms. Use quaternion interpolation for rotation rather than lerping Euler angles across wrap boundaries.
+
+## Camera2D
+
+- Use `limit_left/right/top/bottom` for world bounds.
+- Remember that `global_position` may differ from the actual screen center while built-in smoothing or offsets apply; query the screen-center API when product logic needs the rendered center.
+- Keep look-ahead bounded and return it smoothly to zero.
+- Call `reset_smoothing()` after teleports or discontinuous room changes.
+- Do not put gameplay collision or authority on camera position.
+
+## Camera3D
+
+Follow a dedicated pivot/rig rather than mixing orbit, collision, and shake directly on the camera node. Typical hierarchy:
+
+```text
+CameraRig (Node3D)       # follow position
+└── YawPivot (Node3D)    # horizontal orbit
+    └── PitchPivot       # vertical orbit
+        └── Camera3D     # distance and local shake
+```
+
+Clamp pitch before constructing the transform. For obstruction handling, raycast or shape-cast from the pivot toward the desired camera point, then smooth the resolved distance independently from target follow.
+
+## Shake
+
+Apply shake as a bounded local offset after base follow/limits have been resolved. Use time-based decay and deterministic noise when reproducibility matters. Do not accumulate random offsets into the authoritative base transform.
 
 ```gdscript
-# Any node that can reach the camera
-func on_explosion() -> void:
-    var cam := get_viewport().get_camera_2d() as ScreenShakeCamera
-    if cam:
-        cam.add_trauma(0.6)
+var _shake_strength: float = 0.0
+
+func add_shake(amount: float) -> void:
+    _shake_strength = maxf(_shake_strength, amount)
+
+func _process(delta: float) -> void:
+    _update_follow(delta)
+    offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake_strength
+    _shake_strength = move_toward(_shake_strength, 0.0, 20.0 * delta)
 ```
 
-### C#
+## Transitions and target handoff
 
-```csharp
-using Godot;
+Store one transition token or Tween. Replace or kill it before starting another transition. When awaiting completion, verify the request is still current and the camera remains in the tree.
 
-public partial class ScreenShakeCamera : Camera2D
-{
-    [Export] public Vector2 MaxOffset { get; set; } = new Vector2(20f, 15f);
-    [Export] public float MaxRoll { get; set; } = 3.0f;
-    [Export] public float DecayRate { get; set; } = 1.5f;
-    [Export] public bool UseNoise { get; set; } = true;
-    [Export] public float NoiseSpeed { get; set; } = 60.0f;
+For room/zone cameras, let the zone request a profile (limits, zoom, follow target), while the camera owner applies it. Define overlap priority so entering two zones cannot cause flicker.
 
-    private float _trauma = 0f;
-    private float _noiseTime = 0f;
-    private FastNoiseLite _noise;
+## Web checks
 
-    public override void _Ready()
-    {
-        _noise = new FastNoiseLite();
-        _noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
-        _noise.Seed = (int)GD.Randi();
-    }
+- Resize the browser and verify aspect-dependent framing.
+- Test frame spikes to ensure interpolation cannot overshoot.
+- Test target deletion, scene changes, and teleports.
+- Test paused and background-tab resume behavior.
+- Verify Camera3D effects only use Compatibility-supported rendering.
 
-    public void AddTrauma(float amount)
-    {
-        _trauma = Mathf.Min(_trauma + amount, 1.0f);
-    }
+## References boundary
 
-    public override void _Process(double delta)
-    {
-        if (_trauma <= 0f)
-        {
-            Offset = Vector2.Zero;
-            Rotation = 0f;
-            return;
-        }
+No bundled reference is required by default. Existing `references/` files are optional legacy material and may contain other language or lifecycle models. Do not load them automatically; adapt only verified target-version GDScript when an explicit request requires it.
 
-        float dt = (float)delta;
-        _trauma = Mathf.Max(_trauma - DecayRate * dt, 0f);
-        _noiseTime += dt * NoiseSpeed;
+## Checklist
 
-        float shake = _trauma * _trauma;
-
-        if (UseNoise)
-        {
-            Offset = new Vector2(
-                MaxOffset.X * shake * _noise.GetNoise2D(_noiseTime, 0f),
-                MaxOffset.Y * shake * _noise.GetNoise2D(0f, _noiseTime)
-            );
-            Rotation = Mathf.DegToRad(MaxRoll) * shake * _noise.GetNoise2D(_noiseTime, _noiseTime);
-        }
-        else
-        {
-            Offset = new Vector2(
-                MaxOffset.X * shake * (float)GD.RandRange(-1.0, 1.0),
-                MaxOffset.Y * shake * (float)GD.RandRange(-1.0, 1.0)
-            );
-            Rotation = Mathf.DegToRad(MaxRoll) * shake * (float)GD.RandRange(-1.0, 1.0);
-        }
-    }
-}
-```
-
----
-
-## 4. Camera Zones / Rooms
-
-For room-based games (metroidvanias, top-down dungeons): an `Area2D` per room with a script that, on `body_entered`, tweens the active `Camera2D`'s `limit_left` / `limit_right` / `limit_top` / `limit_bottom` to the room's bounds. Smooth transitions when the player crosses room boundaries.
-
-> See [references/camera-zones.md](references/camera-zones.md) for the full GDScript + C# CameraZone implementation.
-
----
-
-## 5. Camera3D Patterns
-
-Three canonical 3D camera setups: **third-person follow** with `SpringArm3D` (handles wall collision), **orbit camera** with mouse-drag rotation, **first-person** with mouse-look-from-camera.
-
-> See [references/camera3d-patterns.md](references/camera3d-patterns.md) for full GDScript implementations of each pattern.
-
----
-
-## 6. Camera Transitions
-
-Async camera transitions via `Tween` + `await ToSignal`. The pattern: tween the next camera's position/zoom from the current camera's, then call `make_current()` on the next camera. Works for both 2D and 3D.
-
-> See [references/transitions.md](references/transitions.md) for the full `CameraTransitionManager` implementation (2D and 3D).
-
----
-
-## 7. Split Screen (Local Multiplayer)
-
-Render multiple cameras to separate `SubViewport`s, then arrange `SubViewportContainer`s in a layout (`HBoxContainer`, `VBoxContainer`, or `GridContainer`). Each player's camera is set as `current` for its viewport.
-
-> See [references/split-screen.md](references/split-screen.md) for the SubViewport scene-tree setup and a 2-player split-screen example.
-
----
-
-## 8. Implementation Checklist
-
-- [ ] `Camera2D` limits match level/tilemap bounds so no out-of-world edges are visible
-- [ ] Smooth follow uses `_process` (visual interpolation), not `_physics_process`
-- [ ] Screen shake resets `offset` and `rotation` to zero when `_trauma` reaches `0.0`
-- [ ] `add_trauma()` clamps to `1.0`; it does not exceed maximum shake
-- [ ] Camera zone `Area2D` collision layers are set so only the player triggers them
-- [ ] `SpringArm3D` collision mask includes all environment layers for wall avoidance
-- [ ] Camera transition awaits tween completion before calling `make_current()`
-- [ ] Split screen `SubViewport` sizes are updated on window resize (`get_tree().root.size_changed` signal)
-- [ ] Only one `SubViewport` has `audio_listener_enable_2d` or `audio_listener_enable_3d` set to `true`
+- [ ] One owner writes the active camera transform.
+- [ ] Every interpolation weight is clamped to `[0, 1]`.
+- [ ] Teleports reset smoothing.
+- [ ] Look-ahead, shake, and collision offsets do not corrupt base follow state.
+- [ ] Zone overlap and transition replacement are deterministic.
+- [ ] Target deletion and scene exit are safe.
+- [ ] Browser resize and frame-spike behavior are tested.

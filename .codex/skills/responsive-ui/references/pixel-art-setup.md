@@ -12,7 +12,8 @@ Reference for `skills/responsive-ui/SKILL.md` — project settings for pixel art
 In `Project > Project Settings`:
 
 - `Display > Window > Stretch > Mode` → `viewport`
-- `Display > Window > Stretch > Scale` → `2` (or `3`, `4` — any integer)
+- `Display > Window > Stretch > Scale` → `1`
+- `Display > Window > Stretch > Scale Mode` → `integer`
 - `Rendering > Textures > Canvas Textures > Default Texture Filter` → `Nearest`
 
 Setting the texture filter to `Nearest` globally avoids blurry pixels without per-sprite configuration.
@@ -31,48 +32,11 @@ func _ready() -> void:
     get_window().content_scale_size = BASE_SIZE
     get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
     get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
-    _apply_integer_scale()
-    get_viewport().size_changed.connect(_apply_integer_scale)
-
-
-func _apply_integer_scale() -> void:
-    var screen_size := DisplayServer.screen_get_size()
-    var scale_x := screen_size.x / BASE_SIZE.x
-    var scale_y := screen_size.y / BASE_SIZE.y
-    var integer_scale := maxi(1, mini(scale_x, scale_y))
-    get_window().content_scale_factor = float(integer_scale)
+    get_window().content_scale_factor = 1.0
+    get_window().content_scale_stretch = Window.CONTENT_SCALE_STRETCH_INTEGER
 ```
 
-**C#:**
 
-```csharp
-// autoload/DisplayManager.cs
-using Godot;
-
-public partial class DisplayManager : Node
-{
-    private static readonly Vector2I BaseSize = new(320, 180);
-
-    public override void _Ready()
-    {
-        var window = GetWindow();
-        window.ContentScaleSize   = BaseSize;
-        window.ContentScaleMode   = Window.ContentScaleModeEnum.Viewport;
-        window.ContentScaleAspect = Window.ContentScaleAspectEnum.Keep;
-        ApplyIntegerScale();
-        GetViewport().SizeChanged += ApplyIntegerScale;
-    }
-
-    private void ApplyIntegerScale()
-    {
-        var screenSize  = DisplayServer.ScreenGetSize();
-        int scaleX      = screenSize.X / BaseSize.X;
-        int scaleY      = screenSize.Y / BaseSize.Y;
-        int intScale    = Mathf.Max(1, Mathf.Min(scaleX, scaleY));
-        GetWindow().ContentScaleFactor = intScale;
-    }
-}
-```
 
 ### Nearest-Neighbour Filter per Node (Override)
 
@@ -85,11 +49,6 @@ If the global filter is `Linear` and you only want `Nearest` on specific sprites
 $Sprite2D.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 ```
 
-**C#:**
 
-```csharp
-GetNode<Sprite2D>("Sprite2D").TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-```
 
 ---
-

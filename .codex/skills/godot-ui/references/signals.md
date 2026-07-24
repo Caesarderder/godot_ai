@@ -44,20 +44,6 @@ func _on_search_field_text_changed(new_text: String) -> void:
     pass
 ```
 
-**Connecting signals in C#:**
 
-```csharp
-public override void _Ready()
-{
-    GetNode<Button>("StartButton").Pressed += OnStartButtonPressed;
-    GetNode<HSlider>("VolumeSlider").ValueChanged += OnVolumeSliderValueChanged;
-    GetNode<LineEdit>("SearchField").TextChanged += OnSearchFieldTextChanged;
-}
-
-private void OnStartButtonPressed() { }
-private void OnVolumeSliderValueChanged(double value) { }
-private void OnSearchFieldTextChanged(string newText) { }
-```
 
 ---
-

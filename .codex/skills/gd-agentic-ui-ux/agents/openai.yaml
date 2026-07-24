@@ -1,0 +1,5 @@
+interface:
+  display_name: "Godot UI 与 UX"
+  short_description: "按需路由输入、Control 布局、富文本和主题能力"
+  default_prompt: "Use $gd-agentic-ui-ux to select only the relevant Godot 4.6 Web UI and UX references and implement the request."
+

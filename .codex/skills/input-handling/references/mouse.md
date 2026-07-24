@@ -28,30 +28,7 @@ func _input(event: InputEvent) -> void:
         $Head.rotation.x = clamp($Head.rotation.x, -PI / 2.0, PI / 2.0)
 ```
 
-#### C#
 
-```csharp
-[Export] public float MouseSensitivity { get; set; } = 0.002f;
-
-public override void _Ready()
-{
-    Input.MouseMode = Input.MouseModeEnum.Captured;
-}
-
-public override void _Input(InputEvent @event)
-{
-    if (@event is InputEventMouseMotion motion
-        && Input.MouseMode == Input.MouseModeEnum.Captured)
-    {
-        RotateY(-motion.Relative.X * MouseSensitivity);
-        var head = GetNode<Node3D>("Head");
-        head.RotateX(-motion.Relative.Y * MouseSensitivity);
-        Vector3 rot = head.Rotation;
-        rot.X = Mathf.Clamp(rot.X, -Mathf.Pi / 2f, Mathf.Pi / 2f);
-        head.Rotation = rot;
-    }
-}
-```
 
 ### Mouse Modes
 
@@ -73,17 +50,6 @@ func _unhandled_input(event: InputEvent) -> void:
             Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 ```
 
-```csharp
-public override void _UnhandledInput(InputEvent @event)
-{
-    if (@event.IsActionPressed("ui_cancel"))
-    {
-        Input.MouseMode = Input.MouseMode == Input.MouseModeEnum.Captured
-            ? Input.MouseModeEnum.Visible
-            : Input.MouseModeEnum.Captured;
-    }
-}
-```
 
 ### Mouse Button Events
 
@@ -105,29 +71,6 @@ func _unhandled_input(event: InputEvent) -> void:
                 _prev_weapon()
 ```
 
-```csharp
-public override void _UnhandledInput(InputEvent @event)
-{
-    if (@event is InputEventMouseButton mouse)
-    {
-        switch (mouse.ButtonIndex)
-        {
-            case MouseButton.Left when mouse.Pressed:
-                Attack();
-                break;
-            case MouseButton.Right:
-                if (mouse.Pressed) AimStart(); else AimEnd();
-                break;
-            case MouseButton.WheelUp:
-                NextWeapon();
-                break;
-            case MouseButton.WheelDown:
-                PrevWeapon();
-                break;
-        }
-    }
-}
-```
 
 ### Custom Mouse Cursor
 
@@ -142,13 +85,5 @@ func _ready() -> void:
 # Display > Mouse Cursor > Custom Image Hotspot
 ```
 
-```csharp
-public override void _Ready()
-{
-    var cursor = GD.Load<Resource>("res://assets/ui/crosshair.png");
-    Input.SetCustomMouseCursor(cursor, Input.CursorShape.Arrow, new Vector2(16, 16));
-}
-```
 
 ---
-

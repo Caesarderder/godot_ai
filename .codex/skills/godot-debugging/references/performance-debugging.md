@@ -24,13 +24,6 @@ var elapsed := Time.get_ticks_usec() - start
 print("_run_expensive_operation took: %d µs" % elapsed)
 ```
 
-```csharp
-// Profile a specific block manually
-long start = Time.GetTicksUsec();
-RunExpensiveOperation();
-long elapsed = Time.GetTicksUsec() - start;
-GD.Print($"RunExpensiveOperation took: {elapsed} µs");
-```
 
 ### Monitors
 
@@ -41,15 +34,15 @@ GD.Print($"RunExpensiveOperation took: {elapsed} µs");
 | `Time > FPS` | Below target (e.g. 60 fps) indicates frame budget overrun |
 | `Time > Process` | High value means `_process()` callbacks are expensive |
 | `Time > Physics Process` | High value means `_physics_process()` or physics sim is expensive |
-| `Render > Total Draw Calls` | Above ~500 on mobile or ~2000 on desktop may need batching |
-| `Render > Video RAM` | Steadily growing value indicates a memory leak (unfreed textures/meshes) |
+| `Render > Total Draw Calls` | Compare representative scenes against the project's measured frame budget and baseline |
+| `Render > Video RAM` | Repeated growth across the same scenario warrants checking retained resources and cache behavior |
 | `Object > Object Count` | Growing count across identical scenes indicates nodes are not freed |
 | `Physics 3D > Active Bodies` | Large count with simple scenes suggests objects are not sleeping |
 
-### Identifying Draw Call Bottlenecks
+### Separating Script CPU from Rendering Cost
 
 ```gdscript
-# Reduce draw calls with VisibleOnScreenNotifier3D — pause processing when off-screen
+# Save script CPU by pausing optional updates while the object is off-screen.
 @onready var _vis: VisibleOnScreenNotifier3D = $VisibleOnScreenNotifier3D
 
 func _ready() -> void:
@@ -63,20 +56,10 @@ func _on_screen_exited() -> void:
     set_process(false)
 ```
 
-```csharp
-// Reduce draw calls with VisibleOnScreenNotifier3D — pause processing when off-screen
-private VisibleOnScreenNotifier3D _vis;
-
-public override void _Ready()
-{
-    _vis = GetNode<VisibleOnScreenNotifier3D>("VisibleOnScreenNotifier3D");
-    _vis.ScreenEntered += OnScreenEntered;
-    _vis.ScreenExited += OnScreenExited;
-}
-
-private void OnScreenEntered() => SetProcess(true);
-private void OnScreenExited() => SetProcess(false);
-```
+`set_process(false)` only stops this node's `_process()` callback. It does not hide
+a `MeshInstance3D` and does not itself reduce draw calls. Measure rendering and
+script time separately; if an object truly must stop rendering, change the
+renderer-owning node's visibility as an explicit gameplay/visual decision.
 
 - Enable **Rendering > Debug > Draw Calls** in the editor Viewport menu to visualise batching.
 - Use `RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)` for runtime draw call counts.
@@ -100,30 +83,7 @@ func _process(delta: float) -> void:
         _second_timer -= 1.0
 ```
 
-```csharp
-// Track physics ticks to detect spiral-of-death
-private int _physicsTicksThisSecond = 0;
-private double _secondTimer = 0.0;
-
-public override void _PhysicsProcess(double delta)
-{
-    _physicsTicksThisSecond++;
-}
-
-public override void _Process(double delta)
-{
-    _secondTimer += delta;
-    if (_secondTimer >= 1.0)
-    {
-        GD.Print($"Physics ticks last second: {_physicsTicksThisSecond}" +
-                 $" (target: {Engine.PhysicsTicksPerSecond})");
-        _physicsTicksThisSecond = 0;
-        _secondTimer -= 1.0;
-    }
-}
-```
 
 - If ticks per second fall below `Engine.physics_ticks_per_second`, reduce physics complexity or lower `physics_ticks_per_second` in Project Settings.
 
 ---
-

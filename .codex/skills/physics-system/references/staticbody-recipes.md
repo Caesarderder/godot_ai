@@ -40,25 +40,7 @@ func _ready() -> void:
     tween.tween_property(self, "position", _start_position, duration)
 ```
 
-```csharp
-public partial class MovingPlatform : AnimatableBody2D
-{
-    [Export] public Vector2 Travel { get; set; } = new(0, -200);
-    [Export] public float Duration { get; set; } = 2.0f;
-
-    private Vector2 _startPosition;
-
-    public override void _Ready()
-    {
-        _startPosition = Position;
-        var tween = CreateTween().SetLoops();
-        tween.TweenProperty(this, "position", _startPosition + Travel, Duration);
-        tween.TweenProperty(this, "position", _startPosition, Duration);
-    }
-}
-```
 
 > **Note:** `AnimatableBody2D`/`3D` is the correct node for moving platforms. A plain `StaticBody` moved by code will not push CharacterBodies reliably.
 
 ---
-

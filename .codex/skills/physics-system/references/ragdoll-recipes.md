@@ -45,24 +45,6 @@ func disable_ragdoll() -> void:
     sim.physical_bones_stop_simulation()
 ```
 
-```csharp
-private PhysicalBoneSimulator3D _sim;
-
-public override void _Ready()
-{
-    _sim = GetNode<PhysicalBoneSimulator3D>("Skeleton3D/PhysicalBoneSimulator3D");
-}
-
-public void EnableRagdoll()
-{
-    _sim.PhysicalBonesStartSimulation();
-}
-
-public void EnablePartialRagdoll()
-{
-    _sim.PhysicalBonesStartSimulation(new StringName[] { "LeftArm", "RightArm" });
-}
-```
 
 ### Blending Animation and Ragdoll
 

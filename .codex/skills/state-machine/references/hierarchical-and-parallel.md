@@ -1,183 +1,60 @@
-> ← Back to [SKILL.md](../SKILL.md)
+# Hierarchical and parallel state machines
 
-# Hierarchical and Parallel State Machines
+Use these patterns only after a flat machine has shown a real ownership problem.
 
-When a single flat FSM grows beyond 8–10 states, or when separate concerns (movement, combat, animation) create a combinatorial explosion, split into hierarchical or parallel machines.
+## Hierarchical lifecycle
 
-## The Problem: State Explosion
+A parent state owns a nested machine. Configure the nested machine with `start_active = false`; otherwise its `_ready()` would start it before the parent state becomes active.
 
-A character with 3 movement states (idle, walk, run) and 3 combat states (none, attack, block) creates 9 combined states in a flat FSM. Add crouching and that's 18. Hierarchical/parallel machines keep it at 3 + 3 = 6.
-
-## Approach A: Hierarchical (Nested State Machines)
-
-States can contain sub-state machines. The outer machine handles high-level states; inner machines handle details.
-
-**Scene Tree:**
-
-```
-Player (CharacterBody2D)
-└── StateMachine (handles: OnGround, InAir, Climbing)
-    ├── OnGround (contains sub-states: Idle, Walk, Run, Crouch)
-    │   └── SubStateMachine
+```text
+Player
+└── StateMachine
+    ├── OnGround
+    │   └── GroundMachine (start_active = false)
     │       ├── Idle
-    │       ├── Walk
-    │       ├── Run
-    │       └── Crouch
-    ├── InAir (contains sub-states: Jump, Fall, DoubleJump)
-    │   └── SubStateMachine
-    │       ├── Jump
-    │       ├── Fall
-    │       └── DoubleJump
-    └── Climbing
+    │       └── Run
+    └── InAir
 ```
-
-**GDScript — Hierarchical State (extends the Node-based State from Section 3):**
 
 ```gdscript
-# hierarchical_state.gd — a state that owns a sub-state machine
 class_name HierarchicalState
 extends State
 
-@export var sub_state_machine: StateMachine
+@export var nested_machine: StateMachine
 
-func enter() -> void:
-	if sub_state_machine:
-		sub_state_machine.set_physics_process(true)
-		sub_state_machine.set_process(true)
-		# Sub-machine starts from its initial state
-		sub_state_machine.current_state.enter()
 
-func exit() -> void:
-	if sub_state_machine:
-		sub_state_machine.current_state.exit()
-		sub_state_machine.set_physics_process(false)
-		sub_state_machine.set_process(false)
+func enter(_previous: State) -> void:
+	assert(nested_machine != null)
+	assert(nested_machine.initial_state != null)
+	nested_machine.start(nested_machine.initial_state.name)
 
-func physics_update(delta: float) -> String:
-	# Check for transitions OUT of this hierarchical state first
-	if not entity.is_on_floor():
-		return "InAir"
-	# Otherwise, let the sub-machine handle it internally
-	return ""
+
+func exit(_next: State) -> void:
+	nested_machine.stop()
 ```
 
-**C# — Hierarchical State:**
+Do not call `nested_machine.current_state.enter()` or `.exit()` here. `start()` and `stop()` own those hooks. This prevents double entry and makes re-entry deterministic.
 
-```csharp
-public partial class HierarchicalState : State
-{
-    [Export] public StateMachine SubStateMachine { get; set; }
+`stop()` clears the current state and disables process, physics, and unhandled-input callbacks. The nested machine therefore cannot update or consume input while its parent state is inactive.
 
-    public override void Enter()
-    {
-        if (SubStateMachine != null)
-        {
-            SubStateMachine.SetPhysicsProcess(true);
-            SubStateMachine.SetProcess(true);
-            SubStateMachine.CurrentState.Enter();
-        }
-    }
+When a nested transition must cause an outer transition, emit a typed signal or let the parent state inspect a narrow result. Do not let the child reach through ancestors to mutate the outer machine.
 
-    public override void Exit()
-    {
-        if (SubStateMachine != null)
-        {
-            SubStateMachine.CurrentState.Exit();
-            SubStateMachine.SetPhysicsProcess(false);
-            SubStateMachine.SetProcess(false);
-        }
-    }
+## Parallel ownership
 
-    public override string PhysicsUpdate(double delta)
-    {
-        if (!Entity.IsOnFloor()) return "InAir";
-        return string.Empty;
-    }
-}
+Parallel machines are siblings with distinct write responsibilities:
+
+```text
+Player
+├── MovementMachine   <- chooses desired movement
+├── CombatMachine     <- controls attack availability
+└── PlayerController  <- resolves both and writes velocity/animation
 ```
 
-## Approach B: Parallel State Machines
+Both machines may update during one physics tick, but the controller should be the sole writer of shared outputs. If ordering changes correctness, the concerns are not truly independent; move their coordination into one owner or one transition graph.
 
-Run multiple independent state machines simultaneously. Each handles a different concern.
+## Selection guide
 
-**Scene Tree:**
-
-```
-Player (CharacterBody2D)
-├── MovementSM (StateMachine: Idle, Walk, Run, Jump, Fall)
-├── CombatSM   (StateMachine: None, Attack, Block, Dodge)
-└── AnimationSM (StateMachine: reads from Movement + Combat to pick animation)
-```
-
-**GDScript — Parallel machines on a character:**
-
-```gdscript
-extends CharacterBody2D
-
-@onready var movement_sm: StateMachine = $MovementSM
-@onready var combat_sm: StateMachine = $CombatSM
-
-func _physics_process(delta: float) -> void:
-	# Both machines update independently each frame.
-	# The StateMachine class (Section 3) handles its own _physics_process.
-	# Movement and combat don't interfere with each other.
-	move_and_slide()
-
-func get_animation_name() -> String:
-	# Combine states to pick the right animation
-	var move_state: String = movement_sm.current_state.name
-	var combat_state: String = combat_sm.current_state.name
-
-	if combat_state == "Attack":
-		return "attack"  # combat overrides movement animation
-	match move_state:
-		"Run":
-			return "run"
-		"Jump", "Fall":
-			return "air"
-		_:
-			return "idle"
-```
-
-**C#:**
-
-```csharp
-public partial class ParallelPlayer : CharacterBody2D
-{
-    private StateMachine _movementSM;
-    private StateMachine _combatSM;
-
-    public override void _Ready()
-    {
-        _movementSM = GetNode<StateMachine>("MovementSM");
-        _combatSM = GetNode<StateMachine>("CombatSM");
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        MoveAndSlide();
-    }
-
-    public string GetAnimationName()
-    {
-        string moveState = _movementSM.CurrentState.Name;
-        string combatState = _combatSM.CurrentState.Name;
-
-        if (combatState == "Attack") return "attack";
-        return moveState switch
-        {
-            "Run" => "run",
-            "Jump" or "Fall" => "air",
-            _ => "idle"
-        };
-    }
-}
-```
-
-## Which to Choose
-
-| Pattern | Use When |
-|---------|----------|
-| **Flat FSM** | ≤ 8 states, single concern |
-| **Hierarchical** | States naturally nest (OnGround has sub-states), transitions exist between top-level groups |
-| **Parallel** | Independent concerns (movement + combat + animation), no nesting relationship |
+- Use a flat machine when one transition graph remains readable.
+- Use hierarchy when one active mode exclusively owns a nested mode.
+- Use parallel machines when concerns are independent and have disjoint outputs.
+- Use neither when a boolean, cooldown, or small data table expresses the behavior more directly.

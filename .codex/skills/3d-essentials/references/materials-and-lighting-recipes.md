@@ -1,6 +1,6 @@
 # Materials & Lighting Recipes
 
-Reference for `skills/3d-essentials/SKILL.md` — runnable code recipes for creating materials at runtime, per-instance material copies, dynamic lights with tween-driven decay, light properties, shadow configuration, bake modes, and AreaLight3D (Godot 4.7+).
+Reference for `skills/3d-essentials/SKILL.md` — runnable code recipes for creating materials at runtime, per-instance material copies, dynamic lights with tween-driven decay, light properties, shadow configuration, and bake modes.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -30,33 +30,6 @@ func flash_emissive() -> void:
     tween.tween_callback(func(): mat.emission_enabled = false)
 ```
 
-### C#
-
-```csharp
-private MeshInstance3D _mesh;
-
-public override void _Ready()
-{
-    _mesh = GetNode<MeshInstance3D>("MeshInstance3D");
-    var mat = new StandardMaterial3D();
-    mat.AlbedoColor = new Color(0.8f, 0.2f, 0.2f);
-    mat.Metallic = 0.3f;
-    mat.Roughness = 0.7f;
-    _mesh.MaterialOverride = mat;
-}
-
-public void FlashEmissive()
-{
-    var mat = _mesh.MaterialOverride as StandardMaterial3D;
-    mat.EmissionEnabled = true;
-    mat.Emission = Colors.White;
-    mat.EmissionEnergyMultiplier = 3.0f;
-    var tween = CreateTween();
-    tween.TweenProperty(mat, "emission_energy_multiplier", 0.0f, 0.3);
-    tween.TweenCallback(Callable.From(() => mat.EmissionEnabled = false));
-}
-```
-
 ## Transparency Modes
 
 | Mode                | Performance | Shadows | Use For                          |
@@ -76,10 +49,6 @@ When multiple `MeshInstance3D` nodes share the same material, changing one affec
 mesh.material_override = mesh.material_override.duplicate()
 ```
 
-```csharp
-_mesh.MaterialOverride = (Material)_mesh.MaterialOverride.Duplicate();
-```
-
 ## Light Properties
 
 | Property | Type | Default | Notes |
@@ -95,13 +64,6 @@ sun.light_color = Color(1.0, 0.95, 0.9)
 sun.shadow_enabled = true
 sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 sun.directional_shadow_max_distance = 100.0
-```
-
-```csharp
-sun.LightColor = new Color(1.0f, 0.95f, 0.9f);
-sun.ShadowEnabled = true;
-sun.DirectionalShadowMode = DirectionalLight3D.ShadowMode.Parallel4Splits;
-sun.DirectionalShadowMaxDistance = 100.0f;
 ```
 
 ## Shadow Configuration Tips
@@ -122,58 +84,6 @@ sun.DirectionalShadowMaxDistance = 100.0f;
 | Static   | Fully baked into lightmaps — no runtime cost              | Architecture, terrain, fixed lights |
 | Dynamic  | Indirect light baked, direct light stays real-time        | Lights that change color/intensity  |
 
-## AreaLight3D (Godot 4.7+)
-
-`AreaLight3D` is a `Light3D` node that emits light over a two-dimensional rectangle — neon tubes, screens, softbox panels. Light is emitted along the node's **-Z** axis, and PCSS soft shadows are controlled through `light_size` (the shadow map is drawn from the light's center).
-
-| Property | Default | Notes |
-|---|---|---|
-| `area_size` | `Vector2(1, 1)` | Width and height of the rectangle in meters |
-| `area_range` | `5.0` | Max distance (meters) from any point on the area that still receives light |
-| `area_attenuation` | `1.0` | `0.0` ≈ constant brightness through most of the range; `2.0` = physically accurate inverse square |
-| `area_normalize_energy` | `true` | Divides energy by surface area — resizing doesn't change total light output |
-| `area_texture` | (none) | Optional textured emission (e.g. a screen). Forward+ and Mobile only |
-| `light_size` | `0.5` | Overridden `Light3D` default — drives the PCSS penumbra |
-| `shadow_normal_bias` | `1.0` | Overridden `Light3D` default |
-
-> **Note:** With `area_attenuation` at `2.0` or higher, distant objects may receive almost no light even within range. For runtime `area_texture` swaps, keep each texture dimension a multiple of 128 px or a power of two to skip the scaling pass (e.g. 32x64, 128x128, 256x384).
-
-### GDScript
-
-```gdscript
-func add_screen_light() -> void:
-    var panel := AreaLight3D.new()
-    panel.light_color = Color(0.85, 0.9, 1.0)
-    panel.light_energy = 4.0
-    panel.area_size = Vector2(2.0, 1.2)  # meters
-    panel.area_range = 8.0
-    panel.area_attenuation = 2.0  # physically accurate inverse-square falloff
-    panel.area_normalize_energy = true  # resizing keeps total output stable
-    panel.shadow_enabled = true  # PCSS soft shadows (not in Compatibility)
-    panel.area_texture = load("res://textures/screen_content.png")  # Forward+/Mobile only
-    add_child(panel)
-```
-
-### C#
-
-```csharp
-public void AddScreenLight()
-{
-    var panel = new AreaLight3D();
-    panel.LightColor = new Color(0.85f, 0.9f, 1.0f);
-    panel.LightEnergy = 4.0f;
-    panel.AreaSize = new Vector2(2.0f, 1.2f);
-    panel.AreaRange = 8.0f;
-    panel.AreaAttenuation = 2.0f;
-    panel.AreaNormalizeEnergy = true;
-    panel.ShadowEnabled = true;
-    panel.AreaTexture = GD.Load<Texture2D>("res://textures/screen_content.png");
-    AddChild(panel);
-}
-```
-
-> **Warning:** Shadows can look incorrect when the caster has few subdivisions and sits very close to the light (same limitation as OmniLight3D's Dual Paraboloid mode). In Mobile, the PCSS penumbra size doesn't vary as it should; in Compatibility, area lights cannot cast shadows.
-
 ## Dynamic Point Light
 
 Spawn an OmniLight3D at runtime, drive its energy with a tween, and queue-free it on tween completion. Pattern works for explosions, muzzle flashes, magic effects.
@@ -193,23 +103,6 @@ func create_explosion_light(pos: Vector3) -> void:
     tween.tween_callback(light.queue_free)
 ```
 
-```csharp
-public void CreateExplosionLight(Vector3 pos)
-{
-    var light = new OmniLight3D();
-    light.LightColor = new Color(1.0f, 0.6f, 0.2f);
-    light.LightEnergy = 4.0f;
-    light.OmniRange = 10.0f;
-    light.OmniAttenuation = 2.0f;
-    light.Position = pos;
-    AddChild(light);
-
-    var tween = CreateTween();
-    tween.TweenProperty(light, "light_energy", 0.0f, 0.5);
-    tween.TweenCallback(Callable.From(light.QueueFree));
-}
-```
-
 ## Bent Normal Maps (Godot 4.5+)
 
 Code path for setting a bent-normal texture at runtime (the typical case is via Inspector instead).
@@ -224,18 +117,4 @@ func _ready() -> void:
     mat.bent_normal_enabled = true
     mat.bent_normal_texture = preload("res://textures/rock_bent_normal.png")
     mesh.set_surface_override_material(0, mat)
-```
-
-```csharp
-private MeshInstance3D _mesh;
-
-public override void _Ready()
-{
-    _mesh = GetNode<MeshInstance3D>("MeshInstance3D");
-    var mat = _mesh.GetSurfaceOverrideMaterial(0) as StandardMaterial3D
-        ?? new StandardMaterial3D();
-    mat.BentNormalEnabled = true;
-    mat.BentNormalTexture = GD.Load<Texture2D>("res://textures/rock_bent_normal.png");
-    _mesh.SetSurfaceOverrideMaterial(0, mat);
-}
 ```

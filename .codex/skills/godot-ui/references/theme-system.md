@@ -35,25 +35,7 @@ stylebox.border_color = Color(0.4, 0.6, 1.0, 1.0)
 $DialogPanel.add_theme_stylebox_override("panel", stylebox)
 ```
 
-**C#:**
 
-```csharp
-var stylebox = new StyleBoxFlat
-{
-    BgColor = new Color(0.1f, 0.1f, 0.15f, 0.95f),
-    CornerRadiusTopLeft     = 8,
-    CornerRadiusTopRight    = 8,
-    CornerRadiusBottomLeft  = 8,
-    CornerRadiusBottomRight = 8,
-    BorderWidthLeft   = 2,
-    BorderWidthTop    = 2,
-    BorderWidthRight  = 2,
-    BorderWidthBottom = 2,
-    BorderColor = new Color(0.4f, 0.6f, 1.0f, 1.0f),
-};
-
-GetNode<PanelContainer>("DialogPanel").AddThemeStyleboxOverride("panel", stylebox);
-```
 
 ### Font Overrides
 
@@ -66,14 +48,7 @@ $TitleLabel.add_theme_font_override("font", font)
 $TitleLabel.add_theme_font_size_override("font_size", 32)
 ```
 
-**C#:**
 
-```csharp
-var font = GD.Load<FontFile>("res://assets/fonts/Roboto-Regular.ttf");
-var label = GetNode<Label>("TitleLabel");
-label.AddThemeFontOverride("font", font);
-label.AddThemeFontSizeOverride("font_size", 32);
-```
 
 ### Theme Inheritance
 
@@ -103,9 +78,5 @@ Remove an override to fall back to the inherited theme:
 $Button.remove_theme_stylebox_override("normal")
 ```
 
-```csharp
-GetNode<Button>("Button").RemoveThemeStyleboxOverride("normal");
-```
 
 ---
-

@@ -1,461 +1,314 @@
 ---
 name: gdscript-patterns
-description: Use when writing GDScript — static typing, await/coroutines, lambdas, match patterns, export annotations, inner classes, and common idioms
+description: Write, repair, or review runtime GDScript for Builda's Godot 4.6.x single-threaded Web projects. Use for typed GDScript, signals and Callables, await/coroutine lifecycle, lambdas, match, exports, class structure, inheritance, runtime object lifetime, Resources, dynamic dispatch, or profiler-confirmed language hot spots. Do not use for C#, newer-engine migration, @tool/editor plugins, threads, or general game architecture when no GDScript language issue is involved.
 ---
 
-# GDScript Patterns in Godot 4.3+
+# GDScript Patterns
 
-All examples target Godot 4.3+ with no deprecated APIs.
+Use this as the single language-level entry point for Builda projects. Target Godot 4.6.x, GDScript, and the single-threaded Web runtime.
 
-> **Related skills:** **gdscript-advanced** for production-grade depth (performance idioms, metaprogramming, @tool lifecycle, profiler-driven idioms), **godot-code-review** for style rules and anti-patterns, **csharp-godot** for GDScript-to-C# translation, **state-machine** for state patterns, **event-bus** for signal architecture.
+## Runtime boundary
 
-> **Note:** This skill is GDScript-specific by design. For C# patterns, see **csharp-godot** and **csharp-signals**.
+- Write GDScript only. Do not add C# parity examples.
+- Use APIs available in Godot 4.6.x. Do not prescribe behavior or migration workarounds from newer engine releases.
+- Keep runtime code compatible with the no-threads Web export. Do not use `Thread`, `WorkerThreadPool`, or thread-dependent designs.
+- Treat `@tool`, `EditorPlugin`, import plugins, and editor lifecycle as outside this skill.
+- Verify project conventions and the concrete node/resource types before changing code.
 
----
+## Working sequence
 
-## 1. Static Typing
+1. Inspect the script, its base class, relevant scene ownership, connected signals, and call sites.
+2. Identify the language concern: types, initialization, lifetime, async flow, Callable/signal use, collection behavior, or hot-path allocation.
+3. Apply the smallest pattern that preserves current behavior.
+4. Re-check every boundary crossed by an `await`, deferred call, signal, or shared `Resource`.
+5. Parse-check changed scripts with the repository's pinned Godot 4.6 executable when available; then run the smallest relevant scene or project test.
 
-### Type Hints
+## Organize scripts by responsibility
 
-Always add type hints — they catch bugs at parse time, improve autocomplete, and boost performance.
+- Use `snake_case.gd` filenames and directories; use `PascalCase` for `class_name` types and scene
+  node names.
+- Co-locate a scene script with the feature scene it controls. Name reusable scripts by role, such
+  as `health_component.gd`, `spawn_service.gd`, or `item_definition.gd`, rather than generic
+  `manager.gd`, `utils.gd`, or `common.gd`.
+- Keep one primary responsibility per script. Split by ownership, lifecycle, change reason, reuse,
+  or test seam—not by an arbitrary line count.
+- Keep `main.gd` limited to top-level composition, scene switching, and application lifecycle. Put
+  gameplay, input, physics, UI, save, audio, and asset implementation in their owning scripts.
+- Use `class_name` only for a type that needs project-wide identity; private feature scripts can
+  remain path-local.
+
+Read [references/script-organization.md](references/script-organization.md) when creating a script,
+renaming a type, or deciding whether to split a file.
+
+## 1. Type the contract
+
+Type public state, parameters, return values, signals, node references, and collections. Use inference only when the inferred type is obvious and stable.
 
 ```gdscript
-# Variables
-var health: int = 100
-var speed: float = 200.0
-var player_name: String = "Hero"
-var direction: Vector2 = Vector2.ZERO
+signal health_changed(current: int, maximum: int)
 
-# Constants
 const MAX_HEALTH: int = 100
-const GRAVITY: float = 980.0
 
-# Functions — parameters and return type
-func take_damage(amount: int) -> void:
-    health -= amount
+@export_range(0.0, 1000.0, 1.0) var speed: float = 200.0
+@onready var sprite: Sprite2D = $Sprite2D
 
-func get_direction() -> Vector2:
-    return Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-
-# Inferred typing with :=
-var pos := Vector2(100, 200)     # inferred as Vector2
-var items := []                  # inferred as Array (untyped)
-var count := 0                   # inferred as int
-```
-
-### Typed Collections
-
-```gdscript
-# Typed arrays — only accepts the specified type
+var health: int = MAX_HEALTH
 var enemies: Array[Enemy] = []
-var scores: Array[int] = [10, 20, 30]
-var names: Array[String] = ["Alice", "Bob"]
+var inventory: Dictionary[String, int] = {}
 
-# Typed dictionaries (Godot 4.4+)
-var inventory: Dictionary[String, int] = {"sword": 1, "potion": 5}
-
-# Typed loop variable
-for enemy: Enemy in enemies:
-    enemy.take_damage(10)
-
-# Typed array methods work with type safety
-var filtered: Array[Enemy] = enemies.filter(func(e: Enemy) -> bool: return e.health > 0)
+func take_damage(amount: int) -> void:
+    health = maxi(health - amount, 0)
+    health_changed.emit(health, MAX_HEALTH)
 ```
 
-### Casting with `as` and `is`
+An empty literal does not infer an element type:
 
 ```gdscript
-# 'is' — type check (returns bool)
+var names: Array[String] = []
+var metadata: Dictionary[String, Variant] = {}
+```
+
+For an uncertain object type, check before casting. `as` returns `null` on an incompatible object cast.
+
+```gdscript
 func _on_body_entered(body: Node2D) -> void:
     if body is Player:
-        var player: Player = body as Player
+        var player := body as Player
         player.take_damage(10)
-
-# 'as' — cast (returns null on failure, no error)
-var sprite := get_node("Sprite") as Sprite2D
-if sprite:
-    sprite.modulate = Color.RED
-
-# Prefer 'is' check + cast over bare 'as' to avoid null surprises
 ```
 
-### Enabling Strict Typing Warnings
+Do not enable new warning-as-error categories across a legacy project as part of an unrelated fix. Match the repository's existing warning policy.
 
-In **Project > Project Settings > Debug > GDScript**:
+## 2. Respect initialization order
 
-| Warning                 | Effect                                      |
-|-------------------------|---------------------------------------------|
-| `UNTYPED_DECLARATION`   | Warns on any untyped variable/parameter     |
-| `INFERRED_DECLARATION`  | Warns on `:=` (prefers explicit types)      |
-| `UNSAFE_CAST`           | Warns on unsafe `as` casts                  |
-| `UNSAFE_CALL_ARGUMENT`  | Warns when passing wrong type to a function |
-
-> Set warnings to **Error** for strict enforcement in team projects.
-
-### Typed Return Inheritance in Overrides
-
-> ⚠️ **Changed in Godot 4.7:** Methods that override a method with a typed return now inherit the return type, so an override without an explicit `return` statement becomes an error. Add `return null` (or a typed return value) at the end of the override. See the [4.7 migration guide](https://docs.godotengine.org/en/latest/tutorials/migrating/upgrading_to_godot_4.7.html).
+Member initializers and `_init()` run before the node enters the tree. `@onready` values initialize immediately before that script's `_ready()` body. Child `_ready()` callbacks run before the parent's `_ready()` callback.
 
 ```gdscript
-class Enemy:
-    var weapon: Node
-    func get_weapon() -> Node:
-        return weapon
+@onready var health_bar: ProgressBar = %HealthBar
 
-class UnarmedEnemy extends Enemy:
-    func get_weapon():  # 4.7+: inherits -> Node from Enemy
-        return null     # explicit return now required — omitting it is an error
+func _ready() -> void:
+    _configure_children()
+
+func _configure_children() -> void:
+    health_bar.max_value = max_health
 ```
 
----
+Do not read `@onready` members from `_init()` or another member initializer. When a child needs parent-owned state, have the parent call an explicit setup method rather than relying on the parent's `_ready()` having already run.
 
-## 2. Await & Coroutines
+## 3. Make `await` lifecycle explicit
 
-### Awaiting Signals
+`await` returns control immediately and resumes later. Every `await` is a lifecycle boundary: the scene may change, nodes referenced before the wait may be freed or leave the tree, and a newer request may supersede the old one.
 
-`await` pauses the function until a signal fires, then resumes. The function becomes a coroutine.
-
-```gdscript
-func death_sequence() -> void:
-    $AnimationPlayer.play("death")
-    await $AnimationPlayer.animation_finished  # pauses here
-
-    $Sprite2D.visible = false
-    await get_tree().create_timer(1.0).timeout  # wait 1 second
-
-    queue_free()
-```
-
-### Awaiting with Return Values
+Keep required values before the boundary and revalidate external objects after it:
 
 ```gdscript
-# Signal that passes data
-signal dialogue_choice_made(choice: int)
-
-func show_dialogue(options: Array[String]) -> int:
-    # ... display UI ...
-    var choice: int = await dialogue_choice_made
-    return choice
-
-# Caller:
-func _on_npc_interact() -> void:
-    var result := await show_dialogue(["Yes", "No"])
-    if result == 0:
-        print("Player said yes")
-```
-
-### Timer Patterns
-
-```gdscript
-# One-shot delay
-await get_tree().create_timer(0.5).timeout
-
-# Repeating with await (simple but blocks the function)
-for i in 5:
-    do_something()
-    await get_tree().create_timer(0.2).timeout
-
-# Non-blocking timer — use SceneTreeTimer or Tween instead
-get_tree().create_timer(2.0).timeout.connect(_on_delayed_action)
-```
-
-### Coroutine Safety
-
-```gdscript
-# DANGER: node may be freed while awaiting
-func unsafe_coroutine() -> void:
-    await get_tree().create_timer(5.0).timeout
-    position = Vector2.ZERO  # crash if node was freed during wait!
-
-# SAFE: check validity after await
-func safe_coroutine() -> void:
-    await get_tree().create_timer(5.0).timeout
-    if not is_instance_valid(self):
+func flash_target(target: CanvasItem) -> void:
+    if not is_instance_valid(target):
         return
-    position = Vector2.ZERO
+
+    target.modulate = Color.WHITE
+    await get_tree().create_timer(0.15).timeout
+
+    if not is_instance_valid(target) or not target.is_inside_tree():
+        return
+    target.modulate = Color.RED
 ```
 
----
+Do not use `is_instance_valid(self)` as a universal post-`await` fix. The running method already needs a live instance to resume; validate the external objects and scene membership that can change.
 
-## 3. Lambda Functions
-
-Lambdas are inline anonymous functions, useful for callbacks, sorting, filtering.
-
-### Basic Syntax
+Use a generation token when an older async operation must not overwrite newer state:
 
 ```gdscript
-# Single-expression lambda
-var double := func(x: int) -> int: return x * 2
+var _load_generation: int = 0
 
-# Multi-line lambda
-var greet := func(name: String) -> void:
-    print("Hello, %s!" % name)
-    print("Welcome!")
+func show_profile(user_id: String) -> void:
+    _load_generation += 1
+    var generation := _load_generation
+    var profile: Dictionary = await profile_service.fetch_profile(user_id)
 
-# Calling a lambda
-double.call(5)  # returns 10
-greet.call("Player")
+    if generation != _load_generation or not is_inside_tree():
+        return
+    _render_profile(profile)
 ```
 
-### With Signals
+Check the completion precondition before awaiting a signal. GDScript 4.6 has no built-in `Signal.any()` race helper; do not invent one. If an operation needs timeout or cancellation, model that explicitly with one owner that emits a single completion result.
+
+Avoid long initialization awaits inside `_ready()`. Start an explicit async method after synchronous invariants and child setup are established:
 
 ```gdscript
-# Inline signal connection (one-off use)
-$Button.pressed.connect(func(): print("Button pressed!"))
+func _ready() -> void:
+    _initialize_synchronously()
+    _load_content()
 
-# With arguments
-$Timer.timeout.connect(func():
-    health -= 1
-    if health <= 0:
-        die()
-)
-
-# One-shot connection (auto-disconnects after first call)
-$Timer.timeout.connect(func(): print("Once!"), CONNECT_ONE_SHOT)
+func _load_content() -> void:
+    var data: Dictionary = await content_service.load_content()
+    if not is_inside_tree():
+        return
+    _apply_content(data)
 ```
 
-### With Array Methods
+Read [references/async-lifecycle.md](references/async-lifecycle.md) when an async path can overlap, be cancelled, outlive a scene, or wait on several possible outcomes.
+
+## 4. Choose signals and Callables deliberately
+
+Use a signal when zero to many listeners may observe an event. Use a direct method for a known owner/child command. Use a `Callable` for an injected strategy, comparator, or deferred callback.
+
+Prefer named methods for durable signal connections:
 
 ```gdscript
-var numbers: Array[int] = [1, 2, 3, 4, 5, 6, 7, 8]
+func _ready() -> void:
+    health_component.health_changed.connect(_on_health_changed)
 
-# Filter — keep elements where lambda returns true
-var evens: Array[int] = numbers.filter(func(n: int) -> bool: return n % 2 == 0)
-# [2, 4, 6, 8]
-
-# Map — transform each element
-var doubled: Array[int] = numbers.map(func(n: int) -> int: return n * 2)
-# [2, 4, 6, 8, 10, 12, 14, 16]
-
-# Reduce — accumulate into single value
-var total: int = numbers.reduce(func(acc: int, n: int) -> int: return acc + n, 0)
-# 36
-
-# Any / All
-var has_negative: bool = numbers.any(func(n: int) -> bool: return n < 0)
-var all_positive: bool = numbers.all(func(n: int) -> bool: return n > 0)
-
-# Sort with custom comparison
-var items: Array[Dictionary] = [{"name": "B", "value": 2}, {"name": "A", "value": 1}]
-items.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["value"] < b["value"])
+func _on_health_changed(current: int, maximum: int) -> void:
+    health_bar.value = float(current) / float(maximum)
 ```
 
-### Closures (Capturing Variables)
+Use lambdas for small local transformations and truly local one-shot callbacks. Local scalar values are captured by value when the lambda is created; reassigning the outer variable does not update the capture. Arrays, dictionaries, and objects still expose shared referenced content.
 
 ```gdscript
-func create_counter(start: int) -> Callable:
-    var count := start
-    return func() -> int:
-        count += 1
-        return count
-
-var counter := create_counter(0)
-print(counter.call())  # 1
-print(counter.call())  # 2
+var threshold: int = 10
+var is_large := func(value: int) -> bool: return value >= threshold
+threshold = 100
+print(is_large.call(20)) # true: the lambda captured 10
 ```
 
----
-
-## 4. Match / Pattern Matching
-
-GDScript's `match` is like `switch` but with pattern support.
-
-### Basic Match
+Use `bind()` when each callback needs a distinct loop value:
 
 ```gdscript
-match state:
-    State.IDLE:
-        play_idle()
-    State.RUNNING:
-        play_run()
-    State.JUMPING, State.FALLING:  # multiple patterns
-        play_air()
-    _:  # default (wildcard)
-        push_warning("Unknown state: %s" % state)
+var callbacks: Array[Callable] = []
+for index in range(5):
+    callbacks.append((func(value: int) -> void: print(value)).bind(index))
 ```
 
-### Pattern Types
+Store a lambda Callable if it must later be disconnected. Signal connections to a freed target object are removed, but referenced containers or long-lived owners can still retain Callables and captured objects.
+
+## 5. Use data-oriented language features
+
+Use `match` when patterns make the accepted shapes clearer, and include a fallback for external or evolving data:
 
 ```gdscript
-# Literal patterns
-match value:
-    42:
-        print("The answer")
-    "hello":
-        print("Greeting")
-    true:
-        print("Boolean true")
-
-# Binding pattern — captures value into a variable
 match command:
     ["move", var direction]:
         move(direction)
-    ["attack", var target, var damage]:
-        attack(target, damage)
-
-# Array pattern
-match input:
-    [1, 2, 3]:
-        print("Exact match")
-    [1, ..]:
-        print("Starts with 1")
-    [var first, _, var last]:
-        print("First: %s, Last: %s" % [first, last])
-
-# Dictionary pattern
-match event:
-    {"type": "damage", "amount": var amt}:
-        take_damage(amt)
-    {"type": "heal", "amount": var amt}:
-        heal(amt)
-
-# Nested condition inside a branch
-match enemy_type:
-    "boss":
-        if health < 50:
-            enter_rage_mode()
-        else:
-            normal_attack()
+    {"type": "damage", "amount": var amount}:
+        take_damage(amount)
+    _:
+        push_warning("Unsupported command: %s" % [command])
 ```
 
----
-
-## 5. Export Annotations
-
-`@export` exposes a variable to the Inspector. Hint variants (`@export_range`, `@export_enum`, `@export_file`) constrain editor input. Use `@export_group` and `@export_subgroup` to organize. Node and Resource exports use NodePath / typed Resource references.
-
-> See [references/export-annotations.md](references/export-annotations.md) for the full export annotation catalog (basic exports, range/hint variants, groups, node and Resource exports).
-
----
-
-## 6. Inner Classes & class_name
-
-### class_name
-
-Register a script as a global class name — available everywhere without `preload`.
+Use typed Resources for designer-authored definitions, but separate shared definitions from per-instance runtime state. Loaded Resource assets are shared by reference.
 
 ```gdscript
-# item_data.gd
-class_name ItemData
-extends Resource
+@export var item_definition: ItemDefinition
 
-@export var name: String
-@export var icon: Texture2D
-@export var value: int
+var durability: int
 
-# Now usable anywhere:
-# var item: ItemData = ItemData.new()
-# var items: Array[ItemData] = []
+func _ready() -> void:
+    durability = item_definition.max_durability
 ```
 
-### Inner Classes
+Duplicate a Resource only when the instance is intentionally mutable and independent; choose whether subresources also need deep duplication.
+
+Use `class_name` for types that genuinely need project-wide visibility. Prefer local script references for private implementation details. Use inner classes for small result/value objects that do not need global registration.
+
+Read these references only when needed:
+
+- [references/export-annotations.md](references/export-annotations.md) for Inspector-facing properties.
+- [references/abstract-classes.md](references/abstract-classes.md) for Godot 4.5+ abstract bases.
+- [references/variadic-functions.md](references/variadic-functions.md) for Godot 4.5+ rest parameters.
+- [references/common-idioms.md](references/common-idioms.md) for collections, formatting, properties, and validity checks.
+
+## 6. Preserve inheritance behavior
+
+When overriding a callback implemented by a script base class, call `super()` if the child extends rather than replaces the base behavior. Do not assume every engine virtual requires `super()`; inspect the actual base implementation.
 
 ```gdscript
-# Define a class inside another script
-class HitResult:
-    var damage: int
-    var critical: bool
-    var knockback: Vector2
+extends EnemyBase
 
-    func _init(dmg: int, crit: bool, kb: Vector2 = Vector2.ZERO) -> void:
-        damage = dmg
-        critical = crit
-        knockback = kb
-
-# Usage
-func calculate_hit() -> HitResult:
-    var crit := randf() < 0.2
-    var dmg := 10 * (2 if crit else 1)
-    return HitResult.new(dmg, crit, Vector2.RIGHT * 50)
+func _ready() -> void:
+    super()
+    navigation_agent.velocity_computed.connect(_on_velocity_computed)
 ```
 
----
+Read [references/super-in-virtual-methods.md](references/super-in-virtual-methods.md) before changing an inheritance chain.
 
-## 7. super() in Virtual Methods
+## 7. Keep dynamic dispatch bounded
 
-When you override a virtual method that the engine calls (`_ready`, `_process`, `_input`, etc.) and your parent class also implements it, call `super()` to chain the parent's behavior. Forgetting to call `super._ready()` is the most common cause of "my base class init didn't run" bugs.
+Prefer direct typed calls. If a method name and arguments come from save data, network input, mods, or other untrusted content, allowlist the method and validate the complete argument schema before `call()` or `callv()`.
 
-> See [references/super-in-virtual-methods.md](references/super-in-virtual-methods.md) for the full pattern (problem / fix), the C# `base.X()` equivalent, and a catalog of bugs from missing super calls.
+```gdscript
+const ALLOWED_ACTIONS: Array[StringName] = [&"take_damage", &"apply_buff"]
+const ALLOWED_BUFFS: Array[StringName] = [&"shield", &"haste"]
 
----
+func dispatch_action(target: Object, action: StringName, args: Array) -> void:
+    if not is_instance_valid(target) or action not in ALLOWED_ACTIONS or not target.has_method(action):
+        push_warning("Rejected action: %s" % action)
+        return
 
-## 8. Common Idioms
+    var normalized_args: Array[Variant] = []
+    match action:
+        &"take_damage":
+            # Damage is an integer protocol field; reject fractional input
+            # instead of silently rounding it differently across producers.
+            if args.size() != 1 or typeof(args[0]) != TYPE_INT:
+                push_warning("Rejected take_damage arguments")
+                return
+            var amount: int = args[0]
+            if amount < 0 or amount > 10_000:
+                push_warning("Rejected damage amount")
+                return
+            normalized_args = [amount]
+        &"apply_buff":
+            # JSON produces a String, not StringName. Convert only after the
+            # string value and numeric duration pass validation.
+            if args.size() != 2 or typeof(args[0]) != TYPE_STRING or typeof(args[1]) not in [TYPE_INT, TYPE_FLOAT]:
+                push_warning("Rejected apply_buff arguments")
+                return
+            var buff_id := StringName(String(args[0]))
+            var duration := float(args[1])
+            if buff_id not in ALLOWED_BUFFS or not is_finite(duration) or duration <= 0.0 or duration > 300.0:
+                push_warning("Rejected buff values")
+                return
+            normalized_args = [buff_id, duration]
 
-The recurring small patterns: ternary expressions (`value if cond else other`), printf-style string formatting (`"%s %d" % [a, b]`), null/empty checks (`is_instance_valid` vs `!= null`, empty Array/String checks), Dictionary access (`get(key, default)`), Array operations (`Array.has`, `Array.find`, `Array.has_all`), setget via `set` and `get` accessors.
+    target.callv(action, normalized_args)
+```
 
-> See [references/common-idioms.md](references/common-idioms.md) for full code examples of each idiom.
+Use `call_deferred()` for scene-tree mutations that must wait until the idle step, not as a general performance or concurrency primitive.
 
----
+## 8. Optimize only from evidence
 
-## 9. Annotations Reference
+Profile first. In confirmed hot paths:
 
-| Annotation            | Purpose                                    |
-|-----------------------|--------------------------------------------|
-| `@export`             | Expose variable in Inspector               |
-| `@export_range`       | Numeric with slider                        |
-| `@export_enum`        | Dropdown from string list                  |
-| `@export_file`        | File path picker                           |
-| `@export_dir`         | Directory picker                           |
-| `@export_multiline`   | Multi-line text box                        |
-| `@export_group`       | Group heading in Inspector                 |
-| `@export_subgroup`    | Subgroup heading                           |
-| `@export_category`    | Category divider                           |
-| `@onready`            | Initialize when node enters tree, just before `_ready()` body runs |
-| `@tool`               | Run script in editor                       |
-| `@icon`               | Custom icon for the script                 |
-| `@warning_ignore`     | Suppress specific warning on next line     |
-| `@static_unload`      | Allow static variables to be freed         |
+- Cache stable node references instead of resolving paths each frame.
+- Avoid rebuilding Strings, Arrays, and Dictionaries every frame when inputs did not change.
+- Prefer `Packed*Array` for large homogeneous engine buffers, not automatically for ordinary gameplay collections.
+- Move event-driven UI updates out of `_process()`.
+- Use integer vectors for integer domains such as grid coordinates because they express the correct data contract; do not claim an unmeasured speedup.
+- Remember that static variables live for the script/engine lifetime, not the current scene.
 
----
+Read [references/runtime-pitfalls.md](references/runtime-pitfalls.md) for Resource sharing, static lifetime, deferred work, and profiler-driven examples.
 
-## 10. Common Pitfalls
+## 9. Validate the result
 
-| Symptom                               | Cause                                       | Fix                                                              |
-|---------------------------------------|----------------------------------------------|------------------------------------------------------------------|
-| `as` cast silently returns `null`     | Type mismatch — `as` doesn't error          | Use `is` check first, then cast                                  |
-| Await never resumes                   | Signal never emitted, or node freed          | Check `is_instance_valid(self)` after await; ensure signal fires |
-| Lambda captures stale variable        | Loop variable captured by reference          | Copy to local var before lambda: `var local := i`                |
-| `UNTYPED_DECLARATION` warnings flood  | Warning enabled but codebase isn't typed     | Type incrementally; use `@warning_ignore` for legacy code        |
-| Typed array rejects valid items       | Item type doesn't match exactly              | Ensure items match the declared type (no implicit upcasting)     |
-| `@onready` is `null`                  | Accessed before `_ready()` runs              | Never access `@onready` vars in `_init()` or variable declarations |
-| Match doesn't enter any branch        | No matching pattern and no `_:` wildcard     | Always add `_:` default branch                                   |
-| `class_name` conflict                 | Two scripts with same `class_name`           | Use unique names; check for duplicates in Project                |
-| Export group applies to wrong vars     | Group scope continues until next group       | Add a new `@export_group("")` to end the group scope             |
-| Parent `_ready()` logic doesn't run in child | Missing `super()` call in child's `_ready()` | Add `super()` as first line; see Section 7 |
-| `type_exists()` flagged as deprecated | Deprecated in Godot 4.7                      | Use `ClassDB.class_exists()` instead                             |
+- Parse-check every changed `.gd` file with Godot 4.6.x when the project provides a pinned executable.
+- Run the smallest relevant scene or headless test; a parser pass does not validate scene paths, signal wiring, or lifecycle behavior.
+- Exercise cancellation or replacement paths for async work.
+- Exercise scene reload when static state or shared Resources are involved.
+- Exercise the actual Web preview for browser-only behavior; desktop headless success is not Web-runtime proof.
 
-> ⚠️ **Changed in Godot 4.7:** The global `type_exists()` function is deprecated — replace `type_exists("Sprite2D")` with `ClassDB.class_exists("Sprite2D")`. See [GH-116899](https://github.com/godotengine/godot/pull/116899).
+## Checklist
 
----
-
-## 12. Variadic Functions (Godot 4.5+)
-
-Godot 4.5 added trailing-argument arrays via `...args`. The args are collected into an `Array`. Useful for printf-style helpers and flexible APIs without overloads.
-
-> See [references/variadic-functions.md](references/variadic-functions.md) for the full syntax, common patterns, and notes on when to prefer overloads.
-
----
-
-## 13. Abstract Classes and Methods (Godot 4.5+)
-
-The `@abstract` annotation prevents direct instantiation of a class and forces subclasses to implement any `@abstract`-annotated method (similar to C#'s `abstract` keyword).
-
-> See [references/abstract-classes.md](references/abstract-classes.md) for full base-class patterns and subclass implementation rules.
-
----
-
-## 11. Implementation Checklist
-
-- [ ] All variables, parameters, and return types have explicit type hints
-- [ ] Typed arrays (`Array[Type]`) are used instead of untyped `Array` where possible
-- [ ] `await` calls are followed by `is_instance_valid(self)` checks when the node could be freed
-- [ ] Lambdas connected to signals are simple — complex logic goes in named methods
-- [ ] `match` statements include a `_:` default branch
-- [ ] `@export` variables use appropriate hints (`@export_range`, `@export_enum`, etc.)
-- [ ] `@export_group` organizes Inspector properties into logical sections
-- [ ] `class_name` is only used for scripts that need global visibility
-- [ ] `is` type check precedes `as` cast when the type isn't guaranteed
-- [ ] Properties with setters validate and clamp values
-- [ ] Overridden virtual methods call `super()` when extending non-built-in base classes
-- [ ] Variadic functions (`...args`) used when the number of trailing arguments is open-ended (Godot 4.5+)
-- [ ] Base classes that must not be instantiated use `@abstract`; required methods use `@abstract func` (Godot 4.5+)
+- [ ] Code is GDScript for Godot 4.6.x and does not depend on threads or editor execution.
+- [ ] Script and directory names use `snake_case`; node and global type names use `PascalCase`.
+- [ ] Each script has one clear owner and primary responsibility; `main.gd` remains a thin
+      composition root.
+- [ ] Public contracts and collections are typed without forcing unrelated warning-policy changes.
+- [ ] Initialization respects child-before-parent `_ready()` order.
+- [ ] Every `await` revalidates the external state that can change and handles stale requests where necessary.
+- [ ] Signals, direct calls, and Callables match ownership and listener cardinality.
+- [ ] Lambda captures follow GDScript's value-capture rules.
+- [ ] Shared Resources are not mutated as accidental per-instance state.
+- [ ] Dynamic method names are allowlisted, and argument count, types, and value bounds are validated before dispatch.
+- [ ] Optimizations are tied to profiler evidence.
+- [ ] Godot parse checks and relevant runtime checks pass.

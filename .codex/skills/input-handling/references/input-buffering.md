@@ -30,37 +30,5 @@ func _physics_process(delta: float) -> void:
         _jump_buffered = false
 ```
 
-```csharp
-private bool _jumpBuffered;
-private float _jumpBufferTimer;
-private const float JumpBufferTime = 0.1f;
-
-public override void _UnhandledInput(InputEvent @event)
-{
-    if (@event.IsActionPressed("jump"))
-    {
-        _jumpBuffered = true;
-        _jumpBufferTimer = JumpBufferTime;
-    }
-}
-
-public override void _PhysicsProcess(double delta)
-{
-    if (_jumpBuffered)
-    {
-        _jumpBufferTimer -= (float)delta;
-        if (_jumpBufferTimer <= 0f)
-            _jumpBuffered = false;
-    }
-
-    if (_jumpBuffered && IsOnFloor())
-    {
-        Vector2 vel = Velocity;
-        vel.Y = JumpVelocity;
-        Velocity = vel;
-        _jumpBuffered = false;
-    }
-}
-```
 
 ---

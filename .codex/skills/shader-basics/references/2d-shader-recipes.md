@@ -43,15 +43,6 @@ func dissolve(duration: float = 1.0) -> void:
     tween.tween_callback(queue_free)
 ```
 
-```csharp
-public void Dissolve(float duration = 1.0f)
-{
-    var mat = GetNode<Sprite2D>("Sprite2D").Material as ShaderMaterial;
-    var tween = CreateTween();
-    tween.TweenProperty(mat, "shader_parameter/dissolve_amount", 1.0f, duration);
-    tween.TweenCallback(Callable.From(QueueFree));
-}
-```
 
 ### Outline Effect
 
@@ -144,4 +135,3 @@ void fragment() {
 ```
 
 ---
-

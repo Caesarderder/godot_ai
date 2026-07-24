@@ -1,13 +1,15 @@
 ---
 name: math-essentials
-description: Use when implementing game math — vectors, transforms, interpolation, curves, random number generation, and common geometric recipes
+description: Use when implementing vectors, transforms, interpolation, curves, random generation, and geometric recipes in Godot 4.6 GDScript Web projects
 ---
 
-# Game Math in Godot 4.3+
+# Game Math in Godot 4.6
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Use Godot 4.6.x GDScript APIs that work in Builda's single-threaded Web export.
 
 > **Related skills:** **player-controller** for movement physics, **ai-navigation** for pathfinding math, **camera-system** for camera interpolation, **tween-animation** for easing curves, **physics-system** for collision math.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -49,14 +51,6 @@ if global_position.distance_squared_to(target.global_position) < detection_range
     chase_target()
 ```
 
-```csharp
-Vector2 dir = GlobalPosition.DirectionTo(target.GlobalPosition);
-float dist = GlobalPosition.DistanceTo(target.GlobalPosition);
-
-if (GlobalPosition.DistanceSquaredTo(target.GlobalPosition) < detectionRange * detectionRange)
-    ChaseTarget();
-```
-
 ### Dot Product
 
 The dot product tells you how aligned two vectors are.
@@ -73,14 +67,6 @@ elif dot < -0.7:
     print("Target is behind")
 ```
 
-```csharp
-Vector2 forward = Vector2.Right.Rotated(Rotation);
-Vector2 toTarget = GlobalPosition.DirectionTo(target.GlobalPosition);
-float dot = forward.Dot(toTarget);
-
-if (dot > 0.7f) GD.Print("Target is ahead");
-```
-
 ### Cross Product (3D)
 
 The cross product gives a vector perpendicular to two input vectors.
@@ -90,12 +76,6 @@ The cross product gives a vector perpendicular to two input vectors.
 var edge1: Vector3 = vertex_b - vertex_a
 var edge2: Vector3 = vertex_c - vertex_a
 var normal: Vector3 = edge1.cross(edge2).normalized()
-```
-
-```csharp
-Vector3 edge1 = vertexB - vertexA;
-Vector3 edge2 = vertexC - vertexA;
-Vector3 normal = edge1.Cross(edge2).Normalized();
 ```
 
 ---
@@ -119,14 +99,6 @@ var transformed: Vector2 = xform * Vector2(10, 0)  # point in local space → gl
 
 # Inverse transform
 var local: Vector2 = xform.affine_inverse() * global_point
-```
-
-```csharp
-Transform2D xform = GlobalTransform;
-Vector2 localPoint = ToLocal(globalPoint);
-Vector2 worldPoint = ToGlobal(localPoint);
-Vector2 transformed = xform * new Vector2(10, 0);
-Vector2 local = xform.AffineInverse() * globalPoint;
 ```
 
 ### Transform3D & Basis
@@ -153,37 +125,6 @@ var b: Transform3D = $End.global_transform
 global_transform = a.interpolate_with(b, 0.5)  # halfway
 ```
 
-```csharp
-Basis basis = GlobalTransform.Basis;
-Vector3 forward = -basis.Z;
-Vector3 right = basis.X;
-Vector3 up = basis.Y;
-
-LookAt(target.GlobalPosition, Vector3.Up);
-RotateY(Mathf.DegToRad(90.0f));
-
-Transform3D a = GetNode<Node3D>("Start").GlobalTransform;
-Transform3D b = GetNode<Node3D>("End").GlobalTransform;
-GlobalTransform = a.InterpolateWith(b, 0.5f);
-```
-
-### is_orthonormal() (Godot 4.7+)
-
-`Basis.is_orthonormal()` (const) returns `true` if the basis is *orthogonal* (axes perpendicular to each other) **and** *normalized* (every axis has length `1.0`) — especially useful during physics calculations. It complements `orthonormalized()`: check first, and only re-orthonormalize when accumulated floating-point drift has denormalized the basis.
-
-```gdscript
-if not global_transform.basis.is_orthonormal():
-    global_transform.basis = global_transform.basis.orthonormalized()
-```
-
-```csharp
-if (!GlobalTransform.Basis.IsOrthonormal())
-{
-    GlobalTransform = new Transform3D(
-        GlobalTransform.Basis.Orthonormalized(), GlobalPosition);
-}
-```
-
 ---
 
 ## 3. Interpolation
@@ -200,16 +141,6 @@ func _process(delta: float) -> void:
     position = position.lerp(target_position, 5.0 * delta)
 ```
 
-```csharp
-float mid = Mathf.Lerp(0.0f, 100.0f, 0.5f);
-Vector2 pos = startPos.Lerp(endPos, 0.75f);
-
-public override void _Process(double delta)
-{
-    Position = Position.Lerp(targetPosition, 5.0f * (float)delta);
-}
-```
-
 > **Warning:** `lerp(a, b, speed * delta)` is frame-rate dependent and never fully reaches the target. For precise movement, use `move_toward()` instead.
 
 ### move_toward — Fixed-Speed Approach
@@ -222,11 +153,6 @@ position.x = move_toward(position.x, target_x, speed * delta)
 position = position.move_toward(target_position, speed * delta)
 ```
 
-```csharp
-float newX = Mathf.MoveToward(Position.X, targetX, speed * (float)delta);
-Position = Position.MoveToward(targetPosition, speed * (float)delta);
-```
-
 ### slerp — Spherical Interpolation
 
 For smooth rotation interpolation (preserves arc, not straight line).
@@ -237,13 +163,6 @@ var current_quat: Quaternion = global_transform.basis.get_rotation_quaternion()
 var target_quat: Quaternion = target_transform.basis.get_rotation_quaternion()
 var result: Quaternion = current_quat.slerp(target_quat, 5.0 * delta)
 global_transform.basis = Basis(result)
-```
-
-```csharp
-Quaternion currentQuat = GlobalTransform.Basis.GetRotationQuaternion();
-Quaternion targetQuat = targetTransform.Basis.GetRotationQuaternion();
-Quaternion result = currentQuat.Slerp(targetQuat, 5.0f * (float)delta);
-GlobalTransform = new Transform3D(new Basis(result), GlobalPosition);
 ```
 
 ### smoothstep — S-Curve Easing
@@ -308,7 +227,7 @@ Five recipes: **look at target** (2D `Vector2.angle_to_point`), **orbit around a
 | Rotation jumps at 180°               | Using `lerp` instead of `lerp_angle`         | Always use `lerp_angle()` for angle interpolation                |
 | Object faces wrong direction (3D)    | Forgot Godot uses -Z as forward              | Forward direction is `-global_transform.basis.z`                 |
 | Distance check too slow              | Calling `distance_to` on many objects        | Use `distance_squared_to` and compare against `range * range`    |
-| Normalized zero vector crashes       | Calling `normalized()` on `Vector2.ZERO`     | Check `length() > 0` first, or use `direction_to()`             |
+| Movement unexpectedly stops          | `Vector2.ZERO.normalized()` returns `Vector2.ZERO`; code assumed a non-zero direction | Check `is_zero_approx()` before direction-dependent work |
 | Transform interpolation looks wrong  | Lerping euler angles instead of quaternions  | Use `Quaternion.slerp()` or `Transform3D.interpolate_with()`    |
 | Random results repeat after restart  | Using `RandomNumberGenerator` with fixed seed | Godot 4.x auto-seeds global RNG; for `RandomNumberGenerator` use `randomize()` or set `seed` |
 | Noise values are all ~0              | `frequency` too low                          | Increase `FastNoiseLite.frequency` (try 0.01–0.1)               |

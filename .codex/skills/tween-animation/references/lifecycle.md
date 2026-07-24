@@ -22,19 +22,6 @@ func move_to(target: Vector2) -> void:
     _move_tween.tween_property(self, "position", target, 0.4)
 ```
 
-```csharp
-private Tween _moveTween;
-
-public void MoveTo(Vector2 target)
-{
-    if (_moveTween != null && _moveTween.IsValid())
-        _moveTween.Kill();
-
-    _moveTween = CreateTween();
-    _moveTween.SetTrans(Tween.TransitionType.Cubic).SetEase(Tween.EaseType.Out);
-    _moveTween.TweenProperty(this, "position", target, 0.4f);
-}
-```
 
 ### Pause Mode
 
@@ -67,4 +54,3 @@ tween.set_ignore_time_scale()
 ```
 
 ---
-

@@ -16,12 +16,6 @@ tween.tween_property($Panel, "position:x", $Panel.position.x, 0.4) \
     .from(-200.0)
 ```
 
-```csharp
-var panel = GetNode<Control>("Panel");
-var tween = CreateTween();
-tween.TweenProperty(panel, "position:x", panel.Position.X, 0.4f)
-    .From(-200.0f);
-```
 
 ### from_current() — Capture current value as start
 
@@ -30,9 +24,6 @@ tween.TweenProperty(panel, "position:x", panel.Position.X, 0.4f)
 tween.tween_property(self, "position", target_pos, 0.5).from_current()
 ```
 
-```csharp
-tween.TweenProperty(this, "position", targetPos, 0.5f).FromCurrent();
-```
 
 ### as_relative() — Final value is added to current
 
@@ -41,9 +32,6 @@ tween.TweenProperty(this, "position", targetPos, 0.5f).FromCurrent();
 tween.tween_property(self, "position:x", 100.0, 0.3).as_relative()
 ```
 
-```csharp
-tween.TweenProperty(this, "position:x", 100.0f, 0.3f).AsRelative();
-```
 
 ### set_delay() — Delay before this tweener starts
 
@@ -56,4 +44,3 @@ tween.tween_property($Label3, "modulate:a", 1.0, 0.3).from(0.0).set_delay(0.2)
 ```
 
 ---
-

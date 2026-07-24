@@ -1,6 +1,6 @@
 # Notification Stack
 
-Reference for `skills/hud-system/SKILL.md` — VBoxContainer-based notification stack with auto-dismiss, GDScript + C#.
+Reference for `skills/hud-system/SKILL.md` — VBoxContainer-based notification stack with auto-dismiss, GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -74,71 +74,7 @@ func _dismiss(toast: Control) -> void:
     )
 ```
 
-### C#
 
-```csharp
-// NotificationStack.cs — attach to a VBoxContainer
-using Godot;
-using System.Collections.Generic;
-
-public partial class NotificationStack : VBoxContainer
-{
-    [Export] public PackedScene NotificationScene { get; set; }
-    [Export] public int MaxVisible { get; set; } = 5;
-    [Export] public float AutoDismissTime { get; set; } = 3.0f;
-
-    private readonly Queue<string> _queue  = new();
-    private readonly List<Control> _active = new();
-
-    public override void _Ready()
-    {
-        EventBus.Instance.NotificationRequested += Push;
-    }
-
-    public void Push(string message)
-    {
-        _queue.Enqueue(message);
-        FlushQueue();
-    }
-
-    private void FlushQueue()
-    {
-        while (_queue.Count > 0 && _active.Count < MaxVisible)
-            ShowNext();
-    }
-
-    private void ShowNext()
-    {
-        string message = _queue.Dequeue();
-        var toast = NotificationScene.Instantiate<Control>();
-        toast.GetNode<Label>("MessageLabel").Text = message;
-        toast.Modulate = new Color(1, 1, 1, 0);
-        AddChild(toast);
-        _active.Add(toast);
-
-        var tween = CreateTween();
-        tween.TweenProperty(toast, "modulate:a", 1.0f, 0.2f);
-
-        var timer = new Timer { WaitTime = AutoDismissTime, OneShot = true };
-        toast.AddChild(timer);
-        timer.Timeout += () => Dismiss(toast);
-        timer.Start();
-    }
-
-    private void Dismiss(Control toast)
-    {
-        _active.Remove(toast);
-
-        var tween = toast.CreateTween();
-        tween.TweenProperty(toast, "modulate:a", 0.0f, 0.2f);
-        tween.Finished += () =>
-        {
-            toast.QueueFree();
-            FlushQueue();
-        };
-    }
-}
-```
 
 **Toast scene structure:**
 
@@ -155,10 +91,5 @@ ToastNotification (PanelContainer)
 signal notification_requested(message: String)
 ```
 
-```csharp
-// EventBus.cs (partial — notification signal)
-[Signal] public delegate void NotificationRequestedEventHandler(string message);
-```
 
 ---
-

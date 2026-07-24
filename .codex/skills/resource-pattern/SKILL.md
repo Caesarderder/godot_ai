@@ -1,13 +1,15 @@
 ---
 name: resource-pattern
-description: Use when creating data containers in Godot — custom Resources for configuration, items, stats, and editor integration
+description: Use when creating custom Resources for configuration, items, stats, sharing, duplication, collections, and editor integration in Godot 4.6 GDScript Web projects
 ---
 
-# Resource Pattern in Godot 4.3+
+# Resource Pattern in Godot 4.6
 
-Resources are Godot's built-in data containers. Use them for configuration, item definitions, character stats, and any data that lives outside the scene tree. All examples target Godot 4.3+ with no deprecated APIs.
+Use Resources as typed Godot 4.6 GDScript data containers for configuration, item definitions, character stats, and other data outside the scene tree.
 
-> **Related skills:** **inventory-system** for Resource-based item definitions, **save-load** for Resource serialization, **component-system** for data-driven component configuration, **ability-system** for Resource-based ability definitions built on this pattern.
+> **Related skills:** **inventory-system** for Resource-based item definitions, **save-load** for Resource serialization, and **godot-architecture** for ownership of data-driven gameplay configuration.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -21,7 +23,7 @@ A `Resource` is a reference-counted data object that:
 - Can be nested inside other Resources and PackedScenes
 - Survives scene changes (unlike Node state, which is discarded on scene reload)
 
-Because Resources are shared by default, they are ideal for read-only data (item definitions, audio settings, ability blueprints). For per-instance mutable state, call `make_unique()` or `duplicate()` — see section 8.
+Because Resources are shared by default, they are ideal for read-only data (item definitions, audio settings, ability blueprints). For per-instance mutable runtime state, assign the result of `duplicate()` or `duplicate(true)` — see section 8. “Make Unique” is an Inspector action, not a GDScript method.
 
 ---
 
@@ -69,40 +71,13 @@ print(potion.name)        # "Health Potion"
 print(potion.value)       # 50
 ```
 
-### C#
-
-```csharp
-// ItemData.cs
-using Godot;
-
-[GlobalClass]
-public partial class ItemData : Resource
-{
-    public enum ItemType { Weapon, Armour, Consumable, Quest }
-
-    [Export] public string   Name        { get; set; } = "";
-    [Export] public string   Description { get; set; } = "";
-    [Export] public Texture2D Icon       { get; set; }
-    [Export] public int      Value       { get; set; } = 0;
-    [Export] public ItemType Type        { get; set; } = ItemType.Consumable;
-}
-```
-
-> `[GlobalClass]` is required in C# so the editor recognizes the class and shows it in **New Resource**.
-
-```csharp
-var potion = GD.Load<ItemData>("res://data/items/health_potion.tres");
-GD.Print(potion.Name);   // "Health Potion"
-GD.Print(potion.Value);  // 50
-```
-
 ---
 
 ## 4. Editor Integration
 
 Use `class_name`, `@tool`, and `@icon` to make custom Resources first-class in the Inspector — they appear in the Resource picker, can be created via right-click "New Resource", show a custom icon. `@export_group` and `@export_subgroup` organize properties.
 
-> See [references/editor-integration.md](references/editor-integration.md) for the full GDScript + C# pattern with `class_name`, `@icon`, `@export_group`.
+> See [references/editor-integration.md](references/editor-integration.md) for the GDScript pattern with `class_name`, `@icon`, and `@export_group`.
 
 ---
 
@@ -110,7 +85,7 @@ Use `class_name`, `@tool`, and `@icon` to make custom Resources first-class in t
 
 The strongest use case: data-driven game content. Loot tables, enemy stats, ability definitions, item catalogs all become custom Resources. Designers tweak `.tres` files in the Inspector; programmers wire the loader. Avoids JSON's loose schema and stringly-typed parsing.
 
-> See [references/configuration-pattern.md](references/configuration-pattern.md) for a worked LootTable + DropEntry example (GDScript + C#).
+> See [references/configuration-pattern.md](references/configuration-pattern.md) for a GDScript LootTable and DropEntry example.
 
 ---
 
@@ -118,7 +93,7 @@ The strongest use case: data-driven game content. Loot tables, enemy stats, abil
 
 `@export var entries: Array[Entry] = []` exposes a typed array in the Inspector — drag and drop multiple Resource files. For startup-loaded sets, use `ResourcePreloader`. For asset-folder discovery at runtime, walk `DirAccess`.
 
-> See [references/collections.md](references/collections.md) for typed-array exports (v1.6.0 C# parity preserved), `ResourcePreloader` setup, and the directory-walking loader pattern.
+> See [references/collections.md](references/collections.md) for typed-array exports, `ResourcePreloader` setup, and the directory-walking loader pattern.
 
 ---
 
@@ -143,7 +118,7 @@ The strongest use case: data-driven game content. Loot tables, enemy stats, abil
 
 By default, Resources are shared by reference. Two scenes referencing `res://items/sword.tres` see the SAME instance — mutating one mutates both. Use `.duplicate()` (shallow) or `.duplicate(true)` (deep) for instance-local state.
 
-> See [references/sharing-vs-unique.md](references/sharing-vs-unique.md) for the full pattern (v1.6.0 C# parity preserved).
+> See [references/sharing-vs-unique.md](references/sharing-vs-unique.md) for the GDScript sharing and duplication pattern.
 
 ---
 
@@ -151,7 +126,7 @@ By default, Resources are shared by reference. Two scenes referencing `res://ite
 
 `ResourceSaver.save(resource, path)` writes to a `.tres` (text) or `.res` (binary) file. Use for save games (where the schema lives in code as a Resource subclass) instead of hand-rolled JSON when you want strong typing.
 
-> See [references/saving-resources.md](references/saving-resources.md) for the full save/load pattern (GDScript + C#) and security caveat (never load `.tres` from untrusted sources — they execute embedded GDScript).
+> See [references/saving-resources.md](references/saving-resources.md) for the GDScript save/load pattern and security caveat.
 
 ---
 
@@ -229,107 +204,11 @@ extends Resource
 @export var speed:  float = 80.0
 ```
 
-```csharp
-// ❌ Anti-pattern: mutating a shared Resource — accidental shared state
-// All enemies share the same EnemyStats object loaded from the .tres file.
-// Damaging one enemy damages all of them.
-[GlobalClass]
-public partial class Enemy : CharacterBody2D
-{
-    [Export] public EnemyStats Stats;  // loaded from .tres, shared by default
-
-    public void TakeDamage(int amount)
-    {
-        Stats.Health -= amount;  // mutates the shared Resource — affects every Enemy!
-    }
-}
-
-// ✅ Correct: duplicate before mutating so each instance owns its own copy.
-public partial class EnemyGood : CharacterBody2D
-{
-    [Export] public EnemyStats Stats;
-
-    public override void _Ready()
-    {
-        Stats = (EnemyStats)Stats.Duplicate();  // now safe to mutate independently
-    }
-
-    public void TakeDamage(int amount)
-    {
-        Stats.Health -= amount;  // only affects this instance
-    }
-}
-
-// ❌ Anti-pattern: game logic inside a Resource
-// Resources have no scene-tree access, no _Process, and cannot call GetTree() or read Input.
-[GlobalClass]
-public partial class EnemyStatsBad : Resource
-{
-    [Export] public float Health    { get; set; }
-    [Export] public float MaxHealth { get; set; }
-    [Export] public float RegenRate { get; set; }
-
-    // This logic belongs in a Node, not a Resource.
-    public void UpdateHealthRegen(double delta)
-    {
-        // Cannot call GetTree(), cannot access nodes, cannot read Input.
-        Health = Mathf.Min(Health + RegenRate * (float)delta, MaxHealth);
-    }
-}
-
-// ✅ Correct: keep logic in Nodes, data in Resources.
-public partial class EnemyCorrect : CharacterBody2D
-{
-    [Export] public EnemyStats Stats;
-    private float _currentHealth;
-
-    public override void _Ready()
-    {
-        Stats = (EnemyStats)Stats.Duplicate();
-        _currentHealth = Stats.MaxHealth;
-    }
-
-    public override void _Process(double delta)
-    {
-        _currentHealth = Mathf.Min(_currentHealth + Stats.RegenRate * (float)delta, Stats.MaxHealth);
-    }
-}
-
-// ❌ Anti-pattern: giant monolithic Resource
-// One Resource holds everything; impossible to reuse individual pieces.
-[GlobalClass]
-public partial class GameConfigBad : Resource
-{
-    [Export] public int   PlayerHealth      { get; set; }
-    [Export] public float PlayerSpeed       { get; set; }
-    [Export] public int   EnemyGoblinHealth { get; set; }
-    [Export] public float EnemyGoblinSpeed  { get; set; }
-    [Export] public int   EnemyTrollHealth  { get; set; }
-    // ... 200 more properties
-}
-
-// ✅ Correct: small focused Resources, composed together.
-[GlobalClass]
-public partial class PlayerConfig : Resource
-{
-    [Export] public int   Health { get; set; } = 100;
-    [Export] public float Speed  { get; set; } = 200.0f;
-}
-
-[GlobalClass]
-public partial class EnemyConfig : Resource
-{
-    [Export] public int   Health { get; set; } = 50;
-    [Export] public float Speed  { get; set; } = 80.0f;
-}
-```
-
 ---
 
 ## 11. Checklist
 
 - [ ] Resource subclass uses `class_name` so the editor can find it for **New Resource**
-- [ ] C# classes have `[GlobalClass]` attribute
 - [ ] All Inspector-editable fields use `@export` / `[Export]`
 - [ ] `@export_range` used on numeric fields with designer-tunable bounds
 - [ ] `@export_group` and `@export_category` used to organize Inspector layout for Resources with many fields

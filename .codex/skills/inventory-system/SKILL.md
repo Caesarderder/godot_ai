@@ -1,13 +1,15 @@
 ---
 name: inventory-system
-description: Use when building inventory systems — Resource-based items, slot management, stacking, and UI binding
+description: Use when building Resource-based items, slot management, stacking, equipment, serialization, and inventory UI in Godot 4.6 GDScript Web projects
 ---
 
-# Inventory Systems in Godot 4.3+
+# Inventory Systems in Godot 4.6
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Use Godot 4.6.x GDScript APIs that work in Builda's single-threaded Web export.
 
-> **Related skills:** **resource-pattern** for custom Resource data containers, **save-load** for inventory serialization, **event-bus** for inventory change notifications, **hud-system** for inventory UI display.
+> **Related skills:** **resource-pattern** for custom Resource data containers, **save-load** for inventory serialization, **godot-architecture** for local inventory change signals, and **hud-system** for inventory UI display.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -78,32 +80,6 @@ enum ItemType {
 ```
 
 Create item assets: **res://items/potion_health.tres**, set `id = "potion_health"`, etc.
-
-### C#
-
-```csharp
-// ItemData.cs
-using Godot;
-
-[GlobalClass]
-public partial class ItemData : Resource
-{
-    public enum ItemType
-    {
-        Consumable,
-        Equipment,
-        Material,
-        KeyItem,
-    }
-
-    [Export] public string Id          { get; set; } = "";
-    [Export] public string Name        { get; set; } = "";
-    [Export] public string Description { get; set; } = "";
-    [Export] public Texture2D Icon     { get; set; }
-    [Export] public int MaxStackSize   { get; set; } = 99;
-    [Export] public ItemType Type      { get; set; } = ItemType.Material;
-}
-```
 
 > Use `[GlobalClass]` so the Inspector dropdown shows `ItemData` as a resource type when creating `.tres` files.
 
@@ -189,105 +165,11 @@ func get_item_count(item: ItemData) -> int:
     return total
 ```
 
-### C#
-
-```csharp
-// Inventory.cs
-using Godot;
-using Godot.Collections;
-
-public partial class Inventory : Node
-{
-    [Signal] public delegate void InventoryChangedEventHandler();
-    [Signal] public delegate void ItemAddedEventHandler(ItemData item, int quantity);
-    [Signal] public delegate void ItemRemovedEventHandler(ItemData item, int quantity);
-
-    [Export] public int Capacity { get; set; } = 20;
-
-    public Array<InventorySlot> Slots { get; private set; } = new();
-
-    public override void _Ready()
-    {
-        for (int i = 0; i < Capacity; i++)
-            Slots.Add(new InventorySlot());
-    }
-
-    /// <summary>Returns the number of items that could NOT be added (leftover).</summary>
-    public int AddItem(ItemData item, int quantity = 1)
-    {
-        int remaining = quantity;
-
-        // Fill existing stacks first
-        foreach (var slot in Slots)
-        {
-            if (remaining <= 0) break;
-            if (!slot.IsEmpty() && slot.Item == item)
-                remaining = slot.AddToStack(remaining);
-        }
-
-        // Open empty slots next
-        foreach (var slot in Slots)
-        {
-            if (remaining <= 0) break;
-            if (slot.IsEmpty())
-            {
-                slot.Item = item;
-                remaining = slot.AddToStack(remaining);
-            }
-        }
-
-        int added = quantity - remaining;
-        if (added > 0)
-        {
-            EmitSignal(SignalName.ItemAdded, item, added);
-            EmitSignal(SignalName.InventoryChanged);
-        }
-
-        return remaining;
-    }
-
-    public void RemoveItem(ItemData item, int quantity = 1)
-    {
-        int remaining = quantity;
-
-        foreach (var slot in Slots)
-        {
-            if (remaining <= 0) break;
-            if (!slot.IsEmpty() && slot.Item == item)
-            {
-                int removed = Mathf.Min(slot.Quantity, remaining);
-                slot.RemoveFromStack(removed);
-                remaining -= removed;
-            }
-        }
-
-        int actuallyRemoved = quantity - remaining;
-        if (actuallyRemoved > 0)
-        {
-            EmitSignal(SignalName.ItemRemoved, item, actuallyRemoved);
-            EmitSignal(SignalName.InventoryChanged);
-        }
-    }
-
-    public bool HasItem(ItemData item, int quantity = 1)
-        => GetItemCount(item) >= quantity;
-
-    public int GetItemCount(ItemData item)
-    {
-        int total = 0;
-        foreach (var slot in Slots)
-            if (!slot.IsEmpty() && slot.Item == item)
-                total += slot.Quantity;
-        return total;
-    }
-}
-```
-
 ---
 
 ## 4. InventorySlot
 
-`InventorySlot` is a lightweight object tracking an item reference and its quantity. Define it as an inner class on `Inventory` (GDScript) or as a standalone `RefCounted` subclass (C#).
+`InventorySlot` is a lightweight object tracking an item reference and its quantity. Define it as an inner GDScript class on `Inventory` or as a standalone `RefCounted` subclass.
 
 ### GDScript
 
@@ -328,48 +210,27 @@ func remove_from_stack(amount: int) -> void:
         item     = null
 ```
 
-### C#
+## 5. Equipment Extension
 
-```csharp
-// InventorySlot.cs
-using Godot;
+Add equipment slots (`HEAD`, `CHEST`, `WEAPON`, etc.) by extending the `Inventory` class with a typed slot map. Stat aggregation runs by summing `ItemData.stats` across equipped items; signal `equipment_changed` when slots change.
 
-public partial class InventorySlot : RefCounted
-{
-    public ItemData Item     { get; set; }
-    public int      Quantity { get; set; }
+> See [references/equipment.md](references/equipment.md) for the GDScript `Equipment` class with `EquipmentSlotType` enum, equip/unequip API, and stat aggregation.
 
-    public bool IsEmpty() => Item == null || Quantity <= 0;
+---
 
-    public bool CanStack(ItemData newItem)
-        => !IsEmpty() && Item == newItem && Quantity < Item.MaxStackSize;
+## 6. UI Binding
 
-    /// <summary>Adds amount to this slot. Returns leftover that did not fit.</summary>
-    public int AddToStack(int amount)
-    {
-        if (Item == null)
-        {
-            GD.PushError("InventorySlot.AddToStack: slot has no item assigned");
-            return amount;
-        }
-        int space  = Item.MaxStackSize - Quantity;
-        int toAdd  = Mathf.Min(amount, space);
-        Quantity  += toAdd;
-        return amount - toAdd;
-    }
+Slot-grid UI: a `GridContainer` of `Panel` slot widgets, each rendering one `InventorySlot`. Drag-and-drop uses `_get_drag_data` / `_drop_data` / `_can_drop_data` on the slot widget. The Inventory emits `inventory_changed`; the UI re-renders affected slots.
 
-    /// <summary>Removes amount from this slot. Clears when quantity reaches zero.</summary>
-    public void RemoveFromStack(int amount)
-    {
-        Quantity -= amount;
-        if (Quantity <= 0)
-        {
-            Quantity = 0;
-            Item     = null;
-        }
-    }
-}
-```
+> See [references/ui-binding.md](references/ui-binding.md) for the GDScript slot widget, inventory grid layout, and tooltip wiring.
+
+---
+
+## 7. Serialization
+
+Persist Inventory + Equipment as stable `item_id + quantity` records. Reload through `ItemRegistry`, which maps IDs to the current `ItemData` resources; save files must not depend on resource paths. A version field gates migration on load.
+
+> See [references/serialization.md](references/serialization.md) for the GDScript save/load implementation with a `version` field and ConfigFile/JSON variants.
 
 ---
 
@@ -380,34 +241,12 @@ public partial class InventorySlot : RefCounted
 - [ ] `Inventory.add_item()` returns leftover count; callers handle a full inventory
 - [ ] `inventory_changed` signal drives all UI updates — UI never polls per-frame
 - [ ] `InventorySlot.remove_from_stack()` clears `item` to `null` when quantity reaches 0
-- [ ] Equipment slots keyed by `SlotType` enum, not by string, to catch typos at compile time
+- [ ] Equipment slots keyed by `SlotType` enum, not by string, to catch typos at parse time
 - [ ] `Equipment.get_total_stat()` is called when stats are needed, not cached unless profiling demands it
 - [ ] Serialization stores `id + quantity` only — never full `ItemData` objects or resource paths
 - [ ] `ItemRegistry` loads items at startup; all deserialization goes through it
 - [ ] Drag-and-drop swaps slot contents directly then emits `inventory_changed` once
 - [ ] `max_stack_size = 1` on `EQUIPMENT` and `KEY_ITEM` types to prevent stacking
 - [ ] All `push_error()` messages include the class name and method for easy tracing
-
-## 5. Equipment Extension
-
-Add equipment slots (`HEAD`, `CHEST`, `WEAPON`, etc.) by extending the `Inventory` class with a typed slot map. Stat aggregation runs by summing `ItemData.stats` across equipped items; signal `equipment_changed` when slots change.
-
-> See [references/equipment.md](references/equipment.md) for the full GDScript and C# `Equipment` class with `EquipmentSlotType` enum, equip / unequip API, and stat aggregation.
-
----
-
-## 6. UI Binding
-
-Slot-grid UI: a `GridContainer` of `Panel` slot widgets, each rendering one `InventorySlot`. Drag-and-drop uses `_get_drag_data` / `_drop_data` / `_can_drop_data` on the slot widget. The Inventory emits `inventory_changed`; the UI re-renders affected slots.
-
-> See [references/ui-binding.md](references/ui-binding.md) for the full GDScript and C# slot widget (drag/drop, hover preview), inventory grid layout, and tooltip wiring.
-
----
-
-## 7. Serialization
-
-Persist Inventory + Equipment as a Dictionary keyed by item resource path (since ItemData lives at `res://items/<name>.tres`). Reload by `load(path)` and reconstructing the slot list. Version field gates migration on load.
-
-> See [references/serialization.md](references/serialization.md) for the GDScript and C# save/load implementation with `version` field and ConfigFile / JSON variants.
 
 ---

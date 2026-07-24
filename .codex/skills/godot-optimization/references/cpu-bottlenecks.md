@@ -6,7 +6,6 @@ Reference for `skills/godot-optimization/SKILL.md` — GDScript performance patt
 
 ---
 
-> The patterns in this section are GDScript-specific, but the underlying principles (avoid per-frame allocations, use efficient comparisons, prefer typed collections) apply equally to C#. Each subsection includes a C# equivalent where the translation is non-trivial.
 
 ### Avoid Allocations in _process
 
@@ -39,45 +38,7 @@ func _process(_delta: float) -> void:
         _check_aggro(enemy)
 ```
 
-**C#:**
 
-```csharp
-// WRONG — querying the group every frame allocates a new Godot.Collections.Array
-public override void _Process(double delta)
-{
-    var nearby = GetTree().GetNodesInGroup("enemies"); // new array each call
-    foreach (var enemy in nearby)
-        CheckAggro(enemy);
-}
-
-// RIGHT — cache the list and maintain it via signals
-private readonly List<Node> _enemies = new();
-
-public override void _Ready()
-{
-    foreach (var node in GetTree().GetNodesInGroup("enemies"))
-        _enemies.Add(node);
-    GetTree().NodeAdded += OnNodeAdded;
-    GetTree().NodeRemoved += OnNodeRemoved;
-}
-
-private void OnNodeAdded(Node node)
-{
-    if (node.IsInGroup("enemies"))
-        _enemies.Add(node);
-}
-
-private void OnNodeRemoved(Node node)
-{
-    _enemies.Remove(node);
-}
-
-public override void _Process(double delta)
-{
-    foreach (var enemy in _enemies) // no allocation
-        CheckAggro(enemy);
-}
-```
 
 ```gdscript
 # WRONG — constructing temporary vectors in a tight loop
@@ -96,23 +57,7 @@ func _process(_delta: float) -> void:
         _draw_marker(position + _offset)
 ```
 
-**C#:**
 
-```csharp
-// In C#, Vector2 is a struct (value type) — no heap allocation in either case.
-// However, avoiding repeated constructor calls is still marginally faster.
-private Vector2 _offset;
-
-public override void _Process(double delta)
-{
-    for (int i = 0; i < 100; i++)
-    {
-        _offset.X = i * 10.0f;
-        _offset.Y = 0.0f;
-        DrawMarker(Position + _offset);
-    }
-}
-```
 
 ### Use StringName for Comparisons
 
@@ -130,18 +75,7 @@ func _on_body_entered(body: Node) -> void:
         _start_aggro()
 ```
 
-**C#:**
 
-```csharp
-// StringName in C# — cache as a static readonly field for O(1) comparison
-private static readonly StringName PlayerName = new("Player");
-
-private void OnBodyEntered(Node body)
-{
-    if (body.Name == PlayerName) // interned comparison
-        StartAggro();
-}
-```
 
 ```gdscript
 # Cache StringName constants at the class level for repeated use
@@ -156,22 +90,7 @@ func _process(_delta: float) -> void:
         _fire()
 ```
 
-**C#:**
 
-```csharp
-// Cache StringName constants as static readonly fields
-private static readonly StringName ActionJump = new("jump");
-private static readonly StringName ActionFire = new("fire");
-private static readonly StringName GroupEnemies = new("enemies");
-
-public override void _Process(double delta)
-{
-    if (Input.IsActionPressed(ActionJump))
-        Jump();
-    if (Input.IsActionJustPressed(ActionFire))
-        Fire();
-}
-```
 
 ### Typed Arrays
 
@@ -189,22 +108,7 @@ var positions: PackedVector2Array = PackedVector2Array()
 var velocities: PackedFloat32Array = PackedFloat32Array()
 ```
 
-**C#:**
 
-```csharp
-// C# is statically typed — use concrete generic collections for best performance.
-// Avoid Godot.Collections.Array (untyped) in hot paths; prefer List<T> or arrays.
-
-// Untyped Godot collection — boxing and type checks on every access
-Godot.Collections.Array bullets = new();
-
-// Typed .NET collection — no boxing, cache-friendly
-List<Bullet> bullets = new();
-
-// For value types, use plain arrays for maximum throughput (contiguous memory)
-Vector2[] positions = new Vector2[256];
-float[] velocities = new float[256];
-```
 
 ### Static Typing Benefits
 

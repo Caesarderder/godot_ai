@@ -1,6 +1,6 @@
 # TDD Workflow — RED / GREEN / REFACTOR
 
-Reference for `skills/godot-testing/SKILL.md` — full RED/GREEN/REFACTOR walkthrough with worked example. GDScript + C#.
+Reference for `skills/godot-testing/SKILL.md` — full RED/GREEN/REFACTOR walkthrough with worked example. GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -50,73 +50,7 @@ func test_death_signal_emitted_at_zero() -> void:
     assert_signal_emitted(_health, "died")
 ```
 
-#### C# — gdUnit4
 
-```csharp
-// tests/unit/HealthComponentTest.cs
-using Godot;
-using GdUnit4;
-using static GdUnit4.Assertions;
-
-[TestSuite]
-public partial class HealthComponentTest : GdUnit4.GdUnitTestSuite
-{
-    private HealthComponent _health = default!;
-
-    [Before]
-    public void Setup() { }
-
-    [BeforeTest]
-    public void BeforeTest()
-    {
-        _health = AutoFree(new HealthComponent());
-        _health.MaxHealth = 100;
-        AddChild(_health);
-    }
-
-    [TestCase]
-    public void StartsAtMaxHealth()
-        => AssertThat(_health.CurrentHealth).IsEqual(100);
-
-    [TestCase]
-    public void TakeDamageReducesHealth()
-    {
-        _health.TakeDamage(30);
-        AssertThat(_health.CurrentHealth).IsEqual(70);
-    }
-
-    [TestCase]
-    public void CannotGoBelowZero()
-    {
-        _health.TakeDamage(200);
-        AssertThat(_health.CurrentHealth).IsEqual(0);
-    }
-
-    [TestCase]
-    public void HealRestoresHealth()
-    {
-        _health.TakeDamage(50);
-        _health.Heal(20);
-        AssertThat(_health.CurrentHealth).IsEqual(70);
-    }
-
-    [TestCase]
-    public void HealCannotExceedMax()
-    {
-        _health.Heal(50);
-        AssertThat(_health.CurrentHealth).IsEqual(100);
-    }
-
-    [TestCase]
-    public async GdUnitAwaiter DeathSignalEmittedAtZero()
-    {
-        var monitor = MonitorSignals(_health);
-        _health.TakeDamage(100);
-        await monitor.AwaitSignal("died").WithTimeout(500);
-        AssertSignal(monitor).IsEmitted("died");
-    }
-}
-```
 
 ---
 
@@ -153,42 +87,7 @@ func heal(amount: int) -> void:
     health_changed.emit(old, current_health)
 ```
 
-#### C#
 
-```csharp
-// src/components/HealthComponent.cs
-using Godot;
-
-public partial class HealthComponent : Node
-{
-    [Signal] public delegate void DiedEventHandler();
-    [Signal] public delegate void HealthChangedEventHandler(int oldValue, int newValue);
-
-    [Export] public int MaxHealth { get; set; } = 100;
-    public int CurrentHealth { get; private set; }
-
-    public override void _Ready()
-    {
-        CurrentHealth = MaxHealth;
-    }
-
-    public void TakeDamage(int amount)
-    {
-        int old = CurrentHealth;
-        CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
-        EmitSignal(SignalName.HealthChanged, old, CurrentHealth);
-        if (CurrentHealth == 0)
-            EmitSignal(SignalName.Died);
-    }
-
-    public void Heal(int amount)
-    {
-        int old = CurrentHealth;
-        CurrentHealth = Mathf.Min(MaxHealth, CurrentHealth + amount);
-        EmitSignal(SignalName.HealthChanged, old, CurrentHealth);
-    }
-}
-```
 
 ---
 
@@ -236,4 +135,3 @@ func _set_health(new_value: int) -> void:
 ```
 
 ---
-

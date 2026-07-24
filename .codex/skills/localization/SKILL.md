@@ -1,13 +1,15 @@
 ---
 name: localization
-description: Use when implementing localization (i18n/l10n) — TranslationServer, CSV/PO translation files, locale switching, RTL support, and pluralization in Godot 4.3+
+description: Use when implementing TranslationServer, CSV or PO translations, locale switching, RTL support, and pluralization in Godot 4.6 GDScript Web projects
 ---
 
-# Localization in Godot 4.3+
+# Localization in Godot 4.6
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Use Godot 4.6.x GDScript APIs that work in Builda's single-threaded Web export.
 
 > **Related skills:** **godot-ui** for Control nodes and theme management, **save-load** for persisting language settings, **responsive-ui** for layout adjustments per locale.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -101,46 +103,6 @@ var translation := load("res://translations/cs.po") as Translation
 TranslationServer.add_translation(translation)
 ```
 
-```csharp
-var translation = GD.Load<Translation>("res://translations/cs.po");
-TranslationServer.AddTranslation(translation);
-```
-
-> ⚠️ **Changed in Godot 4.7:** `OptimizedTranslation.generate()` now returns `bool` (was `void`) to report success. GDScript-compatible and C# source-compatible, but binary-incompatible for C# — recompile precompiled plugins that call it. See the [4.7 migration guide](https://docs.godotengine.org/en/latest/tutorials/migrating/upgrading_to_godot_4.7.html).
-
-### POT Generation Hooks (Godot 4.7+)
-
-A custom `EditorTranslationParserPlugin` can override the `_customize_strings()` virtual — called once after all files are parsed during POT generation — to add or remove entries from the final list of extracted strings:
-
-```gdscript
-@tool
-extends EditorTranslationParserPlugin
-
-func _customize_strings(strings: Array[PackedStringArray]) -> Array[PackedStringArray]:
-    strings.append(PackedStringArray(["Test 1", "context", "test 1 plurals", "test 1 comment"]))
-    # Drop internal strings that begin with "$".
-    return strings.filter(func(s): return not s[0].begins_with("$"))
-```
-
-```csharp
-#if TOOLS
-using System.Linq;
-using Godot;
-
-public partial class CommentAwareParser : EditorTranslationParserPlugin
-{
-    public override Godot.Collections.Array<string[]> _CustomizeStrings(Godot.Collections.Array<string[]> strings)
-    {
-        strings.Add(new[] { "Test 1", "context", "test 1 plurals", "test 1 comment" });
-        // Drop internal strings that begin with "$".
-        return new Godot.Collections.Array<string[]>(strings.Where(s => !s[0].StartsWith("$")));
-    }
-}
-#endif
-```
-
-> **Godot 4.7+:** The POT generator also extracts `Control.accessibility_name` and `accessibility_description`, so accessibility strings become translatable without listing them manually. ([GH-117134](https://github.com/godotengine/godot/pull/117134))
-
 ---
 
 ## 3. Using tr() in Code
@@ -165,16 +127,6 @@ var msg: String = tr_n("ONE_ENEMY", "MANY_ENEMIES", count)
 # Requires PO files with plural forms
 ```
 
-### C#
-
-```csharp
-string labelText = Tr("MENU_START");
-string healthText = string.Format(Tr("PLAYER_HEALTH"), currentHealth);
-
-// Pluralization
-string msg = TrN("ONE_ENEMY", "MANY_ENEMIES", count);
-```
-
 ### Automatic Control Translation
 
 `Label`, `Button`, `RichTextLabel`, and other Control nodes automatically translate their `text` property if it matches a translation key. Set the text to the key:
@@ -184,8 +136,6 @@ Button.text = "MENU_START"   → displays "Start Game" (en) or "Začít hru" (cs
 ```
 
 > **Tip:** If you don't want automatic translation on a specific Control, set its `auto_translate_mode` to `DISABLED`.
-
-> **Godot 4.7+:** `Control.translation_context: StringName` sets a per-control translation context, used when translating the control's displayed text and when generating translation templates — the property equivalent of `tr()`'s context argument (C#: `TranslationContext`). ([GH-115340](https://github.com/godotengine/godot/pull/115340))
 
 ---
 
@@ -204,17 +154,6 @@ var current: String = TranslationServer.get_locale()  # e.g. "en", "cs", "de"
 
 # Get available locales
 var locales: PackedStringArray = TranslationServer.get_loaded_locales()
-```
-
-### C#
-
-```csharp
-public void SetLanguage(string localeCode)
-{
-    TranslationServer.SetLocale(localeCode);
-}
-
-string current = TranslationServer.GetLocale();
 ```
 
 ### Language Selection Menu
@@ -281,48 +220,6 @@ control.layout_direction = Control.LAYOUT_DIRECTION_RTL
 rich_text.text = "النتيجة: [ltr]100/200[/ltr]"
 ```
 
-### C# parity
-
-```csharp
-// LocaleAwarePanel.cs — flip layout direction whenever the locale changes.
-using Godot;
-
-public partial class LocaleAwarePanel : Control
-{
-    public override void _Ready()
-    {
-        ApplyLayoutForLocale();
-        TranslationServer.Singleton.LocaleChanged += ApplyLayoutForLocale;
-    }
-
-    public override void _ExitTree()
-    {
-        // TranslationServer outlives every scene — without this unsubscribe,
-        // each panel instance leaks a delegate reference for the lifetime of the process.
-        TranslationServer.Singleton.LocaleChanged -= ApplyLayoutForLocale;
-    }
-
-    private void ApplyLayoutForLocale()
-    {
-        string locale = TranslationServer.Singleton.GetLocale();
-        bool isRtl = TextServerManager.GetPrimaryInterface().IsLocaleRightToLeft(locale);
-        LayoutDirection = isRtl
-            ? Control.LayoutDirectionEnum.Rtl
-            : Control.LayoutDirectionEnum.Ltr;
-    }
-}
-
-// RichTextLabel mixed-direction example — same BBCode as GDScript, just assigned in C#.
-public partial class ScoreLabel : RichTextLabel
-{
-    public void SetArabicScore(int score, int max)
-    {
-        BbcodeEnabled = true;
-        Text = $"النتيجة: [ltr]{score}/{max}[/ltr]";
-    }
-}
-```
-
 ### Font Requirements
 
 RTL scripts need fonts that support the relevant Unicode ranges. Godot's default font does not cover Arabic/Hebrew. Import a font like Noto Sans Arabic and assign it via Theme.
@@ -354,25 +251,6 @@ func format_number(value: int) -> String:
 ### Dates and Times
 
 Godot doesn't provide built-in locale-aware date formatting. Use `Time.get_datetime_dict_from_system()` and format manually per locale.
-
-### C#
-
-```csharp
-using Godot;
-using System.Globalization;
-
-public partial class LocaleFormatter : Node
-{
-    public string FormatNumber(double value)
-    {
-        var culture = CultureInfo.GetCultureInfo(TranslationServer.GetLocale().Replace("_", "-"));
-        return value.ToString("N", culture);
-    }
-
-    // FormatCurrency and FormatDate follow the same pattern — same culture lookup,
-    // ToString("C", culture) and ToString("d", culture) respectively.
-}
-```
 
 ---
 
@@ -416,14 +294,14 @@ ITEM_SWORD_DESC          # Inventory item description
 | Label shows key after scene change | Translation resource not loaded yet | Register translations in Project Settings (not at runtime) |
 | RTL text renders LTR | `layout_direction` not set | Set to `RTL` or `LOCALE` on root Control |
 | Font doesn't display characters | Missing Unicode range in font | Import a font that covers the target script (Noto Sans recommended) |
-| Pluralization doesn't work with CSV | CSV doesn't support plural forms | Use PO format for languages with complex plural rules |
+| Pluralization doesn't work with CSV | `?pluralrule` was used as a header or forms were joined in one cell | Put `?pluralrule` in the first cell of its own row and one plural form on each following row |
 | `%s` in translation shows literal `%s` | Using `tr()` result as key instead of formatting it | Use `tr("KEY") % value`, not `tr("KEY" % value)` |
 
 ---
 
-## 9. Editor Locale Preview (Godot 4.5+)
+## 9. Editor Locale Preview in Godot 4.6
 
-Godot 4.5 adds a live locale preview to the editor. You can see how your UI looks in any configured locale — translated text, RTL layout, font changes — without running the game.
+Godot 4.6 provides live locale preview in the editor. Use it to inspect translated text, RTL layout, and font changes without running the game.
 
 ### How to Use
 
@@ -443,11 +321,11 @@ Godot 4.5 adds a live locale preview to the editor. You can see how your UI look
 
 ---
 
-## 10. CSV Plural and Context Support (Godot 4.6+)
+## 10. CSV Plural and Context Support in Godot 4.6
 
-Godot 4.6 extends the CSV translation format with three optional header columns — `?context`, `?plural`, and `?pluralrule` — bringing context disambiguation and simple one/other plurals (previously PO-only) to CSV. For languages with three or more plural forms (Russian, Polish, Arabic), keep using PO format with full `msgstr[n]` plural arrays.
+Godot 4.6 adds the `?context` and `?plural` header columns plus a special `?pluralrule` row. Plural forms occupy separate CSV rows; never combine them with slash-delimited text in one cell. For languages with three or more plural forms, PO remains easier to audit, though CSV can represent them with additional rows.
 
-Column reference, example CSV, and `tr()` / `tr_n()` usage (GDScript + C#): [references/csv-plural-context.md](references/csv-plural-context.md).
+Column reference, example CSV, and GDScript `tr()` / `tr_n()` usage: [references/csv-plural-context.md](references/csv-plural-context.md).
 
 ---
 
@@ -462,7 +340,7 @@ Column reference, example CSV, and `tr()` / `tr_n()` usage (GDScript + C#): [ref
 - [ ] Format strings (`%s`, `%d`) are applied AFTER `tr()`, not before
 - [ ] Translation keys follow a consistent naming convention
 - [ ] UI layout adapts to longer/shorter text in different languages (no hardcoded widths)
-- [ ] PO format is used for languages with complex plural rules
-- [ ] Editor Locale Preview (Project Settings → Internationalization → Preview Language) is used for translation QA instead of test runs (Godot 4.5+)
-- [ ] CSV `?context` column used when the same key has different meanings in different UI contexts (Godot 4.6+)
-- [ ] CSV `?plural` / `?pluralrule` columns used for simple one/other plurals in CSV workflow; PO format used for languages with 3+ plural forms (Godot 4.6+)
+- [ ] Complex plural rules use either auditable PO entries or correctly expanded CSV rows
+- [ ] Godot 4.6 Editor Locale Preview (Project Settings → Internationalization → Preview Language) is used for translation QA instead of test runs
+- [ ] Godot 4.6 CSV `?context` column used when the same key has different meanings in different UI contexts
+- [ ] Godot 4.6 CSV uses a `?plural` header, a `?pluralrule` first-column marker row, and one row per plural form

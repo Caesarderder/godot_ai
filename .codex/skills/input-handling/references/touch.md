@@ -21,21 +21,6 @@ func _unhandled_input(event: InputEvent) -> void:
         print("Drag delta: ", event.relative)
 ```
 
-```csharp
-public override void _UnhandledInput(InputEvent @event)
-{
-    if (@event is InputEventScreenTouch touch)
-    {
-        if (touch.Pressed)
-            GD.Print($"Touch at: {touch.Position}");
-        else
-            GD.Print("Touch released");
-    }
-
-    if (@event is InputEventScreenDrag drag)
-        GD.Print($"Drag delta: {drag.Relative}");
-}
-```
 
 ### Emulate Touch from Mouse
 
@@ -44,4 +29,3 @@ Enable in **Project > Project Settings > Input Devices > Pointing > Emulate Touc
 The reverse (**Emulate Mouse From Touch**) is enabled by default — touchscreen taps generate mouse events so UI controls work on mobile without changes.
 
 ---
-

@@ -53,18 +53,6 @@ func _ready() -> void:
     repeat_times = 3                # Extra repeats for zoom-out safety
 ```
 
-```csharp
-public partial class CloudLayer : Parallax2D
-{
-    public override void _Ready()
-    {
-        ScrollScale = new Vector2(0.3f, 0.0f);
-        RepeatSize = new Vector2(1920, 0);
-        RepeatTimes = 3;
-    }
-}
-```
-
 ### Common Mistakes
 
 | Problem | Fix |
@@ -79,4 +67,3 @@ public partial class CloudLayer : Parallax2D
 For split-screen games, clone parallax nodes into each `SubViewport`. Use `visibility_layer` on parent nodes and `canvas_cull_mask` on SubViewports to isolate parallax per viewport.
 
 ---
-

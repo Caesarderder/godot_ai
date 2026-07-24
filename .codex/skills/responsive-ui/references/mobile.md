@@ -34,35 +34,11 @@ func _on_touch_drag(pos: Vector2, delta: Vector2, finger: int) -> void:
     pass  # handle swipe / scroll
 ```
 
-**C#:**
 
-```csharp
-using Godot;
-
-public partial class TouchHandler : Node
-{
-    public override void _Input(InputEvent @event)
-    {
-        if (@event is InputEventScreenTouch touch)
-        {
-            if (touch.Pressed) OnTouchBegin(touch.Position, touch.Index);
-            else               OnTouchEnd(touch.Position, touch.Index);
-        }
-        else if (@event is InputEventScreenDrag drag)
-        {
-            OnTouchDrag(drag.Position, drag.Relative, drag.Index);
-        }
-    }
-
-    private void OnTouchBegin(Vector2 pos, int finger) { }
-    private void OnTouchEnd(Vector2 pos, int finger) { }
-    private void OnTouchDrag(Vector2 pos, Vector2 delta, int finger) { }
-}
-```
 
 ### Safe Area Insets
 
-Phones with notches, camera cut-outs, or rounded corners report a safe area rectangle. Place interactive UI elements inside it.
+Native fullscreen mobile exports can report a safe-area rectangle in physical screen coordinates. Convert those pixel insets into the viewport's logical UI coordinates before applying them to a `MarginContainer`. Builda Web projects cannot treat this API as browser CSS safe-area data; the host page/canvas owns that inset.
 
 **GDScript:**
 
@@ -71,11 +47,14 @@ func _ready() -> void:
     var safe_area: Rect2i = DisplayServer.get_display_safe_area()
     var screen_size: Vector2i = DisplayServer.screen_get_size()
 
-    # Calculate insets (pixels from each edge)
-    var inset_left   := safe_area.position.x
-    var inset_top    := safe_area.position.y
-    var inset_right  := screen_size.x - (safe_area.position.x + safe_area.size.x)
-    var inset_bottom := screen_size.y - (safe_area.position.y + safe_area.size.y)
+    # Safe area and screen size are physical screen pixels. MarginContainer
+    # constants use the stretched viewport's logical UI units.
+    var ui_size := get_viewport().get_visible_rect().size
+    var screen_to_ui := ui_size / Vector2(screen_size)
+    var inset_left   := roundi(safe_area.position.x * screen_to_ui.x)
+    var inset_top    := roundi(safe_area.position.y * screen_to_ui.y)
+    var inset_right  := roundi((screen_size.x - safe_area.end.x) * screen_to_ui.x)
+    var inset_bottom := roundi((screen_size.y - safe_area.end.y) * screen_to_ui.y)
 
     # Apply to a MarginContainer wrapping all HUD content
     $SafeAreaMargin.add_theme_constant_override("margin_left",   inset_left)
@@ -84,26 +63,7 @@ func _ready() -> void:
     $SafeAreaMargin.add_theme_constant_override("margin_bottom", inset_bottom)
 ```
 
-**C#:**
 
-```csharp
-public override void _Ready()
-{
-    Rect2I safeArea  = DisplayServer.GetDisplaySafeArea();
-    Vector2I screen  = DisplayServer.ScreenGetSize();
-
-    int insetLeft   = safeArea.Position.X;
-    int insetTop    = safeArea.Position.Y;
-    int insetRight  = screen.X - (safeArea.Position.X + safeArea.Size.X);
-    int insetBottom = screen.Y - (safeArea.Position.Y + safeArea.Size.Y);
-
-    var margin = GetNode<MarginContainer>("SafeAreaMargin");
-    margin.AddThemeConstantOverride("margin_left",   insetLeft);
-    margin.AddThemeConstantOverride("margin_top",    insetTop);
-    margin.AddThemeConstantOverride("margin_right",  insetRight);
-    margin.AddThemeConstantOverride("margin_bottom", insetBottom);
-}
-```
 
 ### Orientation Lock
 
@@ -126,13 +86,7 @@ DisplayServer.screen_set_orientation(DisplayServer.SCREEN_PORTRAIT)
 DisplayServer.screen_set_orientation(DisplayServer.SCREEN_SENSOR)
 ```
 
-**C#:**
 
-```csharp
-DisplayServer.ScreenSetOrientation(DisplayServer.ScreenOrientationEnum.Landscape);
-DisplayServer.ScreenSetOrientation(DisplayServer.ScreenOrientationEnum.Portrait);
-DisplayServer.ScreenSetOrientation(DisplayServer.ScreenOrientationEnum.Sensor);
-```
 
 ### Virtual Keyboard
 
@@ -149,15 +103,8 @@ DisplayServer.virtual_keyboard_hide()
 var kb_height: int = DisplayServer.virtual_keyboard_get_height()
 ```
 
-**C#:**
 
-```csharp
-DisplayServer.VirtualKeyboardShow("initial text");
-DisplayServer.VirtualKeyboardHide();
-int kbHeight = DisplayServer.VirtualKeyboardGetHeight();
-```
 
 > **Note:** `LineEdit` and `TextEdit` show/hide the virtual keyboard automatically when they gain and lose focus. Call the API manually only when building custom text input widgets.
 
 ---
-

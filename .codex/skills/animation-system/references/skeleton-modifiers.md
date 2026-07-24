@@ -30,14 +30,6 @@ func stop_looking() -> void:
     look_at.influence = 0.0  # blend back to animation
 ```
 
-```csharp
-_lookAt = GetNode<LookAtModifier3D>("Skeleton3D/LookAtModifier3D");
-_lookAt.BoneName = "Head";
-_lookAt.TargetNode = GetNode("../LookTarget").GetPath();
-_lookAt.UseAngleLimitation = true;
-_lookAt.SymmetryLimitation = Mathf.DegToRad(70f);
-```
-
 ## SpringBoneSimulator3D (Godot 4.4+)
 
 Simulates spring physics on bones — hair, capes, tails, antennas bounce and sway procedurally. Add `SpringBoneSimulator3D` as child of `Skeleton3D`, configure spring chains in the Inspector (root bone, end bone, stiffness, damping, gravity, drag).

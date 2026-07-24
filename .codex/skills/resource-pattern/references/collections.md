@@ -1,6 +1,5 @@
 # Resource Collections
 
-Reference for `skills/resource-pattern/SKILL.md` — `Array[Resource]` exports (v1.6.0 C# parity preserved), `ResourcePreloader`, loading all resources from a directory.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -64,58 +63,7 @@ func load_all_items(dir_path: String) -> Array[ItemData]:
     return result
 ```
 
-```csharp
-// ItemDatabase.cs — typed Resource collection exposed to the Inspector.
-using Godot;
-using Godot.Collections;
-
-[GlobalClass]
-public partial class ItemDatabase : Resource
-{
-    [Export] public Array<ItemData> Items { get; set; } = new();
-
-    public ItemData FindByName(string itemName)
-    {
-        foreach (ItemData item in Items)
-        {
-            if (item.Name == itemName)
-                return item;
-        }
-        return null;
-    }
-}
-
-// Loading all resources from a directory at runtime.
-public static class ItemDatabaseLoader
-{
-    public static Array<ItemData> LoadAllItems(string dirPath)
-    {
-        var result = new Array<ItemData>();
-        using var dir = DirAccess.Open(dirPath);
-        if (dir == null)
-        {
-            GD.PushError($"ItemDatabase: cannot open directory '{dirPath}'");
-            return result;
-        }
-
-        dir.ListDirBegin();
-        string fileName = dir.GetNext();
-        while (fileName != string.Empty)
-        {
-            if (!dir.CurrentIsDir() && (fileName.EndsWith(".tres") || fileName.EndsWith(".res")))
-            {
-                var res = ResourceLoader.Load(dirPath.PathJoin(fileName));
-                if (res is ItemData item)
-                    result.Add(item);
-            }
-            fileName = dir.GetNext();
-        }
-        return result;
-    }
-}
-```
 
 > Use `Godot.Collections.Array<T>` (not `System.Collections.Generic.List<T>`) for `[Export]` — only the Godot collection is editor-serializable.
 
 ---
-

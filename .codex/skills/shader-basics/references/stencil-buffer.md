@@ -60,7 +60,5 @@ In your scene, assign `portal_mask.gdshader` to the portal mesh and `xray_object
 
 > **When to use:** Use stencil effects for portal/window cutouts, selective object highlights, and masking effects. For per-object outlines without stencils, the multi-pass highlight approach in Section 3 is simpler.
 
-C# uses the same shader code and `ShaderMaterial.SetShaderParameter()` API — stencil state is set entirely in the `.gdshader` render modes, not in GDScript/C#.
 
 ---
-

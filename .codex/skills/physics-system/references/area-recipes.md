@@ -15,16 +15,6 @@ func _ready() -> void:
     gravity = 0.0
 ```
 
-```csharp
-public partial class ZeroGZone : Area3D
-{
-    public override void _Ready()
-    {
-        GravitySpaceOverride = SpaceOverride.Replace;
-        Gravity = 0.0f;
-    }
-}
-```
 
 ### Point Gravity (Black Hole / Planet)
 
@@ -38,18 +28,6 @@ func _ready() -> void:
     gravity = 500.0
 ```
 
-```csharp
-public partial class GravityWell : Area2D
-{
-    public override void _Ready()
-    {
-        GravitySpaceOverride = SpaceOverride.Combine;
-        GravityPoint = true;
-        GravityPointCenter = Vector2.Zero;
-        Gravity = 500.0f;
-    }
-}
-```
 
 
 ## Overlap Detection (canonical)
@@ -66,21 +44,6 @@ func _on_body_entered(body: Node2D) -> void:
         print("Player entered the zone")
 ```
 
-```csharp
-public partial class Zone : Area2D
-{
-    public override void _Ready()
-    {
-        BodyEntered += OnBodyEntered;
-    }
-
-    private void OnBodyEntered(Node2D body)
-    {
-        if (body.Name == "Player")
-            GD.Print("Player entered the zone");
-    }
-}
-```
 
 Use `area_entered` / `area_exited` for Area-to-Area overlap (e.g. hitbox vs hurtbox).
 

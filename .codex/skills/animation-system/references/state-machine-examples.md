@@ -1,6 +1,6 @@
 # State Machine Examples
 
-Reference for `skills/animation-system/SKILL.md` — the full GDScript and C# canonical state machine example (CharacterBody2D driving `AnimationNodeStateMachinePlayback`).
+Reference for `skills/animation-system/SKILL.md` — the canonical GDScript state machine example (CharacterBody2D driving `AnimationNodeStateMachinePlayback`).
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -32,45 +32,4 @@ func attack() -> void:
 
 func get_current_state() -> StringName:
     return state_machine.get_current_node()
-```
-
-### State Machine — C#
-
-```csharp
-using Godot;
-
-public partial class Character : CharacterBody2D
-{
-    private AnimationTree _animTree;
-    private AnimationNodeStateMachinePlayback _stateMachine;
-
-    public override void _Ready()
-    {
-        _animTree = GetNode<AnimationTree>("AnimationTree");
-        _stateMachine = _animTree.Get("parameters/playback").As<AnimationNodeStateMachinePlayback>();
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        Vector2 inputDir = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
-
-        if (inputDir != Vector2.Zero)
-        {
-            Velocity = inputDir * 200.0f;
-            _stateMachine.Travel("walk");
-        }
-        else
-        {
-            Velocity = Vector2.Zero;
-            _stateMachine.Travel("idle");
-        }
-
-        MoveAndSlide();
-    }
-
-    public void Attack()
-    {
-        _stateMachine.Travel("attack");
-    }
-}
 ```

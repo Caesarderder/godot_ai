@@ -20,16 +20,6 @@ tween2.tween_property($Sprite, "modulate:a", 0.3, 0.5)
 tween2.tween_property($Sprite, "modulate:a", 1.0, 0.5)
 ```
 
-```csharp
-// Loop forever
-var tween = CreateTween().SetLoops();
-tween.TweenProperty(GetNode("Icon"), "rotation", Mathf.Tau, 2.0f).AsRelative();
-
-// Loop 3 times
-var tween2 = CreateTween().SetLoops(3);
-tween2.TweenProperty(GetNode("Sprite"), "modulate:a", 0.3f, 0.5f);
-tween2.TweenProperty(GetNode("Sprite"), "modulate:a", 1.0f, 0.5f);
-```
 
 ### Signals
 
@@ -42,16 +32,6 @@ func _on_tween_finished() -> void:
     print("Tween complete!")
 ```
 
-```csharp
-var tween = CreateTween();
-tween.TweenProperty(this, "position", new Vector2(300, 200), 0.5f);
-tween.Finished += OnTweenFinished;
-
-private void OnTweenFinished()
-{
-    GD.Print("Tween complete!");
-}
-```
 
 | Signal                       | Fires When                                   |
 |------------------------------|----------------------------------------------|
@@ -60,4 +40,3 @@ private void OnTweenFinished()
 | `step_finished(idx)`         | Each individual tweener completes            |
 
 ---
-

@@ -4,7 +4,7 @@ km_type: reference
 domain: quality
 status: active
 owner: verification
-last_verified: 2026-07-20
+last_verified: 2026-07-23
 source_of_truth:
   - .omx/plans/test-spec-fantasy-idle-expedition.md
   - project-a/tools/verify_m0.sh
@@ -24,14 +24,14 @@ related:
 
 ## 目标
 
-把批准的 milestone 退出条件路由到证据；Godot 历史 M0 和 TapTap 迁移基线已通过，M1-M5 仍是待实现 gate。
+把批准的 milestone 退出条件路由到证据；Godot 当前 M0 和 TapTap 参考原型基线已通过，M1-M5 必须以 Godot 实现证据关闭。
 
 ## 事实
 
 | Milestone | 证据 |
 |---|---|
-| M0（功能 PASS；历史 baseline 例外已记录） | GUT v9.7.1 10/10 tests、34 asserts；editor/mobile/compatibility headless shell 通过；plugin/autoload 共存；245 个 godot_ai 文件仅 R100 移动、0 内容差异；首次逐文件 untracked hash 缺失不可逆，已增强工具并冻结 post-M0 baseline |
-| TapTap 迁移基线（PASS） | Maker 项目已绑定且远端同步；UrhoX Lua 2D 原型存在；`maker_build_current_directory` 提交 `cd5fa47`、远端构建 100%、preview refresh 200、runtime watcher 启动 |
+| Godot M0（当前基线 PASS；历史 baseline 例外已记录） | GUT v9.7.1 10/10 tests、34 asserts；editor/mobile/compatibility headless shell 通过；plugin/autoload 共存；245 个 godot_ai 文件仅 R100 移动、0 内容差异；首次逐文件 untracked hash 缺失不可逆，已增强工具并冻结 post-M0 baseline |
+| TapTap 参考原型（PASS，不关闭 Godot milestone） | Maker 项目已绑定且远端同步；UrhoX Lua 2D 原型存在；`maker_build_current_directory` 提交 `cd5fa47`、远端构建 100%、preview refresh 200、runtime watcher 启动 |
 | M1 | command classification/fingerprint、internal lifecycle、crash matrix、20m+5m、600 replay、backup |
 | M2 | L1-L5 clamp/growth golden、固定 seed 8 heroes、formation、可读性观察 |
 | M3 | stable hash/tie-break、跨 FPS、1-1/1-2/1-3 绝对区间和 1-3 paired +30pp |
@@ -47,7 +47,7 @@ related:
 
 ## 验证
 
-使用 [CMD:game-verification](../../runbooks/game-verification.md#game-verification)；Godot M0 与 TapTap 迁移构建已验证，后续命令在对应 milestone 落地前保持未验证。
+使用 [CMD:game-verification](../../runbooks/game-verification.md#game-verification)；Godot M0 与 TapTap 参考构建均有历史证据，但后续 M1-M5 只由 Godot 代码、测试、模拟和设备证据关闭。
 
 ## 相关节点
 

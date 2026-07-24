@@ -88,43 +88,6 @@ func spawn_explosion(pos: Vector2) -> void:
     get_tree().create_timer(particles.lifetime + 0.5).timeout.connect(particles.queue_free)
 ```
 
-```csharp
-public void SpawnExplosion(Vector2 pos)
-{
-    var particles = new GpuParticles2D();
-    particles.Amount = 30;
-    particles.Lifetime = 0.5f;
-    particles.OneShot = true;
-    particles.Explosiveness = 1.0f;
-    particles.Position = pos;
-
-    var mat = new ParticleProcessMaterial();
-    mat.EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Sphere;
-    mat.EmissionSphereRadius = 5.0f;
-    mat.Direction = Vector3.Zero;
-    mat.Spread = 180.0f;
-    mat.InitialVelocityMin = 100.0f;
-    mat.InitialVelocityMax = 200.0f;
-    mat.DampingMin = 5.0f;
-    mat.DampingMax = 10.0f;
-    mat.ScaleMin = 0.5f;
-    mat.ScaleMax = 1.5f;
-
-    var grad = new GradientTexture1D();
-    var g = new Gradient();
-    g.SetColor(0, new Color(1.0f, 1.0f, 0.5f, 1.0f));
-    g.SetColor(1, new Color(1.0f, 0.3f, 0.0f, 0.0f));
-    grad.Gradient = g;
-    mat.ColorRamp = grad;
-
-    particles.ProcessMaterial = mat;
-    particles.Texture = GD.Load<Texture2D>("res://textures/particles/soft_circle.png");
-    AddChild(particles);
-    particles.Emitting = true;
-
-    GetTree().CreateTimer(particles.Lifetime + 0.5f).Timeout += particles.QueueFree;
-}
-```
 
 ### Dust / Footstep Puff
 
@@ -162,4 +125,3 @@ func spawn_dust(pos: Vector2) -> void:
 ```
 
 ---
-

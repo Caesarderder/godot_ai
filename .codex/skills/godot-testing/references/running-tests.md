@@ -26,10 +26,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -glog=3 -goutput_d
 ### gdUnit4 CLI
 
 ```bash
-# Run all tests
-godot --headless -s addons/gdUnit4/bin/GdUnit4CSharpApiLoader.cs -- --testsuites res://tests
-
-# GDScript only
+# Run all GDScript tests
 godot --headless -s addons/gdUnit4/GdUnitRunner.gd -- --testsuites res://tests/unit
 
 # Run a specific test file
@@ -61,7 +58,7 @@ jobs:
       - name: Install Godot
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.3.0
+          version: 4.6.0
           use-dotnet: false
 
       - name: Import project
@@ -76,19 +73,16 @@ jobs:
           -glog=2
 
   test-gdunit4:
-    name: gdUnit4 Tests (GDScript + C#)
+    name: gdUnit4 Tests (GDScript)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Godot with .NET
+      - name: Install Godot
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.3.0
-          use-dotnet: true
-
-      - name: Restore NuGet packages
-        run: dotnet restore
+          version: 4.6.0
+          use-dotnet: false
 
       - name: Import project
         run: godot --headless --import 2>&1 | tail -5
@@ -110,4 +104,3 @@ jobs:
 ```
 
 ---
-

@@ -1,75 +1,56 @@
-# Abstract Classes and Methods (Godot 4.5+)
+# Abstract classes and methods (Godot 4.5+)
 
-Reference for `skills/gdscript-patterns/SKILL.md` — `@abstract` annotation, abstract base class patterns, when subclasses must implement.
+Use an abstract class when a shared GDScript base must not be instantiated and subclasses must provide selected behavior.
 
-> ← Back to [SKILL.md](../SKILL.md)
-
----
-## 13. Abstract Classes and Methods (Godot 4.5+)
-
-The `@abstract` annotation prevents a class from being instantiated directly and forces subclasses to implement any method annotated with `@abstract`. This is the GDScript equivalent of C#'s `abstract` keyword.
-
-> **Note:** This skill is GDScript-specific by design. For C# patterns, see **csharp-godot** and **csharp-signals**.
+For a named script class, place `@abstract` before `class_name`:
 
 ```gdscript
-# base_enemy.gd — abstract base class; cannot be instantiated directly
-class_name BaseEnemy
-extends CharacterBody2D
-
 @abstract
-
-## Subclasses must implement this to define their attack behavior.
-@abstract func perform_attack() -> void
-
-## Subclasses must implement this to return their display name.
-@abstract func get_display_name() -> String
-
-# Non-abstract methods are fine — they provide shared behavior.
-func take_damage(amount: int) -> void:
-    health -= amount
-    if health <= 0:
-        die()
-
-func die() -> void:
-    print(get_display_name(), " has died")
-    queue_free()
+class_name BaseEnemy
+extends Node
 
 var health: int = 100
+
+@abstract func perform_attack() -> void
+
+@abstract func get_display_name() -> String
+
+func take_damage(amount: int) -> void:
+    health = maxi(health - amount, 0)
 ```
 
+A concrete subclass implements every inherited abstract method:
+
 ```gdscript
-# melee_enemy.gd — concrete subclass
 class_name MeleeEnemy
 extends BaseEnemy
 
 func perform_attack() -> void:
-    $HitboxArea.monitoring = true
-    await get_tree().create_timer(0.2).timeout
-    $HitboxArea.monitoring = false
+    print("Melee attack")
 
 func get_display_name() -> String:
     return "Melee Enemy"
 ```
 
+For an unnamed abstract script, put the annotation before `extends`:
+
 ```gdscript
-# ranged_enemy.gd — another concrete subclass
-class_name RangedEnemy
-extends BaseEnemy
+@abstract
+extends Node
 
-@export var projectile_scene: PackedScene
-
-func perform_attack() -> void:
-    var proj: Node2D = projectile_scene.instantiate()
-    proj.global_position = global_position
-    get_tree().root.add_child(proj)
-
-func get_display_name() -> String:
-    return "Ranged Enemy"
+@abstract func run() -> void
 ```
 
-> **Instantiation guard:** GDScript raises an error at runtime if you call `BaseEnemy.new()` directly. The `@abstract` annotation on the class is the guard — no constructor override needed.
+For an inner abstract class, use:
 
-> **Partial abstraction:** Only the methods annotated `@abstract` are required by subclasses. A class can be `@abstract` without any abstract methods (to signal "don't instantiate this directly") or can have abstract methods without the class-level annotation (each method still enforces implementation).
+```gdscript
+@abstract class Command:
+    @abstract func execute() -> void
+```
 
----
+Important boundaries:
 
+- Do not attach an abstract script to a node; it cannot be instantiated.
+- A class with an abstract method is itself abstract even if the class annotation is omitted, but annotate the class explicitly to make intent visible.
+- Keep shared concrete behavior in the base; do not use abstract methods only to imitate an interface when simple composition is clearer.
+- Abstract classes are a language contract, not a substitute for verifying scene ownership and runtime wiring.

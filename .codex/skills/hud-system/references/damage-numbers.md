@@ -1,6 +1,6 @@
 # Damage Numbers
 
-Reference for `skills/hud-system/SKILL.md` — floating damage-number scene with rise-and-fade tween and a pooled spawner. GDScript + C#.
+Reference for `skills/hud-system/SKILL.md` — floating damage-number scene with rise-and-fade tween and a pooled spawner. GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -52,47 +52,7 @@ func _play_animation() -> void:
     tween.finished.connect(queue_free)
 ```
 
-### C# — DamageNumber scene (single instance)
 
-```csharp
-// DamageNumber.cs — attach to a Label; root of a small PackedScene
-using Godot;
-
-public partial class DamageNumber : Label
-{
-    [Export] public float RiseDistance { get; set; } = 40.0f;
-    [Export] public float Lifetime { get; set; } = 0.7f;
-    [Export] public Color CriticalColor { get; set; } = new(1.0f, 0.3f, 0.1f);
-    [Export] public Color NormalColor { get; set; } = new(1.0f, 1.0f, 1.0f);
-
-    public void ShowDamage(int amount, bool isCritical = false)
-    {
-        Text = isCritical ? $"!{amount}" : amount.ToString();
-        Modulate = new Color(Modulate, 1.0f);
-        AddThemeFontSizeOverride("font_size", isCritical ? 32 : 24);
-        Modulate = isCritical ? CriticalColor : NormalColor;
-        PlayAnimation();
-    }
-
-    private void PlayAnimation()
-    {
-        var tween = CreateTween();
-        tween.SetParallel(true);
-
-        // Rise upward
-        tween.TweenProperty(this, "position:y", Position.Y - RiseDistance, Lifetime)
-            .SetEase(Tween.EaseType.Out)
-            .SetTrans(Tween.TransitionType.Quad);
-
-        // Fade out (start fading at halfway point)
-        tween.TweenProperty(this, "modulate:a", 0.0f, Lifetime * 0.5f)
-            .SetDelay(Lifetime * 0.5f)
-            .SetEase(Tween.EaseType.In);
-
-        tween.Finished += QueueFree;
-    }
-}
-```
 
 ### GDScript — Spawner (attach to the HUD or a DamageNumbersLayer Node2D)
 
@@ -119,61 +79,22 @@ func _ready() -> void:
 
 ## Call this from any node that receives damage events.
 ## `world_position` is the attacker or victim's global position in world space.
+## Keep this spawner's CanvasLayer transform at identity: the converted value is
+## in viewport/HUD canvas coordinates, not OS screen coordinates.
 func spawn(world_position: Vector2, amount: int, is_critical: bool = false) -> void:
-    # Convert world position to screen space so the label sits above the entity
-    var screen_pos: Vector2 = get_viewport().get_canvas_transform() * world_position
+    # Convert world canvas coordinates to viewport/HUD canvas coordinates.
+    var hud_pos: Vector2 = get_viewport().get_canvas_transform() * world_position
 
     # Wraps around — if POOL_SIZE is too small, older labels get recycled mid-animation.
     var dn := _pool[_pool_index % POOL_SIZE]
     _pool_index += 1
 
-    dn.position = screen_pos
+    dn.position = hud_pos
     dn.visible  = true
     dn.show_damage(amount, is_critical)
 ```
 
-### C# — Spawner (attach to the HUD or a DamageNumbersLayer Node2D)
 
-```csharp
-// DamageNumberSpawner.cs
-using Godot;
-
-public partial class DamageNumberSpawner : Node
-{
-    [Export] public PackedScene DamageNumberScene { get; set; }
-
-    private const int PoolSize = 20;
-    private readonly DamageNumber[] _pool = new DamageNumber[PoolSize];
-    private int _poolIndex = 0;
-
-    public override void _Ready()
-    {
-        for (int i = 0; i < PoolSize; i++)
-        {
-            var dn = DamageNumberScene.Instantiate<DamageNumber>();
-            dn.Visible = false;
-            AddChild(dn);
-            _pool[i] = dn;
-        }
-    }
-
-    /// <summary>
-    /// Call from any node that receives damage events.
-    /// <paramref name="worldPosition"/> is the attacker or victim's global position.
-    /// </summary>
-    public void Spawn(Vector2 worldPosition, int amount, bool isCritical = false)
-    {
-        var screenPos = GetViewport().GetCanvasTransform() * worldPosition;
-
-        var dn = _pool[_poolIndex % PoolSize];
-        _poolIndex++;
-
-        dn.Position = screenPos;
-        dn.Visible = true;
-        dn.ShowDamage(amount, isCritical);
-    }
-}
-```
 
 **Connecting to a damage event (GDScript):**
 
@@ -184,18 +105,8 @@ EventBus.damage_dealt.connect(func(pos: Vector2, amount: int, crit: bool) -> voi
 )
 ```
 
-**Connecting to a damage event (C#):**
 
-```csharp
-// In the HUD root or the DamageNumberSpawner's _Ready:
-EventBus.Instance.DamageDealt += (Vector2 pos, int amount, bool crit) =>
-{
-    GetNode<DamageNumberSpawner>("DamageNumbersLayer/DamageNumberSpawner")
-        .Spawn(pos, amount, crit);
-};
-```
 
 **Pool notes:** The simple modular pool above recycles labels before they finish animating if POOL_SIZE is too small. Increase the pool size or skip pooling entirely for games with infrequent hits. A more robust pool tracks which instances are free using a `free_list` array.
 
 ---
-

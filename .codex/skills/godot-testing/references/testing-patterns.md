@@ -32,17 +32,7 @@ func before_test() -> void:
     add_child(_player)
 ```
 
-#### gdUnit4 (C#)
 
-```csharp
-[BeforeTest]
-public void BeforeTest()
-{
-    var scene = GD.Load<PackedScene>("res://scenes/player.tscn");
-    _player = AutoFree(scene.Instantiate<Player>());
-    AddChild(_player);
-}
-```
 
 ### Signal Testing
 
@@ -75,21 +65,7 @@ func test_health_emits_signal() -> void:
     assert_signal(monitor).is_not_emitted("died")
 ```
 
-#### gdUnit4 (C#)
 
-```csharp
-[TestCase]
-public async GdUnitAwaiter HealthEmitsSignal()
-{
-    var monitor = MonitorSignals(_health);
-    _health.TakeDamage(10);
-
-    AssertSignal(monitor).IsEmitted("health_changed");
-    AssertSignal(monitor).IsEmitted("health_changed").WithArgs(100, 90);
-    AssertSignal(monitor).IsNotEmitted("died");
-    await Task.CompletedTask;
-}
-```
 
 ### Mocking / Doubling
 
@@ -125,21 +101,7 @@ func test_player_uses_health_component() -> void:
     verify(mock_health).take_damage(25)
 ```
 
-#### gdUnit4 (C#) — `Mock<T>()`
 
-```csharp
-[TestCase]
-public void PlayerUsesHealthComponent()
-{
-    var mockHealth = Mock<HealthComponent>();
-    mockHealth.MockProperty(h => h.CurrentHealth, 75);
-
-    _player.HealthComponent = mockHealth;
-    _player.TakeHit(25);
-
-    Verify(mockHealth).TakeDamage(25);
-}
-```
 
 ### Waiting for Async Operations
 
@@ -167,17 +129,6 @@ func test_tween_completes() -> void:
     assert_that(_player.position).is_equal(Vector2(100, 0))
 ```
 
-#### gdUnit4 (C#)
 
-```csharp
-[TestCase(Timeout = 1000)]
-public async GdUnitAwaiter TweenCompletes()
-{
-    _player.StartMoveTween();
-    await ISceneRunner.SimulateFrames(30);
-    AssertThat(_player.Position).IsEqual(new Vector2(100, 0));
-}
-```
 
 ---
-

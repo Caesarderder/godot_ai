@@ -1,6 +1,5 @@
 # Sharing vs Unique Resources
 
-Reference for `skills/resource-pattern/SKILL.md` — when Resources share state vs `.duplicate()` for unique copies (v1.6.0 C# parity preserved).
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -27,32 +26,12 @@ func _ready() -> void:
     stats = stats.duplicate(true)
 ```
 
-```csharp
-public partial class Enemy : CharacterBody3D
-{
-    [Export] public EnemyStats StatsTemplate { get; set; }
-    private EnemyStats _stats;
 
-    public override void _Ready()
-    {
-        // Shallow duplicate — referenced sub-resources still point at the original.
-        _stats = (EnemyStats)StatsTemplate.Duplicate();
 
-        // Deep duplicate — sub-resources are also duplicated. Use only when needed (cost scales).
-        // _stats = (EnemyStats)StatsTemplate.Duplicate(subresources: true);
-
-        _stats.CurrentHealth = _stats.MaxHealth;
-    }
-}
-```
-
-`duplicate()` (`Duplicate()` in C#) returns a new Resource with the same property values. The original `.tres` file is untouched.
-
-**`make_unique()` in the editor:** In the Inspector, any sub-resource slot shows a **Make Unique** button. Clicking it embeds a private copy of the sub-resource into the parent scene instead of referencing the shared file. Use this when one scene needs different values than the shared default.
+**Make Unique in the Inspector:** A sub-resource slot can expose a **Make Unique** action. It embeds a private copy into the parent scene instead of referencing the shared file. This is editor UI, not a callable GDScript API. At runtime, use `duplicate()` and assign its return value.
 
 **Guideline:**
 - Read-only data (item definitions, level config) — share freely, no duplication needed.
 - Mutable runtime state (current health, active buffs) — always `duplicate()` in `_ready()`.
 
 ---
-

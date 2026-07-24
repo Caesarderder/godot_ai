@@ -1,6 +1,5 @@
 # ParticleProcessMaterial — Basic Property Recipes
 
-Reference for `skills/particles-vfx/SKILL.md` — emission shape, direction/velocity/gravity, scale and color over lifetime, damping/acceleration, angular velocity. **GDScript + C# parity**.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -26,11 +25,6 @@ mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
 mat.emission_sphere_radius = 2.0
 ```
 
-```csharp
-var mat = new ParticleProcessMaterial();
-mat.EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Sphere;
-mat.EmissionSphereRadius = 2.0f;
-```
 
 ### Direction, Velocity & Gravity
 
@@ -49,14 +43,6 @@ mat.initial_velocity_max = 10.0
 mat.gravity = Vector3(0.0, -9.8, 0.0)
 ```
 
-```csharp
-var mat = new ParticleProcessMaterial();
-mat.Direction = new Vector3(0.0f, 1.0f, 0.0f);
-mat.Spread = 30.0f;
-mat.InitialVelocityMin = 5.0f;
-mat.InitialVelocityMax = 10.0f;
-mat.Gravity = new Vector3(0.0f, -9.8f, 0.0f);
-```
 
 ### Scale Over Lifetime
 
@@ -73,18 +59,6 @@ curve.curve = c
 mat.scale_curve = curve
 ```
 
-```csharp
-var mat = new ParticleProcessMaterial();
-mat.ScaleMin = 1.0f;
-mat.ScaleMax = 1.5f;
-
-var curve = new CurveTexture();
-var c = new Curve();
-c.AddPoint(new Vector2(0.0f, 1.0f));
-c.AddPoint(new Vector2(1.0f, 0.0f));
-curve.Curve = c;
-mat.ScaleCurve = curve;
-```
 
 ### Color Over Lifetime
 
@@ -99,15 +73,6 @@ grad.gradient = g
 mat.color_ramp = grad
 ```
 
-```csharp
-var grad = new GradientTexture1D();
-var g = new Gradient();
-g.SetColor(0, new Color(1.0f, 1.0f, 1.0f, 1.0f));
-g.AddPoint(0.5f, new Color(1.0f, 0.5f, 0.0f, 0.8f));
-g.SetColor(1, new Color(1.0f, 0.2f, 0.0f, 0.0f));
-grad.Gradient = g;
-mat.ColorRamp = grad;
-```
 
 ### Damping & Acceleration
 

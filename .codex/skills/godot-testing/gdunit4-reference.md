@@ -1,6 +1,7 @@
 # gdUnit4 Quick Reference
 
-gdUnit4 is a testing framework for Godot 4.x with first-class support for both GDScript and C#. All examples target Godot 4.3+.
+gdUnit4 is an optional testing framework for Godot 4.x. This reference covers the
+GDScript workflow used by Builda's Godot 4.6 projects.
 
 ---
 
@@ -17,12 +18,6 @@ gdUnit4 is a testing framework for Godot 4.x with first-class support for both G
 
 ```bash
 git submodule add https://github.com/MikeSchulze/gdUnit4.git addons/gdUnit4
-```
-
-**C# projects — add NuGet package**
-
-```bash
-dotnet add package gdUnit4.api
 ```
 
 Then enable the plugin in **Project > Project Settings > Plugins**.
@@ -45,28 +40,6 @@ extends GdUnitTestSuite
 
 func test_example() -> void:
     assert_that(1 + 1).is_equal(2)
-```
-
-### C#
-
-| Convention   | Rule                                                                  |
-|--------------|-----------------------------------------------------------------------|
-| File name    | Any name; `*Test.cs` is the convention                               |
-| Class        | Decorated with `[TestSuite]`; inherits `GdUnit4.GdUnitTestSuite`     |
-| Test method  | Decorated with `[TestCase]`                                           |
-
-```csharp
-// tests/unit/HealthComponentTest.cs
-using GdUnit4;
-using static GdUnit4.Assertions;
-
-[TestSuite]
-public partial class HealthComponentTest : GdUnit4.GdUnitTestSuite
-{
-    [TestCase]
-    public void Example()
-        => AssertThat(1 + 1).IsEqual(2);
-}
 ```
 
 ---
@@ -104,38 +77,6 @@ func after_test() -> void:
     pass
 ```
 
-### C#
-
-```csharp
-[TestSuite]
-public partial class ExampleTest : GdUnit4.GdUnitTestSuite
-{
-    [Before]
-    public void Before()
-    {
-        // Runs once before ALL tests in this class
-    }
-
-    [After]
-    public void After()
-    {
-        // Runs once after ALL tests in this class
-    }
-
-    [BeforeTest]
-    public void BeforeTest()
-    {
-        // Runs before EACH test
-    }
-
-    [AfterTest]
-    public void AfterTest()
-    {
-        // Runs after EACH test
-    }
-}
-```
-
 ---
 
 ## Memory Management
@@ -148,17 +89,6 @@ Registers any `Object` for automatic freeing after the test. Does NOT add it to 
 func before_test() -> void:
     _health = auto_free(HealthComponent.new())
     add_child(_health)  # add manually if needed in the tree
-```
-
-### C# — `AutoFree<T>()`
-
-```csharp
-[BeforeTest]
-public void BeforeTest()
-{
-    _health = AutoFree(new HealthComponent());
-    AddChild(_health);
-}
 ```
 
 ---
@@ -233,84 +163,6 @@ func test_signal() -> void:
 
 ---
 
-## Assertions API — C#
-
-All assertions use static `AssertThat()` / `AssertSignal()` from `GdUnit4.Assertions`.
-
-```csharp
-using static GdUnit4.Assertions;
-```
-
-### Values
-
-```csharp
-AssertThat(value).IsEqual(expected);
-AssertThat(value).IsNotEqual(expected);
-AssertThat(value).IsNull();
-AssertThat(value).IsNotNull();
-AssertThat(value).IsTrue();
-AssertThat(value).IsFalse();
-AssertThat(value).IsSame(other);
-AssertThat(value).IsNotSame(other);
-```
-
-### Numbers
-
-```csharp
-AssertThat(n).IsGreater(x);
-AssertThat(n).IsGreaterEqual(x);
-AssertThat(n).IsLess(x);
-AssertThat(n).IsLessEqual(x);
-AssertThat(n).IsBetween(low, high);
-AssertThat(n).IsApproximately(expected, margin);
-AssertThat(n).IsNegative();
-AssertThat(n).IsZero();
-```
-
-### Strings
-
-```csharp
-AssertThat(str).IsEqual(expected);
-AssertThat(str).Contains("substring");
-AssertThat(str).NotContains("substring");
-AssertThat(str).StartsWith("prefix");
-AssertThat(str).EndsWith("suffix");
-AssertThat(str).IsEmpty();
-AssertThat(str).IsNotEmpty();
-AssertThat(str).HasLength(n);
-```
-
-### Arrays / Collections
-
-```csharp
-AssertThat(arr).IsEqual(new[] { 1, 2, 3 });
-AssertThat(arr).Contains(2, 3);
-AssertThat(arr).NotContains(4);
-AssertThat(arr).ContainsExactly(1, 2, 3);
-AssertThat(arr).IsEmpty();
-AssertThat(arr).IsNotEmpty();
-AssertThat(arr).HasSize(n);
-```
-
-### Signals
-
-```csharp
-[TestCase]
-public async GdUnitAwaiter SignalTest()
-{
-    var monitor = MonitorSignals(_health);
-    _health.TakeDamage(10);
-
-    AssertSignal(monitor).IsEmitted("health_changed");
-    AssertSignal(monitor).IsEmitted("health_changed").WithArgs(100, 90);
-    AssertSignal(monitor).IsNotEmitted("died");
-    AssertSignal(monitor).IsEmitted("health_changed").Exactly(1);
-    await Task.CompletedTask;
-}
-```
-
----
-
 ## Mocking API — GDScript
 
 ```gdscript
@@ -343,52 +195,13 @@ verify(spy_health).take_damage(10)               # call was tracked
 
 ---
 
-## Mocking API — C#
-
-```csharp
-// Create a mock (all methods stubbed)
-var mockHealth = Mock<HealthComponent>();
-
-// Stub method return value
-mockHealth.MockMethod(h => h.GetHealth(), 75);
-mockHealth.MockProperty(h => h.CurrentHealth, 75);
-
-// Use the mock
-_player.HealthComponent = mockHealth;
-_player.ReceiveHit(10);
-
-// Verify calls
-Verify(mockHealth).TakeDamage(10);
-Verify(mockHealth, Times(1)).TakeDamage(10);
-VerifyNoInteractions(mockHealth);
-
-// Spy — real object with call tracking
-var spyHealth = Spy(new HealthComponent());
-AddChild(AutoFree(spyHealth));
-spyHealth.TakeDamage(10);
-
-AssertThat(spyHealth.CurrentHealth).IsEqual(90);  // real behavior
-Verify(spyHealth).TakeDamage(10);                 // call tracked
-```
-
----
-
 ## CLI Commands
 
-### GDScript tests only
+### GDScript tests
 
 ```bash
 godot --headless \
   -s addons/gdUnit4/GdUnitRunner.gd \
-  -- \
-  --testsuites res://tests
-```
-
-### C# tests (requires .NET Godot build)
-
-```bash
-godot --headless \
-  -s addons/gdUnit4/bin/GdUnit4CSharpApiLoader.cs \
   -- \
   --testsuites res://tests
 ```
@@ -406,16 +219,8 @@ godot --headless \
 ### Minimal CI invocation
 
 ```bash
-# GDScript
 godot --headless \
   -s addons/gdUnit4/GdUnitRunner.gd \
-  -- \
-  --testsuites res://tests \
-  --report-dir ./reports
-
-# C# (mixed project)
-godot --headless \
-  -s addons/gdUnit4/bin/GdUnit4CSharpApiLoader.cs \
   -- \
   --testsuites res://tests \
   --report-dir ./reports

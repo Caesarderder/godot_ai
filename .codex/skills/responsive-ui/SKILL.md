@@ -1,13 +1,15 @@
 ---
 name: responsive-ui
-description: Use when handling multiple resolutions — stretch modes, aspect ratios, DPI scaling, and mobile/desktop adaptation
+description: Use when handling stretch modes, aspect ratios, DPI scaling, safe areas, and pointer or touch adaptation in Godot 4.6 GDScript Web projects
 ---
 
-# Responsive UI in Godot 4.3+
+# Responsive UI in Godot 4.6
 
-All examples target Godot 4.3+ with no deprecated APIs. GDScript is shown first, then C#.
+Use Godot 4.6.x GDScript APIs for responsive layouts in Builda's single-threaded Web export.
 
-> **Related skills:** **godot-ui** for Control node layout and themes, **export-pipeline** for platform-specific export settings, **godot-project-setup** for initial project resolution settings, **input-handling** for touch vs desktop input adaptation, **localization** for layout adjustments per locale, **mobile-development** for safe-area and notch handling.
+> **Related skills:** **godot-ui** for Control node layout and themes, **godot-project-setup** for initial project resolution settings, **input-handling** for pointer and touch input adaptation, **localization** for layout adjustments per locale.
+
+> Linked references are a legacy archive. Load and use only their Godot 4.6-compatible GDScript sections.
 
 ---
 
@@ -19,13 +21,12 @@ Key settings and their `.godot/project.godot` keys:
 
 | Setting | project.godot key | Recommended value |
 |---|---|---|
-| Viewport width | `window/size/viewport_width` | `1920` (or your base design width) |
-| Viewport height | `window/size/viewport_height` | `1080` (or your base design height) |
-| Stretch mode | `window/stretch/mode` | `canvas_items` (most games) |
-| Stretch aspect | `window/stretch/aspect` | `expand` (fill screen) or `keep` (letterbox) |
-| Scale factor | `window/stretch/scale` | `1` (adjust for pixel art integer scaling) |
-
-> **Godot 4.7+:** Projects **newly created** in Godot 4.7 already default `display/window/stretch/mode` to `canvas_items` and `display/window/stretch/aspect` to `expand` (previously `disabled` / `keep`) — the recommendations above are now the out-of-the-box values. Projects created on older versions are unchanged (the property default is still `disabled`), so set both explicitly when upgrading. See the [4.7 migration guide](https://docs.godotengine.org/en/latest/tutorials/migrating/upgrading_to_godot_4.7.html).
+| Viewport width | `display/window/size/viewport_width` | `1920` (or your base design width) |
+| Viewport height | `display/window/size/viewport_height` | `1080` (or your base design height) |
+| Stretch mode | `display/window/stretch/mode` | `canvas_items` (most games) |
+| Stretch aspect | `display/window/stretch/aspect` | `expand` (fill screen) or `keep` (letterbox) |
+| Scale factor | `display/window/stretch/scale` | `1` (adjust for pixel art integer scaling) |
+| Scale mode | `display/window/stretch/scale_mode` | `fractional` normally; `integer` for pixel art |
 
 These can also be set at runtime:
 
@@ -35,18 +36,10 @@ These can also be set at runtime:
 # Read current viewport size
 var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 
-# Change stretch mode at runtime
-ProjectSettings.set_setting("display/window/stretch/mode", "canvas_items")
-```
-
-**C#:**
-
-```csharp
-// Read current viewport size
-Vector2I viewportSize = GetViewport().GetVisibleRect().Size;
-
-// Change a project setting at runtime (takes effect next frame)
-ProjectSettings.SetSetting("display/window/stretch/mode", "canvas_items");
+# Runtime equivalents take effect immediately. ProjectSettings values may only
+# be read at startup and should not be used as live Window state.
+get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 ```
 
 ---
@@ -69,7 +62,7 @@ ProjectSettings.SetSetting("display/window/stretch/mode", "canvas_items");
 
 ## 3. Aspect Ratio Handling
 
-Set via `Project > Project Settings > Display > Window > Stretch > Aspect` or the `window/stretch/aspect` key.
+Set via `Project > Project Settings > Display > Window > Stretch > Aspect` or the `display/window/stretch/aspect` key.
 
 | Mode | Visual Result | When to Use |
 |---|---|---|
@@ -84,7 +77,7 @@ Set via `Project > Project Settings > Display > Window > Stretch > Aspect` or th
 
 ## 4. Pixel Art Setup
 
-For crisp pixel-art games: `Project Settings → Display → Window → Stretch → Mode = viewport`, base resolution at native pixel size (e.g., 320×180), `Window Size Override = 4×` for editor preview. Use integer scaling to avoid sub-pixel blur.
+For crisp pixel-art games: set `Mode = viewport`, `Scale Mode = integer`, and a native base resolution such as 320×180. `Window Size Override` only changes editor preview size. Let Godot floor the stretch factor; do not derive `content_scale_factor` from monitor dimensions.
 
 > See [references/pixel-art-setup.md](references/pixel-art-setup.md) for full project settings, integer-scaling script, nearest-neighbour filter overrides.
 
@@ -92,7 +85,7 @@ For crisp pixel-art games: `Project Settings → Display → Window → Stretch 
 
 ## 5. DPI Scaling
 
-For retina / high-DPI displays: set `content_scale_factor` to scale the entire UI proportionally. Query `DisplayServer.screen_get_dpi()` at runtime for adaptive scaling per device.
+For native retina / high-DPI displays, `content_scale_factor` can scale the entire UI proportionally. Builda Web projects should use the browser canvas/viewport layout and must not infer CSS/device-pixel scaling from `DisplayServer.screen_get_dpi()`.
 
 > See [references/dpi-scaling.md](references/dpi-scaling.md) for the `content_scale_factor` recipe and DPI-querying patterns.
 
@@ -160,13 +153,13 @@ godot --path /projects/mygame --resolution 1280x720
 - [ ] Base viewport size (`viewport_width` / `viewport_height`) matches the design canvas in the editor
 - [ ] Stretch mode chosen deliberately: `canvas_items` for most games, `viewport` for pixel art
 - [ ] Aspect ratio mode chosen: `expand` unless fixed-layout content requires `keep`
-- [ ] Pixel art games use `viewport` stretch + `Nearest` texture filter + integer `content_scale_factor`
+- [ ] Pixel art games use `viewport` stretch + `Nearest` texture filter + `display/window/stretch/scale_mode = "integer"`
 - [ ] All HUD `Control` nodes use anchors anchored to the nearest edge, not fixed `position` values
 - [ ] `custom_minimum_size` set on buttons and interactive elements to prevent collapse below tap target size (minimum 44×44 px recommended for mobile)
 - [ ] `size_flags_horizontal` / `size_flags_vertical` set to `SIZE_EXPAND_FILL` on elements that should fill space
 - [ ] `get_viewport().size_changed` signal connected where layout must respond to window resize
-- [ ] Safe area insets read from `DisplayServer.get_display_safe_area()` and applied to a root `MarginContainer`
-- [ ] `content_scale_factor` set at startup based on `DisplayServer.screen_get_dpi()` for high-DPI / Retina displays
+- [ ] Native-only safe-area values are converted from screen pixels into UI canvas units before applying margins; Web projects rely on the host canvas safe area
+- [ ] Native-only DPI scaling is tested on target devices; Web projects do not rely on `DisplayServer.screen_get_dpi()`
 - [ ] Touch input handled via `InputEventScreenTouch` / `InputEventScreenDrag`, not mouse events alone
 - [ ] Orientation locked to the correct mode (`SCREEN_LANDSCAPE` / `SCREEN_PORTRAIT`) or `SCREEN_SENSOR` where rotation is intended
 - [ ] Virtual keyboard height queried after show and used to shift UI content upward on mobile

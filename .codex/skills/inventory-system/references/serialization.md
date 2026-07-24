@@ -1,6 +1,6 @@
 # Inventory Serialization
 
-Reference for `skills/inventory-system/SKILL.md` — save/load via Resource → JSON or ConfigFile, with versioning. GDScript + C#.
+Reference for `skills/inventory-system/SKILL.md` — save/load via Resource → JSON or ConfigFile, with versioning. GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -83,93 +83,6 @@ data["inventory"] = ItemRegistry.serialize_inventory(player.inventory)
 ItemRegistry.deserialize_inventory(player.inventory, data["inventory"])
 ```
 
-### C#
 
-```csharp
-// ItemRegistry.cs — add as autoload named ItemRegistry
-using System.Collections.Generic;
-using Godot;
-using Godot.Collections;
-
-public partial class ItemRegistry : Node
-{
-    private readonly Dictionary<string, ItemData> _items = new();
-
-    public override void _Ready() => LoadAll("res://items/");
-
-    private void LoadAll(string folder)
-    {
-        using var dir = DirAccess.Open(folder);
-        if (dir == null) return;
-
-        dir.ListDirBegin();
-        string fileName = dir.GetNext();
-        while (fileName != "")
-        {
-            if (fileName.EndsWith(".tres"))
-            {
-                var item = GD.Load<ItemData>(folder + fileName);
-                if (item != null && item.Id != "")
-                    _items[item.Id] = item;
-            }
-            fileName = dir.GetNext();
-        }
-    }
-
-    public ItemData GetItem(string id)
-        => _items.TryGetValue(id, out var item) ? item : null;
-
-    // ── Serialize ─────────────────────────────────────────────────────────────
-
-    public Godot.Collections.Array SerializeInventory(Inventory inventory)
-    {
-        var data = new Godot.Collections.Array();
-        foreach (var slot in inventory.Slots)
-        {
-            if (slot.IsEmpty())
-                data.Add(default(Variant));
-            else
-                data.Add(new Godot.Collections.Dictionary
-                {
-                    ["id"]  = slot.Item.Id,
-                    ["qty"] = slot.Quantity,
-                });
-        }
-        return data;
-    }
-
-    // ── Deserialize ───────────────────────────────────────────────────────────
-
-    public void DeserializeInventory(Inventory inventory, Godot.Collections.Array data)
-    {
-        int count = Mathf.Min(data.Count, inventory.Slots.Count);
-        for (int i = 0; i < count; i++)
-        {
-            if (data[i].VariantType == Variant.Type.Nil)
-            {
-                inventory.Slots[i] = new InventorySlot();
-                continue;
-            }
-
-            var entry = data[i].AsGodotDictionary();
-            var item  = GetItem(entry["id"].As<string>());
-            if (item == null)
-            {
-                GD.PushError($"ItemRegistry: unknown item id '{entry["id"]}'");
-                inventory.Slots[i] = new InventorySlot();
-                continue;
-            }
-
-            inventory.Slots[i] = new InventorySlot
-            {
-                Item     = item,
-                Quantity = entry["qty"].As<int>(),
-            };
-        }
-        inventory.EmitSignal(Inventory.SignalName.InventoryChanged);
-    }
-}
-```
 
 ---
-

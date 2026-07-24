@@ -33,15 +33,7 @@ func _ready() -> void:
     $BottomBar/InventoryButton.custom_minimum_size = Vector2(64.0, 64.0)
 ```
 
-**C#:**
 
-```csharp
-public override void _Ready()
-{
-    GetNode<Label>("TopBar/HealthLabel").SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-    GetNode<Button>("BottomBar/InventoryButton").CustomMinimumSize = new Vector2(64f, 64f);
-}
-```
 
 ### Detecting Resolution Changes
 
@@ -65,26 +57,7 @@ func _relayout(size: Vector2) -> void:
         $SplitContainer.vertical = true    # stacked layout
 ```
 
-**C#:**
 
-```csharp
-public override void _Ready()
-{
-    GetViewport().SizeChanged += OnViewportSizeChanged;
-}
-
-private void OnViewportSizeChanged()
-{
-    Vector2 size = GetViewport().GetVisibleRect().Size;
-    Relayout(size);
-}
-
-private void Relayout(Vector2 size)
-{
-    var split = GetNode<SplitContainer>("SplitContainer");
-    split.Vertical = size.X < 1280f;
-}
-```
 
 ### Useful size_flags Values
 
@@ -98,4 +71,3 @@ private void Relayout(Vector2 size)
 | `SIZE_SHRINK_END` | Align to end; take only minimum size |
 
 ---
-

@@ -1,6 +1,6 @@
 # Camera Zones / Rooms
 
-Reference for `skills/camera-system/SKILL.md` — Area2D-based room cameras with limit tweens, GDScript + C#.
+Reference for `skills/camera-system/SKILL.md` — Area2D-based room cameras with limit tweens in GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -50,44 +50,6 @@ func _on_body_entered(body: Node2D) -> void:
     tween.tween_property(cam, "limit_bottom", limit_bottom, transition_time)
 ```
 
-### C#
-
-```csharp
-// CameraZone.cs — attach to an Area2D
-using Godot;
-
-public partial class CameraZone : Area2D
-{
-    [Export] public int LimitLeft   { get; set; } = 0;
-    [Export] public int LimitRight  { get; set; } = 320;
-    [Export] public int LimitTop    { get; set; } = 0;
-    [Export] public int LimitBottom { get; set; } = 180;
-    [Export] public float TransitionTime { get; set; } = 0.4f;
-
-    public override void _Ready()
-    {
-        BodyEntered += OnBodyEntered;
-    }
-
-    private void OnBodyEntered(Node2D body)
-    {
-        if (!body.IsInGroup("player")) return;
-        var cam = body.GetViewport().GetCamera2D();
-        if (cam == null) return;
-
-        var tween = CreateTween();
-        tween.SetParallel(true);
-        tween.SetEase(Tween.EaseType.InOut);
-        tween.SetTrans(Tween.TransitionType.Sine);
-
-        tween.TweenProperty(cam, "limit_left",   LimitLeft,   TransitionTime);
-        tween.TweenProperty(cam, "limit_right",  LimitRight,  TransitionTime);
-        tween.TweenProperty(cam, "limit_top",    LimitTop,    TransitionTime);
-        tween.TweenProperty(cam, "limit_bottom", LimitBottom, TransitionTime);
-    }
-}
-```
-
 **Scene setup:**
 
 ```
@@ -104,4 +66,3 @@ World
 **Tip:** Size each `CollisionShape2D` to the visible room rectangle. For pixel-art games, align shapes to tile boundaries so there is no overlap between adjacent rooms. If rooms share a wall, a thin 1-pixel gap between shapes avoids double-triggers.
 
 ---
-

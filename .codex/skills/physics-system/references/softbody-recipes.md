@@ -53,23 +53,6 @@ func apply_wind(wind_direction: Vector3, wind_strength: float) -> void:
     apply_central_force(wind_direction * wind_strength)
 ```
 
-```csharp
-public partial class ClothBody : SoftBody3D
-{
-    // Apply a one-time impulse (e.g. explosion knockback).
-    public void ExplodeOutward(float forceMagnitude, Vector3 sourcePosition)
-    {
-        Vector3 direction = (GlobalPosition - sourcePosition).Normalized();
-        ApplyCentralImpulse(direction * forceMagnitude);
-    }
-
-    // Apply a continuous force while called from _PhysicsProcess (e.g. wind).
-    public void ApplyWind(Vector3 windDirection, float windStrength)
-    {
-        ApplyCentralForce(windDirection * windStrength);
-    }
-}
-```
 
 | Method | Effect |
 |--------|--------|
