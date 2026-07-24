@@ -4,7 +4,7 @@ km_type: domain
 domain: product
 status: active
 owner: product-design
-last_verified: 2026-07-23
+last_verified: 2026-07-24
 source_of_truth:
   - .omx/specs/deep-interview-fantasy-idle-expedition.md
   - .omx/plans/prd-fantasy-idle-expedition.md
@@ -19,19 +19,22 @@ tags:
   - domain:product
   - decision:core-loop
 related:
+  - domain.factory-cultivation
   - domain.hero-formation
   - domain.equipment-economy
   - domain.camp-quests
   - reference.product-boundaries
   - reference.skibidi-toilet-idle-siege-gdd
   - reference.skibidi-toilet-lore-research
+  - reference.earth-skibidi-act1-campaign
+  - reference.earth-war-character-roster
 ---
 
 # 产品领域
 
 ## 目标
 
-做一款手机端单机休闲放置游戏，让玩家通过随机英雄培养、队伍编成和挂机刷宝，获得开罗式目标感、正反馈和“这支队伍是我养出来的”体验。
+做一款手机端 Web-first 3D 单机休闲放置游戏，让玩家通过马桶人工厂生产、永久升星、六人队伍编成和自动攻城，获得清晰目标、正反馈和“这支军团是我造出来的”体验。
 
 ## 什么时候读
 
@@ -39,10 +42,12 @@ related:
 
 ## 职责
 
-- 核心循环：出征 -> 自动战斗/挂机产出 -> 任务提示 -> 招募/培养 -> 编队 -> 装备 -> 薄营地 -> 跨过卡点。
-- 系统优先级：英雄/编队 P0，装备 P1，营地 P2，任务是横向软引导。
-- 30 分钟目标：8 名英雄、理解 2 个差异维度、2 次主动编队调整、1 件稀有装备、一次失败后成长再胜。
-- 首版内容预算：4 职业、4 资质、8 特质、4 槽、5 关、3 设施、5 大+16 小任务。
+- 当前 v2 核心循环：营地 -> 工厂生产 -> 领取永久马桶人 -> 同原型同星 3 合 1 培育 -> 六人 2×3 编队 -> 三阶段自动攻城 -> 结算材料 -> 回到工厂。
+- 系统优先级：工厂/培育/编队/攻城 P0，装备 P1，营地 P2，任务是横向软引导。
+- 当前可玩切片目标：8 个初始马桶人、三材料八配方、最多 3 个生产订单、六人出征、一次失败后通过生产或升星再战。
+- 后续长期目标仍包含装备、任务、设施扩展、离线收益和手机浏览器真机证据。
+- 长期采用双战役结构：地球 Skibidi 主线经历扩张、联盟反攻摧毁旧工厂、移动工厂重建和 Astro 入侵；通关后另行解锁不覆盖地球养成的 Astro 征服战役。
+- 第一幕《地球战争》按五章二十五关规划，依次引入 Cameramen、Speakermen、TV Men、三族联合防线和中央基地；每章必须用一种新敌方机制推动一个工厂解锁或培育选择。
 
 ## 不是本层职责
 
@@ -50,15 +55,17 @@ related:
 
 ## 不变量
 
-任务不得硬锁后续关卡；随机英雄不得退化为固定卡；装备不得取代英雄本身；营地不得膨胀为复杂经营。
+任务不得硬锁后续关卡；生产和合成不得绕过命令事务；装备不得取代英雄本身；营地不得膨胀为复杂经营。
 
 ## 入口
 
 [KM:reference.product-boundaries](../references/constraints/product-boundaries.md)、[KM:reference.first-30m-contract](../references/constraints/first-30m-contract.md)。
 
+第一幕完整内容入口：[KM:reference.earth-skibidi-act1-campaign](../references/product-design/earth-skibidi-act1-campaign.md)；角色名册入口：[KM:reference.earth-war-character-roster](../references/product-design/earth-war-character-roster.md)。
+
 ## 分支级候选方向
 
-`codex/toilet-man-3d-idle` 上的公开免费 Web 同人游戏方向仍处于策划草案状态，不替换本节点记录的当前奇幻产品事实。已确认的工厂生产、永久合成、六人自走棋攻城和主动技能契约见 [KM:reference.skibidi-toilet-idle-siege-gdd](../references/product-design/skibidi-toilet-idle-siege-gdd.md)；原作世界观、故事阶段、阵营关系、角色与形态边界见 [KM:reference.skibidi-toilet-lore-research](../references/product-design/skibidi-toilet-lore-research.md)。
+`codex/toilet-man-3d-idle` 的公开免费 Web 同人方向已成为当前 `project-a` v2 可玩切片的产品方向。它使用原作世界观、阵营和标志性角色讲述原创平行战争线，不逐集复述原作。主要场景是手机浏览器横屏 3D，核心展示是军团沿城市大道线性推进并摧毁联盟基地；战斗采用低操作自动推进，自动技能默认关闭，关闭时玩家只需点击头像手动施法，不手动移动、选目标或控制镜头。首章采用阴沉白天逐步转入黄昏战火的风格化写实战争质感，最终 Boss 是与基地融为一体、持续轰炸全场的联盟核心巨炮。长期主线始终培养地球 Skibidi：联盟反攻可以摧毁旧工厂并推动移动工厂重建，但不得清空永久角色、星级、关键蓝图和收藏；Astro 入侵后仍沿用地球军团，通关后才解锁独立 Astro 征服战役。完整契约见 [KM:reference.skibidi-toilet-idle-siege-gdd](../references/product-design/skibidi-toilet-idle-siege-gdd.md)；当前实现边界见 [KM:reference.implementation-status](../references/constraints/implementation-status.md)。
 
 ## 验证
 

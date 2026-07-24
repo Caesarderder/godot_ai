@@ -4,19 +4,20 @@ km_type: reference
 domain: product
 status: active
 owner: product-design
-last_verified: 2026-07-17
+last_verified: 2026-07-24
 source_of_truth:
-  - .omx/plans/prd-fantasy-idle-expedition.md
-  - .omx/plans/test-spec-fantasy-idle-expedition.md
+  - docs/references/product-design/skibidi-toilet-idle-siege-gdd.md
+  - docs/domains/product.md
 validated_by:
-  - ralplan-consensus
+  - user-correction-review-2026-07-24
 tags:
   - reference:first-30m-contract
   - quality:acceptance-gate
 related:
   - domain.product
+  - domain.factory-cultivation
   - domain.hero-formation
-  - domain.equipment-economy
+  - domain.battle-progression
   - reference.verification-matrix
 ---
 
@@ -24,39 +25,46 @@ related:
 
 ## 目标
 
-固定首个可玩切片的内容、经济与体验证据，避免“系统都做了但没有成长爽感”。
+固定“马桶人工厂攻城”首个可玩切片的体验证据：玩家必须理解生产选择，经历一次可信失败，通过培育和布阵形成可观察的战力变化，并在同一目标上再战获胜。
+
+旧版“四名初始英雄 → 随机招募 → 装备保底 → 三设施”的路线属于历史 fantasy-idle 方案，不再是当前 P0 验收标准。
 
 ## 事实
 
 ### 玩家旅程
 
-- 0-3 分钟：4 个初始英雄，查看职业/资质/特质。
-- 3-7 分钟：两次招募，第一次主动换人/换位。
-- 7-12 分钟：达到 8 人；1-3 首败后训练/调队并通过。
-- 12-18 分钟：获得保底稀有装备，理解词条并强化。
-- 18-23 分钟：1-4 第二次主动编队调整。
-- 23-28 分钟：看到三设施并升级一次，理解营地只是效率辅助。
-- 28-30 分钟：1-5 Boss 首败后组合培养/装备/编队获胜。
+- 0-2 分钟：标题进入基地，直接看到四个车间分区；普通车间可用，其余车间以锁定预览展示。玩家选择一个 5 秒教学配方并领取首名出厂英雄。
+- 2-5 分钟：查看八种马桶人原型的职责、主动技能与蓝图条件，理解“指定配方生产永久英雄”，而非随机招募。
+- 5-8 分钟：以默认六人编队、自动技能默认关闭挑战同一个联盟基地；战斗明确展示普通守军、精英单位、设施和核心，首战确定性失败或超时并说明原因。
+- 8-14 分钟：回到工厂完成指定生产，执行一次同原型同星级三合一；若有训练书，可训练一名英雄。升至二星后，技能必须产生机制变化，不只是数值线性增长。
+- 14-18 分钟：调整六人 2×3 编队，并按英雄设置自动技能偏好；该偏好在后续战斗及重新载入后继续生效。
+- 18-22 分钟：重试同一关卡，依靠已验收的生产、合成、训练或换阵路径确定性获胜。
+- 22-30 分钟：领取胜利材料，看到至少一个新蓝图解锁或解锁进度，作出第二次生产决策，并预览下一场精英遭遇。
 
-### 资源总量
+### 必须证明的玩法合同
 
-30 分钟规划总来源：金币 1930、券 4、书 11、石 9；推荐消耗金币 960-1080、券 4、书 6-9、石 3-6。具体 fixture 是规划路径，尚未创建。
+- 八种原型各有唯一、可由配方追溯的战斗职责和 canonical 主动技能；战斗不得再按四个职业把它们折叠成四套技能。
+- 二星和三星至少各带来一次可观察的技能质变，例如新增目标、范围、控制、护盾联动或额外触发；单纯增加百分比不算质变。
+- 同一固定 seed、同一内容版本下：初始默认路径失败；执行指定成长步骤后重试同一关卡获胜。
+- 战斗体验依次包含单位交战、设施突破和核心攻坚，联盟普通守军与精英单位参与结算而非仅作背景模型。
+- 自动技能默认关闭；玩家修改后跨战斗、跨存档读取保持，直到再次主动修改。
+- 离线生产使用绝对时间：订单在退出后到期，重新进入可领取且只能领取一次。
+- Web 手机横屏在 844×390 视口下可用触控或指针完成生产、培育、编队、战斗与结算；Android Chrome 和 iOS Safari 真机仍是独立发布门禁。
 
-### 战斗分布
+### 数值与证据纪律
 
-同一预注册 1000-seed manifest：1-1 95-100%；1-2 80-95%；1-3 before 15-30% 且单一编队干预 +30pp；1-4 before 35-50%/after 75-90%；1-5 before 10-25% 且单一稀有装备干预 +30pp。
-
-### 真人门槛
-
-P01-P05 五人预注册；10 个 checkpoint 中关键项各至少 4/5，总计至少 45/50。测试后不得换 seed 粉饰结果。
+- 首败与再胜使用同一个固定 seed、关卡定义和内容 hash，不得换 seed 粉饰结果。
+- 验收脚本必须记录首战结果、成长命令、战力/技能变化、再战结果、奖励和关卡完成状态。
+- 生产、领取、合成、训练、蓝图解锁和战斗结算均遵守 claim-once / exact-once；失败重试不能复制资源。
+- 具体成本、时长和伤害系数可调，但不得破坏上述可观察路径。
 
 ## 入口或路径
 
-[CODE:approved-prd](../../../.omx/plans/prd-fantasy-idle-expedition.md)、[CODE:test-spec](../../../.omx/plans/test-spec-fantasy-idle-expedition.md)。
+[KM:reference.skibidi-toilet-idle-siege-gdd](../product-design/skibidi-toilet-idle-siege-gdd.md)、[KM:domain.product](../../domains/product.md)。
 
 ## 验证
 
-最终证据必须绑定同一 build/content/fixture/manifest hash。
+Godot headless 元系统测试、战斗测试、完整生命周期测试和 Web 844×390 浏览器 smoke 必须绑定同一提交；目标手机真机结果单独记录。
 
 ## 相关节点
 

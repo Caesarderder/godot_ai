@@ -4,29 +4,36 @@ km_type: reference
 domain: code
 status: draft
 owner: architecture
-last_verified: 2026-07-20
+last_verified: 2026-07-24
 source_of_truth:
   - .omx/plans/prd-fantasy-idle-expedition.md
-  - taptap/README.md
-  - taptap/scripts/main.lua
+  - project-a/project.godot
+  - project-a/scenes/screens/main.tscn
+  - project-a/game/scripts/state/game_state.gd
+  - project-a/game/scripts/commands/command_executor.gd
+  - project-a/game/scripts/domain/factory/factory_service.gd
+  - project-a/game/scripts/domain/battle/battle_session.gd
+  - project-a/game/scripts/presentation_3d/battle_world.gd
+  - project-a/tools/run_meta_tests.gd
+  - project-a/tools/run_battle_tests.gd
 validated_by:
-  - rg --files project-a/game project-a/tests project-a/tools
-  - GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
-  - maker_build_current_directory
+  - rg --files project-a
+  - godot-4.6.3-headless-smoke
+  - godot --headless --path project-a -s tools/run_meta_tests.gd
+  - godot --headless --path project-a -s tools/run_battle_tests.gd
 tags:
   - reference:file-ownership
   - risk:planned-not-implemented
 related:
   - reference.architecture-overview
   - reference.implementation-status
-  - decision.project-a-game-root
-  - decision.taptap-maker-game-root
+  - decision.project-a-web-3d-root
   - map.domains
 ---
 
 # 文件归属索引
 
-> `taptap/` 是当前 Maker 实现根；`project-a/` 保留为 Godot 历史 M0。下表继续区分已验证入口与未来落点。
+> `project-a/` 是当前 Godot Web-first 3D 实现根。v2 Meta、工厂、培育、六人编队和三阶段战斗内核已落到 `game/scripts/**`，其余不存在路径仍是 planned ownership。
 
 ## 目标
 
@@ -36,19 +43,30 @@ related:
 
 | 路径 | Owner | 用途 | 当前证据 |
 |---|---|---|---|
-| `taptap/scripts/main.lua` | platform | Maker 生命周期、Update 主循环 | present / remote build |
-| `taptap/scripts/config/GameConfig.lua` | content | 当前角色、关卡、经济与素材配置 | present / remote build |
-| `taptap/scripts/game/GameState.lua` | domain-kernel | 当前战斗、成长、存档和离线结算 | present / remote build |
-| `taptap/scripts/game/BattleView2D.lua` | presentation | 纯 2D 战斗表现与动画 | present / remote build |
-| `taptap/scripts/ui/GameUI.lua` | presentation | 手机 HUD、培养和锻造 UI | present / remote build |
-| `taptap/assets/**` | content | 字体、角色、敌人、背景、视频素材 | present / Maker-managed assets |
-| `taptap/scripts/domain/recruitment/**` | hero-formation | 随机英雄生成 | absent / PRD §10 |
-| `taptap/scripts/domain/formation/**` | hero-formation | 四槽编队 | absent / PRD §10 |
-| `taptap/scripts/domain/equipment/**` | equipment-economy | 装备实例、词条和强化 | absent / PRD §10 |
-| `taptap/scripts/domain/quests/**`、`camp/**` | camp-quests | 任务软引导和三设施薄营地 | absent / PRD §10 |
-| `taptap/tests/**`、`tools/**` | independent-verifier | 内容、seed、经济和长期模拟 | absent / Test Spec §3 |
-| `project-a/project.godot`、`game/**`、`tests/**` | historical-baseline | Godot 4.7 M0、Safe Area、Autoload、GUT | present / historical M0 verifier |
-| `project-a/addons/godot_ai/**` | tooling | 既存智能体 EditorPlugin、runtime helper | present / protected |
+| `project-a/project.godot` | platform | 引擎、启动场景、renderer、viewport | present / Compatibility |
+| `project-a/scenes/screens/main.tscn` | presentation | App Shell 组合根：WorldHost + CanvasLayer | present / headless smoke |
+| `project-a/scripts/main.gd` | application-shell | 标题、营地、工厂、培育、六人编队、出征、战斗 HUD、结算生命周期 | present / 1920×1080 + 844×390 capture |
+| `project-a/export_presets.cfg` | release | 单线程 Web release 导出配置；PWA 尚未配置 | implemented / M0 baseline |
+| `project-a/game/resources/definitions/**` | content | 只读职业、技能、装备、关卡等 `.tres` | absent / PRD §10 |
+| `project-a/game/scripts/state/**` | domain-kernel | 可序列化 GameState、英雄、六槽编队、经济与工厂状态 | present / Meta headless tests |
+| `project-a/game/scripts/commands/**` | application | CommandExecutor、fingerprint、幂等、revision 与事务编排 | present / Meta headless tests |
+| `project-a/game/scripts/domain/recruitment/**` | domain-kernel | 固定 seed 英雄生成 | present / Meta headless tests |
+| `project-a/game/scripts/domain/progression/**` | domain-kernel | L1-L5 培养与派生属性 | present / Meta headless tests |
+| `project-a/game/scripts/domain/factory/**` | domain-kernel | 三材料八配方、生产队列、领取生成英雄、同原型同星 3 合 1 | present / Meta headless tests |
+| `project-a/game/scripts/domain/formation/**` | domain-kernel | 固定六槽 2×3 编队校验 | present / Meta headless tests |
+| `project-a/game/scripts/domain/battle/**` | domain-kernel | 5Hz 三阶段攻城、六人推进、技能、核心巨炮与胜负 | present / battle headless tests |
+| `project-a/game/scripts/domain/{equipment,quests,idle}/**` | domain-kernel | 装备、任务、离线规则 | absent / M3-M4 |
+| `project-a/game/scripts/persistence/**` | persistence | 严格 JSON schema、candidate writer、主档/备份恢复 | present / Meta headless tests |
+| `project-a/game/scripts/autoloads/{game,save_manager}.gd` | application | 启动加载、新档持久化与公开执行入口 | present / bootstrap tests |
+| `project-a/game/scripts/platform/web/**` | platform | visibility、持久性探测、音频解锁、Web bridge | absent / M0-M1 |
+| `project-a/game/scripts/presentation_3d/**` | presentation | 程序化马桶人、结构目标和战斗 snapshot/event 的 3D 投影 | present / runtime smoke + capture |
+| `project-a/game/scripts/ui/**` | presentation | 可复用独立 UI 场景/组件 | absent；当前 v2 UI 在 App Shell |
+| `project-a/game/scenes/**` | presentation | app、battle_3d、screens、dialogs、ui | absent / M0-M4 |
+| `project-a/tools/run_meta_tests.gd` | independent-verifier | Meta、命令、存档和 bootstrap headless tests | present / passing |
+| `project-a/tools/run_battle_tests.gd` | independent-verifier | 六人三阶段攻城、技能、核心炮、结构事件、确定性、超时与 result-once | present / passing |
+| `project-a/tools/capture_*.gd` | visual-verifier | 标题与战斗画面的确定性截图入口 | present / desktop GL Compatibility |
+| `project-a/tests/**`、其余 `project-a/tools/**` | independent-verifier | GUT、内容校验、seed、经济、Web smoke | absent / Test Spec §3 |
+| `taptap/**` | historical-reference | 旧 UrhoX Lua 2D 可玩原型 | present / 非当前交付 |
 
 ## 入口或路径
 
@@ -56,7 +74,7 @@ related:
 
 ## 验证
 
-每个 milestone 用 `rg --files taptap/scripts taptap/assets` 和 Maker MCP 状态/构建确认；领域路径存在后将相关条目从 `absent` 改为实际入口。Godot 历史回归仍使用 `project-a/tools/verify_m0.sh`。
+每个 milestone 用 `rg --files project-a`、Godot headless tests、Web release export 和浏览器 smoke 确认；路径存在并经实际验证后，才把 `absent` 改为真实入口。
 
 ## 相关节点
 

@@ -10,44 +10,24 @@ config_version=5
 
 [application]
 
-config/name="奇幻放置远征队"
-config/description="手机端奇幻放置刷宝游戏"
-config/version="0.0.1-m0"
-run/main_scene="res://game/scenes/app/main.tscn"
-config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.svg"
+config/name="Project A"
+run/main_scene="res://scenes/screens/main.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [autoload]
 
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
-SystemClock="*res://game/scripts/autoloads/system_clock.gd"
 SaveManager="*res://game/scripts/autoloads/save_manager.gd"
-ContentCatalog="*res://game/scripts/autoloads/content_catalog.gd"
-EventBus="*res://game/scripts/autoloads/event_bus.gd"
 Game="*res://game/scripts/autoloads/game.gd"
-AppLifecycle="*res://game/scripts/autoloads/app_lifecycle.gd"
 
 [display]
 
-window/size/viewport_width=1080
-window/size/viewport_height=1920
-window/size/window_width_override=540
-window/size/window_height_override=960
-window/handheld/orientation=1
+window/size/viewport_width=1920
+window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/gut/plugin.cfg")
-
-[physics]
-
-3d/physics_engine="Jolt Physics"
+window/handheld/orientation=6
 
 [rendering]
 
-rendering_device/driver.windows="d3d12"
-renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
-textures/default_filters/use_nearest_mipmap_filter=false
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

@@ -4,11 +4,13 @@ km_type: memory
 domain: agent-memory
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-24
 source_of_truth:
   - docs/workflows/knowledge-map-maintenance.md
+  - docs/references/constraints/implementation-status.md
 validated_by:
   - python3 tools/docs_lint.py
+  - godot --headless --path project-a -s tools/run_meta_tests.gd
 tags:
   - memory:index
 related:
@@ -24,8 +26,10 @@ related:
 
 ## 已验证经验
 
-- 用户已把当前实现根迁移到 `taptap/` TapTap Maker 2D 工程；玩法进入 `taptap/scripts/**`，素材进入 `taptap/assets/**`，提交/构建只走 Maker MCP。
-- `project-a/` 保留为 Godot 历史 M0 和工具插件基线，不再承接默认玩法开发；规划路径、命令和测试结果仍不能提前宣称已实现。
+- 用户已明确当前实现根为 `project-a/`，使用 Godot 4.6.3、3D 表现、Web-first 发布并主要在手机浏览器运行。
+- `taptap/` 仅保留为历史原型；当前 Godot 工程已使用 GL Compatibility，并已实现和验证 v2 Meta、工厂/培育、六人编队和三阶段战斗内核。
+- Compatibility 配置不能替代 Web 交付证据；在 export preset、PWA、浏览器持久性探测、音频解锁、WebLifecycle 和真机 smoke 落地前，不得宣称 Web M0 已通过。
+- `inventory/camp/quests/pity/stage_progress` 的可持久化字段目前只是扩展骨架，不得据此宣称完整装备、营地、任务、掉落、离线或长期关卡平衡已实现。
 
 ## 触发条件
 

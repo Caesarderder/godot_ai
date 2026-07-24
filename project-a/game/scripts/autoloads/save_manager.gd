@@ -1,10 +1,13 @@
 extends Node
 
-signal save_requested(reason: StringName)
+const SaveManagerCore := preload("res://game/scripts/persistence/save_manager.gd")
 
-const SAVE_PATH := "user://savegame.json"
-const BACKUP_PATH := "user://savegame.backup.json"
+var core: RefCounted = SaveManagerCore.new()
 
 
-func request_save(reason: StringName) -> void:
-	save_requested.emit(reason)
+func save_state(state: RefCounted) -> bool:
+	return core.save_state(state)
+
+
+func load_state() -> Dictionary:
+	return core.load_state()

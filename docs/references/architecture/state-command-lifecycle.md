@@ -4,13 +4,24 @@ km_type: reference
 domain: architecture
 status: draft
 owner: platform
-last_verified: 2026-07-17
+last_verified: 2026-07-24
 source_of_truth:
   - .omx/plans/prd-fantasy-idle-expedition.md
   - .omx/plans/test-spec-fantasy-idle-expedition.md
+  - project-a/game/scripts/state/game_state.gd
+  - project-a/game/scripts/state/factory_state.gd
+  - project-a/game/scripts/commands/command_executor.gd
+  - project-a/game/scripts/commands/command_fingerprint.gd
+  - project-a/game/scripts/domain/factory/factory_service.gd
+  - project-a/game/scripts/domain/battle/battle_session.gd
+  - project-a/game/scripts/persistence/save_manager.gd
+  - project-a/game/scripts/autoloads/game.gd
+  - project-a/tools/run_meta_tests.gd
+  - project-a/tools/run_battle_tests.gd
 validated_by:
-  - architect-plan-approval
-  - critic-plan-approval
+  - godot --headless --path project-a -s tools/run_meta_tests.gd
+  - godot --headless --path project-a -s tools/run_battle_tests.gd
+  - independent-code-review-2026-07-23
 tags:
   - reference:state-command-lifecycle
   - risk:exact-once
@@ -22,7 +33,7 @@ related:
 
 # 状态、命令与生命周期契约
 
-> 以下是执行契约，不代表相关脚本已经存在。
+> 当前已实现本页的 GameState schema 3、公开耐久命令、fingerprint、幂等、revision、先存后换、严格 JSON、v1->v2->v3 迁移、主备恢复和 bootstrap gate；战斗已实现临时三阶段 BattleSession、BattleResult 与一次性战斗结算。WebLifecycle、离线结算、装备和任务链仍是目标契约，因此节点保持 `draft`。
 
 ## 目标
 
@@ -32,18 +43,19 @@ related:
 
 ### 状态边界
 
-- `GameState`：roster、inventory、formation、economy、camp、quest、pity、stage、attempt、receipt 和四时间字段。
-- `BattleSession/BattleState`：当前战斗的 seed、tick、单位状态、局部 RNG、表现队列；不进入存档。
-- `BattleResult`：战斗完成后的不可变结算输入；手动退出无奖励。
+- `GameState`：已实现 schema 3、content version `factory-siege-v3`、roster、inventory、六槽 formation、economy、factory、camp、quests、pity、stage_progress、attempt_counters、receipt ledgers 和四时间字段；未完成系统以严格可持久化骨架存在。
+- `FactoryState`：已实现三材料、蓝图表、最多三项生产队列、生产序列和单调英雄序列。
+- `BattleSession/BattleState`：已用纯 GDScript 5Hz 状态承载 tick、六人单位、七个结构目标、阶段、技能、炮击预警和表现事件；它不进入存档。跨帧率 digest 仍待实现。
+- `BattleResult`：已作为战斗完成后的结算输入，并由 `settle_battle` 通过稳定 `battle_id` business key 一次性提交；手动退出无奖励。
 
 ### 命令分类
 
-- `DURABLE_VALUE`：招募、训练、强化、设施升级、领奖、战斗/离线结算、attempt reservation。
-- `INTERNAL_DURABLE`：pause anchor、foreground heartbeat、resume/offline settlement。
-- `REVERSIBLE_META`：编队、装备、筛选、重命名，可 debounce。
+- `DURABLE_VALUE`：当前已覆盖新英雄、训练、受控资源变更、战斗结算、开始生产、领取生产和 3 合 1 合成；强化、设施升级、领奖、离线结算与 attempt reservation 待实现。
+- `INTERNAL_DURABLE`：pause anchor、foreground heartbeat、resume/offline settlement 尚未实现。
+- `REVERSIBLE_META`：六槽编队走立即提交；装备、筛选、重命名及 debounce 尚未实现。
 - `EPHEMERAL`：导航、动画、临时 tick，不进入 GameState/receipt。
 
-所有耐久操作遵循 candidate clone -> reducer/QuestReducer -> receipt -> durable save -> memory swap -> success。调用方不得降低 durability 或绕过 executor。
+当前所有已实现命令遵循 candidate clone -> reducer -> invariants -> receipt -> durable save -> memory swap -> success；未提供保存回调、保存失败或 revision 过期时不会交换 live state。QuestReducer 尚未实现。调用方不得降低 durability 或绕过 executor。
 
 ### 时间字段
 
@@ -54,15 +66,15 @@ related:
 
 ### Receipt
 
-命令 ID 绑定 canonical fingerprint；同 ID 不同 payload/business key 必须 hard error。价值 receipt 保留整个存档期，任务 causal receipt 保留到所有消费者 terminal+claimed。
+命令 ID 绑定 canonical fingerprint；同 ID 同 fingerprint 返回原 receipt，同 ID 或 business key 复用但 fingerprint 不同会 hard error。canonical payload 只接受受控 JSON 值，公开命令校验精确字段与类型。价值 receipt 已写入存档；任务 causal receipt 的 terminal+claimed 生命周期尚未实现。
 
 ## 入口或路径
 
-计划实现路径见 [KM:reference.file-ownership](../indexes/file-ownership.md)。
+已实现路径见 [KM:reference.file-ownership](../indexes/file-ownership.md)，核心入口为 [CODE:command-executor](../../../project-a/game/scripts/commands/command_executor.gd)、[CODE:save-manager](../../../project-a/game/scripts/persistence/save_manager.gd) 和 [CODE:game-bootstrap](../../../project-a/game/scripts/autoloads/game.gd)。
 
 ## 验证
 
-classification/fingerprint golden、600 replay、crash matrix、20m+5m、重复 resume、rollback/48h jump。
+已通过 `godot --headless --path project-a -s tools/run_meta_tests.gd` 验证 fingerprint、幂等、business key 冲突、revision、保存失败、严格 schema、v1->v2 迁移、工厂/合成事务、主备恢复与 bootstrap gate。600 replay、浏览器 crash matrix、20m+5m、重复 resume、rollback/48h jump 尚未验证。
 
 ## 相关节点
 

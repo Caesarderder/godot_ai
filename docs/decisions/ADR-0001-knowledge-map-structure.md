@@ -4,7 +4,7 @@ km_type: decision
 domain: agent-memory
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-23
 source_of_truth:
   - docs/index.md
   - tools/docs_lint.py
@@ -31,7 +31,7 @@ Accepted，2026-07-17。
 
 ## 原因
 
-本决策建立于 2026-07-17，当时仓库只有批准规划和占位 README；此后实现根变化不影响知识地图分层。人和智能体仍需共享事实优先级，并明确区分规划与实现；当前实现根以 ADR-0004 为准。
+本决策建立于 2026-07-17，当时仓库只有批准规划和占位 README；此后实现根变化不影响知识地图分层。人和智能体仍需共享事实优先级，并明确区分规划与实现；当前实现根以最新的 ADR-0005 为准。
 
 ## 影响
 

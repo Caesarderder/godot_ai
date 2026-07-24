@@ -4,20 +4,26 @@ km_type: reference
 domain: code
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-24
 source_of_truth:
   - README.md
-  - .omx/plans/prd-fantasy-idle-expedition.md
   - project-a/project.godot
-  - project-a/tools/verify_m0.sh
-  - taptap/scripts/main.lua
-  - taptap/scripts/game/GameState.lua
-  - taptap/scripts/ui/GameUI.lua
+  - project-a/scenes/screens/main.tscn
+  - project-a/game/scripts/state/game_state.gd
+  - project-a/game/scripts/state/factory_state.gd
+  - project-a/game/scripts/commands/command_executor.gd
+  - project-a/game/scripts/domain/factory/factory_catalog.gd
+  - project-a/game/scripts/domain/factory/factory_service.gd
+  - project-a/game/scripts/domain/battle/battle_session.gd
+  - project-a/game/scripts/presentation_3d/battle_world.gd
+  - project-a/game/scripts/persistence/save_manager.gd
+  - project-a/tools/run_meta_tests.gd
+  - project-a/tools/run_battle_tests.gd
 validated_by:
-  - GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh
-  - protected-addon-hash-audit
-  - maker_status_lite
-  - maker_build_current_directory
+  - godot-4.6.3-headless-smoke
+  - godot --headless --path project-a -s tools/run_meta_tests.gd
+  - godot --headless --path project-a -s tools/run_battle_tests.gd
+  - visual-capture-1920x1080-and-844x390
 tags:
   - reference:implementation-status
   - risk:planned-not-implemented
@@ -34,20 +40,24 @@ related:
 
 ## 事实
 
-- 当前开发根是 `taptap/` 绑定 Maker 工程，使用 UrhoX Lua、`urhox-libs/UI` 和纯 2D 表现；首次迁移提交 `cd5fa47` 已通过 TapTap MCP 远端构建与预览刷新。
-- 当前原型已实现 30 关自动战斗、三名固定队员培养、三项锻造升级、主动技能、本地/云存档和最多 8 小时离线收益；这些是迁移基线，不等于批准规划中的随机英雄、四槽编队和随机装备已经完成。
-- 尚不存在：随机英雄运行实例、四槽编队、装备实例/随机词条、任务 reducer、三设施薄营地、1000-seed 经济/战斗门禁和 Android 设备证据。
-- `project-a/` 的 Godot 4.7.1 M0 仍完整保留并通过 GUT 10/10、34 asserts 和三条 headless 启动链，但它是历史基线，不再是默认玩法落点。
-- `project-a/addons/godot_ai/**` 是现有智能体工具插件并含用户工作树改动；它属于目标工程的工具层，不是游戏领域代码，默认不得被游戏任务修改/格式化/清理。
-- 已落地的 TapTap 与 Godot 历史路径可使用 `CODE:*` 标签；未来领域路径仍是规划落点，禁止在存在前标记为代码事实。
+- 当前开发根是 `project-a/`，使用 Godot 4.6.3、GDScript 和 3D 表现，目标为 Web-first、手机浏览器优先。
+- 项目已切换到 Compatibility renderer；主场景现为长期存在的 App Shell，承载标题、营地、工厂、培育、六人编队、出征确认、战斗 HUD、技能按钮、自动技能开关与结算 UI。
+- v3 Meta 领域内核已落地：可序列化 `GameState` schema 3、固定 seed 初始 8 英雄、四职业/八原型/四资质/特质、星级、L1-L5 培养、六槽编队、经济资源、工厂材料、蓝图锁定/解锁、生产队列、自动技能偏好、命令 fingerprint/幂等/revision/先存后换、严格 JSON schema、v1/v2->v3 迁移、主档/备份恢复和启动加载。
+- 新档基线为 8 名英雄、有效六槽编队、250 金币、2 本经验书、120 瓷、100 零件和 80 污泥；英雄、编队、培养、工厂、合成、命令与存档契约由 `project-a/tools/run_meta_tests.gd` headless 验证。
+- v3 可玩切片已落地：标题进入、营地、四车间工厂、八配方生产/锁定预览、订单倒计时与离线到期领取、同原型同星 3 合 1、训练 UI、六人编队、三阶段出征确认、六名程序化低模马桶人推进并摧毁联盟基地、核心巨炮、技能 HUD、胜负结算、重试和返回营地。
+- 战斗领域以 5Hz 固定 tick 运行，自动推进、联盟普通守军/精英、结构目标、八原型 canonical 技能、星级技能质变、核心炮预警/命中、阶段切换、超时和结果只依赖纯 GDScript `BattleSession`；`BattleWorld` 与 `ToiletUnitView` 只投影快照和事件。`settle_battle` 以 `battle_id` business key 幂等写入金币、经验书、三材料奖励、首败/超时反攻蓝图、失败/超时残骸、关卡完成和尝试次数。
+- 当前 UI 使用容器、全屏锚点和横屏安全边距，并嵌入 Noto Sans CJK SC 以避免 Web 中文缺字。1920×1080、844×390 Compatibility 截图，以及 844×390 本地 HTTP Web 构建的标题、营地、工厂生产/领取、培育、编队、出征、战斗和失败结算均已人工检查；浏览器控制台无 error/warn。该证据不等于 Chrome Android/Safari iOS 真机通过。
+- `project-a/export_presets.cfg` 已提供单线程 Web release preset，本机已安装 Godot 4.6.3 Web 模板并成功生成 `project-a/build/web/index.html`、`.pck` 与 `.wasm`。生产订单已支持绝对时间离线到期与一次性领取；尚不存在：PWA、浏览器持久性探测、音频解锁、完整装备玩法、任务 reducer、离线战斗收益、Web 真机证据、跨帧率 digest 和 paired 1000 平衡门禁。
+- `taptap/` 的 UrhoX Lua 2D 版本保留为历史可玩原型；它的实现和远端构建证据不能用于宣称当前 Godot Web 版本已完成。
+- 已落地的 `project-a` shell、`game/scripts/{state,commands,domain,persistence,autoloads}/**` 与 `tools/run_meta_tests.gd` 可使用 `CODE:*` 标签；其余规划路径禁止在存在前标记为代码事实。
 
 ## 入口或路径
 
-[CODE:taptap-entry](../../../taptap/scripts/main.lua)、[CODE:taptap-state](../../../taptap/scripts/game/GameState.lua)、[CODE:taptap-ui](../../../taptap/scripts/ui/GameUI.lua)、[CODE:m0-verifier](../../../project-a/tools/verify_m0.sh)、[KM:reference.file-ownership](../indexes/file-ownership.md)。
+[CODE:project-config](../../../project-a/project.godot)、[CODE:main-scene](../../../project-a/scenes/screens/main.tscn)、[CODE:app-shell](../../../project-a/scripts/main.gd)、[CODE:factory-catalog](../../../project-a/game/scripts/domain/factory/factory_catalog.gd)、[CODE:factory-service](../../../project-a/game/scripts/domain/factory/factory_service.gd)、[CODE:battle-session](../../../project-a/game/scripts/domain/battle/battle_session.gd)、[CODE:battle-world](../../../project-a/game/scripts/presentation_3d/battle_world.gd)、[CODE:meta-tests](../../../project-a/tools/run_meta_tests.gd)、[CODE:battle-tests](../../../project-a/tools/run_battle_tests.gd)、[KM:reference.file-ownership](../indexes/file-ownership.md)。
 
 ## 验证
 
-TapTap 开发先读 `maker_status_lite`，本地检查后用 `maker_build_current_directory` 提交并远端构建；首次迁移构建为 100% 成功。Godot 历史基线继续用 `GODOT_BIN=/opt/homebrew/bin/godot project-a/tools/verify_m0.sh` 回归。
+当前已验证 Godot 4.6.3 headless 导入、主场景启动、Compatibility 配置、Meta/战斗/完整生命周期测试、Web release export，以及桌面与本地 HTTP 手机横屏浏览器渲染交互。PWA、Chrome Android/Safari iOS 真机、跨帧率 digest、paired balance、装备、任务和离线门禁必须在对应里程碑落地后重新验证。
 
 ## 相关节点
 

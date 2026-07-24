@@ -4,10 +4,18 @@ km_type: map
 domain: cross-domain
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-24
 source_of_truth:
-  - .omx/plans/prd-fantasy-idle-expedition.md
-  - .omx/plans/test-spec-fantasy-idle-expedition.md
+  - project-a/project.godot
+  - project-a/export_presets.cfg
+  - project-a/scripts/main.gd
+  - project-a/game/scripts/state/game_state.gd
+  - project-a/game/scripts/domain/factory/factory_catalog.gd
+  - project-a/game/scripts/domain/factory/factory_service.gd
+  - project-a/game/scripts/domain/battle/battle_session.gd
+  - project-a/tools/run_meta_tests.gd
+  - project-a/tools/run_battle_tests.gd
+  - project-a/tools/run_lifecycle_tests.gd
 validated_by:
   - python3 tools/docs_lint.py
 tags:
@@ -21,7 +29,7 @@ related:
 
 # 项目知识地图
 
-这是人和智能体共用的中文工作环境。当前开发根已经迁移到 `taptap/` TapTap Maker 2D 工程；该工程已有自动战斗、离线收益、培养、薄锻造所和手机 UI 可玩基线。`project-a/` 的 Godot M0 保留为历史验证基线，随机英雄、四槽编队、随机装备与任务营地仍按后续里程碑推进。
+这是人和智能体共用的中文工作环境。当前开发根是 `project-a/` Godot 4.6.3 3D 工程，目标为 Web-first 并主要在手机浏览器运行。当前已具备 Compatibility App Shell、v2 Meta 领域内核、单线程 Web release 导出，以及营地→工厂→培育→六人编队→三阶段 3D 攻城→结算的可玩切片；PWA、浏览器生命周期、离线结算、装备、任务与 Android/iOS 真机证据仍按后续里程碑推进。`taptap/` 仅作为历史可玩原型和产品参考。
 
 ## 先读顺序
 
@@ -53,4 +61,6 @@ related:
 5. ADR 与 memory。
 6. 叙述性说明和规划草稿。
 
-当前可玩实现以 [CODE:taptap-entry](../taptap/scripts/main.lua)、[CODE:taptap-state](../taptap/scripts/game/GameState.lua) 和 [CODE:taptap-ui](../taptap/scripts/ui/GameUI.lua) 为事实源，提交与构建以 TapTap MCP 返回结果为准。Godot 历史 M0 仍以 [CODE:m0-verifier](../project-a/tools/verify_m0.sh) 为事实源；未落地玩法继续以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md) 和 [CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 为主要证据。
+当前代码事实以 [CODE:project-config](../project-a/project.godot)、[CODE:web-export-preset](../project-a/export_presets.cfg)、[CODE:main-scene](../project-a/scenes/screens/main.tscn)、[CODE:app-shell](../project-a/scripts/main.gd)、[CODE:factory-catalog](../project-a/game/scripts/domain/factory/factory_catalog.gd)、[CODE:factory-service](../project-a/game/scripts/domain/factory/factory_service.gd)、[CODE:battle-session](../project-a/game/scripts/domain/battle/battle_session.gd)、[CODE:meta-tests](../project-a/tools/run_meta_tests.gd)、[CODE:battle-tests](../project-a/tools/run_battle_tests.gd) 和 [CODE:lifecycle-tests](../project-a/tools/run_lifecycle_tests.gd) 为准；它们与实际导出、浏览器证据共同证明 Godot 4.6.3 Compatibility App Shell、单线程 Web release 构建、工厂生产、3 合 1 培育、六人编队和三阶段 5Hz 3D 攻城已存在，但不证明 PWA、Android/iOS 真机或完整长期 GDD 已完成。目标架构见 [KM:reference.architecture-overview](references/architecture/architecture-overview.md)，未落地玩法继续以 [CODE:approved-prd](../.omx/plans/prd-fantasy-idle-expedition.md)、[CODE:test-spec](../.omx/plans/test-spec-fantasy-idle-expedition.md) 和 [KM:reference.skibidi-toilet-idle-siege-gdd](references/product-design/skibidi-toilet-idle-siege-gdd.md) 为主要证据。
+
+策划案中的核心循环、内容、经济与验收指标继续有效；其中旧的 Godot 4.7.1、2D、Mobile renderer、Android-first 平台文字已由 [KM:decision.project-a-web-3d-root](decisions/ADR-0005-project-a-web-3d-root.md) 取代。遇到冲突时，平台和工程根读 ADR-0005，玩法与数值读 PRD/Test Spec。

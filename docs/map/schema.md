@@ -4,7 +4,7 @@ km_type: map
 domain: cross-domain
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-24
 source_of_truth:
   - tools/docs_lint.py
 validated_by:
@@ -35,7 +35,7 @@ related:
 
 通用领域：`product`、`code`、`architecture`、`workflow`、`quality`、`agent-memory`、`cross-domain`。
 
-项目领域：`hero-formation`、`battle-progression`、`equipment-economy`、`camp-quests`、`platform-persistence`。
+项目领域：`factory-cultivation`、`hero-formation`、`battle-progression`、`equipment-economy`、`camp-quests`、`platform-persistence`。
 
 ## 状态规则
 

@@ -24,7 +24,7 @@ related:
 
 ## 状态
 
-Deprecated，2026-07-20。历史决策保留；当前实现根由 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 替代。
+Deprecated。历史 Godot 2D/Mobile 决策保留；当前实现根由 [KM:decision.project-a-web-3d-root](ADR-0005-project-a-web-3d-root.md) 替代。
 
 ## 决策
 

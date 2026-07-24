@@ -44,6 +44,7 @@ DOMAINS = {
     "quality",
     "agent-memory",
     "cross-domain",
+    "factory-cultivation",
     "hero-formation",
     "battle-progression",
     "equipment-economy",

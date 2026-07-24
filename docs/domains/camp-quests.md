@@ -2,14 +2,13 @@
 km_id: domain.camp-quests
 km_type: domain
 domain: camp-quests
-status: active
+status: draft
 owner: gameplay
-last_verified: 2026-07-17
+last_verified: 2026-07-24
 source_of_truth:
-  - .omx/specs/deep-interview-fantasy-idle-expedition.md
-  - .omx/plans/prd-fantasy-idle-expedition.md
+  - docs/references/constraints/product-boundaries.md
 validated_by:
-  - ralplan-consensus
+  - user-correction-review-2026-07-24
 tags:
   - domain:camp-quests
   - decision:p2-system
@@ -24,7 +23,7 @@ related:
 
 ## 目标
 
-用最薄营地包装长期成长，用大小任务提供方向和正反馈，同时保持玩家自由推进。
+记录 P2 候选营地与任务包装。当前基地首页只负责通往工厂、培育、编队和出征，不以旧酒馆/铁匠/训练场设施抢占 P0。
 
 ## 什么时候读
 
@@ -32,18 +31,18 @@ related:
 
 ## 职责
 
-- 酒馆、铁匠、训练场三设施，各 3 级、线性升级、直接服务核心循环。
-- 5 个大任务提供阶段目标，16 个小任务提示当前可执行动作。
-- 任务通过统一 DomainEvent/QuestReducer 推进，不轮询、不散落业务硬编码。
-- 任务完成提供奖励和反馈，但跳过任务仍可进入后续关卡。
+- 当前 P0 只提供工厂、培育、编队和出征四个入口，以及不阻塞操作的教学提示。
+- 酒馆、铁匠、训练场、设施升级、大任务和小任务均为 P2 候选，实施前重新确认其是否强化工厂攻城主题。
+- 若实现任务，必须通过统一 DomainEvent/QuestReducer 推进，不轮询、不散落业务硬编码。
+- 任务只提供软引导和反馈；跳过任务仍可生产、培育和出征。
 
 ## 不是本层职责
 
-不做自由建造、人口模拟、复杂生产链或关卡硬锁。
+不定义工厂车间、生产队列、蓝图或英雄训练；这些属于当前 P0 的独立领域。也不做自由建造、人口模拟或关卡硬锁。
 
 ## 不变量
 
-设施升级和任务领奖属于耐久价值操作；重复事件或命令不得重复进度/奖励。
+若实现设施升级和任务领奖，它们属于耐久价值操作；重复事件或命令不得重复进度/奖励。P2 系统不得成为 P0 失败后成长再胜的必要条件。
 
 ## 入口
 
@@ -51,7 +50,7 @@ related:
 
 ## 验证
 
-跳过任务仍能进关、600 条重放、claim once、设施 source/sink。
+当前仅验证 P0 不依赖任务或旧三设施。进入 P2 后再验证跳过任务仍能进关、重放、claim once 与设施 source/sink。
 
 ## 相关节点
 

@@ -2,14 +2,13 @@
 km_id: domain.equipment-economy
 km_type: domain
 domain: equipment-economy
-status: active
+status: draft
 owner: gameplay
-last_verified: 2026-07-17
+last_verified: 2026-07-24
 source_of_truth:
-  - .omx/specs/deep-interview-fantasy-idle-expedition.md
-  - .omx/plans/prd-fantasy-idle-expedition.md
+  - docs/references/constraints/product-boundaries.md
 validated_by:
-  - ralplan-consensus
+  - user-correction-review-2026-07-24
 tags:
   - domain:equipment-economy
   - decision:p1-system
@@ -23,7 +22,7 @@ related:
 
 ## 目标
 
-用可理解的装备跃迁放大英雄构筑，并让 30 分钟资源收支支持两次有意义的成长决策。
+记录 P1 候选装备经济，供核心“工厂生产—培育—攻城”闭环稳定后评估。装备不是当前首 30 分钟门禁，也不能取代配方、星级和阵型的策略价值。
 
 ## 什么时候读
 
@@ -31,11 +30,10 @@ related:
 
 ## 职责
 
-- 静态装备模板与运行实例分离；实例保存品质、随机词条、强化等级和稳定 ID。
-- 武器/防具/饰品，白/绿/蓝/紫，+0..+5；强化无失败、无降级。
-- 首局保证至少一次玩家能理解的蓝色以上跃迁。
-- 金币、招募券、经验书、锻造石是首版全部经济资源，无付费货币。
-- 第 8 个合格掉落前无蓝色以上时触发 pity；1-3 首胜也提供职业可用蓝色候选，二者取较早。
+- 若进入 P1，静态装备模板与运行实例分离；实例保存品质、随机词条、强化等级和稳定 ID。
+- 武器/防具/饰品、品质、强化和 pity 均为候选设计，实施前需重新做数值与范围确认。
+- 当前 P0 经济以生产材料、金币、训练书和蓝图进度服务工厂与永久培育；不再使用招募券作为主循环资源。
+- 当前首 30 分钟的成长证明来自生产、三合一、训练、技能质变和换阵，不依赖稀有装备保底。
 
 ## 不是本层职责
 
@@ -43,7 +41,7 @@ related:
 
 ## 不变量
 
-装备不能取代英雄差异；强化不能因失败损失；掉落与强化结果必须可持久重放且不重复。
+装备不能取代八原型、星级技能质变或阵型差异；若实现强化，失败不得损失且结果必须可持久重放、不重复。
 
 ## 入口
 
@@ -51,7 +49,7 @@ related:
 
 ## 验证
 
-first-30m ledger、pity golden、强化 source/sink、重复结算/杀进程矩阵。
+当前仅验证 P0 没有隐式依赖装备。装备进入实施后再建立 ledger、pity golden、强化 source/sink 与重复结算/杀进程矩阵。
 
 ## 相关节点
 

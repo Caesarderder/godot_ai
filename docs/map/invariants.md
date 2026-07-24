@@ -4,7 +4,7 @@ km_type: invariant
 domain: cross-domain
 status: active
 owner: maintainers
-last_verified: 2026-07-20
+last_verified: 2026-07-23
 source_of_truth:
   - .omx/specs/deep-interview-fantasy-idle-expedition.md
   - .omx/plans/prd-fantasy-idle-expedition.md
@@ -23,7 +23,7 @@ related:
 
 ## 产品不变量
 
-- 手机端、单机、休闲放置；玩家通过随机英雄培养和编队跨过卡点。
+- 手机端、单机、休闲放置；以 Web 游戏发布并主要在手机浏览器运行，玩家通过随机英雄培养和编队跨过卡点。
 - P0 是英雄培养与编队，P1 是装备，P2 是薄营地。
 - 大小任务只引导与奖励，不作为关卡硬锁。
 - 英雄是随机运行实例，不回退为固定角色抽卡。
@@ -31,12 +31,14 @@ related:
 
 ## 技术不变量
 
-- `taptap/` 是当前 TapTap Maker 2D 实现根；代码进入 `taptap/scripts/**`，素材进入 `taptap/assets/**`。
-- `project-a/` 是历史 Godot M0 基线；现有 addon、EditorPlugin 和 Autoload 必须保留，但不再承接默认玩法开发。
-- UrhoX Lua、`urhox-libs/UI`、2D、手机端优先；UI 已使用 `UI.Scale.DEFAULT`，后续新界面必须补齐 `UI.SafeAreaView` 且主要触控目标不得低于 48 基准像素。当前迁移原型尚未满足后两项。
+- `project-a/` 是当前 Godot 4.6.3 实现根；使用 GDScript、3D 表现、Web-first 发布。`taptap/` 是历史参考，不是当前交付入口。
+- PRD/Test Spec 的玩法、经济和验收约束保持有效；其中旧版本、2D、Mobile renderer 与 Android-first 平台描述由 ADR-0005 取代。
+- Web 使用 Compatibility / WebGL 2.0；默认单线程导出。Forward+、C#、原生移动插件和没有 Web 构建的 GDExtension 不得成为当前版本依赖。
+- 3D 场景只投影领域战斗；物理、导航、动画和帧率不得决定命中、伤害、掉落或胜负。
+- UI 必须适配浏览器 viewport、安全区和 DPI，主要触控目标不得低于 48 基准像素。
 - 静态定义与运行实例分离；运行状态只保存稳定 ID 和实例字段。
 - executor 是 GameState 唯一写入口；价值命令先持久化再报告成功。
 - 离线收益只认 `offline_anchor_unix`；战斗只认稳定 seed 和 5Hz tick。
 - UI 是状态投影，不直接修改领域状态。
-- Maker 状态、提交、推送、预览和构建只走 TapTap MCP；不得把普通 Git 提交流程用于绑定的 Maker 工程。
+- 浏览器后台不依赖持续 Tick；恢复只通过 sealed internal command 结算离线收益。
 - 实现事实必须由代码、测试和命令重新验证；计划路径不等于已存在路径。
