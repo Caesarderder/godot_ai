@@ -1,0 +1,33 @@
+# 策划 genres
+
+Choose only the smallest relevant leaf:
+
+- `gd-agentic-genre-action-rpg` (genre; activation: `contextual`; owner: `gd-agentic-genre-action-rpg`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-action-rpg.md)
+- `gd-agentic-genre-battle-royale` (genre; activation: `contextual`; owner: `gd-agentic-genre-battle-royale`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-battle-royale.md)
+- `gd-agentic-genre-card-game` (genre; activation: `contextual`; owner: `gd-agentic-genre-card-game`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-card-game.md)
+- `gd-agentic-genre-educational` (genre; activation: `contextual`; owner: `gd-agentic-genre-educational`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-educational.md)
+- `gd-agentic-genre-fighting` (genre; activation: `contextual`; owner: `gd-agentic-genre-fighting`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-fighting.md)
+- `gd-agentic-genre-horror` (genre; activation: `contextual`; owner: `gd-agentic-genre-horror`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-horror.md)
+- `gd-agentic-genre-idle-clicker` (genre; activation: `contextual`; owner: `gd-agentic-genre-idle-clicker`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-idle-clicker.md)
+- `gd-agentic-genre-metroidvania` (genre; activation: `contextual`; owner: `gd-agentic-genre-metroidvania`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-metroidvania.md)
+- `gd-agentic-genre-moba` (genre; activation: `contextual`; owner: `gd-agentic-genre-moba`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-moba.md)
+- `gd-agentic-genre-open-world` (genre; activation: `contextual`; owner: `gd-agentic-genre-open-world`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-open-world.md)
+- `gd-agentic-genre-party` (genre; activation: `contextual`; owner: `gd-agentic-genre-party`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-party.md)
+- `gd-agentic-genre-platformer` (genre; activation: `contextual`; owner: `gd-agentic-genre-platformer`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-platformer.md)
+- `gd-agentic-genre-puzzle` (genre; activation: `contextual`; owner: `gd-agentic-genre-puzzle`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-puzzle.md)
+- `gd-agentic-genre-racing` (genre; activation: `contextual`; owner: `gd-agentic-genre-racing`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-racing.md)
+- `gd-agentic-genre-rhythm` (genre; activation: `contextual`; owner: `gd-agentic-genre-rhythm`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-rhythm.md)
+- `gd-agentic-genre-roguelike` (genre; activation: `contextual`; owner: `gd-agentic-genre-roguelike`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-roguelike.md)
+- `gd-agentic-genre-romance` (genre; activation: `contextual`; owner: `gd-agentic-genre-romance`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-romance.md)
+- `gd-agentic-genre-rts` (genre; activation: `contextual`; owner: `gd-agentic-genre-rts`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-rts.md)
+- `gd-agentic-genre-sandbox` (genre; activation: `contextual`; owner: `gd-agentic-genre-sandbox`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-sandbox.md)
+- `gd-agentic-genre-shooter` (genre; activation: `contextual`; owner: `gd-agentic-genre-shooter`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-shooter.md)
+- `gd-agentic-genre-shooter-fps` (genre; activation: `contextual`; owner: `gd-agentic-genre-shooter-fps`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-shooter-fps.md)
+- `gd-agentic-genre-simulation` (genre; activation: `contextual`; owner: `gd-agentic-genre-simulation`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-simulation.md)
+- `gd-agentic-genre-sports` (genre; activation: `contextual`; owner: `gd-agentic-genre-sports`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-sports.md)
+- `gd-agentic-genre-stealth` (genre; activation: `contextual`; owner: `gd-agentic-genre-stealth`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-stealth.md)
+- `gd-agentic-genre-survival` (genre; activation: `contextual`; owner: `gd-agentic-genre-survival`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-survival.md)
+- `gd-agentic-genre-tower-defense` (genre; activation: `contextual`; owner: `gd-agentic-genre-tower-defense`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-tower-defense.md)
+- `gd-agentic-genre-visual-novel` (genre; activation: `contextual`; owner: `gd-agentic-genre-visual-novel`) → [knowledge leaf](../references/indexes/nodes/gd-agentic-genre-visual-novel.md)
+
+Do not load every item on this page. Cross-role needs must route to the other role's canonical home.

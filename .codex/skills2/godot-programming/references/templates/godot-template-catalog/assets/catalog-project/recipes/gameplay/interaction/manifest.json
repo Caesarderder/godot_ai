@@ -1,0 +1,39 @@
+{
+  "id": "gameplay.interaction",
+  "category": "gameplay",
+  "summary": "Rank interaction candidates, expose one prompt, execute the selected target, and cancel safely.",
+  "canonical_owner": "godot-architecture",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": [
+      "selection_changed(candidate: TemplateInteractable)",
+      "executed(candidate: TemplateInteractable)",
+      "canceled"
+    ],
+    "resources": ["TemplateInteractionOffer"],
+    "required_nodes": ["InteractionDemo/Interactor"]
+  },
+  "files": [
+    "interaction_offer.gd",
+    "interactable.gd",
+    "interactor.gd",
+    "demo.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["ui.component-gallery-core"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot Resource and signal documentation"]
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot 通用模板目录"
+  short_description: "按需选择带场景、资源、示例和测试的 Godot 微模板"
+  default_prompt: "Use $godot-template-catalog to select the smallest verified Godot 4.6 Web micro-recipe, adapt it to the current project, and run its focused verification."

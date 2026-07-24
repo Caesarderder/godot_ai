@@ -1,0 +1,37 @@
+{
+  "id": "ui.component-gallery-core",
+  "category": "ui",
+  "summary": "A state gallery for interactive Controls, progress, and modal presentation.",
+  "canonical_owner": "godot-ui",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": [],
+    "resources": [],
+    "required_nodes": [
+      "ComponentGallery/Scroll/Layout/Buttons/Normal",
+      "ComponentGallery/Scroll/Layout/Buttons/Disabled",
+      "ComponentGallery/Scroll/Layout/Progress",
+      "ComponentGallery/Scroll/Layout/Dialog"
+    ]
+  },
+  "files": [
+    "gallery.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["ui.theme-tokens", "ui.responsive-screen-shell"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot GUI building blocks"]
+  }
+}

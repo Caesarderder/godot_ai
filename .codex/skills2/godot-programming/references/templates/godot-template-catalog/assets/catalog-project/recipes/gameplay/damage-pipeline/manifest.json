@@ -1,0 +1,39 @@
+{
+  "id": "gameplay.damage-pipeline",
+  "category": "gameplay",
+  "summary": "Typed damage data flows from hitbox through hurtbox into an owned health component.",
+  "canonical_owner": "combat-system",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": [
+      "health_changed(current: int, maximum: int)",
+      "damaged(data: TemplateDamageData)",
+      "depleted"
+    ],
+    "resources": ["TemplateDamageData"],
+    "required_nodes": ["DamagePipelineDemo/Health", "DamagePipelineDemo/Hitbox", "DamagePipelineDemo/Hurtbox"]
+  },
+  "files": [
+    "damage_data.gd",
+    "health_component.gd",
+    "hitbox.gd",
+    "hurtbox.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["ui.component-gallery-core"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot Area2D composition", "existing Builda combat owner"]
+  }
+}

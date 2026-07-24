@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://recipes/testing/scene-contract/fixture.gd" id="1_fixture"]
+
+[sub_resource type="Resource" id="FixtureConfig"]
+
+[node name="SceneContractFixture" type="Node"]
+script = ExtResource("1_fixture")
+config = SubResource("FixtureConfig")
+
+[node name="RequiredChild" type="Node" parent="."]

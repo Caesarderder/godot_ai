@@ -30,8 +30,13 @@ related:
 
 1. 在 [KM:map.domains](../map/domains.md) 确认主领域。
 2. 读 [KM:reference.file-ownership](../references/indexes/file-ownership.md)。
+<<<<<<< HEAD
 3. 使用 `rg --files project-a` 或在 `project-a/**` 中 `rg '<symbol>'` 验证当前玩法路径和符号；只有查询历史原型时才进入 `taptap/**`。
 4. 如果 `project-a/game/**` 或候选路径不存在，结论写“PRD/架构规划落点（draft）”；不得把 `taptap` 历史原型误当成当前 Godot Web 实现。
+=======
+3. 使用 `rg --files project-a/game project-a/tests project-a/tools` 或在这些路径中 `rg '<symbol>'` 验证当前 Godot 玩法路径和符号；工具集成问题再检查 `project-a/addons/godot_ai`。
+4. 如果 `project-a/game/**` 中的候选领域路径不存在，结论写“PRD 规划落点（draft）”；可以读取 `taptap/scripts/**` 作为参考行为，但不得把参考原型误当成当前 Godot 领域实现。
+>>>>>>> origin/codex/toilet-man-3d-idle
 5. 检查相关测试和 [KM:reference.verification-matrix](../references/indexes/verification-matrix.md)。
 
 ## 停止条件

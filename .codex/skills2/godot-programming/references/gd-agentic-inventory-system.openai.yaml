@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gd Agentic Inventory System"
+  short_description: "完整保留并合规引用 gd-agentic-inventory-system 代码原型"
+  default_prompt: "Use $gd-agentic-inventory-system to consult and safely port the preserved prototype library."

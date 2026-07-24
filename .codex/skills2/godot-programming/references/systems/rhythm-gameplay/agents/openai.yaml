@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rhythm Gameplay"
+  short_description: "实现音频时钟、BPM 谱面、延迟校准与确定性判定窗口"
+  default_prompt: "Use $rhythm-gameplay to implement or review this rhythm timing and judgment system."

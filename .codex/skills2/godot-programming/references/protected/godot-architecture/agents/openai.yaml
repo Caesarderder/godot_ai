@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Architecture"
+  short_description: "Plan and harden Godot architecture boundaries"
+  default_prompt: "Use $godot-architecture to plan scene boundaries or harden proven gameplay with explicit Resource, signal, and application-service contracts."

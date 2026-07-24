@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Playtest"
+  short_description: "用真实玩家行为证据检验玩法并推动下一轮调优"
+  default_prompt: "Use $game-playtest to evaluate this playable build and prioritize the next gameplay iteration from real evidence."

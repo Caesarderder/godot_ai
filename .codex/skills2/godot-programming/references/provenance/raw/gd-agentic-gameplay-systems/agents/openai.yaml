@@ -1,0 +1,5 @@
+interface:
+  display_name: "Godot 玩法系统"
+  short_description: "按需路由战斗、能力、任务、经济、循环与回合系统"
+  default_prompt: "Use $gd-agentic-gameplay-systems to select only the relevant Godot 4.6 Web gameplay references and implement the request."
+

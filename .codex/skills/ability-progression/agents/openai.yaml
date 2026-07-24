@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ability Progression"
+  short_description: "实现稳定 ID 驱动的属性修正、技能冷却、状态与成长"
+  default_prompt: "Use $ability-progression to implement or review this stats, ability, or progression system."

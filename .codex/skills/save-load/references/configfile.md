@@ -1,6 +1,5 @@
 # ConfigFile — Settings
 
-Reference for `skills/save-load/SKILL.md` — `ConfigFile` for INI-style settings (audio, video, controls). GDScript + C#.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -67,72 +66,9 @@ var vol: float = SettingsManager.get_setting("audio", "master_volume", 1.0)
 SettingsManager.set_setting("audio", "master_volume", 0.5)
 ```
 
-### C#
 
-```csharp
-// SettingsManager.cs — add as autoload named SettingsManager
-using Godot;
-
-public partial class SettingsManager : Node
-{
-    private const string SettingsPath = "user://settings.cfg";
-
-    private readonly ConfigFile _config = new();
-
-    public override void _Ready()
-    {
-        LoadSettings();
-    }
-
-    public void LoadSettings()
-    {
-        var err = _config.Load(SettingsPath);
-        if (err != Error.Ok)
-        {
-            SetDefaults();
-            SaveSettings();
-        }
-    }
-
-    public void SaveSettings()
-    {
-        var err = _config.Save(SettingsPath);
-        if (err != Error.Ok)
-            GD.PushError($"SettingsManager: failed to save settings — error {err}");
-    }
-
-    public Variant GetSetting(string section, string key, Variant @default = default)
-        => _config.GetValue(section, key, @default);
-
-    public void SetSetting(string section, string key, Variant value)
-    {
-        _config.SetValue(section, key, value);
-        SaveSettings();
-    }
-
-    private void SetDefaults()
-    {
-        // Audio
-        _config.SetValue("audio", "master_volume", Variant.From(1.0f));
-        _config.SetValue("audio", "music_volume",  Variant.From(0.8f));
-        _config.SetValue("audio", "sfx_volume",    Variant.From(1.0f));
-        // Display
-        _config.SetValue("display", "fullscreen",       Variant.From(false));
-        _config.SetValue("display", "vsync",            Variant.From(true));
-        _config.SetValue("display", "resolution_scale", Variant.From(1.0f));
-    }
-}
-```
 
 **Usage:**
 
-```csharp
-// Read
-float vol = SettingsManager.GetSetting("audio", "master_volume", Variant.From(1.0f)).As<float>();
-
-// Write
-SettingsManager.SetSetting("audio", "master_volume", Variant.From(0.5f));
-```
 
 ---
-

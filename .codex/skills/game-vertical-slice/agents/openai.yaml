@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Vertical Slice"
+  short_description: "Build a complete playable game slice with real evidence"
+  default_prompt: "Use $game-vertical-slice to turn the current game into a representative, complete, evidence-backed playable slice."

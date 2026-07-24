@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Technical Design"
+  short_description: "Turn game intent into a buildable Godot plan"
+  default_prompt: "Use $game-technical-design to turn this game design into an evidence-based Godot technical plan."

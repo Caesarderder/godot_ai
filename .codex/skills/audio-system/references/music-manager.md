@@ -1,6 +1,6 @@
 # Music Manager Autoload
 
-Reference for `skills/audio-system/SKILL.md` — singleton music manager with crossfade, layering, GDScript + C#.
+Reference for `skills/audio-system/SKILL.md` — singleton music manager with crossfade and layering in GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -32,7 +32,6 @@ func _ready() -> void:
 
     _active_player = _player_a
 
-
 func play_music(stream: AudioStream, from_position: float = 0.0) -> void:
     # If already playing this track, do nothing
     if _active_player.stream == stream and _active_player.playing:
@@ -52,74 +51,14 @@ func play_music(stream: AudioStream, from_position: float = 0.0) -> void:
 
     _active_player = next_player
 
-
 func stop_music(fade_duration: float = 1.0) -> void:
     var tween := create_tween()
     tween.tween_property(_active_player, "volume_db", -80.0, fade_duration)
     tween.tween_callback(_active_player.stop)
 
-
 func set_music_volume(linear: float) -> void:
     var index := AudioServer.get_bus_index("Music")
     AudioServer.set_bus_volume_db(index, linear_to_db(linear))
-```
-
-### C#
-
-```csharp
-using Godot;
-
-public partial class MusicManager : Node
-{
-    [Export] public float CrossfadeDuration { get; set; } = 1.5f;
-
-    private AudioStreamPlayer _playerA;
-    private AudioStreamPlayer _playerB;
-    private AudioStreamPlayer _activePlayer;
-
-    public override void _Ready()
-    {
-        _playerA = new AudioStreamPlayer { Bus = "Music" };
-        AddChild(_playerA);
-
-        _playerB = new AudioStreamPlayer { Bus = "Music" };
-        AddChild(_playerB);
-
-        _activePlayer = _playerA;
-    }
-
-    public void PlayMusic(AudioStream stream, float fromPosition = 0.0f)
-    {
-        if (_activePlayer.Stream == stream && _activePlayer.Playing)
-            return;
-
-        var nextPlayer = _activePlayer == _playerA ? _playerB : _playerA;
-
-        nextPlayer.Stream = stream;
-        nextPlayer.VolumeDb = -80.0f;
-        nextPlayer.Play(fromPosition);
-
-        var tween = CreateTween().SetParallel(true);
-        tween.TweenProperty(_activePlayer, "volume_db", -80.0f, CrossfadeDuration);
-        tween.TweenProperty(nextPlayer, "volume_db", 0.0f, CrossfadeDuration);
-        tween.Chain().TweenCallback(Callable.From(_activePlayer.Stop));
-
-        _activePlayer = nextPlayer;
-    }
-
-    public void StopMusic(float fadeDuration = 1.0f)
-    {
-        var tween = CreateTween();
-        tween.TweenProperty(_activePlayer, "volume_db", -80.0f, fadeDuration);
-        tween.TweenCallback(Callable.From(_activePlayer.Stop));
-    }
-
-    public void SetMusicVolume(float linear)
-    {
-        int index = AudioServer.GetBusIndex("Music");
-        AudioServer.SetBusVolumeDb(index, Mathf.LinearToDb(linear));
-    }
-}
 ```
 
 **Usage:**
@@ -131,4 +70,3 @@ MusicManager.stop_music(2.0)
 ```
 
 ---
-

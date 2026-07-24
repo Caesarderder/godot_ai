@@ -81,74 +81,9 @@ func _deserialize(data: Dictionary) -> void:
 		_play_open_animation()
 ```
 
-**C# (`SaveableComponent.cs`)**
 
-> In C#, prefer `Action`/`Func` delegates over `Callable` for save/load hooks — they are type-safe at compile time and avoid the `Callable.From()` boilerplate. Use `Callable.From()` only when the hook needs to cross the GDScript ↔ C# boundary.
 
-```csharp
-// Attach to any node that should save/load its own state.
-using Godot;
-using System;
 
-public partial class SaveableComponent : Node
-{
-    /// <summary>Unique stable ID for this saveable object (set in the Inspector).</summary>
-    [Export] public string SaveId = "";
 
-    /// <summary>Assign a Func that returns a Dictionary of state to save.</summary>
-    public Func<Godot.Collections.Dictionary> Serialize = () =>
-    {
-        GD.PushError("SaveableComponent: Serialize not set");
-        return new Godot.Collections.Dictionary();
-    };
-
-    /// <summary>Assign an Action that accepts a Dictionary to restore state from.</summary>
-    public Action<Godot.Collections.Dictionary> Deserialize = _ =>
-    {
-        GD.PushError("SaveableComponent: Deserialize not set");
-    };
-
-    public override void _Ready()
-    {
-        AddToGroup("saveable");
-    }
-}
-```
-
-**Example — Chest node using SaveableComponent (C#):**
-
-```csharp
-// Chest.cs
-using Godot;
-using Godot.Collections;
-
-public partial class Chest : Node3D
-{
-    [Export] public SaveableComponent Saveable;
-
-    private bool _isOpen = false;
-    private Array _contents = new Array { "sword", "potion" };
-
-    public override void _Ready()
-    {
-        Saveable.Serialize = () => new Dictionary
-        {
-            { "is_open", _isOpen },
-            { "contents", _contents.Duplicate() },
-        };
-
-        Saveable.Deserialize = data =>
-        {
-            _isOpen   = (bool)data["is_open"];
-            _contents = (Array)((Array)data["contents"]).Duplicate();
-            if (_isOpen)
-                PlayOpenAnimation();
-        };
-    }
-
-    private void PlayOpenAnimation() { /* ... */ }
-}
-```
 
 ---
-

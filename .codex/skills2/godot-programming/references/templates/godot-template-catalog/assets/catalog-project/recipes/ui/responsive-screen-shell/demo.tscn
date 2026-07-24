@@ -1,0 +1,59 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://recipes/ui/responsive-screen-shell/responsive_shell.gd" id="1_shell"]
+
+[node name="ResponsiveScreenShell" type="Control"]
+custom_minimum_size = Vector2(320, 240)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shell")
+
+[node name="SafeMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Content" type="VBoxContainer" parent="SafeMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SafeMargin/Content"]
+layout_mode = 2
+text = "Responsive screen shell"
+
+[node name="Body" type="PanelContainer" parent="SafeMargin/Content"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BodyText" type="Label" parent="SafeMargin/Content/Body"]
+layout_mode = 2
+text = "Long content belongs in a ScrollContainer when it can exceed this shell."
+autowrap_mode = 2
+
+[node name="Actions" type="HBoxContainer" parent="SafeMargin/Content"]
+layout_mode = 2
+alignment = 2
+
+[node name="Cancel" type="Button" parent="SafeMargin/Content/Actions"]
+custom_minimum_size = Vector2(88, 44)
+layout_mode = 2
+focus_mode = 2
+text = "Cancel"
+
+[node name="Confirm" type="Button" parent="SafeMargin/Content/Actions"]
+custom_minimum_size = Vector2(88, 44)
+layout_mode = 2
+focus_mode = 2
+text = "Confirm"

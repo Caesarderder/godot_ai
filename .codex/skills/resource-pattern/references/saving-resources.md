@@ -1,6 +1,5 @@
 # Saving Custom Resources
 
-Reference for `skills/resource-pattern/SKILL.md` — `ResourceSaver.save()` for persistent state. GDScript + C#.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -27,26 +26,7 @@ save_resource(my_item, "user://generated/custom_sword.tres")
 save_resource(my_item, "user://generated/custom_sword.res")
 ```
 
-### C#
 
-```csharp
-public bool SaveResource(Resource res, string path)
-{
-    var err = ResourceSaver.Save(res, path);
-    if (err != Error.Ok)
-    {
-        GD.PushError($"Failed to save resource to '{path}' — error {err}");
-        return false;
-    }
-    return true;
-}
-
-// .tres — human-readable, for debugging and version control
-SaveResource(myItem, "user://generated/custom_sword.tres");
-
-// .res — binary, faster to load, use in production
-SaveResource(myItem, "user://generated/custom_sword.res");
-```
 
 **Format guidance:**
 
@@ -58,4 +38,3 @@ SaveResource(myItem, "user://generated/custom_sword.res");
 > **Security:** Never load `.tres` or `.res` files from untrusted sources (user uploads, downloaded mods). They can execute embedded GDScript. Use JSON for user-controlled data.
 
 ---
-

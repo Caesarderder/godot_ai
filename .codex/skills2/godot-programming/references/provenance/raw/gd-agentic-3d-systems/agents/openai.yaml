@@ -1,0 +1,5 @@
+interface:
+  display_name: "Godot 3D 系统"
+  short_description: "按需路由 3D 世界、材质、物理、导航与查询"
+  default_prompt: "Use $gd-agentic-3d-systems to select only the relevant Godot 4.6 Web 3D references and implement the request."
+

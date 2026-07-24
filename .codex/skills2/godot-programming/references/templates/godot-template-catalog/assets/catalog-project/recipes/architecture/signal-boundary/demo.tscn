@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://recipes/architecture/signal-boundary/signal_mediator.gd" id="1_mediator"]
+[ext_resource type="Script" path="res://recipes/architecture/signal-boundary/signal_source.gd" id="2_source"]
+
+[node name="Mediator" type="Node"]
+script = ExtResource("1_mediator")
+
+[node name="Source" type="Node" parent="."]
+script = ExtResource("2_source")

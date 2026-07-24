@@ -1,0 +1,4 @@
+interface:
+  display_name: "测试发布"
+  short_description: "Builda Godot 测试发布知识地图"
+  default_prompt: "Use $godot-qa-release to select the smallest evidence or release-gate leaves without taking over feature implementation."

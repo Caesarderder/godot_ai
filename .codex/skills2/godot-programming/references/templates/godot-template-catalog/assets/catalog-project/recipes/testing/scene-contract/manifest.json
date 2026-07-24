@@ -1,0 +1,33 @@
+{
+  "id": "testing.scene-contract",
+  "category": "testing",
+  "summary": "Dependency-free checks for required nodes, signals, Resource properties, and InputMap actions.",
+  "canonical_owner": "godot-testing",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": [],
+    "resources": ["Resource"],
+    "required_nodes": ["SceneContractFixture/RequiredChild"]
+  },
+  "files": [
+    "scene_contract.gd",
+    "fixture.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": [],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot Object and InputMap APIs", "gdUnit4 scene-test concepts"]
+  }
+}

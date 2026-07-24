@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Architecture"
+  short_description: "Choose simple, testable Godot scene boundaries"
+  default_prompt: "Use $godot-architecture to design or refactor this Godot scene architecture."

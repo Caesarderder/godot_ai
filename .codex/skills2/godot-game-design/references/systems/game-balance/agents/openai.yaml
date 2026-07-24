@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Balance"
+  short_description: "检查战斗经济成长掉落与优势策略并输出可验证调参建议"
+  default_prompt: "Use $game-balance to analyze and improve this game balance with current evidence."

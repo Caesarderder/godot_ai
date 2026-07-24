@@ -17,7 +17,11 @@ tags:
   - risk:worktree-boundary
 related:
   - decision.project-a-game-root
+<<<<<<< HEAD
   - decision.project-a-web-3d-root
+=======
+  - decision.return-to-project-a
+>>>>>>> origin/codex/toilet-man-3d-idle
   - reference.architecture-overview
   - reference.file-ownership
   - reference.implementation-status
@@ -27,7 +31,11 @@ related:
 
 ## 状态
 
+<<<<<<< HEAD
 Deprecated，2026-07-23。历史决策保留；当前实现根由 [KM:decision.project-a-web-3d-root](ADR-0005-project-a-web-3d-root.md) 替代。
+=======
+Deprecated，2026-07-23。该决策曾在 2026-07-20 替代 [KM:decision.project-a-game-root](ADR-0003-project-a-game-root.md)，现由 [KM:decision.return-to-project-a](ADR-0005-return-to-project-a.md) 替代。
+>>>>>>> origin/codex/toilet-man-3d-idle
 
 ## 决策
 

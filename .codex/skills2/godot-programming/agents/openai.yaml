@@ -1,0 +1,4 @@
+interface:
+  display_name: "程序"
+  short_description: "Builda Godot 程序知识地图"
+  default_prompt: "Use $godot-programming to select one implementation axis, prefer the canonical owner, and open at most two distinct leaves."

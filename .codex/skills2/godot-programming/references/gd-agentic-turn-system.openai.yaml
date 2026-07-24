@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gd Agentic Turn System"
+  short_description: "完整保留并合规引用 gd-agentic-turn-system 代码原型"
+  default_prompt: "Use $gd-agentic-turn-system to consult and safely port the preserved prototype library."

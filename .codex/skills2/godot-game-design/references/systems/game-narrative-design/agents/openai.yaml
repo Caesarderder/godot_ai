@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Narrative Design"
+  short_description: "让角色剧情世界观环境叙事与玩家行动状态和关卡体验真正连接"
+  default_prompt: "Use $game-narrative-design to design gameplay-bound narrative content for this game."

@@ -1,0 +1,34 @@
+{
+  "id": "architecture.feature-slice",
+  "category": "architecture",
+  "summary": "A feature-owned scene, controller, configuration Resource, demo, and focused test.",
+  "canonical_owner": "godot-project-setup",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": ["value_changed(value: int)", "limit_reached(value: int)"],
+    "resources": ["TemplateCounterConfig"],
+    "required_nodes": ["TemplateCounterFeature"]
+  },
+  "files": [
+    "counter_config.gd",
+    "counter_feature.gd",
+    "counter_feature.tscn"
+  ],
+  "demo_scene": "counter_feature.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["architecture.resource-runtime-pair", "testing.scene-contract"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot official scene composition guidance", "GDQuest component patterns"]
+  }
+}

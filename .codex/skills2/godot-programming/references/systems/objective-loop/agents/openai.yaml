@@ -1,0 +1,4 @@
+interface:
+  display_name: "Objective Loop"
+  short_description: "实现任务收集波次计时复活与奖励的幂等目标生命周期"
+  default_prompt: "Use $objective-loop to implement or review this objective or game loop."

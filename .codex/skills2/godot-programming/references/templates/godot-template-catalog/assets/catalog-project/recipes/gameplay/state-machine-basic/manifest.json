@@ -1,0 +1,35 @@
+{
+  "id": "gameplay.state-machine-basic",
+  "category": "gameplay",
+  "summary": "A small Node-based state lifecycle with explicit enter, exit, and guarded transitions.",
+  "canonical_owner": "state-machine",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": ["transitioned(previous: TemplateState, current: TemplateState)"],
+    "resources": [],
+    "required_nodes": ["StateMachine/Idle", "StateMachine/Active"]
+  },
+  "files": [
+    "state.gd",
+    "state_machine.gd",
+    "idle_state.gd",
+    "active_state.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["testing.scene-contract"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot node lifecycle", "GDQuest state-machine pattern taxonomy"]
+  }
+}

@@ -1,0 +1,19 @@
+config_version=5
+
+[application]
+
+config/name="Builda Godot Template Catalog"
+run/main_scene="res://recipes/ui/component-gallery-core/demo.tscn"
+
+[display]
+
+window/size/viewport_width=799
+window/size/viewport_height=450
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false

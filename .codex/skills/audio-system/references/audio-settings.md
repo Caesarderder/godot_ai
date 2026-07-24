@@ -1,6 +1,6 @@
 # Audio Settings Integration
 
-Reference for `skills/audio-system/SKILL.md` — settings menu wired to AudioServer bus volumes with persistence. GDScript + C#.
+Reference for `skills/audio-system/SKILL.md` — settings menu wired to AudioServer bus volumes with persistence in GDScript.
 
 > ← Back to [SKILL.md](../SKILL.md)
 
@@ -56,60 +56,4 @@ func _save_volume(key: String, value: float) -> void:
     SettingsManager.set_setting("audio", "%s_volume" % key, value)
 ```
 
-### C#
-
-```csharp
-using Godot;
-
-public partial class AudioSettings : Control
-{
-    private HSlider _masterSlider;
-    private HSlider _musicSlider;
-    private HSlider _sfxSlider;
-
-    public override void _Ready()
-    {
-        _masterSlider = GetNode<HSlider>("%MasterSlider");
-        _musicSlider = GetNode<HSlider>("%MusicSlider");
-        _sfxSlider = GetNode<HSlider>("%SFXSlider");
-
-        _masterSlider.Value = GetSavedVolume("master");
-        _musicSlider.Value = GetSavedVolume("music");
-        _sfxSlider.Value = GetSavedVolume("sfx");
-
-        ApplyVolume("Master", (float)_masterSlider.Value);
-        ApplyVolume("Music", (float)_musicSlider.Value);
-        ApplyVolume("SFX", (float)_sfxSlider.Value);
-
-        _masterSlider.ValueChanged += v => { ApplyVolume("Master", (float)v); SaveVolume("master", (float)v); };
-        _musicSlider.ValueChanged += v => { ApplyVolume("Music", (float)v); SaveVolume("music", (float)v); };
-        _sfxSlider.ValueChanged += v => { ApplyVolume("SFX", (float)v); SaveVolume("sfx", (float)v); };
-    }
-
-    private void ApplyVolume(string busName, float linear)
-    {
-        int index = AudioServer.GetBusIndex(busName);
-        if (linear <= 0.01f)
-            AudioServer.SetBusMute(index, true);
-        else
-        {
-            AudioServer.SetBusMute(index, false);
-            AudioServer.SetBusVolumeDb(index, Mathf.LinearToDb(linear));
-        }
-    }
-
-    private float GetSavedVolume(string key)
-    {
-        // Integrate with your settings system (see save-load skill)
-        return 1.0f;
-    }
-
-    private void SaveVolume(string key, float value)
-    {
-        // Integrate with your settings system (see save-load skill)
-    }
-}
-```
-
 ---
-

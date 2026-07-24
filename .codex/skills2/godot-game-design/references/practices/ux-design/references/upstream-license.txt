@@ -1,0 +1,14 @@
+Adapted source:
+https://github.com/Donchitos/Claude-Code-Game-Studios/tree/main/.claude/skills/ux-design
+
+Upstream project:
+Claude-Code-Game-Studios
+Copyright (c) Donchitos and contributors
+License: MIT
+https://github.com/Donchitos/Claude-Code-Game-Studios/blob/main/LICENSE
+
+Builda adaptation:
+- Preserves the screen/flow, HUD, and interaction-pattern modes.
+- Replaces Claude-specific Task/AskUserQuestion/agent routing with Codex-compatible workflow guidance.
+- Targets Godot 4.6.x, GDScript, single-threaded Web, and Compatibility renderer.
+- Routes implementation and validation through Builda's existing default skills.
