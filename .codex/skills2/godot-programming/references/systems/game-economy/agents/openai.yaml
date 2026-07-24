@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Economy"
+  short_description: "实现可重试、可对账的钱包商店掉落采集与制作事务"
+  default_prompt: "Use $game-economy to implement or review this in-game economy transaction."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "策划"
+  short_description: "Builda Godot 策划知识地图"
+  default_prompt: "Use $godot-game-design to select one player-facing design axis and at most two non-duplicative leaves."

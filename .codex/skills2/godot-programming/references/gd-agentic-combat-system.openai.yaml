@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gd Agentic Combat System"
+  short_description: "完整保留并合规引用 gd-agentic-combat-system 代码原型"
+  default_prompt: "Use $gd-agentic-combat-system to consult and safely port the preserved prototype library."

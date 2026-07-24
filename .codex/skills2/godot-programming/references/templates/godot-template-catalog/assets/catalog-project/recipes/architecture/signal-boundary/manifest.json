@@ -1,0 +1,33 @@
+{
+  "id": "architecture.signal-boundary",
+  "category": "architecture",
+  "summary": "A child source reports intent while its parent mediator owns state changes.",
+  "canonical_owner": "godot-architecture",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": ["requested(amount: int)", "committed(total: int)"],
+    "resources": [],
+    "required_nodes": ["Mediator/Source"]
+  },
+  "files": [
+    "signal_source.gd",
+    "signal_mediator.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["architecture.feature-slice"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot signal documentation"]
+  }
+}

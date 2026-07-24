@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gd Agentic Animation Tree Mastery"
+  short_description: "完整保留并合规引用 gd-agentic-animation-tree-mastery 代码原型"
+  default_prompt: "Use $gd-agentic-animation-tree-mastery to consult and safely port the preserved prototype library."

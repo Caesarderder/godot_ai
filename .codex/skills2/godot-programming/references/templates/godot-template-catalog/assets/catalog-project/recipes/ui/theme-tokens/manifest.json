@@ -1,0 +1,35 @@
+{
+  "id": "ui.theme-tokens",
+  "category": "ui",
+  "summary": "Semantic UI tokens generate reusable Theme items and type variations without an editor plugin.",
+  "canonical_owner": "godot-ui",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": [],
+    "resources": ["TemplateThemeTokens", "Theme"],
+    "required_nodes": ["ThemeTokensDemo/Layout/Primary", "ThemeTokensDemo/Layout/Danger"]
+  },
+  "files": [
+    "theme_tokens.gd",
+    "theme_tokens.tres",
+    "theme_factory.gd",
+    "demo.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["ui.component-gallery-core", "ui.responsive-screen-shell"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot Theme documentation", "ThemeGen semantic-token approach"]
+  }
+}

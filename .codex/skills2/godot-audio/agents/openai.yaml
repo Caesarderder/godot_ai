@@ -1,0 +1,4 @@
+interface:
+  display_name: "音效"
+  short_description: "Builda Godot 音效知识地图"
+  default_prompt: "Use $godot-audio to select the smallest audio-system leaves for the requested music, SFX, mix, or Web audio outcome."

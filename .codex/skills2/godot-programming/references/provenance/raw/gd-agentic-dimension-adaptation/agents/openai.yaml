@@ -1,0 +1,5 @@
+interface:
+  display_name: "Godot 2D/3D 转换"
+  short_description: "在保留玩法意图的前提下执行 2D 与 3D 迁移"
+  default_prompt: "Use $gd-agentic-dimension-adaptation to choose one conversion direction and adapt the Godot 4.6 Web project."
+

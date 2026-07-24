@@ -1,0 +1,77 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://recipes/ui/component-gallery-core/gallery.gd" id="1_gallery"]
+
+[node name="ComponentGallery" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gallery")
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="Scroll"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Scroll/Layout"]
+layout_mode = 2
+text = "Core component states"
+
+[node name="Buttons" type="HBoxContainer" parent="Scroll/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Normal" type="Button" parent="Scroll/Layout/Buttons"]
+custom_minimum_size = Vector2(96, 44)
+layout_mode = 2
+focus_mode = 2
+text = "Normal"
+
+[node name="Disabled" type="Button" parent="Scroll/Layout/Buttons"]
+custom_minimum_size = Vector2(96, 44)
+layout_mode = 2
+focus_mode = 2
+disabled = true
+text = "Disabled"
+
+[node name="Progress" type="ProgressBar" parent="Scroll/Layout"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+value = 65.0
+show_percentage = true
+
+[node name="Dialog" type="PanelContainer" parent="Scroll/Layout"]
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+
+[node name="DialogLayout" type="VBoxContainer" parent="Scroll/Layout/Dialog"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="Scroll/Layout/Dialog/DialogLayout"]
+layout_mode = 2
+text = "Dialog heading"
+
+[node name="Body" type="Label" parent="Scroll/Layout/Dialog/DialogLayout"]
+layout_mode = 2
+text = "Keep long localized text readable and allow this area to grow."
+autowrap_mode = 2
+
+[node name="Confirm" type="Button" parent="Scroll/Layout/Dialog/DialogLayout"]
+custom_minimum_size = Vector2(96, 44)
+layout_mode = 2
+size_flags_horizontal = 8
+focus_mode = 2
+text = "Confirm"

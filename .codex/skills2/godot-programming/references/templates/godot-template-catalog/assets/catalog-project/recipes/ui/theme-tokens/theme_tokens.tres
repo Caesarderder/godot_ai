@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="TemplateThemeTokens" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://recipes/ui/theme-tokens/theme_tokens.gd" id="1_tokens"]
+
+[resource]
+script = ExtResource("1_tokens")
+surface = Color(0.0941176, 0.12549, 0.168627, 1)
+primary = Color(0.294118, 0.54902, 1, 1)
+danger = Color(0.878431, 0.321569, 0.388235, 1)
+text = Color(0.964706, 0.972549, 0.984314, 1)
+spacing = 12
+corner_radius = 8

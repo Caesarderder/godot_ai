@@ -1,0 +1,4 @@
+interface:
+  display_name: "制作人"
+  short_description: "Builda Godot 制作人知识地图"
+  default_prompt: "Use $godot-producer to define the smallest product milestone and select only the relevant stage leaf without preloading implementation roles."

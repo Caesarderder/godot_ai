@@ -1,0 +1,33 @@
+{
+  "id": "architecture.scene-transition",
+  "category": "architecture",
+  "summary": "Replace a hosted child scene with explicit failure and success signals.",
+  "canonical_owner": "godot-architecture",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": ["transitioned(scene: Node)", "transition_failed(reason: String)"],
+    "resources": ["PackedScene"],
+    "required_nodes": ["SceneRouter/Host"]
+  },
+  "files": [
+    "scene_router.gd",
+    "target_scene.tscn"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["ui.responsive-screen-shell"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot scene instancing documentation", "Maaack product-shell boundaries"]
+  }
+}

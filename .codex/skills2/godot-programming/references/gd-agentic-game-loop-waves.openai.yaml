@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gd Agentic Game Loop Waves"
+  short_description: "完整保留并合规引用 gd-agentic-game-loop-waves 代码原型"
+  default_prompt: "Use $gd-agentic-game-loop-waves to consult and safely port the preserved prototype library."

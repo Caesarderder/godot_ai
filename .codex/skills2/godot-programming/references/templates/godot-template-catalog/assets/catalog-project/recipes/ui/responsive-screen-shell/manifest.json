@@ -1,0 +1,32 @@
+{
+  "id": "ui.responsive-screen-shell",
+  "category": "ui",
+  "summary": "A Container-first screen shell that exposes deterministic narrow and wide modes.",
+  "canonical_owner": "responsive-ui",
+  "target": {
+    "engine": "Godot 4.6.x",
+    "language": "GDScript",
+    "platform": "Web",
+    "renderer": "Compatibility",
+    "threading": "single"
+  },
+  "dependencies": [],
+  "autoloads": [],
+  "input_actions": [],
+  "public_contract": {
+    "signals": ["mode_changed(is_narrow: bool)"],
+    "resources": [],
+    "required_nodes": ["ResponsiveScreenShell/SafeMargin/Content"]
+  },
+  "files": [
+    "responsive_shell.gd"
+  ],
+  "demo_scene": "demo.tscn",
+  "test_script": "tests/test.gd",
+  "composes_with": ["ui.theme-tokens", "ui.component-gallery-core"],
+  "provenance": {
+    "kind": "builda-owned-original",
+    "upstream_code_copied": false,
+    "references": ["Godot Control and Container documentation"]
+  }
+}

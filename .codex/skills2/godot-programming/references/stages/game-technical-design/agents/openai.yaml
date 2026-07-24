@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Technical Design"
+  short_description: "Plan and harden a buildable Godot architecture"
+  default_prompt: "Use $game-technical-design to plan the next playable milestone or a bounded second-pass architecture hardening based on current runtime evidence."

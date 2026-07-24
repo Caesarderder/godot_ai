@@ -1,0 +1,4 @@
+interface:
+  display_name: "美术"
+  short_description: "Builda Godot 美术知识地图"
+  default_prompt: "Use $godot-art to select one visual-content axis and only the smallest leaves needed for the requested asset or presentation outcome."
