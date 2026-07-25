@@ -6,6 +6,11 @@ const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_gener
 const HeroProgression := preload("res://game/scripts/domain/progression/hero_progression.gd")
 const FormationService := preload("res://game/scripts/domain/formation/formation_service.gd")
 const FactoryService := preload("res://game/scripts/domain/factory/factory_service.gd")
+const WalletServiceScript := preload("res://game/scripts/domain/economy/wallet_service.gd")
+const SalvageCatalogScript := preload("res://game/scripts/domain/economy/salvage_catalog.gd")
+const QuestServiceScript := preload("res://game/scripts/domain/quest/quest_service.gd")
+const AchievementServiceScript := preload("res://game/scripts/domain/achievement/achievement_service.gd")
+const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 const CommandClassRegistryScript := preload("res://game/scripts/commands/command_class_registry.gd")
 const CommandFingerprintScript := preload("res://game/scripts/commands/command_fingerprint.gd")
 
@@ -58,6 +63,10 @@ func execute(envelope: Dictionary) -> Dictionary:
 	var event: Dictionary = _apply_reducer(candidate, command_type, payload)
 	if not bool(event.get("ok", false)):
 		return _error(String(event.get("error", "COMMAND_FAILED")))
+	if not ["refresh_quests", "claim_quest"].has(command_type):
+		QuestServiceScript.apply_event(candidate, event.get("event", {}) as Dictionary)
+	if command_type != "refresh_achievements":
+		AchievementServiceScript.apply_event(candidate, event.get("event", {}) as Dictionary, command_id)
 	var invariant_errors: Array[String] = candidate.validate()
 	if not invariant_errors.is_empty():
 		return _error("INVARIANT_FAILED: %s" % "; ".join(invariant_errors))
@@ -97,32 +106,63 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			var battle_id := String(data.get("battle_id", ""))
 			var outcome := String(data.get("outcome", ""))
 			var ticks := int(data.get("ticks", 0))
-			var reward := {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}
+			var stage_id := String(data.get("stage_id", StageCatalogScript.DEFAULT_STAGE_ID))
+			var reward := StageCatalogScript.reward_for(stage_id, outcome)
+			if reward.is_empty():
+				return {"ok": false, "error": "STAGE_NOT_FOUND"}
+			var was_first_victory := false
 			if outcome == "victory":
-				reward = {"gold": 80, "xp_books": 1, "porcelain": 24, "parts": 16, "sludge": 12}
 				var cleared: Array = candidate.stage_progress.get("cleared_stages", [])
-				if not cleared.has("stage_1_1"):
-					cleared.append("stage_1_1")
+				was_first_victory = not cleared.has(stage_id)
+				if not cleared.has(stage_id):
+					cleared.append(stage_id)
 				candidate.stage_progress["cleared_stages"] = cleared
-			elif outcome == "defeat":
-				reward = {"gold": 12, "xp_books": 2, "porcelain": 8, "parts": 5, "sludge": 4}
-			elif outcome == "timeout":
-				reward = {"gold": 6, "xp_books": 2, "porcelain": 4, "parts": 3, "sludge": 2}
+				var next_stage := StageCatalogScript.next_stage_id(stage_id)
+				if not next_stage.is_empty():
+					candidate.stage_progress["highest_unlocked_stage"] = _max_stage_id(String(candidate.stage_progress.get("highest_unlocked_stage", StageCatalogScript.DEFAULT_STAGE_ID)), next_stage)
 			candidate.economy.grant({"gold": reward["gold"], "xp_books": reward["xp_books"]})
 			candidate.factory.grant({"porcelain": reward["porcelain"], "parts": reward["parts"], "sludge": reward["sludge"]})
-			candidate.attempt_counters["stage_1_1"] = int(candidate.attempt_counters.get("stage_1_1", 0)) + 1
-			var unlocked_blueprints := FactoryService.apply_battle_unlocks(candidate, outcome, int(candidate.attempt_counters["stage_1_1"]))
+			var alliance_scrap_granted := 0
+			var alliance_scrap_receipt: Dictionary = {}
+			if outcome == "victory" and was_first_victory:
+				alliance_scrap_granted = SalvageCatalogScript.stage_victory_salvage(stage_id)
+				var scrap_result := WalletServiceScript.grant_alliance_scrap(
+					candidate,
+					"first_victory_salvage:%s" % stage_id,
+					alliance_scrap_granted,
+					"battle_first_victory",
+					{"stage_id": stage_id, "battle_id": battle_id}
+				)
+				if not bool(scrap_result.get("ok", false)):
+					return {"ok": false, "error": String(scrap_result.get("error", "SALVAGE_GRANT_FAILED"))}
+				alliance_scrap_receipt = (scrap_result.get("receipt", {}) as Dictionary).duplicate(true)
+			candidate.attempt_counters[stage_id] = int(candidate.attempt_counters.get(stage_id, 0)) + 1
+			var unlocked_blueprints := FactoryService.apply_battle_unlocks(candidate, outcome, int(candidate.attempt_counters[stage_id]), stage_id)
 			return {
 				"ok": true,
 				"event": {
 					"type": "battle_settled",
 					"battle_id": battle_id,
+					"stage_id": stage_id,
 					"outcome": outcome,
 					"ticks": ticks,
 					"reward": reward,
 					"unlocked_blueprints": unlocked_blueprints,
+					"next_stage_id": StageCatalogScript.next_stage_id(stage_id) if outcome == "victory" else "",
+					"alliance_scrap_granted": alliance_scrap_granted,
+					"alliance_scrap_receipt": alliance_scrap_receipt,
 				},
 			}
+		"exchange_salvage":
+			return WalletServiceScript.exchange_salvage(candidate, String(data["request_id"]), String(data["offer_id"]))
+		"refresh_quests":
+			return QuestServiceScript.refresh_quests(candidate)
+		"claim_quest":
+			return QuestServiceScript.claim_quest(candidate, String(data["quest_id"]), int(data["generation"]), String(data["request_id"]))
+		"refresh_achievements":
+			return AchievementServiceScript.refresh_achievements(candidate)
+		"claim_achievement":
+			return AchievementServiceScript.claim_achievement(candidate, String(data["achievement_id"]), int(data["generation"]), String(data["request_id"]))
 		"start_production":
 			return FactoryService.start_production(candidate, String(data["recipe_id"]), int(data["now_unix"]))
 		"claim_production":
@@ -222,15 +262,59 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 		"recruit_hero":
 			return _exact_keys(data, [], "recruit_hero")
 		"settle_battle":
-			var battle_error := _exact_keys(data, ["battle_id", "outcome", "ticks"], "settle_battle")
+			var expected_keys: Array[String] = ["battle_id", "outcome", "ticks"]
+			if data.has("stage_id"):
+				expected_keys.append("stage_id")
+			var battle_error := _exact_keys(data, expected_keys, "settle_battle")
 			if not battle_error.is_empty():
 				return battle_error
 			if typeof(data["battle_id"]) != TYPE_STRING or String(data["battle_id"]).is_empty():
 				return "settle_battle.battle_id must be non-empty string"
+			if data.has("stage_id") and (typeof(data["stage_id"]) != TYPE_STRING or not StageCatalogScript.has_stage(String(data["stage_id"]))):
+				return "settle_battle.stage_id must be a known stage"
 			if typeof(data["outcome"]) != TYPE_STRING or not ["victory", "defeat", "timeout"].has(String(data["outcome"])):
 				return "settle_battle.outcome must be victory, defeat, or timeout"
-			if typeof(data["ticks"]) != TYPE_INT or int(data["ticks"]) <= 0 or int(data["ticks"]) > 300:
-				return "settle_battle.ticks must be int 1..300"
+			var settlement_stage_id := String(data.get("stage_id", StageCatalogScript.DEFAULT_STAGE_ID))
+			var max_ticks := int(StageCatalogScript.stage(settlement_stage_id).get("max_ticks", 300))
+			if typeof(data["ticks"]) != TYPE_INT or int(data["ticks"]) <= 0 or int(data["ticks"]) > max_ticks:
+				return "settle_battle.ticks must be int 1..%d" % max_ticks
+			return ""
+		"exchange_salvage":
+			var exchange_error := _exact_keys(data, ["request_id", "offer_id"], "exchange_salvage")
+			if not exchange_error.is_empty():
+				return exchange_error
+			if typeof(data["request_id"]) != TYPE_STRING or String(data["request_id"]).is_empty():
+				return "exchange_salvage.request_id must be non-empty string"
+			if typeof(data["offer_id"]) != TYPE_STRING or String(data["offer_id"]).is_empty():
+				return "exchange_salvage.offer_id must be non-empty string"
+			if not SalvageCatalogScript.has_offer(String(data["offer_id"])):
+				return "UNKNOWN_SALVAGE_OFFER"
+			return ""
+		"refresh_quests":
+			return _exact_keys(data, [], "refresh_quests")
+		"claim_quest":
+			var claim_quest_error := _exact_keys(data, ["quest_id", "generation", "request_id"], "claim_quest")
+			if not claim_quest_error.is_empty():
+				return claim_quest_error
+			if typeof(data["quest_id"]) != TYPE_STRING or String(data["quest_id"]).is_empty():
+				return "claim_quest.quest_id must be non-empty string"
+			if typeof(data["generation"]) != TYPE_INT or int(data["generation"]) < 0:
+				return "claim_quest.generation must be non-negative int"
+			if typeof(data["request_id"]) != TYPE_STRING or String(data["request_id"]).is_empty():
+				return "claim_quest.request_id must be non-empty string"
+			return ""
+		"refresh_achievements":
+			return _exact_keys(data, [], "refresh_achievements")
+		"claim_achievement":
+			var claim_achievement_error := _exact_keys(data, ["achievement_id", "generation", "request_id"], "claim_achievement")
+			if not claim_achievement_error.is_empty():
+				return claim_achievement_error
+			if typeof(data["achievement_id"]) != TYPE_STRING or String(data["achievement_id"]).is_empty():
+				return "claim_achievement.achievement_id must be non-empty string"
+			if typeof(data["generation"]) != TYPE_INT or int(data["generation"]) != 0:
+				return "claim_achievement.generation must be zero"
+			if typeof(data["request_id"]) != TYPE_STRING or String(data["request_id"]).is_empty():
+				return "claim_achievement.request_id must be non-empty string"
 			return ""
 		"start_production":
 			var start_error := _exact_keys(data, ["recipe_id", "now_unix"], "start_production")
@@ -312,3 +396,11 @@ func _exact_keys(data: Dictionary, expected: Array[String], label: String) -> St
 	if actual != sorted_expected:
 		return "%s payload keys mismatch" % label
 	return ""
+
+
+func _max_stage_id(current_stage_id: String, candidate_stage_id: String) -> String:
+	var current_index := StageCatalogScript.all_stage_ids().find(current_stage_id)
+	var candidate_index := StageCatalogScript.all_stage_ids().find(candidate_stage_id)
+	if candidate_index > current_index:
+		return candidate_stage_id
+	return current_stage_id

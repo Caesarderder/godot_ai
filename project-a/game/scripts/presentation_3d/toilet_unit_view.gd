@@ -16,6 +16,8 @@ var _hp_label: Label3D
 var _anim_time: float = 0.0
 var _attack_pulse: float = 0.0
 var _hit_pulse: float = 0.0
+var _skill_pulse: float = 0.0
+var _status_tint: Color = Color.WHITE
 var _is_alive: bool = true
 var _target_position: Vector3 = Vector3.ZERO
 
@@ -65,8 +67,12 @@ func play_battle_event(event: Dictionary) -> void:
 		_hit_pulse = 1.0
 	elif event_type == &"skill_used" and event.get("unit_id", &"") == unit_id:
 		_attack_pulse = 1.6
+		_skill_pulse = 1.0
+		_status_tint = _skill_color(String(event.get("skill_id", "")))
 	elif event_type in [&"unit_healed", &"unit_shielded", &"unit_revived"] and event.get("unit_id", &"") == unit_id:
 		_hit_pulse = 0.65
+		_skill_pulse = 0.55
+		_status_tint = Color("#77f2a2")
 
 
 func _process(delta: float) -> void:
@@ -76,14 +82,17 @@ func _process(delta: float) -> void:
 	position = position.lerp(_target_position, minf(1.0, delta * 7.0))
 	_attack_pulse = maxf(0.0, _attack_pulse - delta * 4.5)
 	_hit_pulse = maxf(0.0, _hit_pulse - delta * 6.0)
+	_skill_pulse = maxf(0.0, _skill_pulse - delta * 2.8)
 	var facing := -1.0 if team == TEAM_ALLY else 1.0
 	_body_pivot.position = Vector3(
 		sin(_anim_time * 2.2 + float(slot)) * 0.012,
-		sin(_anim_time * 3.0 + float(slot)) * 0.025,
+		sin(_anim_time * 3.0 + float(slot)) * 0.025 + sin(_skill_pulse * PI) * 0.08,
 		facing * sin(_attack_pulse * PI) * 0.38
 	)
 	var squash := sin(_hit_pulse * PI) * 0.16
-	_body_pivot.scale = Vector3(1.0 + squash, 1.0 - squash, 1.0 + squash)
+	var skill_scale := sin(_skill_pulse * PI) * 0.14
+	_body_pivot.scale = Vector3(1.0 + squash + skill_scale, 1.0 - squash + skill_scale * 0.35, 1.0 + squash + skill_scale)
+	_name_label.modulate = _status_tint.lerp(Color("#7fd7ff") if team == TEAM_ALLY else Color("#ff8d82"), 1.0 - _skill_pulse)
 
 
 func _build_model(unit_snapshot: Dictionary) -> void:
@@ -95,6 +104,7 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 
 	var class_id := String(unit_snapshot.get("class_id", "fighter"))
 	var archetype_id := String(unit_snapshot.get("archetype_id", class_id))
+	var display_name := String(unit_snapshot.get("display_name", ""))
 	var elite := bool(unit_snapshot.get("elite", false))
 	var porcelain_key := "ally_porcelain" if team == TEAM_ALLY else "enemy_porcelain"
 	var accent_key := "ally_accent" if team == TEAM_ALLY else "enemy_accent"
@@ -117,6 +127,8 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 		_add_part("Sight", "sight", accent_key, Vector3(0.0, 1.78, -0.02))
 	if class_id == "arcanist" or archetype_id in ["sonic", "parasite", "repair"]:
 		_add_part("Antenna", "antenna", accent_key, Vector3(0.0, 1.88, 0.0))
+	if team != TEAM_ALLY:
+		_add_alliance_headgear(display_name, class_id, accent_key)
 	if archetype_id == "saw":
 		_add_part("LeftSaw", "saw", accent_key, Vector3(-0.76, 0.74, -0.04))
 		_add_part("RightSaw", "saw", accent_key, Vector3(0.76, 0.74, -0.04))
@@ -143,6 +155,19 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 	_hp_label.outline_size = 6
 	_hp_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_body_pivot.add_child(_hp_label)
+
+
+func _add_alliance_headgear(display_name: String, class_id: String, material_key: String) -> void:
+	if display_name.contains("电视") or display_name.contains("TV"):
+		var screen := _add_part("TVScreen", "tv_screen", material_key, Vector3(0.0, 1.55, -0.34))
+		screen.rotation_degrees.x = -4.0
+		_add_part("TVGlow", "tv_glow", "enemy_screen", Vector3(0.0, 1.55, -0.37))
+	elif display_name.contains("音箱") or display_name.contains("Speaker") or class_id == "arcanist":
+		_add_part("SpeakerLeft", "speaker_cone", material_key, Vector3(-0.27, 1.52, -0.31))
+		_add_part("SpeakerRight", "speaker_cone", material_key, Vector3(0.27, 1.52, -0.31))
+	else:
+		_add_part("CameraBody", "camera_box", material_key, Vector3(0.0, 1.58, -0.31))
+		_add_part("CameraLens", "camera_lens", "dark", Vector3(0.0, 1.58, -0.47))
 
 
 func _add_limb(part_name: String, side: float, material_key: String) -> void:
@@ -244,6 +269,21 @@ static func _ensure_shared_resources() -> void:
 	_shared_meshes["saw"] = _box(Vector3(0.1, 0.38, 0.16))
 	_shared_meshes["bomb"] = _box(Vector3(0.46, 0.36, 0.24))
 	_shared_meshes["crest"] = _box(Vector3(0.5, 0.16, 0.08))
+	_shared_meshes["camera_box"] = _box(Vector3(0.42, 0.28, 0.24))
+	var camera_lens := CylinderMesh.new()
+	camera_lens.top_radius = 0.105
+	camera_lens.bottom_radius = 0.13
+	camera_lens.height = 0.12
+	camera_lens.radial_segments = 10
+	_shared_meshes["camera_lens"] = camera_lens
+	var speaker_cone := CylinderMesh.new()
+	speaker_cone.top_radius = 0.02
+	speaker_cone.bottom_radius = 0.16
+	speaker_cone.height = 0.16
+	speaker_cone.radial_segments = 10
+	_shared_meshes["speaker_cone"] = speaker_cone
+	_shared_meshes["tv_screen"] = _box(Vector3(0.58, 0.36, 0.08))
+	_shared_meshes["tv_glow"] = _box(Vector3(0.46, 0.24, 0.025))
 
 	var antenna := CylinderMesh.new()
 	antenna.top_radius = 0.025
@@ -259,6 +299,7 @@ static func _ensure_shared_resources() -> void:
 	_shared_materials["skin"] = _material(Color("#d9a178"), 0.86)
 	_shared_materials["dark"] = _material(Color("#17202a"), 0.72)
 	_shared_materials["danger"] = _material(Color("#ff694d"), 0.48)
+	_shared_materials["enemy_screen"] = _material(Color("#38465a"), 0.4, Color("#8fd5ff"), 0.9)
 
 
 static func _box(size: Vector3) -> BoxMesh:
@@ -267,8 +308,25 @@ static func _box(size: Vector3) -> BoxMesh:
 	return mesh
 
 
-static func _material(color: Color, roughness: float) -> StandardMaterial3D:
+static func _material(color: Color, roughness: float, emission: Color = Color.TRANSPARENT, emission_energy: float = 0.0) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
 	material.roughness = roughness
+	if emission_energy > 0.0:
+		material.emission_enabled = true
+		material.emission = emission
+		material.emission_energy_multiplier = emission_energy
 	return material
+
+
+static func _skill_color(skill_id: String) -> Color:
+	return {
+		"plunger_charge": Color("#75ddff"),
+		"sonic_disruptor": Color("#8ee9ff"),
+		"rocket_salvo": Color("#ff9d48"),
+		"suicide_dive": Color("#ff7048"),
+		"siege_shield": Color("#8df5bd"),
+		"saw_rush": Color("#f7d56d"),
+		"field_repair": Color("#77f2a2"),
+		"parasite_swarm": Color("#b489ff"),
+	}.get(skill_id, Color.WHITE)

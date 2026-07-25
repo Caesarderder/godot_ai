@@ -4,11 +4,12 @@ km_type: map
 domain: cross-domain
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-25
 source_of_truth:
   - docs/index.md
 validated_by:
   - python3 tools/docs_lint.py
+  - manual-skill-routing-review
 tags:
   - workflow:knowledge-query
   - quality:docs-routing
@@ -16,6 +17,7 @@ related:
   - map.public-index
   - map.schema
   - map.workflows
+  - map.skills
   - map.domains
   - invariant.project-boundaries
 ---
@@ -30,7 +32,7 @@ related:
 
 | 层 | 入口 | 用途 |
 |---|---|---|
-| 控制层 | 本页、[KM:map.schema](schema.md) | 读法和节点契约 |
+| 控制层 | 本页、[KM:map.schema](schema.md)、[KM:map.skills](skills.md) | 读法、节点契约和 Skill 能力路由 |
 | 领域层 | [KM:map.domains](domains.md) | 系统职责和反边界 |
 | 工作流层 | [KM:map.workflows](workflows.md) | 任务步骤、停止条件、验证 |
 | 约束层 | [KM:invariant.project-boundaries](invariants.md) | 不可破坏的边界 |
@@ -42,6 +44,7 @@ related:
 ## 常用入口
 
 - 查事实：[KM:workflow.knowledge-query](../workflows/knowledge-query.md)
+- 选 Skill：[KM:workflow.skill-routing](../workflows/skill-routing.md)
 - 找代码：[KM:workflow.code-locating](../workflows/code-locating.md)
 - 开工影响分析：[KM:workflow.impact-map](../workflows/impact-map.md)
 - 写代码/审查：[KM:workflow.code-writing-review](../workflows/code-writing-review.md)

@@ -4,6 +4,7 @@ extends RefCounted
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const FactoryStateScript := preload("res://game/scripts/state/factory_state.gd")
+const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 
 
 static func start_production(state: RefCounted, recipe_id: String, now_unix: int) -> Dictionary:
@@ -119,16 +120,11 @@ static func offline_summary(state: RefCounted, now_unix: int) -> Dictionary:
 	}
 
 
-static func apply_battle_unlocks(state: RefCounted, outcome: String, attempt_count: int) -> Array[String]:
+static func apply_battle_unlocks(state: RefCounted, outcome: String, attempt_count: int, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID) -> Array[String]:
 	var unlocked: Array[String] = []
-	if outcome == "defeat" or outcome == "timeout":
-		if attempt_count >= 1:
-			unlocked.append_array(state.factory.unlock_blueprints(FactoryStateScript.FIRST_FAILURE_UNLOCKS))
-	elif outcome == "victory":
-		unlocked.append_array(state.factory.unlock_blueprints(FactoryStateScript.FIRST_FAILURE_UNLOCKS))
-		unlocked.append_array(state.factory.unlock_blueprints(FactoryStateScript.FIRST_VICTORY_UNLOCKS))
-		if not (state.stage_progress.get("cleared_stages", []) as Array).is_empty():
-			unlocked.append_array(state.factory.unlock_blueprints(FactoryStateScript.CORE_CLEAR_UNLOCKS))
+	if outcome in ["defeat", "timeout"] and attempt_count < 1:
+		return unlocked
+	unlocked.append_array(state.factory.unlock_blueprints(StageCatalogScript.unlocks_for(stage_id, outcome)))
 	return unlocked
 
 

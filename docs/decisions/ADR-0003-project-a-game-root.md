@@ -25,11 +25,7 @@ related:
 
 ## 状态
 
-<<<<<<< HEAD
 Deprecated。历史 Godot 2D/Mobile 决策保留；当前实现根由 [KM:decision.project-a-web-3d-root](ADR-0005-project-a-web-3d-root.md) 替代。
-=======
-Deprecated，2026-07-20。历史决策保留；它曾由 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 替代。2026-07-23 恢复 Godot 主线的当前决策见 [KM:decision.return-to-project-a](ADR-0005-return-to-project-a.md)。
->>>>>>> origin/codex/toilet-man-3d-idle
 
 ## 决策
 

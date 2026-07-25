@@ -7,8 +7,8 @@ const FormationStateScript := preload("res://game/scripts/state/formation_state.
 const FactoryStateScript := preload("res://game/scripts/state/factory_state.gd")
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 
-var schema_version: int = 3
-var content_version: String = "factory-siege-v3"
+var schema_version: int = 4
+var content_version: String = "factory-siege-v4"
 var save_id: String = ""
 var run_seed: int = 0
 var revision: int = 0
@@ -26,6 +26,7 @@ var attempt_counters: Dictionary = {}
 var receipt_ledgers: Dictionary = {"durable": {}, "reversible": {}}
 var command_receipts: Dictionary = {}
 var business_receipts: Dictionary = {}
+var achievements: Dictionary = {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}
 var saved_at_unix: int = 0
 var last_seen_wall_unix: int = 0
 var last_settled_unix: int = 0
@@ -102,6 +103,7 @@ func to_dict() -> Dictionary:
 		"receipt_ledgers": receipt_ledgers.duplicate(true),
 		"command_receipts": command_receipts.duplicate(true),
 		"business_receipts": business_receipts.duplicate(true),
+		"achievements": achievements.duplicate(true),
 		"saved_at_unix": saved_at_unix,
 		"last_seen_wall_unix": last_seen_wall_unix,
 		"last_settled_unix": last_settled_unix,
@@ -111,8 +113,8 @@ func to_dict() -> Dictionary:
 
 static func from_dict(data: Dictionary) -> GameState:
 	var state := GameState.new()
-	state.schema_version = int(data.get("schema_version", 3))
-	state.content_version = String(data.get("content_version", "factory-siege-v3"))
+	state.schema_version = int(data.get("schema_version", 4))
+	state.content_version = String(data.get("content_version", "factory-siege-v4"))
 	state.save_id = String(data.get("save_id", ""))
 	state.run_seed = int(data.get("run_seed", 0))
 	state.revision = int(data.get("revision", 0))
@@ -132,6 +134,7 @@ static func from_dict(data: Dictionary) -> GameState:
 	state.receipt_ledgers = (data.get("receipt_ledgers", {}) as Dictionary).duplicate(true)
 	state.command_receipts = (data.get("command_receipts", {}) as Dictionary).duplicate(true)
 	state.business_receipts = (data.get("business_receipts", {}) as Dictionary).duplicate(true)
+	state.achievements = (data.get("achievements", {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}) as Dictionary).duplicate(true)
 	state.saved_at_unix = int(data.get("saved_at_unix", 0))
 	state.last_seen_wall_unix = int(data.get("last_seen_wall_unix", 0))
 	state.last_settled_unix = int(data.get("last_settled_unix", 0))
@@ -141,7 +144,7 @@ static func from_dict(data: Dictionary) -> GameState:
 
 func validate() -> Array[String]:
 	var errors: Array[String] = []
-	if schema_version != 3:
+	if schema_version != 4:
 		errors.append("unsupported schema_version")
 	if content_version.is_empty():
 		errors.append("content_version is required")
@@ -158,6 +161,29 @@ func validate() -> Array[String]:
 	errors.append_array(formation.validate(roster_ids()))
 	errors.append_array(economy.validate())
 	errors.append_array(factory.validate())
+	var achievements_error := _validate_achievements()
+	if not achievements_error.is_empty():
+		errors.append(achievements_error)
 	if revision < 0:
 		errors.append("revision must not be negative")
 	return errors
+
+
+func _validate_achievements() -> String:
+	if typeof(achievements) != TYPE_DICTIONARY:
+		return "achievements must be dictionary"
+	var expected: Array[String] = ["progress", "completed", "claimed", "event_keys", "counters"]
+	var actual: Array[String] = []
+	for key in achievements.keys():
+		if typeof(key) != TYPE_STRING:
+			return "achievements has non-string key"
+		actual.append(String(key))
+	actual.sort()
+	var sorted_expected := expected.duplicate()
+	sorted_expected.sort()
+	if actual != sorted_expected:
+		return "achievements keys mismatch"
+	for key in expected:
+		if typeof(achievements[key]) != TYPE_DICTIONARY:
+			return "achievements.%s must be dictionary" % key
+	return ""

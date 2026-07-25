@@ -66,7 +66,7 @@ Accepted，2026-07-23；取代 [KM:decision.taptap-maker-game-root](ADR-0004-tap
 
 2026-07-24 校准：上方“影响”保留为决策当时的历史原文，不回写其时态。当前工程已从 Forward+ 切换到 GL Compatibility；当前切片已实现 `GameState` schema 3、8 英雄、L1-L5 培养、三材料八配方工厂、3 队列、生产领取、同原型同星 3 合 1、六槽编队、经济资源、命令 fingerprint/幂等/revision/先存后换、严格 JSON、v1->v2->v3 迁移、主档/备份恢复、bootstrap gate 和三阶段 5Hz 战斗，并通过 `tools/run_meta_tests.gd` 与 `tools/run_battle_tests.gd`。
 
-Web export preset 与本地 HTTP 浏览器交互基线已落实；PWA、浏览器持久性探测、音频解锁、WebLifecycle、离线结算、装备、任务、跨帧率 digest、paired balance 和手机浏览器真机证据尚未落实，因此 M0-M5 仍不能据此标记整体通过。
+Web/PWA export preset、离线页/图标/service worker、本地产物审计、设置存储、失焦暂停与 844×390 本地 HTTP 浏览器路径已落实；生产源持久性探测、音频解锁、离线结算、装备、任务、跨帧率 digest、paired balance 和手机浏览器真机证据尚未落实，因此 M0-M5 仍不能据此标记整体通过。
 
 ## 相关节点
 

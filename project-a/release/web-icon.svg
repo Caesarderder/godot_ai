@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Project A release icon">
+  <rect width="512" height="512" rx="96" fill="#11131a"/>
+  <path d="M84 344c16-84 77-142 172-142s156 58 172 142" fill="#293244"/>
+  <path d="M128 344h256v44c0 36-29 65-65 65H193c-36 0-65-29-65-65z" fill="#f2efe6"/>
+  <path d="M173 184c9-70 50-111 83-126 33 15 74 56 83 126" fill="#d9e6ff"/>
+  <path d="M197 173h118c22 0 40 18 40 40v68H157v-68c0-22 18-40 40-40z" fill="#f2efe6"/>
+  <circle cx="216" cy="239" r="18" fill="#11131a"/>
+  <circle cx="296" cy="239" r="18" fill="#11131a"/>
+  <path d="M213 309c28 20 58 20 86 0" fill="none" stroke="#11131a" stroke-width="18" stroke-linecap="round"/>
+  <path d="M72 126l66 25M440 126l-66 25M256 35v72" fill="none" stroke="#ffcf70" stroke-width="22" stroke-linecap="round"/>
+</svg>

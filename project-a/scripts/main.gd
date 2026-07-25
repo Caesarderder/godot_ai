@@ -3,10 +3,16 @@ extends Node
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const FactoryService := preload("res://game/scripts/domain/factory/factory_service.gd")
 const HeroProgression := preload("res://game/scripts/domain/progression/hero_progression.gd")
+const StageCatalog := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const QuestCatalog := preload("res://game/scripts/domain/quest/quest_catalog.gd")
 const BattleWorldScript := preload("res://game/scripts/presentation_3d/battle_world.gd")
+const SettingsStoreScript := preload("res://game/scripts/platform/settings_store.gd")
+const WebRuntimeScript := preload("res://game/scripts/platform/web_runtime.gd")
 const CJKFont := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 
-enum AppState { BOOT, TITLE, CAMP, FACTORY, CULTIVATION, FORMATION, EXPEDITION, BATTLE, RESULT }
+enum AppState { BOOT, TITLE, CAMP, FACTORY, CULTIVATION, FORMATION, EXPEDITION, BATTLE, RESULT, SETTINGS, QUESTS }
+
+const ACHIEVEMENT_CATALOG_PATH := "res://game/scripts/domain/achievement/achievement_catalog.gd"
 
 const COLOR_BG := Color("#0b1322")
 const COLOR_PANEL := Color("#16243a")
@@ -20,6 +26,17 @@ const UI_SCALE: float = 1.65
 const SLOT_KEYS: Array[String] = ["front_left", "front_center", "front_right", "back_left", "back_center", "back_right"]
 const SLOT_NAMES: Array[String] = ["前左", "前中", "前右", "后左", "后中", "后右"]
 const MATERIAL_LABELS := {"porcelain": "瓷片", "parts": "零件", "sludge": "污泥"}
+const SALVAGE_EXCHANGES: Array[Dictionary] = [
+	{"exchange_id": "porcelain_resupply", "display_name": "瓷片箱", "cost": 8, "reward_text": "瓷片40"},
+	{"exchange_id": "mixed_parts", "display_name": "零件箱", "cost": 12, "reward_text": "零28 泥20"},
+	{"exchange_id": "training_cache", "display_name": "训练箱", "cost": 15, "reward_text": "金120 书2"},
+]
+const FALLBACK_QUESTS: Array[Dictionary] = [
+	{"quest_id": "campaign_act1", "generation": 1, "scope": "campaign", "title": "当前大战役任务", "description": "推进第一幕城市大道，累计完成 25 个关键目标。", "progress": 0, "target": 25, "reward_text": "战功 +50"},
+	{"quest_id": "loop_destroy", "generation": 1, "scope": "loop", "title": "摧毁联盟设施", "description": "在战斗中拆除结构。", "progress": 0, "target": 3, "reward_text": "战功 +8"},
+	{"quest_id": "loop_factory", "generation": 1, "scope": "loop", "title": "补充攻城单位", "description": "完成一次生产或领取。", "progress": 0, "target": 1, "reward_text": "战功 +6"},
+	{"quest_id": "loop_training", "generation": 1, "scope": "loop", "title": "强化主力", "description": "完成一次训练或升星。", "progress": 0, "target": 1, "reward_text": "战功 +6"},
+]
 
 @onready var world_host: Node3D = $WorldHost
 @onready var ui_root: Control = $Interface/UIRoot
@@ -43,10 +60,16 @@ var command_serial: int = 0
 var selected_formation_slot: int = 0
 var selected_merge_ids: Array[String] = []
 var selected_training_id: String = ""
+var selected_stage_id: String = StageCatalog.DEFAULT_STAGE_ID
+var selected_achievement_category: String = "all"
 var battle_is_paused: bool = false
+var settings_store: RefCounted
+var web_runtime: Node
+var settings_return_state: AppState = AppState.CAMP
 
 
 func _ready() -> void:
+	_initialize_platform_runtime()
 	game = get_node_or_null("/root/Game")
 	ui_root.theme = _build_theme()
 	if game == null:
@@ -56,6 +79,51 @@ func _ready() -> void:
 		game.bootstrap_completed.connect(_on_bootstrap_completed)
 	_show_boot()
 	_on_bootstrap_completed(String(game.bootstrap_status))
+
+
+func _notification(what: int) -> void:
+	if web_runtime == null:
+		return
+	match what:
+		NOTIFICATION_APPLICATION_FOCUS_IN:
+			web_runtime.set_focus_state(true)
+		NOTIFICATION_APPLICATION_FOCUS_OUT:
+			web_runtime.set_focus_state(false)
+		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+			web_runtime.set_focus_state(true)
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			web_runtime.set_focus_state(false)
+		NOTIFICATION_WM_CLOSE_REQUEST:
+			web_runtime.set_visibility_state(false)
+		_:
+			pass
+
+
+func _initialize_platform_runtime() -> void:
+	settings_store = SettingsStoreScript.new()
+	settings_store.load_settings()
+	_apply_settings_to_runtime()
+	web_runtime = WebRuntimeScript.new()
+	web_runtime.name = "WebRuntime"
+	add_child(web_runtime)
+	web_runtime.runtime_state_changed.connect(_on_runtime_state_changed)
+
+
+func _apply_settings_to_runtime() -> void:
+	if settings_store == null:
+		return
+	var volume_ratio := float(settings_store.master_volume) / 100.0
+	AudioServer.set_bus_volume_db(0, -80.0 if volume_ratio <= 0.0 else linear_to_db(volume_ratio))
+	AudioServer.set_bus_mute(0, volume_ratio <= 0.0)
+	if battle_world != null and battle_world.has_method("configure_presentation"):
+		battle_world.configure_presentation(settings_store.effects_quality, settings_store.reduced_motion)
+
+
+func _on_runtime_state_changed(state: Dictionary) -> void:
+	if app_state != AppState.BATTLE or battle_world == null:
+		return
+	if not bool(state.get("is_interactive", true)):
+		_set_battle_paused(true)
 
 
 func _process(delta: float) -> void:
@@ -137,6 +205,10 @@ func _show_title() -> void:
 	var button := _button("进入营地", COLOR_PRIMARY, Vector2(210, 54), 19)
 	button.pressed.connect(_show_camp)
 	column.add_child(button)
+	var settings_button := _button("设置", COLOR_PANEL_ALT, Vector2(210, 46), 16)
+	settings_button.name = "TitleSettingsButton"
+	settings_button.pressed.connect(func() -> void: _show_settings(AppState.TITLE))
+	column.add_child(settings_button)
 	button.grab_focus()
 
 
@@ -163,10 +235,20 @@ func _show_camp() -> void:
 	var copy := VBoxContainer.new()
 	copy.add_theme_constant_override("separation", 8)
 	objective.add_child(copy)
-	copy.add_child(_label("下一目标", 14, COLOR_PRIMARY))
-	copy.add_child(_label("城市外围防线", 26, COLOR_TEXT))
-	copy.add_child(_label("三阶段推进：外围路障 -> 火力封锁区 -> 基地广场。", 15, COLOR_MUTED))
-	copy.add_child(_label("胜利奖励：金币、训练书、瓷片、零件、污泥。", 15, COLOR_ACCENT))
+	var objective_action := _derive_next_action(game.current_state())
+	var objective_eyebrow := _label("下一目标", 14, COLOR_PRIMARY)
+	copy.add_child(objective_eyebrow)
+	var objective_title := _label(String(objective_action["title"]), 26, COLOR_TEXT)
+	objective_title.name = "ObjectiveTitle"
+	copy.add_child(objective_title)
+	var objective_body := _label(String(objective_action["body"]), 15, COLOR_MUTED)
+	objective_body.name = "ObjectiveBody"
+	copy.add_child(objective_body)
+	var objective_button := _button(String(objective_action["cta_label"]), COLOR_PRIMARY, Vector2(180, 50), 16)
+	objective_button.name = "CampObjectiveButton"
+	objective_button.pressed.connect(func() -> void: _navigate_objective_action(objective_action))
+	copy.add_child(objective_button)
+	copy.add_child(_label("CTA 只进入对应界面；生产、领取、培育和出征仍由玩家确认。", 12, COLOR_ACCENT))
 	var actions := GridContainer.new()
 	actions.columns = 2
 	actions.add_theme_constant_override("h_separation", 8)
@@ -181,9 +263,17 @@ func _show_camp() -> void:
 	var formation := _button("编队", COLOR_PANEL_ALT, Vector2(138, 58), 19)
 	formation.pressed.connect(_show_formation)
 	actions.add_child(formation)
+	var quests := _button("目标", COLOR_PANEL_ALT, Vector2(138, 58), 19)
+	quests.name = "QuestEntryButton"
+	quests.pressed.connect(_show_quests)
+	actions.add_child(quests)
 	var expedition := _button("出征", COLOR_ACCENT, Vector2(138, 58), 19)
 	expedition.pressed.connect(_show_expedition)
 	actions.add_child(expedition)
+	var settings_button := _button("设置", COLOR_PANEL_ALT, Vector2(138, 58), 19)
+	settings_button.name = "CampSettingsButton"
+	settings_button.pressed.connect(func() -> void: _show_settings(AppState.CAMP))
+	actions.add_child(settings_button)
 
 
 func _build_top_bar() -> Control:
@@ -198,9 +288,11 @@ func _build_top_bar() -> Control:
 	var state: RefCounted = game.current_state()
 	var materials: Dictionary = state.factory.materials
 	var resources := _label(
-		"金 %d · 书 %d · 瓷 %d · 零 %d · 泥 %d" % [
+		"金 %d · 书 %d · 残 %d · 战功Lv%d · 瓷 %d · 零 %d · 泥 %d" % [
 			state.economy.gold,
 			state.economy.xp_books,
+			_salvage_balance(state),
+			_war_merit_rank(state),
 			int(materials.get("porcelain", 0)),
 			int(materials.get("parts", 0)),
 			int(materials.get("sludge", 0)),
@@ -208,10 +300,819 @@ func _build_top_bar() -> Control:
 		13,
 		COLOR_ACCENT
 	)
+	resources.name = "TopResourceSummaryLabel"
 	resources.autowrap_mode = TextServer.AUTOWRAP_OFF
 	resources.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(resources)
+	var settings_button := _button("设置", COLOR_PANEL_ALT, Vector2(72, 50), 12)
+	settings_button.name = "TopBarSettingsButton"
+	settings_button.pressed.connect(func() -> void: _show_settings(AppState.CAMP))
+	row.add_child(settings_button)
 	return panel
+
+
+func _show_settings(return_state: AppState = AppState.CAMP) -> void:
+	settings_return_state = return_state
+	app_state = AppState.SETTINGS
+	_clear_ui()
+	_clear_world()
+	_build_camp_world()
+	_add_background(Color(0.02, 0.04, 0.08, 0.64))
+	var safe := _safe_margin()
+	ui_root.add_child(safe)
+	var center := CenterContainer.new()
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	safe.add_child(center)
+	var panel := _panel(COLOR_PANEL, 14)
+	panel.custom_minimum_size = Vector2(760, 420)
+	center.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	panel.add_child(column)
+	var title := _label("设置", 26, COLOR_TEXT)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(title)
+	column.add_child(_settings_volume_row())
+	column.add_child(_settings_quality_row())
+	column.add_child(_settings_toggle_row("减少动态", "SettingsReducedMotionToggle", settings_store.reduced_motion, func(enabled: bool) -> void:
+		settings_store.set_reduced_motion(enabled)
+		_apply_settings_to_runtime()
+	))
+	column.add_child(_settings_toggle_row("全局自动技能", "SettingsGlobalAutoSkillToggle", settings_store.global_auto_skill, func(enabled: bool) -> void:
+		settings_store.set_global_auto_skill(enabled)
+	))
+	var platform_state := "Web" if web_runtime != null and web_runtime.is_web() else "本地/Headless"
+	column.add_child(_label("平台：%s · 失焦或隐藏时战斗会暂停，需要手动继续。" % platform_state, 13, COLOR_MUTED))
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	actions.add_theme_constant_override("separation", 8)
+	column.add_child(actions)
+	var save := _button("保存设置", COLOR_PRIMARY, Vector2(150, 44), 15)
+	save.name = "SettingsSaveButton"
+	save.pressed.connect(_save_settings_from_ui)
+	actions.add_child(save)
+	var back := _button("返回", COLOR_PANEL_ALT, Vector2(110, 44), 15)
+	back.name = "SettingsBackButton"
+	back.pressed.connect(_return_from_settings)
+	actions.add_child(back)
+	save.grab_focus()
+
+
+func _settings_volume_row() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var label := _label("主音量", 16, COLOR_TEXT)
+	label.custom_minimum_size.x = 120 * UI_SCALE
+	row.add_child(label)
+	var slider := HSlider.new()
+	slider.name = "SettingsMasterVolumeSlider"
+	slider.min_value = 0.0
+	slider.max_value = 100.0
+	slider.step = 1.0
+	slider.value = settings_store.master_volume
+	slider.custom_minimum_size = Vector2(340, 44) * UI_SCALE
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.focus_mode = Control.FOCUS_ALL
+	row.add_child(slider)
+	var value_label := _label("%d" % settings_store.master_volume, 15, COLOR_ACCENT)
+	value_label.name = "SettingsMasterVolumeValue"
+	value_label.custom_minimum_size.x = 52 * UI_SCALE
+	row.add_child(value_label)
+	slider.value_changed.connect(func(value: float) -> void:
+		settings_store.set_master_volume(value)
+		value_label.text = "%d" % settings_store.master_volume
+		_apply_settings_to_runtime()
+	)
+	return row
+
+
+func _settings_quality_row() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var label := _label("特效质量", 16, COLOR_TEXT)
+	label.custom_minimum_size.x = 120 * UI_SCALE
+	row.add_child(label)
+	var options := OptionButton.new()
+	options.name = "SettingsEffectsQualityOption"
+	options.custom_minimum_size = Vector2(340, 44) * UI_SCALE
+	options.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	options.focus_mode = Control.FOCUS_ALL
+	for quality in SettingsStoreScript.EFFECTS_QUALITIES:
+		options.add_item(quality)
+	var selected_index := SettingsStoreScript.EFFECTS_QUALITIES.find(settings_store.effects_quality)
+	options.select(maxi(0, selected_index))
+	options.item_selected.connect(func(index: int) -> void:
+		settings_store.set_effects_quality(SettingsStoreScript.EFFECTS_QUALITIES[index])
+		_apply_settings_to_runtime()
+	)
+	row.add_child(options)
+	return row
+
+
+func _settings_toggle_row(label_text: String, node_name: String, enabled: bool, callback: Callable) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var label := _label(label_text, 16, COLOR_TEXT)
+	label.custom_minimum_size.x = 120 * UI_SCALE
+	row.add_child(label)
+	var toggle := CheckButton.new()
+	toggle.name = node_name
+	toggle.button_pressed = enabled
+	toggle.custom_minimum_size = Vector2(160, 44) * UI_SCALE
+	toggle.focus_mode = Control.FOCUS_ALL
+	toggle.add_theme_font_size_override("font_size", int(14 * UI_SCALE))
+	toggle.toggled.connect(func(value: bool) -> void: callback.call(value))
+	row.add_child(toggle)
+	return row
+
+
+func _save_settings_from_ui() -> void:
+	_apply_settings_to_runtime()
+	if settings_store.save_settings():
+		_show_notice("设置已保存。")
+	else:
+		_show_notice("设置保存失败。")
+
+
+func _return_from_settings() -> void:
+	if settings_return_state == AppState.TITLE:
+		_show_title()
+	else:
+		_show_camp()
+
+
+func _derive_next_action(state: RefCounted, now_unix: int = -1) -> Dictionary:
+	var now := int(Time.get_unix_time_from_system()) if now_unix < 0 else now_unix
+	var highest_stage := String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
+	if not StageCatalog.has_stage(highest_stage):
+		highest_stage = StageCatalog.DEFAULT_STAGE_ID
+	var cleared: Array = state.stage_progress.get("cleared_stages", [])
+	var highest_cleared := cleared.has(highest_stage)
+	var highest_attempted := int(state.attempt_counters.get(highest_stage, 0)) > 0
+	var ready_count := _ready_factory_order_count(state, now)
+	if ready_count > 0:
+		return {
+			"title": "领取完成生产",
+			"body": "工厂已有 %d 单完成。先领取永久单位，再决定培育或继续推进。" % ready_count,
+			"cta_label": "去工厂领取",
+			"target": "factory",
+			"stage_id": highest_stage,
+		}
+	if not cleared.is_empty() and not highest_cleared and not highest_attempted:
+		return {
+			"title": "推进下一关",
+			"body": "%s 已开放。先看本关威胁，再决定是否调整编队。" % String(StageCatalog.stage(highest_stage).get("display_name", highest_stage)),
+			"cta_label": "查看下一关",
+			"target": "expedition",
+			"stage_id": highest_stage,
+		}
+	if state.attempt_counters.is_empty():
+		return {
+			"title": "出征侦察",
+			"body": "第一场先摸清 Cameramen 的路障、炮塔和核心巨炮节奏。失败不会卡死，会带回反制蓝图和成长资源。",
+			"cta_label": "去侦察",
+			"target": "expedition",
+			"stage_id": StageCatalog.DEFAULT_STAGE_ID,
+		}
+	var recipe_action := _recipe_guidance_action_for_stage(state, highest_stage)
+	if not recipe_action.is_empty():
+		return recipe_action
+	return {
+		"title": "再战城市大道",
+		"body": "关键成长已经到位。回到出征页，带着新单位和技能节奏再次压向联盟基地。",
+		"cta_label": "去出征",
+		"target": "expedition",
+		"stage_id": highest_stage,
+	}
+
+
+func _navigate_objective_action(action: Dictionary) -> void:
+	var stage_id := String(action.get("stage_id", selected_stage_id))
+	if StageCatalog.has_stage(stage_id):
+		selected_stage_id = stage_id
+	match String(action.get("target", "expedition")):
+		"factory":
+			_show_factory()
+		"cultivation":
+			_show_cultivation()
+		_:
+			_show_expedition()
+
+
+func _ready_factory_order_count(state: RefCounted, now_unix: int) -> int:
+	var count := 0
+	for order in state.factory.production_queue:
+		if int((order as Dictionary).get("completes_at_unix", 0)) <= now_unix:
+			count += 1
+	return count
+
+
+func _recipe_guidance_action_for_stage(state: RefCounted, stage_id: String) -> Dictionary:
+	var recipe_id := _select_guidance_recipe_id(state, stage_id)
+	if recipe_id.is_empty():
+		return {}
+	var recipe := FactoryCatalog.recipe(recipe_id)
+	if recipe.is_empty():
+		return {}
+	var archetype_id := String(recipe.get("archetype_id", ""))
+	var recipe_name := String(recipe.get("display_name", recipe_id))
+	var archetype_name := _archetype_name(archetype_id)
+	var count := _hero_count_by_archetype(state, archetype_id)
+	var has_two_star := _has_hero_by_archetype_and_star(state, archetype_id, 2)
+	if count <= 3:
+		return {
+			"title": "生产%s" % recipe_name,
+			"body": "%s蓝图已解锁，但%s数量不足。先补同原型单位，为三合一和后续升星准备材料。" % [recipe_name, archetype_name],
+			"cta_label": "去工厂生产",
+			"target": "factory",
+			"stage_id": stage_id,
+		}
+	if not has_two_star:
+		return {
+			"title": "合成%s" % archetype_name,
+			"body": "%s数量够了，先合成 2 星。原型升星比单纯堆战力更能解决当前关卡机制。" % archetype_name,
+			"cta_label": "去培育合成",
+			"target": "cultivation",
+			"stage_id": stage_id,
+		}
+	if _can_train_archetype_two_star(state, archetype_id):
+		return {
+			"title": "训练%s" % archetype_name,
+			"body": "%s已有 2 星，训练资源足够。先把等级转成稳定输出或承压能力，再回到城市大道。" % archetype_name,
+			"cta_label": "去培育训练",
+			"target": "cultivation",
+			"stage_id": stage_id,
+		}
+	return {}
+
+
+func _select_guidance_recipe_id(state: RefCounted, stage_id: String) -> String:
+	for recipe_id in _stage_guidance_recipe_ids(stage_id):
+		if not bool(state.factory.blueprints.get(recipe_id, false)):
+			continue
+		var recipe := FactoryCatalog.recipe(recipe_id)
+		if recipe.is_empty():
+			continue
+		var archetype_id := String(recipe.get("archetype_id", ""))
+		if _hero_count_by_archetype(state, archetype_id) <= 3:
+			return recipe_id
+		if not _has_hero_by_archetype_and_star(state, archetype_id, 2):
+			return recipe_id
+		if _can_train_archetype_two_star(state, archetype_id):
+			return recipe_id
+	return ""
+
+
+func _stage_guidance_recipe_ids(stage_id: String) -> Array[String]:
+	var stage_config := StageCatalog.stage(stage_id)
+	var ordered: Array[String] = []
+	for key in ["recommended_recipe_ids", "fallback_recipe_ids"]:
+		for recipe_value in stage_config.get(key, []):
+			var recipe_id := String(recipe_value)
+			if FactoryCatalog.has_recipe(recipe_id) and not ordered.has(recipe_id):
+				ordered.append(recipe_id)
+	if ordered.is_empty():
+		for recipe_id in ["heavy.armored", "ordinary.assault"]:
+			if FactoryCatalog.has_recipe(recipe_id):
+				ordered.append(recipe_id)
+	return ordered
+
+
+func _hero_count_by_archetype(state: RefCounted, archetype_id: String) -> int:
+	var count := 0
+	for hero in state.roster:
+		if String(hero.archetype_id) == archetype_id:
+			count += 1
+	return count
+
+
+func _has_hero_by_archetype_and_star(state: RefCounted, archetype_id: String, minimum_star: int) -> bool:
+	for hero in state.roster:
+		if String(hero.archetype_id) == archetype_id and int(hero.star) >= minimum_star:
+			return true
+	return false
+
+
+func _can_train_any_two_star(state: RefCounted) -> bool:
+	if state.economy.xp_books <= 0 or state.economy.gold < HeroProgression.GOLD_PER_BOOK:
+		return false
+	for hero in state.roster:
+		if int(hero.star) >= 2 and int(hero.xp) < HeroProgression.MAX_XP:
+			return true
+	return false
+
+
+func _can_train_archetype_two_star(state: RefCounted, archetype_id: String) -> bool:
+	if state.economy.xp_books <= 0 or state.economy.gold < HeroProgression.GOLD_PER_BOOK:
+		return false
+	for hero in state.roster:
+		if String(hero.archetype_id) == archetype_id and int(hero.star) >= 2 and int(hero.xp) < HeroProgression.MAX_XP:
+			return true
+	return false
+
+
+func _salvage_balance(state: RefCounted) -> int:
+	if state == null:
+		return 0
+	if state.get("inventory") != null:
+		var inventory := state.inventory as Dictionary
+		var items := inventory.get("items", {}) as Dictionary
+		if items.has("alliance_scrap"):
+			return int(items["alliance_scrap"])
+	var direct: Variant = state.get("salvage")
+	if direct != null:
+		return int(direct)
+	if state.get("economy") != null:
+		var economy_value: Variant = state.economy.get("salvage")
+		if economy_value != null:
+			return int(economy_value)
+	if state.get("factory") != null:
+		var factory_value: Variant = state.factory.get("salvage")
+		if factory_value != null:
+			return int(factory_value)
+	return 0
+
+
+func _war_merit_points(state: RefCounted) -> int:
+	if state == null:
+		return 0
+	var quests := state.get("quests") as Dictionary
+	if quests != null:
+		for key in ["war_merit", "war_merit_points", "points", "total_points"]:
+			if quests.has(key):
+				return int(quests[key])
+	if state.get("inventory") != null:
+		var inventory := state.inventory as Dictionary
+		var items := inventory.get("items", {}) as Dictionary
+		for item_id in ["war_merit", "battle_merit"]:
+			if items.has(item_id):
+				return int(items[item_id])
+	return 0
+
+
+func _war_merit_rank(state: RefCounted) -> int:
+	return QuestCatalog.rank_for_merit(_war_merit_points(state))
+
+
+func _war_merit_next_progress(state: RefCounted) -> String:
+	var rank := _war_merit_rank(state)
+	if rank >= QuestCatalog.MAX_RANK:
+		return "已达等级上限（战功继续累计）"
+	var remaining := _war_merit_points(state)
+	for level in range(1, rank):
+		remaining -= QuestCatalog.rank_requirement(level)
+	return "%d/%d" % [maxi(0, remaining), QuestCatalog.rank_requirement(rank)]
+
+
+func _show_quests() -> void:
+	app_state = AppState.QUESTS
+	_refresh_quests_if_needed()
+	_clear_ui()
+	_clear_world()
+	_build_camp_world()
+	_add_background(Color(0.02, 0.04, 0.08, 0.64))
+	_show_management_shell("目标", _build_quests_body())
+
+
+func _refresh_quests_if_needed() -> void:
+	var state: RefCounted = game.current_state()
+	var quest_state := state.get("quests") as Dictionary
+	if quest_state != null:
+		var active := quest_state.get("active", {}) as Dictionary
+		var slots := active.get("minor_slots", []) as Array
+		if slots.size() == QuestCatalog.MINOR_SLOT_COUNT:
+			return
+	var request_id := "quests:refresh:%d" % int(state.revision)
+	_execute_command("refresh_quests", {}, request_id)
+
+
+func _build_quests_body() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.name = "QuestsScrollContainer"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	column.custom_minimum_size = Vector2(1180, 0)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
+	column.add_child(_build_goal_tabs(false))
+	var state: RefCounted = game.current_state()
+	var rank_label := _label(
+		"累计战功 %d · 当前等级 Lv%d · 下一级 %s" % [_war_merit_points(state), _war_merit_rank(state), _war_merit_next_progress(state)],
+		16,
+		COLOR_ACCENT
+	)
+	rank_label.name = "QuestWarMeritLabel"
+	column.add_child(rank_label)
+	var no_timer := _label("无每日倒计时：任务按大战役推进和循环目标刷新。", 13, COLOR_MUTED)
+	no_timer.name = "QuestNoDailyCountdownLabel"
+	column.add_child(no_timer)
+	var entries := _quest_active_entries(state, true)
+	var campaign := _campaign_quest_entry(entries)
+	column.add_child(_quest_card(campaign, true, state))
+	var loop_grid := GridContainer.new()
+	loop_grid.columns = 3
+	loop_grid.add_theme_constant_override("h_separation", 6)
+	loop_grid.add_theme_constant_override("v_separation", 6)
+	loop_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_child(loop_grid)
+	var loops := _loop_quest_entries(entries)
+	for index in 3:
+		loop_grid.add_child(_quest_card(loops[index], false, state, index + 1))
+	return scroll
+
+
+func _show_achievements() -> void:
+	app_state = AppState.QUESTS
+	_refresh_achievements_if_needed()
+	_clear_ui()
+	_clear_world()
+	_build_camp_world()
+	_add_background(Color(0.02, 0.04, 0.08, 0.64))
+	_show_management_shell("目标", _build_achievements_body())
+
+
+func _build_goal_tabs(achievements_selected: bool) -> Control:
+	var tabs := HBoxContainer.new()
+	tabs.name = "GoalCenterTabs"
+	tabs.add_theme_constant_override("separation", 8)
+	var quests := _button("任务", COLOR_PRIMARY if not achievements_selected else COLOR_PANEL_ALT, Vector2(120, 50), 15)
+	quests.name = "GoalTabQuestsButton"
+	quests.pressed.connect(_show_quests)
+	tabs.add_child(quests)
+	var achievements := _button("成就", COLOR_PRIMARY if achievements_selected else COLOR_PANEL_ALT, Vector2(120, 50), 15)
+	achievements.name = "GoalTabAchievementsButton"
+	achievements.pressed.connect(_show_achievements)
+	tabs.add_child(achievements)
+	return tabs
+
+
+func _refresh_achievements_if_needed() -> void:
+	var state: RefCounted = game.current_state()
+	var achievement_state := state.get("achievements") as Dictionary
+	if achievement_state != null:
+		var progress := achievement_state.get("progress", {}) as Dictionary
+		var completed := achievement_state.get("completed", {}) as Dictionary
+		var claimed := achievement_state.get("claimed", {}) as Dictionary
+		if not progress.is_empty() or not completed.is_empty() or not claimed.is_empty():
+			return
+	var request_id := "achievements:refresh:%d" % int(state.revision)
+	_execute_command("refresh_achievements", {}, request_id)
+
+
+func _build_achievements_body() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.name = "AchievementsScrollContainer"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var column := VBoxContainer.new()
+	column.name = "AchievementsListColumn"
+	column.add_theme_constant_override("separation", 8)
+	column.custom_minimum_size = Vector2(1180, 0)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
+	column.add_child(_build_goal_tabs(true))
+	var state: RefCounted = game.current_state()
+	var definitions := _achievement_definitions()
+	var completed_count := _achievement_completed_count(state, definitions)
+	var claimable_count := _achievement_claimable_count(state, definitions)
+	var overview := _label("总完成 %d/%d · 可领取 %d" % [completed_count, definitions.size(), claimable_count], 16, COLOR_ACCENT)
+	overview.name = "AchievementOverviewLabel"
+	column.add_child(overview)
+	column.add_child(_build_achievement_category_buttons())
+	var sorted_definitions := definitions.duplicate(true)
+	sorted_definitions.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return _achievement_sort_weight(state, a) < _achievement_sort_weight(state, b)
+	)
+	for definition in sorted_definitions:
+		if selected_achievement_category == "all" or String(definition.get("category", "")) == selected_achievement_category:
+			column.add_child(_achievement_card(definition, state))
+	return scroll
+
+
+func _build_achievement_category_buttons() -> Control:
+	var row := HBoxContainer.new()
+	row.name = "AchievementCategoryButtons"
+	row.add_theme_constant_override("separation", 6)
+	var categories := [
+		{"id": "all", "label": "全部"},
+		{"id": "campaign", "label": "战役"},
+		{"id": "factory", "label": "工厂"},
+		{"id": "cultivation", "label": "培育"},
+		{"id": "collection", "label": "收集"},
+	]
+	for category in categories:
+		var category_id := String(category["id"])
+		var button := _button(String(category["label"]), COLOR_PRIMARY if selected_achievement_category == category_id else COLOR_PANEL_ALT, Vector2(92, 50), 13)
+		button.name = "AchievementCategoryButton_%s" % category_id
+		button.pressed.connect(func() -> void:
+			selected_achievement_category = category_id
+			_show_achievements()
+		)
+		row.add_child(button)
+	return row
+
+
+func _achievement_card(definition: Dictionary, state: RefCounted) -> Control:
+	var achievement_id := String(definition.get("achievement_id", definition.get("id", "")))
+	var completed := _achievement_is_completed(state, definition)
+	var claimed := _achievement_is_claimed(state, definition)
+	var card := _panel(COLOR_PANEL, 7)
+	card.name = "AchievementCard_%s" % _safe_node_suffix(achievement_id)
+	card.custom_minimum_size = Vector2(1180, 132)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	card.add_child(row)
+	var copy := VBoxContainer.new()
+	copy.add_theme_constant_override("separation", 3)
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(copy)
+	copy.add_child(_label(String(definition.get("title", achievement_id)), 15, COLOR_TEXT))
+	copy.add_child(_label("分类：%s · 进度：%s" % [_achievement_category_label(String(definition.get("category", "campaign"))), _achievement_progress_text(state, definition)], 12, COLOR_MUTED))
+	copy.add_child(_label("奖励：%s" % _achievement_reward_text(definition.get("reward", {}) as Dictionary), 12, COLOR_ACCENT))
+	var action := _button("已领取" if claimed else ("领取" if completed else "进行中"), COLOR_PRIMARY if completed and not claimed else COLOR_PANEL_ALT, Vector2(104, 50), 13)
+	action.name = "AchievementClaimButton_%s" % _safe_node_suffix(achievement_id)
+	action.disabled = claimed or not completed
+	action.pressed.connect(func() -> void: _claim_achievement(achievement_id))
+	row.add_child(action)
+	return card
+
+
+func _claim_achievement(achievement_id: String) -> void:
+	var request_id := "achievement:claim:%s:0:%d" % [achievement_id, int(game.current_state().revision)]
+	var result := _execute_command("claim_achievement", {"achievement_id": achievement_id, "generation": 0, "request_id": request_id}, request_id)
+	if bool(result.get("ok", false)):
+		if app_state == AppState.QUESTS:
+			_show_achievements()
+		return
+	_show_notice("成就领取暂不可用：%s" % String(result.get("error", "UNKNOWN")))
+
+
+func _achievement_definitions() -> Array[Dictionary]:
+	if ResourceLoader.exists(ACHIEVEMENT_CATALOG_PATH):
+		var catalog = load(ACHIEVEMENT_CATALOG_PATH)
+		if catalog != null and catalog.has_method("definitions"):
+			var values: Array[Dictionary] = []
+			for value in catalog.definitions():
+				if typeof(value) == TYPE_DICTIONARY:
+					values.append((value as Dictionary).duplicate(true))
+			if not values.is_empty():
+				return values
+	return _fallback_achievement_definitions()
+
+
+func _fallback_achievement_definitions() -> Array[Dictionary]:
+	var values: Array[Dictionary] = []
+	var categories: Array[String] = ["campaign", "factory", "cultivation", "collection"]
+	var labels: Dictionary = {"campaign": "战役", "factory": "工厂", "cultivation": "培育", "collection": "收集"}
+	for index in 24:
+		var category: String = categories[index % categories.size()]
+		values.append({
+			"achievement_id": "fallback.%s.%02d" % [category, index + 1],
+			"title": "%s成就 %02d" % [String(labels[category]), index + 1],
+			"category": category,
+			"progress": 0,
+			"target": 1,
+			"reward": {"merit": 10},
+		})
+	return values
+
+
+func _achievement_completed_count(state: RefCounted, definitions: Array[Dictionary]) -> int:
+	var count := 0
+	for definition in definitions:
+		if _achievement_is_completed(state, definition):
+			count += 1
+	return count
+
+
+func _achievement_claimable_count(state: RefCounted, definitions: Array[Dictionary]) -> int:
+	var count := 0
+	for definition in definitions:
+		if _achievement_is_completed(state, definition) and not _achievement_is_claimed(state, definition):
+			count += 1
+	return count
+
+
+func _achievement_sort_weight(state: RefCounted, definition: Dictionary) -> int:
+	if _achievement_is_completed(state, definition) and not _achievement_is_claimed(state, definition):
+		return 0
+	if not _achievement_is_completed(state, definition):
+		return 1
+	return 2
+
+
+func _achievement_is_completed(state: RefCounted, definition: Dictionary) -> bool:
+	var achievement_id := String(definition.get("achievement_id", definition.get("id", "")))
+	var achievement_state := state.get("achievements") as Dictionary
+	if achievement_state != null:
+		var completed := achievement_state.get("completed", {}) as Dictionary
+		if completed.has(achievement_id):
+			return true
+	return _achievement_progress_value(state, definition) >= _achievement_target(definition)
+
+
+func _achievement_is_claimed(state: RefCounted, definition: Dictionary) -> bool:
+	var achievement_id := String(definition.get("achievement_id", definition.get("id", "")))
+	var achievement_state := state.get("achievements") as Dictionary
+	if achievement_state != null:
+		var claimed := achievement_state.get("claimed", {}) as Dictionary
+		return claimed.has(achievement_id)
+	return false
+
+
+func _achievement_progress_text(state: RefCounted, definition: Dictionary) -> String:
+	var target := _achievement_target(definition)
+	return "%d/%d" % [clampi(_achievement_progress_value(state, definition), 0, target), target]
+
+
+func _achievement_progress_value(state: RefCounted, definition: Dictionary) -> int:
+	var achievement_id := String(definition.get("achievement_id", definition.get("id", "")))
+	var achievement_state := state.get("achievements") as Dictionary
+	if achievement_state != null:
+		var progress := achievement_state.get("progress", {}) as Dictionary
+		if progress.has(achievement_id):
+			var value = progress[achievement_id]
+			if typeof(value) == TYPE_DICTIONARY:
+				return int((value as Dictionary).get("value", (value as Dictionary).get("progress", 0)))
+			return int(value)
+	return int(definition.get("progress", 0))
+
+
+func _achievement_target(definition: Dictionary) -> int:
+	return maxi(1, int(definition.get("target", definition.get("goal", 1))))
+
+
+func _achievement_reward_text(reward: Dictionary) -> String:
+	var parts: Array[String] = []
+	if int(reward.get("merit", 0)) > 0:
+		parts.append("战功+%d" % int(reward["merit"]))
+	if int(reward.get("gold", 0)) > 0:
+		parts.append("金币+%d" % int(reward["gold"]))
+	if int(reward.get("xp_books", 0)) > 0:
+		parts.append("训练书+%d" % int(reward["xp_books"]))
+	return "无" if parts.is_empty() else " · ".join(parts)
+
+
+func _achievement_category_label(category: String) -> String:
+	return String({
+		"campaign": "战役",
+		"factory": "工厂",
+		"cultivation": "培育",
+		"collection": "收集",
+	}.get(category, category))
+
+
+func _safe_node_suffix(value: String) -> String:
+	return value.replace(".", "_").replace(":", "_").replace("/", "_")
+
+
+func _quest_card(entry: Dictionary, campaign: bool, state: RefCounted, loop_index: int = 0) -> Control:
+	var card := _panel(COLOR_PANEL, 7)
+	card.name = "CampaignQuestCard" if campaign else "LoopQuestCard_%d" % loop_index
+	card.custom_minimum_size = Vector2(1180, 150) if campaign else Vector2(384, 190)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 4)
+	card.add_child(column)
+	var title := _label(String(entry.get("title", "任务")), 15 if campaign else 13, COLOR_TEXT)
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	column.add_child(title)
+	var progress := _quest_progress_text(entry)
+	var body := _label("%s · %s" % [String(entry.get("description", "")), progress], 12, COLOR_MUTED)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(body)
+	if campaign:
+		var summary := _label("大战役进度：%s · 25目标不展开长列表" % progress, 12, COLOR_ACCENT)
+		summary.name = "CampaignQuestSummaryLabel"
+		column.add_child(summary)
+	else:
+		column.add_child(_label(String(entry.get("reward_text", "战功")), 11, COLOR_ACCENT))
+	var action := _quest_action_button(entry, state)
+	column.add_child(action)
+	return card
+
+
+func _quest_action_button(entry: Dictionary, state: RefCounted) -> Button:
+	var quest_id := String(entry.get("quest_id", ""))
+	var generation := int(entry.get("generation", 1))
+	var completed := _quest_is_completed(state, entry)
+	var claimed := _quest_is_claimed(state, entry)
+	var action := _button("已领取" if claimed else ("领取" if completed else "进行中"), COLOR_PRIMARY if completed and not claimed else COLOR_PANEL_ALT, Vector2(104, 50), 13)
+	action.name = "QuestClaimButton_%s" % _safe_node_suffix(quest_id)
+	action.disabled = claimed or not completed
+	action.pressed.connect(func() -> void: _claim_quest(quest_id, generation))
+	return action
+
+
+func _claim_quest(quest_id: String, generation: int) -> void:
+	var request_id := "quest:claim:%s:%d:%d" % [quest_id, generation, int(game.current_state().revision)]
+	var result := _execute_command("claim_quest", {"quest_id": quest_id, "generation": generation, "request_id": request_id}, request_id)
+	if bool(result.get("ok", false)):
+		if app_state == AppState.QUESTS:
+			_show_quests()
+		return
+	_show_notice("任务领取暂不可用：%s" % String(result.get("error", "UNKNOWN")))
+
+
+func _quest_active_entries(state: RefCounted, include_fallback: bool) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var quest_state := state.get("quests") as Dictionary
+	if quest_state != null:
+		var active := quest_state.get("active", {}) as Dictionary
+		var completed := quest_state.get("completed", {}) as Dictionary
+		var claimed := quest_state.get("claimed", {}) as Dictionary
+		for stage_id in StageCatalog.all_stage_ids():
+			var major := QuestCatalog.major_quest(stage_id)
+			var major_id := String(major.get("quest_id", ""))
+			if claimed.has(major_id):
+				continue
+			major["scope"] = "major"
+			major["description"] = "完成该关首次胜利，推动地球马桶人战线。"
+			major["progress"] = 1 if completed.has(major_id) else 0
+			major["target"] = 1
+			major["reward_text"] = _quest_reward_text(major.get("reward", {}) as Dictionary)
+			entries.append(major)
+			break
+		for slot_value in active.get("minor_slots", []):
+			if typeof(slot_value) != TYPE_DICTIONARY:
+				continue
+			var entry := (slot_value as Dictionary).duplicate(true)
+			entry["scope"] = "minor"
+			entry["description"] = "完成后可手动领取，领取后本槽自动补入新目标。"
+			entry["reward_text"] = _quest_reward_text(entry.get("reward", {}) as Dictionary)
+			entries.append(entry)
+	if entries.is_empty() and include_fallback:
+		for fallback in FALLBACK_QUESTS:
+			entries.append(fallback.duplicate(true))
+	return entries
+
+
+func _quest_reward_text(reward: Dictionary) -> String:
+	var parts: Array[String] = []
+	if int(reward.get("merit", 0)) > 0:
+		parts.append("战功+%d" % int(reward["merit"]))
+	if int(reward.get("gold", 0)) > 0:
+		parts.append("金币+%d" % int(reward["gold"]))
+	if int(reward.get("xp_books", 0)) > 0:
+		parts.append("训练书+%d" % int(reward["xp_books"]))
+	return " · ".join(parts)
+
+
+func _campaign_quest_entry(entries: Array[Dictionary]) -> Dictionary:
+	for entry in entries:
+		var scope := String(entry.get("scope", entry.get("type", "")))
+		if scope in ["campaign", "major", "war"]:
+			return entry
+	return FALLBACK_QUESTS[0].duplicate(true)
+
+
+func _loop_quest_entries(entries: Array[Dictionary]) -> Array[Dictionary]:
+	var loops: Array[Dictionary] = []
+	for entry in entries:
+		var scope := String(entry.get("scope", entry.get("type", "")))
+		if scope in ["loop", "daily", "repeatable", "minor"]:
+			loops.append(entry)
+	while loops.size() < 3:
+		loops.append(FALLBACK_QUESTS[loops.size() + 1].duplicate(true))
+	return loops.slice(0, 3)
+
+
+func _quest_progress_text(entry: Dictionary) -> String:
+	var progress := int(entry.get("progress", entry.get("current", 0)))
+	var target := maxi(1, int(entry.get("target", entry.get("goal", 1))))
+	return "%d/%d" % [clampi(progress, 0, target), target]
+
+
+func _quest_is_completed(state: RefCounted, entry: Dictionary) -> bool:
+	if bool(entry.get("completed", false)):
+		return true
+	var quest_id := String(entry.get("quest_id", ""))
+	var quest_state := state.get("quests") as Dictionary
+	if quest_state != null:
+		var completed := quest_state.get("completed", {}) as Dictionary
+		if completed.has(quest_id):
+			return true
+	return int(entry.get("progress", entry.get("current", 0))) >= int(entry.get("target", entry.get("goal", 1)))
+
+
+func _quest_is_claimed(state: RefCounted, entry: Dictionary) -> bool:
+	if bool(entry.get("claimed", false)):
+		return true
+	var quest_id := String(entry.get("quest_id", ""))
+	var quest_state := state.get("quests") as Dictionary
+	if quest_state != null:
+		var claimed := quest_state.get("claimed", {}) as Dictionary
+		return claimed.has(quest_id)
+	return false
 
 
 func _show_factory() -> void:
@@ -246,6 +1147,7 @@ func _build_factory_body() -> Control:
 		var claim_all := _button("领取完成", COLOR_PRIMARY, Vector2(120, 34), 13)
 		claim_all.pressed.connect(_claim_ready_productions)
 		ready_row.add_child(claim_all)
+	column.add_child(_build_salvage_exchange_panel(state))
 	var queue_title := _label("生产队列  %d/3" % state.factory.production_queue.size(), 17, COLOR_PRIMARY)
 	column.add_child(queue_title)
 	var queue_grid := GridContainer.new()
@@ -278,6 +1180,65 @@ func _build_factory_body() -> Control:
 			if String(recipe["workshop"]) == workshop_id:
 				recipes.add_child(_recipe_card(recipe, bool(state.factory.blueprints.get(String(recipe["recipe_id"]), false))))
 	return scroll
+
+
+func _build_salvage_exchange_panel(state: RefCounted) -> Control:
+	var panel := _panel(Color(0.06, 0.095, 0.13, 0.96), 8)
+	panel.name = "SalvageExchangePanel"
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	panel.add_child(column)
+	var balance := _salvage_balance(state)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 8)
+	column.add_child(header)
+	var title := _label("联盟残骸回收", 16, COLOR_PRIMARY)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var balance_label := _label("残骸 %d" % balance, 14, COLOR_ACCENT)
+	balance_label.name = "SalvageSummaryLabel"
+	header.add_child(balance_label)
+	var exchange_grid := GridContainer.new()
+	exchange_grid.columns = 3
+	exchange_grid.add_theme_constant_override("h_separation", 6)
+	exchange_grid.add_theme_constant_override("v_separation", 4)
+	column.add_child(exchange_grid)
+	for config in SALVAGE_EXCHANGES:
+		exchange_grid.add_child(_salvage_exchange_card(config, balance))
+	return panel
+
+
+func _salvage_exchange_card(config: Dictionary, balance: int) -> Control:
+	var exchange := _button(
+		"%s\n%d残 → %s" % [
+			String(config["display_name"]),
+			int(config["cost"]),
+			String(config["reward_text"]),
+		],
+		COLOR_PRIMARY,
+		Vector2(105, 52),
+		11
+	)
+	var exchange_id := String(config["exchange_id"])
+	exchange.name = "SalvageExchangeButton_%s" % exchange_id
+	exchange.disabled = balance < int(config["cost"])
+	exchange.tooltip_text = "%s：消耗%d联盟残骸，获得%s" % [
+		String(config["display_name"]),
+		int(config["cost"]),
+		String(config["reward_text"]),
+	]
+	exchange.pressed.connect(func() -> void: _exchange_salvage(exchange_id))
+	return exchange
+
+
+func _exchange_salvage(exchange_id: String) -> void:
+	var request_id := "salvage:%s:%d" % [exchange_id, int(game.current_state().revision)]
+	var result := _execute_command("exchange_salvage", {"request_id": request_id, "offer_id": exchange_id}, request_id)
+	if bool(result.get("ok", false)):
+		if app_state == AppState.FACTORY:
+			_show_factory()
+		return
+	_show_notice("残骸回收暂不可用：%s" % String(result.get("error", "UNKNOWN")))
 
 
 func _factory_order_card(order: Dictionary, now: int) -> Control:
@@ -607,6 +1568,11 @@ func _show_expedition() -> void:
 	_clear_world()
 	_build_camp_world()
 	_add_background(Color(0.02, 0.04, 0.08, 0.62))
+	var state: RefCounted = game.current_state()
+	if not _stage_is_unlocked(selected_stage_id, state):
+		selected_stage_id = String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
+	if not StageCatalog.has_stage(selected_stage_id):
+		selected_stage_id = StageCatalog.DEFAULT_STAGE_ID
 	var safe := _safe_margin()
 	ui_root.add_child(safe)
 	var root := VBoxContainer.new()
@@ -615,67 +1581,216 @@ func _show_expedition() -> void:
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	safe.add_child(root)
 	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 8)
 	root.add_child(header)
-	var title := _label("出征确认", 26, COLOR_TEXT)
+	var title := _label("第一幕 · 地球战争", 25, COLOR_TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
-	var back := _button("返回营地", COLOR_PANEL_ALT, Vector2(110, 40), 14)
+	var back := _button("返回营地", COLOR_PANEL_ALT, Vector2(110, 50), 14)
+	back.name = "ExpeditionBackButton"
 	back.pressed.connect(_show_camp)
 	header.add_child(back)
-	var start := _button("开始攻城", COLOR_PRIMARY, Vector2(140, 40), 15)
-	start.pressed.connect(_start_battle)
-	header.add_child(start)
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 10)
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(body)
-	var stages := _panel(COLOR_PANEL, 10)
-	stages.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stages.custom_minimum_size.x = 900
-	body.add_child(stages)
-	var stage_column := VBoxContainer.new()
-	stage_column.add_theme_constant_override("separation", 8)
-	stages.add_child(stage_column)
-	stage_column.add_child(_label("三阶段路线", 17, COLOR_PRIMARY))
-	stage_column.add_child(_label("1. 城市外围：拆除外围路障", 15, COLOR_TEXT))
-	stage_column.add_child(_label("2. 火力封锁区：拔掉火力塔与装甲门", 15, COLOR_TEXT))
-	stage_column.add_child(_label("3. 基地广场：击毁电池、核心装甲、联盟核心", 15, COLOR_TEXT))
-	stage_column.add_child(_label("六人自动推进，可手动释放技能。", 15, COLOR_ACCENT))
-	var squad := _panel(COLOR_PANEL, 10)
-	squad.custom_minimum_size.x = 650
-	body.add_child(squad)
-	var squad_column := VBoxContainer.new()
-	squad_column.add_theme_constant_override("separation", 4)
-	squad.add_child(squad_column)
-	squad_column.add_child(_label("出征六人", 17, COLOR_PRIMARY))
+	var map_panel := _panel(Color(0.045, 0.07, 0.11, 0.96), 9)
+	map_panel.name = "ExpeditionMapPanel"
+	map_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	map_panel.size_flags_stretch_ratio = 0.45
+	body.add_child(map_panel)
+	var map_scroll := ScrollContainer.new()
+	map_scroll.name = "MapScrollContainer"
+	map_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	map_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	map_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	map_panel.add_child(map_scroll)
+	var chapter_column := VBoxContainer.new()
+	chapter_column.add_theme_constant_override("separation", 8)
+	map_scroll.add_child(chapter_column)
+	var chapter_names := ["灰镜", "震荡", "黑屏", "联防", "伪胜"]
+	var stage_ids := StageCatalog.all_stage_ids()
+	var cleared: Array = state.stage_progress.get("cleared_stages", [])
+	for chapter_index in 5:
+		var chapter_row := HBoxContainer.new()
+		chapter_row.name = "ChapterStageRow_%d" % [chapter_index + 1]
+		chapter_row.add_theme_constant_override("separation", 5)
+		chapter_column.add_child(chapter_row)
+		var chapter_title := _label("%d  %s" % [chapter_index + 1, chapter_names[chapter_index]], 14, COLOR_ACCENT)
+		chapter_title.custom_minimum_size.x = 112 * UI_SCALE
+		chapter_row.add_child(chapter_title)
+		for stage_index in 5:
+			var stage_id: String = stage_ids[chapter_index * 5 + stage_index]
+			var unlocked := _stage_is_unlocked(stage_id, state)
+			var is_cleared := cleared.has(stage_id)
+			var selected := stage_id == selected_stage_id
+			var stage_text := "%d-%d" % [chapter_index + 1, stage_index + 1]
+			if is_cleared:
+				stage_text = "✓ " + stage_text
+			elif not unlocked:
+				stage_text = "锁 " + stage_text
+			var stage_button := _button(
+				stage_text,
+				COLOR_PRIMARY if selected else (COLOR_PANEL_ALT if unlocked else COLOR_BG),
+				Vector2(52, 52),
+				12
+			)
+			stage_button.name = "StageButton_%d_%d" % [chapter_index + 1, stage_index + 1]
+			stage_button.disabled = not unlocked
+			stage_button.pressed.connect(func() -> void:
+				selected_stage_id = stage_id
+				_show_expedition()
+			)
+			chapter_row.add_child(stage_button)
+
+	var detail := _panel(COLOR_PANEL, 10)
+	detail.name = "ExpeditionDetailPanel"
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail.size_flags_stretch_ratio = 0.55
+	body.add_child(detail)
+	var detail_column := VBoxContainer.new()
+	detail_column.add_theme_constant_override("separation", 6)
+	detail.add_child(detail_column)
+	var stage_config: Dictionary = StageCatalog.stage(selected_stage_id)
+	detail_column.add_child(_label(String(stage_config.get("display_name", selected_stage_id)), 20, COLOR_TEXT))
+	var chapter := int(stage_config.get("chapter", 1))
+	var is_boss := int(stage_config.get("stage_in_chapter", 1)) == 5
+	var threat_label := _label(
+		_stage_text(stage_config, "threat_summary", _chapter_threat_text(chapter, is_boss)),
+		13,
+		COLOR_DANGER if is_boss else COLOR_MUTED
+	)
+	threat_label.name = "StageThreatSummary"
+	detail_column.add_child(threat_label)
+	var counter_label := _label(
+		_stage_text(stage_config, "counter_hint", "反制：装甲顶线，火箭/双锯拆设施，维修保主力。"),
+		12,
+		COLOR_PRIMARY
+	)
+	counter_label.name = "StageCounterHint"
+	detail_column.add_child(counter_label)
+	var unlock_label := _label(
+		_stage_text(stage_config, "unlock_preview", _unlock_preview_text(stage_config)),
+		12,
+		COLOR_ACCENT
+	)
+	unlock_label.name = "StageUnlockPreview"
+	detail_column.add_child(unlock_label)
+	var feedback_label := _label(
+		_stage_text(stage_config, "chapter_feedback", "章节反馈：根据战斗结果回到工厂或培育补强，再沿城市大道推进。"),
+		12,
+		COLOR_MUTED
+	)
+	feedback_label.name = "StageChapterFeedback"
+	detail_column.add_child(feedback_label)
+	var rewards: Dictionary = StageCatalog.reward_for(selected_stage_id, "victory")
+	detail_column.add_child(_label(
+		"胜利：金%d · 书%d · 瓷%d · 零%d · 泥%d" % [
+			int(rewards.get("gold", 0)),
+			int(rewards.get("xp_books", 0)),
+			int(rewards.get("porcelain", 0)),
+			int(rewards.get("parts", 0)),
+			int(rewards.get("sludge", 0)),
+		],
+		12,
+		COLOR_ACCENT
+	))
+	detail_column.add_child(_label("路线：城市外围 → 火力封锁区 → 基地广场", 12, COLOR_MUTED))
+	detail_column.add_child(_label("自动推进和索敌；点击技能，或为单个角色开启自动技能。", 12, COLOR_PRIMARY))
+	detail_column.add_child(HSeparator.new())
+	detail_column.add_child(_label("出征六人", 15, COLOR_PRIMARY))
 	var squad_grid := GridContainer.new()
 	squad_grid.columns = 2
 	squad_grid.add_theme_constant_override("h_separation", 8)
 	squad_grid.add_theme_constant_override("v_separation", 4)
-	squad_column.add_child(squad_grid)
-	var ids: Array[String] = game.current_state().formation.hero_ids()
+	detail_column.add_child(squad_grid)
+	var ids: Array[String] = state.formation.hero_ids()
 	for index in 6:
-		var hero: RefCounted = game.current_state().hero_by_id(ids[index])
-		var hero_label := _label("%s  %s ★%d" % [SLOT_NAMES[index], _archetype_name(hero.archetype_id), hero.star], 13, COLOR_TEXT)
+		var hero: RefCounted = state.hero_by_id(ids[index])
+		var hero_label := _label("%s  %s L%d ★%d" % [SLOT_NAMES[index], _archetype_name(hero.archetype_id), hero.level, hero.star], 11, COLOR_TEXT)
 		hero_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 		squad_grid.add_child(hero_label)
+	var start := _button("开始攻城", COLOR_DANGER if is_boss else COLOR_PRIMARY, Vector2(190, 50), 16)
+	start.name = "StartBattleButton"
+	start.pressed.connect(_start_battle)
+	detail_column.add_child(start)
 	start.grab_focus()
+
+
+func _stage_is_unlocked(stage_id: String, state: RefCounted) -> bool:
+	var all_ids := StageCatalog.all_stage_ids()
+	var target_index := all_ids.find(stage_id)
+	var highest_id := String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
+	var highest_index := all_ids.find(highest_id)
+	return target_index >= 0 and target_index <= maxi(0, highest_index)
+
+
+func _chapter_threat_text(chapter: int, is_boss: bool) -> String:
+	var threats := {
+		1: "Cameramen 火力线：标记、盾卫与炮塔",
+		2: "Speakermen 封锁线：冲锋、震荡与能量干扰",
+		3: "TV Men 黑屏城区：传送、控制与周期护盾",
+		4: "三军联合防线：防空、净化与协同火控",
+		5: "联盟中央基地：持续轰炸与综合机制验收",
+	}
+	var text := String(threats.get(chapter, "联盟城市防线"))
+	return ("BOSS · " if is_boss else "") + text
+
+
+func _stage_text(stage_config: Dictionary, key: String, fallback: String) -> String:
+	var value := String(stage_config.get(key, ""))
+	return fallback if value.is_empty() else value
+
+
+func _unlock_preview_text(stage_config: Dictionary) -> String:
+	var unlocks: Array = stage_config.get("unlock_on_victory", [])
+	if unlocks.is_empty():
+		return "蓝图预览：本关主要提供资源与下一段路线进度。"
+	return "蓝图预览：%s" % _blueprint_usage_text(unlocks)
+
+
+func _blueprint_usage_text(recipe_ids: Array) -> String:
+	var parts: Array[String] = []
+	for recipe_value in recipe_ids:
+		var recipe_id := String(recipe_value)
+		match recipe_id:
+			"heavy.armored":
+				parts.append("装甲冲城用于顶住第一轮火力并提供三合一材料")
+			"flying.rocket":
+				parts.append("火箭飞行用于远程拆炮塔")
+			"flying.bomber":
+				parts.append("自爆飞行用于爆发破门")
+			"heavy.saw":
+				parts.append("双锯重装用于斩杀精英守军")
+			"special.repair":
+				parts.append("维修单位用于长线续航")
+			"special.parasite":
+				parts.append("寄生母体用于召唤和干扰核心守军")
+			_:
+				parts.append(recipe_id)
+	return "；".join(parts)
 
 
 func _start_battle() -> void:
 	app_state = AppState.BATTLE
 	_clear_ui()
 	_clear_world()
-	battle_id = "stage_1_1-%d-%d" % [int(Time.get_unix_time_from_system()), Time.get_ticks_msec()]
+	battle_id = "%s-%d-%d" % [selected_stage_id, int(Time.get_unix_time_from_system()), Time.get_ticks_msec()]
 	battle_elapsed = 0.0
 	battle_snapshot_elapsed = 0.0
 	battle_is_paused = false
 	battle_world = BattleWorldScript.new()
 	world_host.add_child(battle_world)
 	battle_world.battle_finished.connect(_on_battle_finished)
+	if battle_world.has_method("configure_presentation"):
+		battle_world.configure_presentation(settings_store.effects_quality, settings_store.reduced_motion)
 	var snapshots: Array[Dictionary] = _build_battle_snapshots()
-	battle_world.start_battle(snapshots)
+	battle_world.start_battle(snapshots, selected_stage_id, StageCatalog.stage(selected_stage_id))
+	_apply_global_auto_skill_to_battle(snapshots)
 	_build_battle_hud()
 	_update_battle_hud()
 
@@ -713,17 +1828,23 @@ func _build_battle_hud() -> void:
 	battle_timer_label.custom_minimum_size.x = 70
 	battle_timer_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	stage_row.add_child(battle_timer_label)
-	battle_warning_label = _label("无预警", 14, COLOR_MUTED)
-	battle_warning_label.custom_minimum_size.x = 95
+	battle_warning_label = _label("无炮击预警", 14, COLOR_MUTED)
+	battle_warning_label.name = "CannonSuppressionLabel"
+	battle_warning_label.custom_minimum_size.x = 170
 	battle_warning_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	battle_warning_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	battle_warning_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	top.add_child(battle_warning_label)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(spacer)
 	var bottom := _panel(Color(0.055, 0.09, 0.14, 0.84), 8)
+	bottom.name = "BattleBottomHud"
+	bottom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_child(bottom)
 	battle_skill_rows = VBoxContainer.new()
 	battle_skill_rows.add_theme_constant_override("separation", 4)
+	battle_skill_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(battle_skill_rows)
 
 
@@ -736,28 +1857,94 @@ func _update_battle_hud() -> void:
 	battle_timer_label.text = "%02d:%02d" % [int(battle_elapsed) / 60, int(battle_elapsed) % 60]
 	battle_stage_label.text = "阶段 %d/3  %s" % [int(snapshot.get("stage_index", 0)) + 1, snapshot.get("stage_name", "")]
 	battle_progress_label.text = "推进 %d/1000" % int(snapshot.get("road_progress", 0))
-	var warnings: Array = snapshot.get("warnings", [])
-	battle_warning_label.text = "预警 %d" % warnings.size() if not warnings.is_empty() else "无预警"
+	_apply_cannon_suppression_hud(snapshot)
 	if battle_pause_button != null:
 		battle_pause_button.text = "继续" if battle_is_paused else "暂停"
 	_rebuild_skill_hud(snapshot)
 
 
+func _apply_cannon_suppression_hud(snapshot: Dictionary) -> void:
+	if battle_warning_label == null:
+		return
+	var warnings: Array = snapshot.get("warnings", [])
+	var suppression_warning := _suppression_warning(warnings)
+	if not suppression_warning.is_empty():
+		var current := _warning_int(suppression_warning, ["current", "suppression_current", "suppression"], 0)
+		var target := _warning_int(suppression_warning, ["target", "suppression_target"], maxi(1, current))
+		var seconds := _warning_seconds_to_impact(suppression_warning, int(snapshot.get("tick", 0)))
+		battle_warning_label.text = "巨炮压制 %d/%d · %.1f秒" % [current, maxi(1, target), seconds]
+		battle_warning_label.add_theme_color_override("font_color", COLOR_DANGER if seconds <= 2.0 or current >= target else COLOR_ACCENT)
+		return
+	if warnings.is_empty():
+		battle_warning_label.text = "巨炮待机" if _snapshot_is_boss_cannon(snapshot) else "无炮击预警"
+		battle_warning_label.add_theme_color_override("font_color", COLOR_MUTED)
+		return
+	battle_warning_label.text = "炮击预警 %d" % warnings.size()
+	battle_warning_label.add_theme_color_override("font_color", COLOR_ACCENT)
+
+
+func _suppression_warning(warnings: Array) -> Dictionary:
+	for warning_value in warnings:
+		if typeof(warning_value) != TYPE_DICTIONARY:
+			continue
+		var warning := warning_value as Dictionary
+		if bool(warning.get("suppression", false)) or warning.has("suppression_current") or warning.has("suppression_target"):
+			return warning
+	return {}
+
+
+func _warning_int(warning: Dictionary, keys: Array[String], fallback: int) -> int:
+	for key in keys:
+		if not warning.has(key):
+			continue
+		var value = warning[key]
+		if typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT:
+			return int(value)
+		if typeof(value) == TYPE_DICTIONARY:
+			var nested := value as Dictionary
+			if nested.has("current"):
+				return int(nested["current"])
+	return fallback
+
+
+func _warning_seconds_to_impact(warning: Dictionary, snapshot_tick: int = 0) -> float:
+	var tick := int(warning.get("tick", snapshot_tick))
+	var impact_tick := int(warning.get("impact_tick", tick))
+	return maxf(0.0, float(impact_tick - tick) / 5.0)
+
+
+func _snapshot_is_boss_cannon(snapshot: Dictionary) -> bool:
+	if bool(snapshot.get("is_boss", false)):
+		return true
+	var stage_id := String(snapshot.get("stage_id", selected_stage_id))
+	if not StageCatalog.has_stage(stage_id):
+		return false
+	return int(StageCatalog.stage(stage_id).get("stage_in_chapter", 0)) == 5
+
+
 func _toggle_battle_pause() -> void:
 	if battle_world == null:
 		return
-	battle_is_paused = not battle_is_paused
+	_set_battle_paused(not battle_is_paused)
+	_update_battle_hud()
+
+
+func _set_battle_paused(value: bool) -> void:
+	if battle_world == null:
+		return
+	battle_is_paused = value
 	if battle_world.has_method("set_paused"):
 		battle_world.set_paused(battle_is_paused)
-	_update_battle_hud()
 
 
 func _rebuild_skill_hud(snapshot: Dictionary) -> void:
 	for child in battle_skill_rows.get_children():
 		child.queue_free()
 	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 6)
+	grid.name = "BattleSkillGrid"
+	grid.columns = 6
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	battle_skill_rows.add_child(grid)
 	var units: Array[Dictionary] = []
@@ -772,27 +1959,29 @@ func _rebuild_skill_hud(snapshot: Dictionary) -> void:
 
 func _battle_unit_control(unit: Dictionary) -> Control:
 	var card := _panel(COLOR_PANEL, 5)
-	card.custom_minimum_size = Vector2(180, 72)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 3)
-	card.add_child(column)
+	card.custom_minimum_size = Vector2(190, 96)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 3)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_child(row)
 	var hp := _label("%s %d/%d E%d" % [
 		SLOT_NAMES[int(unit["slot"])],
 		int(unit["hp"]),
 		int(unit["max_hp"]),
 		int(unit["energy"]),
 	], 11, COLOR_TEXT if bool(unit["alive"]) else COLOR_DANGER)
+	hp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hp.autowrap_mode = TextServer.AUTOWRAP_OFF
 	hp.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	column.add_child(hp)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	column.add_child(row)
+	row.add_child(hp)
 	var skill_name := _label(_skill_short(String(unit["skill_id"])), 11, COLOR_MUTED)
-	skill_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	skill_name.custom_minimum_size.x = 34
+	skill_name.autowrap_mode = TextServer.AUTOWRAP_OFF
+	skill_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(skill_name)
 	var unit_id := StringName(unit["unit_id"])
-	var skill := _button("技", COLOR_PRIMARY, Vector2(44, 24), 10)
+	var skill := _button("技", COLOR_PRIMARY, Vector2(52, 52), 12)
+	skill.name = "SkillButton"
 	skill.disabled = int(unit["energy"]) < 100 or not bool(unit["alive"])
 	skill.pressed.connect(func() -> void:
 		if battle_world != null:
@@ -801,10 +1990,11 @@ func _battle_unit_control(unit: Dictionary) -> Control:
 	)
 	row.add_child(skill)
 	var auto := CheckButton.new()
+	auto.name = "AutoSkillToggle"
 	auto.text = ""
 	auto.button_pressed = bool(unit.get("auto_skill", false))
-	auto.custom_minimum_size = Vector2(36, 24) * UI_SCALE
-	auto.add_theme_font_size_override("font_size", int(10 * UI_SCALE))
+	auto.custom_minimum_size = Vector2(52, 52) * UI_SCALE
+	auto.add_theme_font_size_override("font_size", int(12 * UI_SCALE))
 	auto.toggled.connect(func(enabled: bool) -> void:
 		var result := _execute_command("set_auto_skill_preference", {"hero_id": String(unit_id), "enabled": enabled}, "")
 		if bool(result.get("ok", false)):
@@ -821,10 +2011,12 @@ func _battle_unit_control(unit: Dictionary) -> Control:
 
 func _on_battle_finished(result: Dictionary) -> void:
 	var outcome := String(result.get("outcome", "defeat"))
-	var ticks := clampi(int(result.get("ticks", 1)), 1, 300)
+	var stage_id := String(result.get("stage_id", selected_stage_id))
+	var max_ticks := int(StageCatalog.stage(stage_id).get("max_ticks", 300))
+	var ticks := clampi(int(result.get("ticks", 1)), 1, max_ticks)
 	var settlement := _execute_command(
 		"settle_battle",
-		{"battle_id": battle_id, "outcome": outcome, "ticks": ticks},
+		{"battle_id": battle_id, "stage_id": stage_id, "outcome": outcome, "ticks": ticks},
 		"battle:%s" % battle_id
 	)
 	if not bool(settlement.get("ok", false)):
@@ -844,14 +2036,25 @@ func _show_result(result: Dictionary, settlement: Dictionary, error_message: Str
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	safe.add_child(center)
 	var panel := _panel(COLOR_PANEL, 14)
-	panel.custom_minimum_size = Vector2(520, 250)
+	panel.name = "ResultPanel"
+	panel.custom_minimum_size = Vector2(620, 290)
 	center.add_child(panel)
 	var column := VBoxContainer.new()
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_theme_constant_override("separation", 8)
 	panel.add_child(column)
-	var victory := String(result.get("outcome", "defeat")) == "victory"
-	column.add_child(_label("核心已摧毁" if victory else "攻城失败", 28, COLOR_ACCENT if victory else COLOR_DANGER))
+	var outcome := String(result.get("outcome", "defeat"))
+	var victory := outcome == "victory"
+	var stage_id := String(settlement.get("stage_id", result.get("stage_id", selected_stage_id)))
+	var stage_config := StageCatalog.stage(stage_id)
+	column.add_child(_label("目标已摧毁" if victory else "攻城失败", 28, COLOR_ACCENT if victory else COLOR_DANGER))
+	column.add_child(_label(String(stage_config.get("display_name", stage_id)), 15, COLOR_MUTED))
+	var report_title := _label("战术战报", 18, COLOR_PRIMARY)
+	report_title.name = "ResultReportTitle"
+	column.add_child(report_title)
+	var cannon_report := _label(_cannon_result_report_text(result, settlement), 13, COLOR_ACCENT)
+	cannon_report.name = "ResultCannonReportLabel"
+	column.add_child(cannon_report)
 	var reason := String(result.get("reason", ""))
 	var reason_text: String = String({
 		"core_destroyed": "联盟核心已经坍塌",
@@ -860,7 +2063,7 @@ func _show_result(result: Dictionary, settlement: Dictionary, error_message: Str
 		"invalid_formation": "出征编队不足六人",
 	}.get(reason, reason))
 	column.add_child(_label(
-		"到达阶段 %d/3 · 摧毁结构 %d/7 · %s" % [
+		"到达阶段 %d/3 · 摧毁结构 %d · %s" % [
 			clampi(int(result.get("stage_reached", 0)) + 1, 1, 3),
 			int(result.get("structures_destroyed", 0)),
 			reason_text,
@@ -881,28 +2084,90 @@ func _show_result(result: Dictionary, settlement: Dictionary, error_message: Str
 		COLOR_PRIMARY if victory else COLOR_MUTED
 	))
 	if not victory:
-		column.add_child(_label("失败也会带回少量残骸；去工厂补同型单位、培育升星或开启自动技能。", 13, COLOR_ACCENT))
+		var recommended_action := _derive_next_action(game.current_state())
+		column.add_child(_label(_failure_advice(result, recommended_action), 13, COLOR_ACCENT))
+	else:
+		var salvage_label := _label("本次残骸：+%d" % _salvage_reward_from_settlement(settlement), 13, COLOR_ACCENT)
+		salvage_label.name = "ResultSalvageLabel"
+		column.add_child(salvage_label)
+	if victory and stage_id == "stage_5_5":
+		column.add_child(_label("伪胜警报：联盟主力正在沿大道反推。科学家已启动核心数据库撤离协议……", 14, COLOR_DANGER))
+		column.add_child(_label("第一幕完成。永久角色、星级与关键蓝图已安全转移；工厂毁灭将开启下一幕。", 13, COLOR_TEXT))
+	elif victory:
+		var next_stage := String(settlement.get("next_stage_id", StageCatalog.next_stage_id(stage_id)))
+		if not next_stage.is_empty():
+			var next_config := StageCatalog.stage(next_stage)
+			column.add_child(_label("下一目标已开放：%s" % String(next_config.get("display_name", next_stage)), 13, COLOR_PRIMARY))
+			column.add_child(_label("威胁预告：%s" % _stage_text(next_config, "threat_summary", _chapter_threat_text(int(next_config.get("chapter", 1)), int(next_config.get("stage_in_chapter", 1)) == 5)), 12, COLOR_MUTED))
+	var unlocked: Array = settlement.get("unlocked_blueprints", [])
+	if victory and not unlocked.is_empty():
+		column.add_child(_label("本次蓝图用途：%s" % _blueprint_usage_text(unlocked), 12, COLOR_ACCENT))
 	if not error_message.is_empty():
 		column.add_child(_label(error_message, 14, COLOR_DANGER))
-	var actions := GridContainer.new()
-	actions.columns = 5
-	actions.add_theme_constant_override("h_separation", 6)
+	_build_result_actions(column, victory)
+
+
+func _build_result_actions(column: VBoxContainer, victory: bool) -> void:
+	var actions := HBoxContainer.new()
+	actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	actions.add_theme_constant_override("separation", 8)
 	column.add_child(actions)
-	var factory := _button("工厂", COLOR_PANEL_ALT, Vector2(90, 42), 14)
-	factory.pressed.connect(_show_factory)
-	actions.add_child(factory)
-	var cultivate := _button("培育", COLOR_PANEL_ALT, Vector2(90, 42), 14)
-	cultivate.pressed.connect(_show_cultivation)
-	actions.add_child(cultivate)
-	var formation := _button("编队", COLOR_PANEL_ALT, Vector2(90, 42), 14)
-	formation.pressed.connect(_show_formation)
-	actions.add_child(formation)
-	var retry := _button("重试", COLOR_PRIMARY, Vector2(90, 42), 14)
-	retry.pressed.connect(_show_expedition)
-	actions.add_child(retry)
-	var camp := _button("营地", COLOR_PANEL_ALT, Vector2(90, 42), 14)
+	if victory:
+		var next_action := _derive_next_action(game.current_state())
+		var next := _button(String(next_action.get("cta_label", "继续")), COLOR_PRIMARY, Vector2(130, 44), 14)
+		next.name = "ResultRecommendedButton"
+		next.pressed.connect(func() -> void: _navigate_objective_action(next_action))
+		actions.add_child(next)
+	else:
+		var recommended_action := _derive_next_action(game.current_state())
+		var recommended := _button(String(recommended_action.get("cta_label", "继续")), COLOR_PRIMARY, Vector2(150, 44), 14)
+		recommended.name = "ResultRecommendedButton"
+		recommended.pressed.connect(func() -> void: _navigate_objective_action(recommended_action))
+		actions.add_child(recommended)
+	var camp := _button("营地", COLOR_PANEL_ALT, Vector2(90, 44), 14)
+	camp.name = "ResultCampButton"
 	camp.pressed.connect(_show_camp)
 	actions.add_child(camp)
+
+
+func _failure_advice(result: Dictionary, action: Dictionary = {}) -> String:
+	var reason := String(result.get("reason", ""))
+	var stage_reached := int(result.get("stage_reached", 0))
+	var next_text := "推荐：%s。" % String(action.get("title", "回营地调整"))
+	if reason == "timeout":
+		return "诊断：输出不足。%s" % next_text
+	if stage_reached <= 0:
+		return "诊断：前排过早崩溃。%s" % next_text
+	if stage_reached == 1:
+		return "诊断：火力封锁未突破。%s" % next_text
+	return "诊断：基地炮击压垮队伍。%s" % next_text
+
+
+func _salvage_reward_from_settlement(settlement: Dictionary) -> int:
+	var reward := settlement.get("reward", {}) as Dictionary
+	if reward.has("salvage"):
+		return int(reward["salvage"])
+	if settlement.has("salvage"):
+		return int(settlement["salvage"])
+	if settlement.has("salvage_delta"):
+		return int(settlement["salvage_delta"])
+	if settlement.has("alliance_scrap_granted"):
+		return int(settlement["alliance_scrap_granted"])
+	return 0
+
+
+func _cannon_result_report_text(result: Dictionary, settlement: Dictionary) -> String:
+	var suppressed := _first_int_value([result, settlement], ["cannon_suppression_count", "cannon_suppressed_count", "suppression_count", "boss_suppression_count"])
+	var hits := _first_int_value([result, settlement], ["cannon_hit_count", "cannon_hits", "bombardment_hits", "boss_cannon_hits"])
+	return "本局压制巨炮 %d 次 / 炮击命中 %d 次" % [suppressed, hits]
+
+
+func _first_int_value(sources: Array[Dictionary], keys: Array[String]) -> int:
+	for source in sources:
+		for key in keys:
+			if source.has(key):
+				return int(source[key])
+	return 0
 
 
 func _build_battle_snapshots() -> Array[Dictionary]:
@@ -925,9 +2190,20 @@ func _build_battle_snapshots() -> Array[Dictionary]:
 			"defense": int(stats["defense"]),
 			"slot": slot_index,
 			"skill_id": skill_id,
-			"auto_skill": hero.auto_skill_enabled,
+			"auto_skill": bool(hero.auto_skill_enabled) or bool(settings_store.global_auto_skill),
 		})
 	return snapshots
+
+
+func _apply_global_auto_skill_to_battle(snapshots: Array[Dictionary]) -> void:
+	if battle_world == null:
+		return
+	for snapshot in snapshots:
+		var enabled := bool(snapshot.get("auto_skill", false))
+		if settings_store.global_auto_skill:
+			enabled = true
+		if enabled and battle_world.has_method("set_auto_skill"):
+			battle_world.set_auto_skill(StringName(String(snapshot["hero_id"])), true)
 
 
 func _execute_command(command_type: String, payload: Dictionary, business_key: String) -> Dictionary:
@@ -960,7 +2236,8 @@ func _show_management_shell(title_text: String, body: Control) -> void:
 	var title := _label(title_text, 24, COLOR_TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
-	var back := _button("返回营地", COLOR_PANEL_ALT, Vector2(110, 38), 14)
+	var back := _button("返回营地", COLOR_PANEL_ALT, Vector2(110, 50), 14)
+	back.name = "ManagementBackButton"
 	back.pressed.connect(_show_camp)
 	header.add_child(back)
 	root.add_child(body)

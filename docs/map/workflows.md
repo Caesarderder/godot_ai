@@ -4,15 +4,17 @@ km_type: map
 domain: workflow
 status: active
 owner: maintainers
-last_verified: 2026-07-23
+last_verified: 2026-07-25
 source_of_truth:
   - docs/workflows
 validated_by:
   - python3 tools/docs_lint.py
+  - manual-skill-routing-review
 tags:
   - workflow:task-routing
 related:
   - workflow.knowledge-query
+  - workflow.skill-routing
   - workflow.code-locating
   - workflow.impact-map
   - workflow.code-writing-review
@@ -26,13 +28,10 @@ related:
 | 任务 | 工作流 |
 |---|---|
 | 回答系统事实、产品边界 | [KM:workflow.knowledge-query](../workflows/knowledge-query.md) |
+| 为任务选择项目 Skill | [KM:workflow.skill-routing](../workflows/skill-routing.md) |
 | 定位实现文件或归属 | [KM:workflow.code-locating](../workflows/code-locating.md) |
 | 写代码、审查、重构、迁移前 | [KM:workflow.impact-map](../workflows/impact-map.md) |
 | 实施或代码审查 | [KM:workflow.code-writing-review](../workflows/code-writing-review.md) |
 | 新增/更新/审查知识节点 | [KM:workflow.knowledge-map-maintenance](../workflows/knowledge-map-maintenance.md) |
 
-<<<<<<< HEAD
-当前实现优先定位 `project-a/**`，构建与验证遵循 Godot 4.6.3 Web 工作流。`taptap/` 只作为历史原型读取；未来领域路径不存在时报告“规划落点”，不得伪装成现有实现。
-=======
-当前实现优先定位 `project-a/game/**`、`project-a/tests/**`、`project-a/tools/**` 与 `project-a/project.godot`；Godot 工程验证遵循 [CMD:game-verification](../runbooks/game-verification.md#game-verification)。`taptap/` 只作为已验证参考原型读取；未来 Godot 领域路径不存在时报告“规划落点”，不得把 TapTap 原型功能伪装成 Godot 已实现事实。
->>>>>>> origin/codex/toilet-man-3d-idle
+实现定位必须先读取当前文件归属索引与工程配置；参考原型、规划落点和已实现事实必须显式区分。若实现树或知识节点仍有合并冲突，先报告冲突，不从任一侧推断当前事实。

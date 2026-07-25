@@ -31,11 +31,7 @@ related:
 
 1. 读 [KM:map.control-index](../map/index.md) 和 [KM:invariant.project-boundaries](../map/invariants.md)。
 2. 在 [KM:map.domains](../map/domains.md) 选择一个主领域。
-<<<<<<< HEAD
 3. 优先读取实现索引和 `project-a/**` 当前代码；只有查询历史原型时才进入 `taptap/**`。当前 Godot 领域路径不存在时再读取规划参考。
-=======
-3. 优先读取实现索引和 `project-a/**` 当前代码；只有查询参考原型或迁移历史时才进入 `taptap/**`。当前 Godot 领域路径不存在时再读取规划与 TapTap 参考行为。
->>>>>>> origin/codex/toilet-man-3d-idle
 4. 发现冲突时按事实优先级报告，不静默拼接。
 5. 回答中明确状态：`active`、`draft`、`stale` 或待用户确认。
 

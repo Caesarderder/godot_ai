@@ -2,6 +2,7 @@ class_name BattleSession
 extends RefCounted
 
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 
 const TICKS_PER_SECOND: int = 5
 const MAX_TICKS: int = 300
@@ -18,23 +19,52 @@ var is_finished: bool = false
 var result: Dictionary = {}
 
 var _stage_index: int = 0
+var _stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID
+var _stage_config: Dictionary = {}
+var _stage_names: Array[String] = StageCatalogScript.DEFAULT_STAGE_NAMES.duplicate()
+var _max_ticks: int = MAX_TICKS
+var _final_structure_id: StringName = &"alliance_core"
 var _units: Array[Dictionary] = []
 var _structures: Array[Dictionary] = []
 var _pending_skills: Dictionary = {}
 var _warnings: Array[Dictionary] = []
+var _suppressible_cannon: bool = false
+var _cannon_suppression_target: int = 0
+var _cannon_warning_ticks: int = CANNON_FUSE_TICKS
+var _cannons_suppressed: int = 0
+var _cannon_impacts: int = 0
 var _summon_serial: int = 0
 var _revived_unit_ids: Dictionary = {}
 
 
-func start(hero_snapshots: Array) -> void:
+func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID, stage_config: Dictionary = {}) -> void:
 	tick_index = 0
 	is_finished = false
 	result = {}
 	_stage_index = 0
+	_stage_id = stage_id
+	_stage_config = stage_config.duplicate(true) if not stage_config.is_empty() else StageCatalogScript.stage(stage_id)
+	if _stage_config.is_empty():
+		_stage_id = StageCatalogScript.DEFAULT_STAGE_ID
+		_stage_config = StageCatalogScript.stage(_stage_id)
+	_stage_names = []
+	for stage_name in _stage_config.get("stage_names", StageCatalogScript.DEFAULT_STAGE_NAMES):
+		_stage_names.append(String(stage_name))
+	if _stage_names.is_empty():
+		_stage_names = StageCatalogScript.DEFAULT_STAGE_NAMES.duplicate()
+	_max_ticks = int(_stage_config.get("max_ticks", MAX_TICKS))
+	_final_structure_id = StringName(String(_stage_config.get("final_structure_id", "alliance_core")))
+	_suppressible_cannon = bool(_stage_config.get("suppressible_cannon", false))
+	_cannon_suppression_target = maxi(0, int(_stage_config.get("cannon_suppression_target", 0)))
+	_cannon_warning_ticks = int(_stage_config.get("cannon_warning_ticks", CANNON_FUSE_TICKS))
+	if _cannon_warning_ticks <= 0:
+		_cannon_warning_ticks = CANNON_FUSE_TICKS
 	_units.clear()
 	_structures = _make_structures()
 	_pending_skills.clear()
 	_warnings.clear()
+	_cannons_suppressed = 0
+	_cannon_impacts = 0
 	_summon_serial = 0
 	_revived_unit_ids.clear()
 
@@ -83,11 +113,37 @@ func advance_tick() -> Array[Dictionary]:
 	_tick_status_effects()
 	_resolve_cannon_warnings(events)
 	_run_structure_defenses(events)
+	_run_chapter_mechanics(events)
 	_run_enemies(events)
 	_run_allies(events)
 	_update_stage(events)
 	_resolve_battle(events)
 	return events
+
+
+func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
+	var chapter := int(_stage_config.get("chapter", 1))
+	if chapter == 2 and tick_index % 35 == 0:
+		var affected := 0
+		for ally in _living_main_allies():
+			ally["energy"] = maxi(0, int(ally["energy"]) - 18)
+			ally["weakness_ticks"] = maxi(int(ally.get("weakness_ticks", 0)), 8)
+			affected += 1
+		events.append({"type": &"resonance_pulse", "tick": tick_index, "affected": affected})
+	elif chapter == 3 and tick_index % 40 == 0:
+		var target := _lowest_hp_ally()
+		if not target.is_empty():
+			target["stun_ticks"] = maxi(int(target.get("stun_ticks", 0)), 8)
+			events.append({"type": &"screen_control", "tick": tick_index, "unit_id": target["unit_id"], "duration_ticks": 8})
+	elif chapter >= 4 and tick_index % 30 == 0:
+		var shielded := 0
+		for enemy in _living_stage_enemies():
+			if bool(enemy.get("elite", false)):
+				enemy["shield"] = mini(90, int(enemy.get("shield", 0)) + 28)
+				enemy["shield_ticks"] = 20
+				shielded += 1
+		if shielded > 0:
+			events.append({"type": &"alliance_coordination", "tick": tick_index, "shielded": shielded})
 
 
 func snapshot() -> Dictionary:
@@ -101,17 +157,28 @@ func snapshot() -> Dictionary:
 	var structure_snapshots: Array[Dictionary] = []
 	for structure in _structures:
 		structure_snapshots.append(structure.duplicate(true))
+	var warning_snapshots: Array[Dictionary] = []
+	for warning in _warnings:
+		var warning_snapshot := warning.duplicate(true)
+		warning_snapshot["remaining_ticks"] = maxi(0, int(warning_snapshot.get("impact_tick", tick_index)) - tick_index)
+		if bool(warning_snapshot.get("suppressible", false)):
+			var target := int(warning_snapshot.get("suppression_target", 0))
+			var damage := int(warning_snapshot.get("suppression_damage", 0))
+			warning_snapshot["suppression_current"] = damage
+			warning_snapshot["suppression_remaining"] = maxi(0, target - damage)
+		warning_snapshots.append(warning_snapshot)
 	return {
 		"tick": tick_index,
-		"max_ticks": MAX_TICKS,
+		"max_ticks": _max_ticks,
 		"finished": is_finished,
+		"stage_id": _stage_id,
 		"stage_index": _stage_index,
-		"stage_name": STAGE_NAMES[_stage_index],
+		"stage_name": _stage_names[_stage_index],
 		"road_progress": _front_line(),
 		"units": unit_snapshots,
 		"enemies": enemy_snapshots,
 		"structures": structure_snapshots,
-		"warnings": _warnings.duplicate(true),
+		"warnings": warning_snapshots,
 		"result": result.duplicate(true),
 	}
 
@@ -176,19 +243,33 @@ func _run_structure_defenses(events: Array[Dictionary]) -> void:
 		var kind := String(structure["kind"])
 		if kind in ["turret", "battery"] and tick_index % int(structure["attack_period_ticks"]) == 0:
 			_apply_unit_damage(_select_defense_target(int(structure["lane"])), int(structure["attack"]), structure["structure_id"], false, events)
-		elif kind == "core" and _stage_index == 2:
+		elif kind == "core" and _stage_index == _stage_names.size() - 1:
 			var living_batteries := _living_structure_count(["battery"])
 			var period := 42 - living_batteries * 6
 			if tick_index % period == 0:
 				var lane := int(tick_index / period) % 3
+				var is_suppressible := _is_suppressible_cannon_active()
+				var warning_ticks := _cannon_warning_ticks if is_suppressible else CANNON_FUSE_TICKS
 				var warning := {
 					"warning_id": "shell_%d" % tick_index,
-					"impact_tick": tick_index + CANNON_FUSE_TICKS,
+					"impact_tick": tick_index + warning_ticks,
 					"lane": lane,
 					"damage": 46 + living_batteries * 9,
+					"suppressible": is_suppressible,
 				}
+				if is_suppressible:
+					warning["source_structure_id"] = structure["structure_id"]
+					warning["suppression_target"] = _cannon_suppression_target
+					warning["suppression_damage"] = 0
+					warning["suppression_current"] = 0
+					warning["suppression_remaining"] = _cannon_suppression_target
 				_warnings.append(warning)
-				events.append({"type": &"artillery_warning", "tick": tick_index, "warning_id": warning["warning_id"], "lane": lane, "impact_tick": warning["impact_tick"]})
+				var event := {"type": &"artillery_warning", "tick": tick_index, "warning_id": warning["warning_id"], "lane": lane, "impact_tick": warning["impact_tick"], "suppressible": is_suppressible}
+				if is_suppressible:
+					event["suppression_target"] = _cannon_suppression_target
+					event["suppression_current"] = 0
+					event["remaining_ticks"] = warning_ticks
+				events.append(event)
 
 
 func _resolve_cannon_warnings(events: Array[Dictionary]) -> void:
@@ -203,7 +284,42 @@ func _resolve_cannon_warnings(events: Array[Dictionary]) -> void:
 				_apply_unit_damage(unit, int(warning["damage"]), &"core_cannon", false, events)
 				hits += 1
 		events.append({"type": &"explosion", "tick": tick_index, "source_id": &"core_cannon", "lane": warning["lane"], "road_position": 865, "hits": hits})
-		events.append({"type": &"artillery_impact", "tick": tick_index, "lane": warning["lane"], "hits": hits})
+		_cannon_impacts += 1
+		events.append({"type": &"artillery_impact", "tick": tick_index, "warning_id": warning.get("warning_id", ""), "lane": warning["lane"], "hits": hits})
+	_warnings = remaining
+
+
+func _is_suppressible_cannon_active() -> bool:
+	return _suppressible_cannon and _stage_index == _stage_names.size() - 1 and _cannon_suppression_target > 0
+
+
+func _record_cannon_suppression_damage(structure: Dictionary, actual_damage: int, events: Array[Dictionary]) -> void:
+	if actual_damage <= 0 or not _is_suppressible_cannon_active() or int(structure.get("stage", -1)) != _stage_index:
+		return
+	if _warnings.is_empty():
+		return
+	var remaining: Array[Dictionary] = []
+	for warning in _warnings:
+		if not bool(warning.get("suppressible", false)) or int(warning.get("impact_tick", 0)) <= tick_index:
+			remaining.append(warning)
+			continue
+		var target := int(warning.get("suppression_target", _cannon_suppression_target))
+		var damage := int(warning.get("suppression_damage", 0)) + actual_damage
+		warning["suppression_damage"] = damage
+		warning["suppression_current"] = damage
+		warning["suppression_remaining"] = maxi(0, target - damage)
+		if damage >= target:
+			_cannons_suppressed += 1
+			events.append({
+				"type": &"cannon_suppressed",
+				"tick": tick_index,
+				"warning_id": warning.get("warning_id", ""),
+				"structure_id": structure.get("structure_id", &""),
+				"damage": damage,
+				"target": target,
+			})
+			continue
+		remaining.append(warning)
 	_warnings = remaining
 
 
@@ -324,6 +440,7 @@ func _damage_structure(structure: Dictionary, damage: int, source_id: StringName
 	structure["hp"] = maxi(0, int(structure["hp"]) - actual)
 	structure["damage_stage"] = _damage_stage(int(structure["hp"]), int(structure["max_hp"]))
 	events.append({"type": &"structure_damaged", "tick": tick_index, "structure_id": structure["structure_id"], "source_id": source_id, "damage": actual, "hp": structure["hp"], "max_hp": structure["max_hp"], "is_skill": is_skill})
+	_record_cannon_suppression_damage(structure, actual, events)
 	if int(structure["damage_stage"]) != old_damage_stage:
 		events.append({"type": &"structure_damage_stage_changed", "tick": tick_index, "structure_id": structure["structure_id"], "damage_stage": structure["damage_stage"]})
 	if int(structure["hp"]) == 0:
@@ -404,22 +521,22 @@ func _convert_enemy(owner: Dictionary, events: Array[Dictionary]) -> bool:
 
 func _update_stage(events: Array[Dictionary]) -> void:
 	var old_stage := _stage_index
-	while _stage_index < 2 and _stage_cleared(_stage_index):
+	while _stage_index < _stage_names.size() - 1 and _stage_cleared(_stage_index):
 		_stage_index += 1
 	if _stage_index != old_stage:
-		events.append({"type": &"stage_changed", "tick": tick_index, "stage_index": _stage_index, "stage_name": STAGE_NAMES[_stage_index]})
+		events.append({"type": &"stage_changed", "tick": tick_index, "stage_index": _stage_index, "stage_name": _stage_names[_stage_index]})
 
 
 func _resolve_battle(events: Array[Dictionary]) -> void:
 	var main_allies_alive := _main_allies_alive()
 	var reason := ""
 	var victory := false
-	if not _structure_alive(&"alliance_core"):
+	if not _structure_alive(_final_structure_id):
 		reason = "core_destroyed"
 		victory = true
 	elif main_allies_alive == 0:
 		reason = "main_squad_defeated"
-	elif tick_index >= MAX_TICKS:
+	elif tick_index >= _max_ticks:
 		reason = "timeout"
 	else:
 		return
@@ -431,6 +548,7 @@ func _resolve_battle(events: Array[Dictionary]) -> void:
 func _finish_result(victory: bool, reason: String) -> Dictionary:
 	return {
 		"outcome": "victory" if victory else ("timeout" if reason == "timeout" else "defeat"),
+		"stage_id": _stage_id,
 		"victory": victory,
 		"reason": reason,
 		"ticks": tick_index,
@@ -439,6 +557,10 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"main_allies_alive": _main_allies_alive(),
 		"structures_destroyed": _destroyed_structure_count(),
 		"enemies_defeated": _defeated_enemy_count(),
+		"cannons_suppressed": _cannons_suppressed,
+		"cannon_impacts": _cannon_impacts,
+		"cannon_suppressed_count": _cannons_suppressed,
+		"cannon_hit_count": _cannon_impacts,
 	}
 
 
@@ -510,6 +632,25 @@ func _living_allies() -> Array[Dictionary]:
 		if int(unit["team"]) == TEAM_ALLY and bool(unit["alive"]):
 			allies.append(unit)
 	return allies
+
+
+func _living_main_allies() -> Array[Dictionary]:
+	var allies: Array[Dictionary] = []
+	for unit in _living_allies():
+		if not bool(unit.get("temporary", false)):
+			allies.append(unit)
+	return allies
+
+
+func _lowest_hp_ally() -> Dictionary:
+	var target: Dictionary = {}
+	var lowest_ratio := 2.0
+	for ally in _living_main_allies():
+		var ratio := float(int(ally["hp"])) / float(maxi(1, int(ally["max_hp"])))
+		if target.is_empty() or ratio < lowest_ratio:
+			target = ally
+			lowest_ratio = ratio
+	return target
 
 
 func _select_enemy_target(enemy: Dictionary) -> Dictionary:
@@ -681,17 +822,24 @@ func _make_summon(owner: Dictionary, serial: int, display_name: String = "寄生
 
 
 func _make_enemies() -> Array[Dictionary]:
-	return [
-		_enemy("cam_grunt_l", "联盟摄像兵", "fighter", 0, 230, 0, 115, 22, 7, 32, 8, false),
-		_enemy("cam_grunt_c", "联盟摄像兵", "fighter", 0, 250, 1, 125, 23, 7, 32, 8, false),
-		_enemy("speaker_grunt", "联盟音箱兵", "arcanist", 0, 270, 2, 105, 24, 5, 90, 9, false),
-		_enemy("shield_captain", "盾阵队长", "guardian", 1, 505, 1, 230, 32, 14, 36, 8, true),
-		_enemy("turret_guard_l", "火力守军", "ranger", 1, 480, 0, 145, 29, 8, 110, 7, false),
-		_enemy("turret_guard_r", "火力守军", "ranger", 1, 520, 2, 145, 29, 8, 110, 7, false),
-		_enemy("tv_elite", "电视精英", "arcanist", 2, 805, 1, 285, 36, 12, 100, 8, true),
-		_enemy("core_guard_l", "核心近卫", "guardian", 2, 840, 0, 220, 31, 14, 38, 7, true),
-		_enemy("core_guard_r", "核心近卫", "guardian", 2, 840, 2, 220, 31, 14, 38, 7, true),
-	]
+	var values: Array[Dictionary] = []
+	for enemy_data in _stage_config.get("enemies", []):
+		var enemy := enemy_data as Dictionary
+		values.append(_enemy(
+			String(enemy["unit_id"]),
+			String(enemy["display_name"]),
+			String(enemy["class_id"]),
+			int(enemy["stage"]),
+			int(enemy["road_position"]),
+			int(enemy["lane"]),
+			int(enemy["hp"]),
+			int(enemy["attack"]),
+			int(enemy["defense"]),
+			int(enemy["range"]),
+			int(enemy["attack_period_ticks"]),
+			bool(enemy["elite"])
+		))
+	return values
 
 
 func _enemy(id: String, label: String, class_id: String, stage: int, road_position: int, lane: int, hp: int, attack: int, defense: int, attack_range: int, period: int, elite: bool) -> Dictionary:
@@ -731,15 +879,22 @@ func _enemy(id: String, label: String, class_id: String, stage: int, road_positi
 
 
 func _make_structures() -> Array[Dictionary]:
-	return [
-		_structure("outer_barricade", "外围路障", "structure", 0, 300, 1, 260, 11, 0, 0),
-		_structure("fire_tower", "火力塔", "turret", 1, 560, 0, 440, 12, 18, 8),
-		_structure("armored_gate", "装甲大门", "armored", 1, 640, 1, 700, 18, 0, 0),
-		_structure("left_battery", "左防御设施", "battery", 2, 815, 0, 450, 13, 23, 9),
-		_structure("right_battery", "右防御设施", "battery", 2, 815, 2, 450, 13, 23, 9),
-		_structure("core_armor", "核心外层装甲", "armored", 2, 900, 1, 650, 20, 0, 0),
-		_structure("alliance_core", "联盟核心巨炮", "core", 2, ROAD_END, 1, 900, 16, 0, 0),
-	]
+	var values: Array[Dictionary] = []
+	for structure_data in _stage_config.get("structures", []):
+		var structure := structure_data as Dictionary
+		values.append(_structure(
+			String(structure["structure_id"]),
+			String(structure["display_name"]),
+			String(structure["kind"]),
+			int(structure["stage"]),
+			int(structure["road_position"]),
+			int(structure["lane"]),
+			int(structure["max_hp"]),
+			int(structure["defense"]),
+			int(structure["attack"]),
+			int(structure["attack_period_ticks"])
+		))
+	return values
 
 
 func _structure(id: String, label: String, kind: String, stage: int, road_position: int, lane: int, max_hp: int, defense: int, attack: int, attack_period_ticks: int) -> Dictionary:

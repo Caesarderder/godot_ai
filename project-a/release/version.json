@@ -1,0 +1,25 @@
+{
+  "app_id": "project-a-earth-skibidi-web",
+  "product_name": "Project A",
+  "release_channel": "local-web-candidate",
+  "source_state": "source_hardened",
+  "version": "0.1.0-release-hardening.1",
+  "save_schema_version": 4,
+  "godot_required": "4.6.3-stable",
+  "renderer_contract": "Compatibility / WebGL2",
+  "web_threads": false,
+  "gdextension": false,
+  "privacy_claim": "zero intentional runtime collection; local browser-origin save only",
+  "fan_content_notice_required": true,
+  "artifact_audit_command": "python tools/release_audit.py --artifact-dir build/web",
+  "export_command": "godot --headless --path project-a --export-release Web build/web/index.html",
+  "external_evidence_required": [
+    "Builda-controlled runtime/template identity or approved replacement path",
+    "final HTTPS deployment URL and version id",
+    "production MIME/compression/cache/security headers",
+    "Chrome Android and Safari iOS real-device smoke",
+    "production-origin persistence and blocked-storage behavior",
+    "final legal/IP/asset-license review",
+    "monitoring and rollback rehearsal"
+  ]
+}

@@ -2,6 +2,7 @@ extends SceneTree
 
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 
 var failures: Array[String] = []
 
@@ -13,8 +14,14 @@ func _init() -> void:
 	_test_eight_archetype_skill_families()
 	_test_star_tiers_change_skill_output()
 	_test_core_cannon_and_destruction_feedback()
+	_test_boss_cannon_suppression_window()
+	_test_boss_cannon_suppression_high_output()
+	_test_boss_cannon_low_output_impacts()
+	_test_normal_stage_has_no_suppressible_warning()
+	_test_boss_cannon_determinism()
 	_test_same_input_same_result()
 	_test_timeout_contract()
+	_test_act_one_stage_catalog_and_config_start()
 	if failures.is_empty():
 		print("BATTLE TESTS PASS")
 		quit(0)
@@ -241,6 +248,122 @@ func _test_timeout_contract() -> void:
 	_check(String(session.result.get("outcome", "")) == "timeout", "living squad at maximum tick times out")
 
 
+func _test_act_one_stage_catalog_and_config_start() -> void:
+	_check(StageCatalogScript.all_stage_ids().size() == 25, "act one catalog exposes twenty-five stages")
+	_check(StageCatalogScript.has_stage("stage_5_5"), "act one catalog includes final 5-5")
+	var config := StageCatalogScript.stage("stage_2_5")
+	_check(String(config.get("stage_id", "")) == "stage_2_5", "stage catalog returns requested stage id")
+	_check(int(config.get("max_ticks", 0)) > BattleSessionScript.MAX_TICKS, "boss stages can own longer time limits")
+	_check((config.get("enemies", []) as Array).size() >= 6, "stage config owns enemy content")
+	_check((config.get("structures", []) as Array).size() >= 5, "stage config owns structure content")
+	var session: RefCounted = BattleSessionScript.new()
+	session.start(_siege_heroes(), "stage_2_5", config)
+	var snapshot: Dictionary = session.snapshot()
+	_check(String(snapshot.get("stage_id", "")) == "stage_2_5", "battle snapshot exposes configured stage id")
+	_check(int(snapshot.get("max_ticks", 0)) == int(config["max_ticks"]), "battle max ticks comes from stage config")
+	_check((snapshot.get("enemies", []) as Array).size() == (config.get("enemies", []) as Array).size(), "battle enemies come from stage config")
+	_check((snapshot.get("structures", []) as Array).size() == (config.get("structures", []) as Array).size(), "battle structures come from stage config")
+
+
+func _test_boss_cannon_suppression_window() -> void:
+	var session := _forced_final_stage_session("stage_1_5", _low_pressure_heroes())
+	var events: Array[Dictionary] = session.advance_tick()
+	var warning := _first_event(events, &"artillery_warning")
+	_check(not warning.is_empty(), "chapter boss emits a cannon warning in the final base phase")
+	_check(bool(warning.get("suppressible", false)), "chapter boss cannon warning is suppressible")
+	_check(int(warning.get("suppression_target", 0)) == 70, "chapter one boss suppression target is 70")
+	_check(int(warning.get("impact_tick", 0)) - int(warning.get("tick", 0)) == 20, "boss cannon warning lasts twenty ticks at five hertz")
+	var warnings := session.snapshot().get("warnings", []) as Array
+	_check(warnings.size() == 1, "unsuppressed boss warning remains visible in the snapshot")
+	if not warnings.is_empty():
+		var snapshot_warning := warnings[0] as Dictionary
+		_check(int(snapshot_warning.get("remaining_ticks", 0)) == 20, "boss warning snapshot exposes remaining ticks")
+		_check(int(snapshot_warning.get("suppression_remaining", 0)) == 70, "boss warning snapshot exposes suppression remaining")
+
+
+func _test_boss_cannon_suppression_high_output() -> void:
+	var session := _forced_final_stage_session("stage_1_5", _burst_pressure_heroes())
+	var events: Array[Dictionary] = session.advance_tick()
+	var suppressed := _first_event(events, &"cannon_suppressed")
+	_check(not suppressed.is_empty(), "high structure output can interrupt the boss cannon before impact")
+	_check((session.snapshot().get("warnings", []) as Array).is_empty(), "suppressed boss warning is removed immediately")
+	session.tick_index = int(StageCatalogScript.stage("stage_1_5").get("max_ticks", 360)) - 1
+	session.advance_tick()
+	_check(int(session.result.get("cannons_suppressed", 0)) == 1, "battle result records suppressed boss cannon count")
+	_check(int(session.result.get("cannon_impacts", -1)) == 0, "suppressed boss cannon does not also impact")
+
+
+func _test_boss_cannon_low_output_impacts() -> void:
+	var session := _forced_final_stage_session("stage_1_5", _low_pressure_heroes())
+	var impact_seen := false
+	var suppressed_seen := false
+	for _i in 22:
+		for event in session.advance_tick():
+			impact_seen = impact_seen or event["type"] == &"artillery_impact"
+			suppressed_seen = suppressed_seen or event["type"] == &"cannon_suppressed"
+	session.tick_index = int(StageCatalogScript.stage("stage_1_5").get("max_ticks", 360)) - 1
+	session.advance_tick()
+	_check(impact_seen, "low output fails the suppression race and receives cannon impact")
+	_check(not suppressed_seen, "low output does not emit cannon_suppressed")
+	_check(int(session.result.get("cannon_impacts", 0)) > 0, "battle result records cannon impacts")
+
+
+func _test_normal_stage_has_no_suppressible_warning() -> void:
+	var session := _forced_final_stage_session("stage_1_1", _low_pressure_heroes())
+	var events: Array[Dictionary] = session.advance_tick()
+	var warning := _first_event(events, &"artillery_warning")
+	_check(not warning.is_empty(), "normal final-base phase keeps legacy cannon warning")
+	_check(not bool(warning.get("suppressible", false)), "normal stages do not expose suppressible cannon UI state")
+	_check(int(warning.get("impact_tick", 0)) - int(warning.get("tick", 0)) == BattleSessionScript.CANNON_FUSE_TICKS, "normal cannon warning keeps the legacy fuse")
+	var warnings := session.snapshot().get("warnings", []) as Array
+	if not warnings.is_empty():
+		_check(not bool((warnings[0] as Dictionary).get("suppressible", false)), "normal warning snapshot remains non-suppressible")
+		_check(int((warnings[0] as Dictionary).get("suppression_target", 0)) == 0, "normal warning snapshot has no positive suppression target")
+
+
+func _test_boss_cannon_determinism() -> void:
+	var first := _boss_cannon_trace(_burst_pressure_heroes())
+	var second := _boss_cannon_trace(_burst_pressure_heroes())
+	_check(first == second, "same boss cannon pressure sequence is deterministic")
+
+
+func _boss_cannon_trace(heroes: Array[Dictionary]) -> Array[String]:
+	var session := _forced_final_stage_session("stage_1_5", heroes)
+	var trace: Array[String] = []
+	for _i in 25:
+		for event in session.advance_tick():
+			if [&"artillery_warning", &"cannon_suppressed", &"artillery_impact"].has(event["type"]):
+				trace.append("%s:%s:%d" % [String(event["type"]), String(event.get("warning_id", "")), int(event.get("tick", 0))])
+	return trace
+
+
+func _forced_final_stage_session(stage_id: String, heroes: Array[Dictionary]) -> RefCounted:
+	var session: RefCounted = BattleSessionScript.new()
+	var config := StageCatalogScript.stage(stage_id)
+	session.start(heroes, stage_id, config)
+	session._stage_index = 2
+	session.tick_index = 29
+	for unit in session._units:
+		if int(unit["team"]) == BattleSessionScript.TEAM_ENEMY:
+			unit["alive"] = false
+	for structure in session._structures:
+		if int(structure["stage"]) < 2:
+			structure["alive"] = false
+	for unit in session._units:
+		if int(unit["team"]) == BattleSessionScript.TEAM_ALLY:
+			unit["stage"] = 2
+			unit["road_position"] = 780
+			unit["cooldown_ticks"] = 0
+	return session
+
+
+func _first_event(events: Array[Dictionary], event_type: StringName) -> Dictionary:
+	for event in events:
+		if event["type"] == event_type:
+			return event
+	return {}
+
+
 func _first_skill_event(heroes: Array[Dictionary], unit_id: StringName) -> Dictionary:
 	var session: RefCounted = BattleSessionScript.new()
 	session.start(heroes)
@@ -348,6 +471,25 @@ func _siege_heroes() -> Array[Dictionary]:
 		_hero(4, "repair", "guardian", 2, 245, 62, 24),
 		_hero(5, "parasite", "arcanist", 2, 225, 66, 15),
 	]
+
+
+func _low_pressure_heroes() -> Array[Dictionary]:
+	var values := _six_of("assault", 1)
+	for hero in values:
+		hero["attack"] = 1
+		hero["max_hp"] = 500
+		hero["defense"] = 40
+	return values
+
+
+func _burst_pressure_heroes() -> Array[Dictionary]:
+	var values := _six_of("rocket", 3)
+	for hero in values:
+		hero["attack"] = 220
+		hero["max_hp"] = 500
+		hero["defense"] = 40
+		hero["starting_energy"] = 0
+	return values
 
 
 func _six_of(archetype_id: String, star: int) -> Array[Dictionary]:

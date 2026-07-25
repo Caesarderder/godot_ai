@@ -14,6 +14,9 @@ source_of_truth:
   - project-a/game/scripts/commands/command_fingerprint.gd
   - project-a/game/scripts/domain/factory/factory_service.gd
   - project-a/game/scripts/domain/battle/battle_session.gd
+  - project-a/game/scripts/domain/quest/quest_service.gd
+  - project-a/game/scripts/domain/achievement/achievement_catalog.gd
+  - project-a/game/scripts/domain/achievement/achievement_service.gd
   - project-a/game/scripts/persistence/save_manager.gd
   - project-a/game/scripts/autoloads/game.gd
   - project-a/tools/run_meta_tests.gd
@@ -21,6 +24,7 @@ source_of_truth:
 validated_by:
   - godot --headless --path project-a -s tools/run_meta_tests.gd
   - godot --headless --path project-a -s tools/run_battle_tests.gd
+  - godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
   - independent-code-review-2026-07-23
 tags:
   - reference:state-command-lifecycle
@@ -33,7 +37,7 @@ related:
 
 # 状态、命令与生命周期契约
 
-> 当前已实现本页的 GameState schema 3、公开耐久命令、fingerprint、幂等、revision、先存后换、严格 JSON、v1->v2->v3 迁移、主备恢复和 bootstrap gate；战斗已实现临时三阶段 BattleSession、BattleResult 与一次性战斗结算。WebLifecycle、离线结算、装备和任务链仍是目标契约，因此节点保持 `draft`。
+> 当前已实现本页的 GameState schema 4、content `factory-siege-v4`、公开耐久命令、fingerprint、幂等、revision、先存后换、严格 JSON、v1/v2/v3->v4 迁移、主备恢复、bootstrap gate，以及任务/成就完成、领取和 claimed 生命周期；战斗已实现临时三阶段 BattleSession、BattleResult 与一次性战斗结算。WebLifecycle、离线结算和装备仍是目标契约，因此节点保持 `draft`。
 
 ## 目标
 
@@ -43,19 +47,20 @@ related:
 
 ### 状态边界
 
-- `GameState`：已实现 schema 3、content version `factory-siege-v3`、roster、inventory、六槽 formation、economy、factory、camp、quests、pity、stage_progress、attempt_counters、receipt ledgers 和四时间字段；未完成系统以严格可持久化骨架存在。
+- `GameState`：已实现 schema 4、content version `factory-siege-v4`、roster、inventory、六槽 formation、economy、factory、camp、quests、pity、stage_progress、attempt_counters、receipt ledgers、achievements 和四时间字段；未完成系统以严格可持久化骨架存在。
+- `achievements`：顶层五桶固定为 `progress`、`completed`、`claimed`、`event_keys`、`counters`。`progress/completed/claimed` 支持完成与手动领取分离；`event_keys` 使用 command_id 级别事件去重；`counters` 保存可靠回填后的单调计数。
 - `FactoryState`：已实现三材料、蓝图表、最多三项生产队列、生产序列和单调英雄序列。
 - `BattleSession/BattleState`：已用纯 GDScript 5Hz 状态承载 tick、六人单位、七个结构目标、阶段、技能、炮击预警和表现事件；它不进入存档。跨帧率 digest 仍待实现。
 - `BattleResult`：已作为战斗完成后的结算输入，并由 `settle_battle` 通过稳定 `battle_id` business key 一次性提交；手动退出无奖励。
 
 ### 命令分类
 
-- `DURABLE_VALUE`：当前已覆盖新英雄、训练、受控资源变更、战斗结算、开始生产、领取生产和 3 合 1 合成；强化、设施升级、领奖、离线结算与 attempt reservation 待实现。
+- `DURABLE_VALUE`：当前已覆盖新英雄、训练、受控资源变更、战斗结算、开始生产、领取生产、3 合 1 合成、任务刷新/领奖、成就刷新/领奖；强化、设施升级、离线结算与 attempt reservation 待实现。
 - `INTERNAL_DURABLE`：pause anchor、foreground heartbeat、resume/offline settlement 尚未实现。
 - `REVERSIBLE_META`：六槽编队走立即提交；装备、筛选、重命名及 debounce 尚未实现。
 - `EPHEMERAL`：导航、动画、临时 tick，不进入 GameState/receipt。
 
-当前所有已实现命令遵循 candidate clone -> reducer -> invariants -> receipt -> durable save -> memory swap -> success；未提供保存回调、保存失败或 revision 过期时不会交换 live state。QuestReducer 尚未实现。调用方不得降低 durability 或绕过 executor。
+当前所有已实现命令遵循 candidate clone -> reducer -> invariants -> receipt -> durable save -> memory swap -> success；未提供保存回调、保存失败或 revision 过期时不会交换 live state。`QuestService` 与 `AchievementService` 消费成功领域事件，任务/成就刷新与领奖命令自身不会递归推进自身。调用方不得降低 durability 或绕过 executor。
 
 ### 时间字段
 
@@ -66,7 +71,7 @@ related:
 
 ### Receipt
 
-命令 ID 绑定 canonical fingerprint；同 ID 同 fingerprint 返回原 receipt，同 ID 或 business key 复用但 fingerprint 不同会 hard error。canonical payload 只接受受控 JSON 值，公开命令校验精确字段与类型。价值 receipt 已写入存档；任务 causal receipt 的 terminal+claimed 生命周期尚未实现。
+命令 ID 绑定 canonical fingerprint；同 ID 同 fingerprint 返回原 receipt，同 ID 或 business key 复用但 fingerprint 不同会 hard error。canonical payload 只接受受控 JSON 值，公开命令校验精确字段与类型。价值 receipt 已写入存档；任务和成就完成与领取分离，claimed、generation、request fingerprint、durable claim ledger 和目录奖励对账已实现。
 
 ## 入口或路径
 
@@ -74,7 +79,7 @@ related:
 
 ## 验证
 
-已通过 `godot --headless --path project-a -s tools/run_meta_tests.gd` 验证 fingerprint、幂等、business key 冲突、revision、保存失败、严格 schema、v1->v2 迁移、工厂/合成事务、主备恢复与 bootstrap gate。600 replay、浏览器 crash matrix、20m+5m、重复 resume、rollback/48h jump 尚未验证。
+已通过 `godot --headless --path project-a -s tools/run_meta_tests.gd` 验证 fingerprint、幂等、business key 冲突、revision、保存失败、严格 schema、v1/v2/v3->v4 迁移、工厂/合成事务、任务与成就完成/领取/篡改拒绝、command_id 事件去重、可靠回填、主备恢复与 bootstrap gate。600 replay、真实旧版 JSON fixture、浏览器 crash matrix、20m+5m、重复 resume、rollback/48h jump 尚未验证。
 
 ## 相关节点
 

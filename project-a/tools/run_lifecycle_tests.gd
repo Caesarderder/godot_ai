@@ -1,6 +1,7 @@
 extends SceneTree
 
 const GameStateScript := preload("res://game/scripts/state/game_state.gd")
+const SaveCodecScript := preload("res://game/scripts/persistence/save_codec.gd")
 const CommandExecutorScript := preload("res://game/scripts/commands/command_executor.gd")
 const HeroProgression := preload("res://game/scripts/domain/progression/hero_progression.gd")
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
@@ -11,6 +12,9 @@ var save_calls: int = 0
 
 
 func _init() -> void:
+	_test_achievement_schema_new_save_and_roundtrip()
+	_test_achievement_schema_v3_migrations()
+	_test_achievement_schema_rejects_missing_or_bad_buckets()
 	_test_new_save_starts_with_eight_heroes_and_six_unit_formation()
 	_test_factory_start_claim_consumes_materials_and_uses_monotonic_ids()
 	_test_three_matching_armored_heroes_merge_into_two_star_and_keep_formation_valid()
@@ -24,6 +28,54 @@ func _init() -> void:
 		push_error(failure)
 	print("LIFECYCLE TESTS FAIL: %d failure(s)" % failures.size())
 	quit(1)
+
+
+func _test_achievement_schema_new_save_and_roundtrip() -> void:
+	var state: RefCounted = GameStateScript.create_new(20260725, 1000)
+	_eq(state.schema_version, 4, "new save uses schema v4")
+	_eq(state.content_version, "factory-siege-v4", "new save uses content v4")
+	_eq(state.achievements, _empty_achievements(), "new save starts with empty achievement buckets")
+	_ok(state.validate().is_empty(), "new save achievement schema validates")
+	var decoded := SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(state))
+	_ok(bool(decoded.get("ok", false)), "schema v4 save codec roundtrip decodes: %s" % str(decoded))
+	if bool(decoded.get("ok", false)):
+		var restored: RefCounted = decoded["state"]
+		_eq(restored.to_dict(), state.to_dict(), "schema v4 roundtrip preserves achievements")
+
+
+func _test_achievement_schema_v3_migrations() -> void:
+	var real_v3 := _as_v3_save(GameStateScript.create_new(20260725, 1000).to_dict())
+	var migrated_real := SaveCodecScript.decode(real_v3)
+	_ok(bool(migrated_real.get("ok", false)), "real v3 save migrates to v4: %s" % str(migrated_real))
+	if bool(migrated_real.get("ok", false)):
+		var real_state: RefCounted = migrated_real["state"]
+		_eq(real_state.schema_version, 4, "real v3 migration writes schema v4")
+		_eq(real_state.content_version, "factory-siege-v4", "real v3 migration writes content v4")
+		_eq(real_state.achievements, _empty_achievements(), "real v3 migration initializes achievement buckets")
+	var synthetic_v3 := _as_v3_save(GameStateScript.create_new(20260726, 2000).to_dict())
+	synthetic_v3["attempt_counters"] = {"battle": 3}
+	synthetic_v3["command_receipts"] = {"cmd-1": {"ok": true}}
+	synthetic_v3["business_receipts"] = {"life:one": {"ok": true}}
+	var migrated_synthetic := SaveCodecScript.decode(synthetic_v3)
+	_ok(bool(migrated_synthetic.get("ok", false)), "synthetic v3 save migrates to v4: %s" % str(migrated_synthetic))
+	if bool(migrated_synthetic.get("ok", false)):
+		var synthetic_state: RefCounted = migrated_synthetic["state"]
+		_eq(synthetic_state.schema_version, 4, "synthetic v3 migration writes schema v4")
+		_eq(synthetic_state.attempt_counters, {"battle": 3}, "synthetic v3 migration preserves counters")
+		_eq(synthetic_state.command_receipts, {"cmd-1": {"ok": true}}, "synthetic v3 migration preserves command receipts")
+		_eq(synthetic_state.business_receipts, {"life:one": {"ok": true}}, "synthetic v3 migration preserves business receipts")
+		_eq(synthetic_state.achievements, _empty_achievements(), "synthetic v3 migration initializes achievement buckets")
+
+
+func _test_achievement_schema_rejects_missing_or_bad_buckets() -> void:
+	var missing := GameStateScript.create_new(20260725, 1000).to_dict()
+	missing.erase("achievements")
+	var missing_decoded := SaveCodecScript.decode(missing)
+	_ok(not bool(missing_decoded.get("ok", false)), "schema v4 rejects missing achievements")
+	var bad_bucket := GameStateScript.create_new(20260725, 1000).to_dict()
+	bad_bucket["achievements"]["progress"] = []
+	var bad_bucket_decoded := SaveCodecScript.decode(bad_bucket)
+	_ok(not bool(bad_bucket_decoded.get("ok", false)), "schema v4 rejects non-dictionary achievement bucket")
 
 
 func _test_new_save_starts_with_eight_heroes_and_six_unit_formation() -> void:
@@ -206,6 +258,18 @@ func _assert_reward_delta(state: RefCounted, materials_before: Dictionary, gold_
 	_eq(state.factory.materials["porcelain"], int(materials_before["porcelain"]) + int(reward["porcelain"]), "%s: porcelain delta" % message)
 	_eq(state.factory.materials["parts"], int(materials_before["parts"]) + int(reward["parts"]), "%s: parts delta" % message)
 	_eq(state.factory.materials["sludge"], int(materials_before["sludge"]) + int(reward["sludge"]), "%s: sludge delta" % message)
+
+
+func _empty_achievements() -> Dictionary:
+	return {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}
+
+
+func _as_v3_save(data: Dictionary) -> Dictionary:
+	var v3 := data.duplicate(true)
+	v3["schema_version"] = 3
+	v3["content_version"] = "factory-siege-v3"
+	v3.erase("achievements")
+	return v3
 
 
 func _exec_ok(executor: RefCounted, command_id: String, command_type: String, payload: Dictionary, business_key: String) -> Dictionary:

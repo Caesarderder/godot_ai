@@ -4,17 +4,21 @@ km_type: workflow
 domain: workflow
 status: active
 owner: maintainers
-last_verified: 2026-07-17
+last_verified: 2026-07-25
 source_of_truth:
   - docs/map/schema.md
+  - docs/map/skills.md
   - tools/docs_lint.py
 validated_by:
   - python3 tools/docs_lint.py
+  - manual-skill-routing-review
 tags:
   - workflow:knowledge-map-maintenance
   - quality:docs-drift
 related:
   - map.schema
+  - map.skills
+  - workflow.skill-routing
   - quality.stale-docs
   - runbook.docs-lint
 ---
@@ -34,10 +38,11 @@ related:
 1. 读公共入口、控制入口和目标目录索引。
 2. 优先更新已有节点，不创建同义节点。
 3. 更新 frontmatter、`source_of_truth`、`validated_by`、`related`、tags 和正文。
-4. 新增节点时同步相关索引与反向关系。
-5. 未验证实现标 `draft`；冲突事实标 `stale`；历史替代标 `deprecated`。
-6. 只有验证过且会改变未来行为的经验才写入 `docs/memory/`。
-7. 运行 [CMD:docs-lint](../runbooks/docs-lint.md#docs-lint)，并执行受影响项目测试。
+4. `.codex/skills/*` 发生新增、删除、重命名或同步时，重新枚举直接包含 `SKILL.md` 的目录，并同步 [KM:map.skills](../map/skills.md) 的能力簇、条件能力和高频路由。
+5. 新增节点时同步相关索引与反向关系。
+6. 未验证实现标 `draft`；冲突事实标 `stale`；历史替代标 `deprecated`。
+7. 只有验证过且会改变未来行为的经验才写入 `docs/memory/`。
+8. 运行 [CMD:docs-lint](../runbooks/docs-lint.md#docs-lint)，并执行受影响项目测试。
 
 ## 停止条件
 

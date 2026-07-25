@@ -6,14 +6,15 @@ const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_gener
 
 const FactoryStateScript := preload("res://game/scripts/state/factory_state.gd")
 
-const CURRENT_SCHEMA_VERSION: int = 3
+const CURRENT_SCHEMA_VERSION: int = 4
 const GAME_KEYS: Array[String] = [
 	"schema_version", "content_version", "save_id", "run_seed", "revision",
 	"roster", "inventory", "formation", "economy", "factory", "camp", "quests", "pity",
 	"stage_progress", "auto_skill_preferences", "attempt_counters", "receipt_ledgers", "command_receipts",
-	"business_receipts", "saved_at_unix", "last_seen_wall_unix",
+	"business_receipts", "achievements", "saved_at_unix", "last_seen_wall_unix",
 	"last_settled_unix", "offline_anchor_unix"
 ]
+const ACHIEVEMENT_KEYS: Array[String] = ["progress", "completed", "claimed", "event_keys", "counters"]
 const HERO_KEYS: Array[String] = [
 	"hero_id", "display_name", "class_id", "archetype_id", "star", "aptitude_id", "trait_ids",
 	"skill_ids", "auto_skill_enabled", "equipment_by_slot", "level", "xp", "base_stats",
@@ -48,6 +49,13 @@ const V2_HERO_KEYS: Array[String] = [
 	"hero_id", "display_name", "class_id", "archetype_id", "star", "aptitude_id", "trait_ids",
 	"skill_ids", "equipment_by_slot", "level", "xp", "base_stats",
 	"stat_remainders", "seed_token"
+]
+const V3_GAME_KEYS: Array[String] = [
+	"schema_version", "content_version", "save_id", "run_seed", "revision",
+	"roster", "inventory", "formation", "economy", "factory", "camp", "quests", "pity",
+	"stage_progress", "auto_skill_preferences", "attempt_counters", "receipt_ledgers", "command_receipts",
+	"business_receipts", "saved_at_unix", "last_seen_wall_unix",
+	"last_settled_unix", "offline_anchor_unix"
 ]
 const V1_FORMATION_KEYS: Array[String] = ["front_left", "front_right", "back_left", "back_right"]
 
@@ -115,6 +123,11 @@ static func decode(data: Variant) -> Dictionary:
 		if not v2_error.is_empty():
 			return {"ok": false, "error": v2_error}
 		dict = _migrate_v2_to_v3(dict)
+	if int(dict["schema_version"]) == 3:
+		var v3_error := _validate_v3_game_schema(dict)
+		if not v3_error.is_empty():
+			return {"ok": false, "error": v3_error}
+		dict = _migrate_v3_to_v4(dict)
 	var schema_error := _validate_game_schema(dict)
 	if not schema_error.is_empty():
 		return {"ok": false, "error": schema_error}
@@ -170,7 +183,7 @@ static func _validate_game_schema(data: Dictionary) -> String:
 	if typeof(data["roster"]) != TYPE_ARRAY:
 		return "roster must be array"
 	if (data["roster"] as Array).size() < 6:
-		return "v2 roster requires at least 6 heroes"
+		return "v4 roster requires at least 6 heroes"
 	for hero_data in data["roster"]:
 		if typeof(hero_data) != TYPE_DICTIONARY:
 			return "hero must be dictionary"
@@ -189,6 +202,9 @@ static func _validate_game_schema(data: Dictionary) -> String:
 	var placeholder_error := _validate_placeholders(data)
 	if not placeholder_error.is_empty():
 		return placeholder_error
+	var achievements_error := _validate_achievements_schema(data["achievements"])
+	if not achievements_error.is_empty():
+		return achievements_error
 	return ""
 
 
@@ -334,6 +350,40 @@ static func _validate_v2_game_schema(data: Dictionary) -> String:
 	return ""
 
 
+static func _validate_v3_game_schema(data: Dictionary) -> String:
+	var key_error := _exact_keys(data, V3_GAME_KEYS, "GameStateV3")
+	if not key_error.is_empty():
+		return key_error
+	for key in ["schema_version", "run_seed", "revision", "saved_at_unix", "last_seen_wall_unix", "last_settled_unix", "offline_anchor_unix"]:
+		if typeof(data[key]) != TYPE_INT:
+			return "%s must be int" % key
+	for key in ["content_version", "save_id"]:
+		if typeof(data[key]) != TYPE_STRING:
+			return "%s must be string" % key
+	if int(data["schema_version"]) != 3:
+		return "unsupported schema_version"
+	if typeof(data["roster"]) != TYPE_ARRAY:
+		return "roster must be array"
+	if (data["roster"] as Array).size() < 6:
+		return "v3 roster requires at least 6 heroes"
+	for hero_data in data["roster"]:
+		if typeof(hero_data) != TYPE_DICTIONARY:
+			return "hero must be dictionary"
+		var hero_error := _validate_hero_schema(hero_data as Dictionary)
+		if not hero_error.is_empty():
+			return hero_error
+	var formation_error := _validate_string_dict(data["formation"], FORMATION_KEYS, "FormationV3")
+	if not formation_error.is_empty():
+		return formation_error
+	var economy_error := _validate_int_dict(data["economy"], ECONOMY_KEYS, "Economy")
+	if not economy_error.is_empty():
+		return economy_error
+	var factory_error := _validate_factory_schema(data["factory"])
+	if not factory_error.is_empty():
+		return factory_error
+	return _validate_placeholders(data)
+
+
 static func _validate_v2_hero_schema(data: Dictionary) -> String:
 	var key_error := _exact_keys(data, V2_HERO_KEYS, "HeroStateV2")
 	if not key_error.is_empty():
@@ -411,6 +461,14 @@ static func _migrate_v2_to_v3(data: Dictionary) -> Dictionary:
 	return migrated
 
 
+static func _migrate_v3_to_v4(data: Dictionary) -> Dictionary:
+	var migrated := data.duplicate(true)
+	migrated["schema_version"] = 4
+	migrated["content_version"] = "factory-siege-v4"
+	migrated["achievements"] = {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}
+	return migrated
+
+
 static func _legacy_archetype(class_id: String) -> String:
 	match class_id:
 		"guardian":
@@ -455,6 +513,12 @@ static func _validate_placeholders(data: Dictionary) -> String:
 		if typeof(hero_id) != TYPE_STRING or typeof((data["auto_skill_preferences"] as Dictionary)[hero_id]) != TYPE_BOOL:
 			return "auto_skill_preferences must be string to bool"
 	return _validate_dict_dict(data["receipt_ledgers"], ["durable", "reversible"], "receipt_ledgers")
+
+
+static func _validate_achievements_schema(value: Variant) -> String:
+	if typeof(value) != TYPE_DICTIONARY:
+		return "achievements must be dictionary"
+	return _validate_dict_dict(value, ACHIEVEMENT_KEYS, "achievements")
 
 
 static func _validate_string_dict(value: Variant, keys: Array[String], label: String) -> String:

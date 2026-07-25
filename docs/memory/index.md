@@ -4,11 +4,7 @@ km_type: memory
 domain: agent-memory
 status: active
 owner: maintainers
-<<<<<<< HEAD
 last_verified: 2026-07-24
-=======
-last_verified: 2026-07-23
->>>>>>> origin/codex/toilet-man-3d-idle
 source_of_truth:
   - docs/workflows/knowledge-map-maintenance.md
   - docs/references/constraints/implementation-status.md
@@ -30,16 +26,12 @@ related:
 
 ## 已验证经验
 
-<<<<<<< HEAD
 - 用户已明确当前实现根为 `project-a/`，使用 Godot 4.6.3、3D 表现、Web-first 发布并主要在手机浏览器运行。
-- `taptap/` 仅保留为历史原型；当前 Godot 工程已使用 GL Compatibility，并已实现和验证 v2 Meta、工厂/培育、六人编队和三阶段战斗内核。
-- Compatibility 配置不能替代 Web 交付证据；在 export preset、PWA、浏览器持久性探测、音频解锁、WebLifecycle 和真机 smoke 落地前，不得宣称 Web M0 已通过。
-- `inventory/camp/quests/pity/stage_progress` 的可持久化字段目前只是扩展骨架，不得据此宣称完整装备、营地、任务、掉落、离线或长期关卡平衡已实现。
-=======
-- 用户已把当前工作目标、工程核心和默认实现根转回 `project-a/` Godot 4.7.1 工程；后续玩法、UI、测试和构建优先进入该工程。
-- `taptap/` 完整保留为 Maker 2D 参考原型，不再承接默认开发；参考原型已有功能不能提前宣称为 Godot 已实现。
-- `project-a/addons/godot_ai/**` 与相关 EditorPlugin/Autoload 是受保护工具层；规划路径、命令和测试结果仍不能提前宣称已实现。
->>>>>>> origin/codex/toilet-man-3d-idle
+- `taptap/` 仅保留为历史原型；当前 Godot 工程已使用 GL Compatibility，并已实现和验证 v4 Meta、工厂/培育、六人编队、第一幕 25 关、任务/成就目标中心和三阶段战斗内核。
+- Compatibility 与本地 PWA 构建不能替代生产 Web 证据；在浏览器持久性探测、音频解锁、生产 HTTPS 和真机 smoke 落地前，不得宣称正式 Web 上架通过。
+- `quests/achievements` 已从骨架升级为已实现目标中心；以后不得再把任务或成就泛称为未实现。但 `inventory/pity` 仍只是部分经济/掉落骨架，不得据此宣称完整装备、掉落、离线或长期关卡平衡已实现。
+- 成就系统的长期事实：schema v4 / `factory-siege-v4`，顶层 `achievements` 五桶，24 个永久一次性成就，奖励仅 `merit/gold/xp_books`，无日周限时/FOMO/广告/IAP/蓝图/战力倍率；旧档只回填可靠证据。
+- Boss 巨炮压制已落地为战斗层输出竞速，不是新操作系统：仅章节 Boss `stage_in_chapter == 5` 最终基地阶段启用，20 ticks / 5Hz 约 4 秒窗口，五章目标 `70/85/100/115/130` 仍待人工平衡验证；达标 `cannon_suppressed` 取消炮击，失败保留 `artillery_impact`。不得把它写成新增货币、奖励、存档字段、任务、成就或已证明好玩的长期平衡结论。
 
 ## 触发条件
 

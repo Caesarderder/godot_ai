@@ -2,20 +2,18 @@
 km_id: decision.return-to-project-a
 km_type: decision
 domain: architecture
-status: active
+status: deprecated
 owner: maintainers
-last_verified: 2026-07-23
+last_verified: 2026-07-25
 source_of_truth:
-  - project-a/project.godot
-  - project-a/tools/verify_m0.sh
+  - docs/decisions/ADR-0005-project-a-web-3d-root.md
 validated_by:
-  - user-confirmation
-  - manual-project-scan
-  - Godot 4.7.1 editor session for project-a
+  - manual-deprecation-review
 tags:
   - decision:project-root
   - risk:worktree-boundary
 related:
+  - decision.project-a-web-3d-root
   - decision.project-a-game-root
   - decision.taptap-maker-game-root
   - reference.architecture-overview
@@ -27,7 +25,7 @@ related:
 
 ## 状态
 
-Accepted，2026-07-23；替代 [KM:decision.taptap-maker-game-root](ADR-0004-taptap-maker-game-root.md) 的默认实现根结论。
+Deprecated，2026-07-25。本文保留 2026-07-23 的历史决策语境；当前引擎版本、渲染器、维度和发布目标由 [KM:decision.project-a-web-3d-root](ADR-0005-project-a-web-3d-root.md) 取代。
 
 ## 决策
 
