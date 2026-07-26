@@ -4,7 +4,7 @@ km_type: quality
 domain: quality
 status: active
 owner: maintainers
-last_verified: 2026-07-26
+last_verified: 2026-07-27
 source_of_truth:
   - docs/references/constraints/implementation-status.md
 validated_by:
@@ -21,7 +21,7 @@ related:
 
 ## 当前清单
 
-2026-07-26 v3 合同切换后，以下内容属于迁移期旧事实：
+2026-07-27 永久军团合同统一后，以下内容属于迁移期旧事实：
 
 - `project-a/` schema v6 的型号科技、库存单位、永久死亡、图纸研发、双货币、一键补位与无尽前线；
 - [KM:reference.architecture-overview](../references/architecture/architecture-overview.md) 和
@@ -34,11 +34,10 @@ related:
 
 ## 新合同待实现或待外部验证
 
-- Gman 1-4 首败后的确定性图纸、兵工厂、基础兵生产与渐进阵位闭环；
-- `GC-001/003/006` 与主 GDD 要求基础兵生产，但项目不变量和产品边界仍写“工厂不生产量产马桶人”；
-  在制作人明确基础兵是否属于永久 roster 前，不得把任一侧静默当成已统一合同；
+- 主 GDD、`GC-001/003/006`、产品边界和首 30 分钟合同已经统一为永久援军路线；量产兵、图纸抽取、
+  三前排库存兵不再是待实现项；
 - 完整 25 关从新档按真实奖励与成本推进的经济可达性；
-- 固定地块还是自由网格建造的产品范围统一；
+- 当前 5×5 有界设施选址已经进入合同；道路、工人、人口和复杂物流仍在范围外；
 - 首 30 分钟真人理解、Android Chrome、iOS Safari 和生产来源持久化证据。
 
 ## 回填节奏
