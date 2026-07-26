@@ -11,6 +11,7 @@ const SCENES: Array[PackedScene] = [
 	preload("res://game/scenes/screens/title_screen.tscn"),
 	preload("res://game/scenes/screens/settings_screen.tscn"),
 	preload("res://game/scenes/screens/help_screen.tscn"),
+	preload("res://game/scenes/screens/intelligence_screen.tscn"),
 ]
 
 var failures: Array[String] = []

@@ -63,6 +63,7 @@ project-a/
     │   └── title_screen.tscn                 # 已实现：存档感知标题入口与帮助/设置语义 owner
     │   └── settings_screen.tscn              # 已实现：体验偏好、本地数据与危险操作 owner
     │   └── help_screen.tscn                  # 已实现：核心循环、卡点恢复与本地数据说明 owner
+    │   └── intelligence_screen.tscn          # 已实现：统一战力、风险与下一行动 owner
     ├── scripts/ui/
     │   └── stage_detail_panel.gd            # 已实现：只读投影 + attack_requested
     │   └── war_zone_screen.gd               # 已实现：战区导航 + sibling signal
@@ -74,6 +75,7 @@ project-a/
     │   └── title_screen.gd                   # 已实现：标题只读 view + primary/settings/help 信号
     │   └── settings_screen.gd                # 已实现：设置只读 view + setting/action 语义信号
     │   └── help_screen.gd                    # 已实现：版本只读 view + back_requested
+    │   └── intelligence_screen.gd            # 已实现：WarReadinessReport 投影 + action_requested
     ├── resources/definitions/               # 只读 `.tres`
     │   ├── stages/
     │   │   └── act_1/stage_1_1..5.tres      # 已实现：首30分钟关卡高频策划字段
@@ -104,6 +106,7 @@ project-a/
 | `TitleScreen` | 存档摘要、下一目标和开始/继续/终章入口 | 标题 screen | `configure(view)`；`action_requested` |
 | `SettingsScreen` | 体验偏好、试玩报告、备份恢复和二次删档呈现 | 设置 screen | `configure(view)`；`setting_changed`、`action_requested` |
 | `HelpScreen` | 核心循环、首章卡点、成长路线、操作和本地数据说明 | 帮助 screen | `configure(view)`；`back_requested` |
+| `IntelligenceScreen` | 当前编队战力、关卡能力比、无损规则、后勤短板和下一行动 | 情报 screen | `configure(view)`；`action_requested` |
 | `Game` Autoload | 当前 `GameState`、CommandExecutor | 应用 | 查询快照、执行领域命令 |
 | `SaveManager` Autoload | 存档 adapter | 应用 | 有界加载/发布/备份；不持有 UI Node |
 | `BattleSession` | 确定性战斗运行态 | 单场战斗 | tick、command、snapshot、result |
@@ -158,9 +161,9 @@ Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` �
 5. 搜索确认旧构建函数无调用后再删除，不做横跨全部 screen 的大爆炸迁移。
 6. 每刀通过编辑器解析、focused tests、844×390 与窄屏视觉证据；关键流程再跑浏览器。
 
-十块 UI 与首个内容切片完成证据：`StageDetailPanel`、`WarZoneScreen`、`BattleHudScreen`、
+十一块 UI 与首个内容切片完成证据：`StageDetailPanel`、`WarZoneScreen`、`BattleHudScreen`、
 `BattleResultScreen`、`LegionScreen`、`FactoryScreen`、`GoalsScreen`、`TitleScreen` 与
-`SettingsScreen` 与 `HelpScreen` 已拥有 authored
+`SettingsScreen`、`HelpScreen` 与 `IntelligenceScreen` 已拥有 authored
 scene tree、延迟 configure 生命周期和单向语义信号；UI smoke、battle tests 与真实 844×390
 截图通过。首章 Boss 首屏可读到战力差、风险及两条已验证路线；结算首屏可读到奖励、高光、
 按永久角色 ID 统计的核心贡献、巨炮表现和下一行动。首章五关的推荐战力、倍率、Boss 耐久和
@@ -176,3 +179,6 @@ scene tree、延迟 configure 生命周期和单向语义信号；UI smoke、bat
 App Shell 只投影现有 `SettingsStore` / Web 能力、执行持久化与浏览器文件动作并处理返回路由。
 `HelpScreen` 把 1-4 设计卡点、研究所免费突破十连、冲锋/装甲两条路线、战后完全恢复、
 行动目标梯和本地数据边界收进可回看的双栏档案；App Shell 只注入版本并按进入来源返回。
+`IntelligenceScreen` 接管统一战情仪表盘，只消费 `WarReadinessReport`，同时呈现当前编队
+`CombatPower`、关卡能力比、风险原因、无损出征、后勤短板与唯一 CTA；App Shell 只生成报告并
+路由到军团培养或目标关卡。

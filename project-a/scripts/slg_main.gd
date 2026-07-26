@@ -23,6 +23,7 @@ const GoalsScreenScene := preload("res://game/scenes/screens/goals_screen.tscn")
 const TitleScreenScene := preload("res://game/scenes/screens/title_screen.tscn")
 const SettingsScreenScene := preload("res://game/scenes/screens/settings_screen.tscn")
 const HelpScreenScene := preload("res://game/scenes/screens/help_screen.tscn")
+const IntelligenceScreenScene := preload("res://game/scenes/screens/intelligence_screen.tscn")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const OnboardingCatalog := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
@@ -956,68 +957,25 @@ func _show_intelligence() -> void:
 	var config := StageCatalog.stage(target_stage_id)
 	var report := WarReadinessReport.derive(state, config)
 	var shell := _shell("指挥情报", "用同一口径判断战力、成长投资与下一行动")
-	shell.name = "WarIntelligenceScreen"
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 14)
-	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(columns)
-
-	var capability := _panel_vbox("目标 · %s" % String(report.get("stage_name", "")), 8)
-	capability.name = "WarCapabilityPanel"
-	capability.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	capability.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	capability.add_child(_label("当前编队战力  %d" % int(report.get("cp_ready", 0)), 20, CYAN))
-	capability.add_child(_label("关卡推荐  %d" % int(report.get("recommended_power", 0)), 17, GOLD))
-	var ratio_percent := int(round(float(report.get("capability_ratio", 0.0)) * 100.0))
-	capability.add_child(_progress_bar(ratio_percent, 130, _risk_color(String(report.get("risk_id", "extreme")))))
-	capability.add_child(_label(
-		"能力比 %d%% · %s" % [ratio_percent, String(report.get("risk_label", ""))],
-		17,
-		_risk_color(String(report.get("risk_id", "extreme")))
-	))
-	capability.add_child(_label(String(report.get("risk_detail", "")), 13, MUTED))
-	columns.add_child(capability)
-
-	var sustain := _panel_vbox("持续作战", 8)
-	sustain.name = "WarSustainPanel"
-	sustain.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sustain.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sustain.add_child(_label("当前编队  %d/%d" % [
-		int(report.get("ready_count", 0)),
-		int(report.get("formation_size", 0)),
-	], 17, TEXT))
-	sustain.add_child(_label("无损出征 · 战后无需维修", 16, GREEN))
-	sustain.add_child(_label("最紧缺后勤  %s %d%%" % [
-		String(report.get("weakest_resource_label", "")),
-		int(report.get("weakest_resource_percent", 0)),
-	], 15, MUTED))
-	var next_action := report.get("next_action", {}) as Dictionary
-	sustain.add_child(_label(String(next_action.get("title", "继续观察")), 18, GREEN))
-	sustain.add_child(_label(String(next_action.get("detail", "")), 13, MUTED))
-	var action_id := String(next_action.get("id", "attack"))
-	if action_id == "upgrade":
-		sustain.add_child(_button("进入军团培养", _show_legion, true))
-	else:
-		sustain.add_child(_button("立即出击", Callable(self, "_start_stage_battle").bind(target_stage_id), true))
-	columns.add_child(sustain)
+	shell.name = "WarIntelligenceShell"
+	var intelligence := IntelligenceScreenScene.instantiate() as Control
+	intelligence.call("configure", {
+		"stage_id": target_stage_id,
+		"report": report,
+	})
+	intelligence.connect("action_requested", _on_intelligence_action_requested)
+	shell.add_child(intelligence)
 	_add_nav(shell, Screen.INTELLIGENCE)
+	return
 
 
-func _risk_color(risk_id: String) -> Color:
-	if risk_id in ["extreme", "challenge"]:
-		return RED if risk_id == "extreme" else GOLD
-	if risk_id == "target":
-		return CYAN
-	return GREEN
+func _on_intelligence_action_requested(action_id: String, payload: Dictionary) -> void:
+	_play_ui_click()
+	if action_id == "upgrade":
+		_show_legion()
+		return
+	_start_stage_battle(String(payload.get("stage_id", selected_stage_id)))
 
-
-func _readiness_panel(state: RefCounted) -> Control:
-	var panel := _panel_vbox("军团状态", 8)
-	for hero in state.roster:
-		panel.add_child(_label("%s   Lv.%d   无损可出征" % [
-			hero.display_name, hero.level
-		], 14, GREEN))
-	return panel
 
 
 func _show_map() -> void:
