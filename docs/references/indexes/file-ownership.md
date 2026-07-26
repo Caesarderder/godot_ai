@@ -63,6 +63,7 @@ related:
 | `project-a/game/scripts/domain/battle/**` | domain-kernel | 5Hz 三阶段攻城、六人推进、技能、核心巨炮与胜负 | present / battle headless tests |
 | `project-a/game/scripts/domain/quest/**` | domain-kernel | 25 大战役任务、3 槽循环小任务、战功等级、任务领取 | present / Meta + UI smoke |
 | `project-a/game/scripts/content/objective_hurdle_*.gd`、`project-a/game/resources/definitions/objectives/hurdles/**` | authored-content | 首章大小卡点 typed 定义、固定索引与内容校验；不持有运行进度 | present / definition + projection tests |
+| `project-a/game/scripts/content/onboarding_*_definition.gd`、`project-a/game/scripts/content/onboarding_definition_catalog.gd`、`project-a/game/resources/definitions/onboarding/**` | authored-content | 首章七任务、十目标、CTA 与奖励预算的 typed 定义和固定索引；不持有进度或执行发奖 | present / onboarding definition + journey tests |
 | `project-a/game/scripts/content/research_breakthrough_*.gd`、`project-a/game/resources/definitions/research/breakthrough/**` | authored-content | 免费突破十连十卡配方、援军/资源预算与内容校验；不执行发奖 | present / breakthrough + first-formation tests |
 | `project-a/game/scripts/domain/achievement/**` | domain-kernel | 24 个永久一次性成就、可靠回填、event key 去重、成就领取 | present / Meta + UI smoke |
 | `project-a/game/scripts/domain/{equipment,idle}/**` | domain-kernel | 装备、离线规则 | absent / deferred |

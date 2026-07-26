@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="OnboardingTaskDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/onboarding_task_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/fail_1_4.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.high_wall"
+title = "行动三：撞击高墙"
+lesson = "挑战 1-4 重炮防线；这次失败会揭示 Gman 缺少前排增援。"
+objectives = Array[Resource]([ExtResource("2")])
+toilet_coins = 70

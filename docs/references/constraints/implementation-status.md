@@ -173,6 +173,12 @@ related:
   只读取 detached Dictionary view。玩家完成进度、奖励和 command receipt 仍由
   `OnboardingService`、`GameState` 与 `CommandExecutor` 权威持有，没有新增 Autoload 或把
   可变存档写入 Resource。
+- 首章七个行动任务与十个自然行为目标已进一步迁移为 `OnboardingTaskDefinition`、
+  `OnboardingObjectiveDefinition` 和独立 `.tres`。任务 Resource 组合稳定顺序、教学文案、
+  目标引用与显式非负奖励字段；目标 Resource 描述战斗、研究、建造、收取或二星成长证据及语义
+  CTA。固定 preload Catalog 校验七任务、十目标、唯一 ID、事件/路由条件与引用完整性，
+  `OnboardingCatalog` 仅保留既有 detached Dictionary API 作为兼容门面。玩家进度、旧档追赶、
+  claim-once 奖励和 receipt 仍由原有服务与命令事务持有。
 - 研究所免费突破十连的十张奖励已从 `ResearchBreakthroughService` 硬编码数组迁移为
   `ResearchBreakthroughCardDefinition` 与十个 `.tres`：两张 A 级永久援军卡固定为冲锋/装甲，
   八张研究物资聚合为技能芯片 1、陶瓷 18、零件 10、能源 8。固定 Catalog 校验十卡数量、

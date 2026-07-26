@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="OnboardingObjectiveDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/onboarding_objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+objective_id = &"capture_1_1"
+label = "使用 Gman 攻克 1-1 无防备城市"
+event_type = &"battle_settled"
+stage_id = &"stage_1_1"
+outcome = "victory"
+target = "expedition"
+stage_target = &"stage_1_1"
+cta_label = "立即进攻 1-1"

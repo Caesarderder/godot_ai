@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="OnboardingTaskDefinition" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/onboarding_task_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/commission_resource_facility.tres" id="2"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/claim_commissioning_output.tres" id="3"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/complete_combat_growth.tres" id="4"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.choose_growth"
+title = "行动六：工业备战"
+lesson = "先让一座资源设施投产并收取首批后勤，再比较冲锋与装甲，选择一名升到二星。"
+objectives = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4")])

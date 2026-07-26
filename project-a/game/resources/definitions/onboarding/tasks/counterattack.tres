@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="OnboardingTaskDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/onboarding_task_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/capture_1_4.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.counterattack"
+title = "行动五：带队反攻"
+lesson = "让两名新马桶人加入编队，分担重炮火力并攻克灰镜高墙。"
+objectives = Array[Resource]([ExtResource("2")])
+toilet_coins = 80
+hero_shards = 4
+skill_chips = 1
+porcelain = 18
+parts = 10
+sludge = 8

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="OnboardingObjectiveDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/onboarding_objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+objective_id = &"claim_commissioning_output"
+label = "收取投产验收物资"
+event_type = &"factory_output_claimed"
+target = "factory"
+cta_label = "收取首批后勤"

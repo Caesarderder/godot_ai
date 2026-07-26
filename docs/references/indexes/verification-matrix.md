@@ -231,6 +231,11 @@ related:
   `CampaignObjectiveProjection` 返回 detached view。`run_objective_hurdle_definition_tests.gd`
   覆盖七段引导一一对应、1-4 大坎与免费十连恢复、未知 ID fail-closed 和共享 Resource 不可被
   view 调用方篡改；投影、研究引导、UI smoke 与 14 条新档旅程回归通过。
+- 行动任务内容边界：七个 `OnboardingTaskDefinition` 引用十个
+  `OnboardingObjectiveDefinition`，固定 Catalog 校验稳定顺序、唯一 ID、自然行为条件、CTA 和
+  完整奖励预算；`run_onboarding_definition_tests.gd` 锁定 1-4 首败到免费十连的大坎恢复、
+  工业建造—收取—二星成长三个小目标、未知 ID fail-closed 与嵌套 detached view。研究引导、
+  SLG、Meta、UI、启动和 14 条首 30 分钟新档旅程回归通过。
 - 免费突破十连内容边界：`ResearchBreakthroughCardDefinition` 与十个 `.tres` 锁定两张 A 级
   冲锋/装甲和八张研究物资；Catalog 校验顺序、稀有度、字段、重复英雄转数据与聚合预算。
   `run_research_breakthrough_tests.gd` 验证研究所门禁、十卡、英雄/蓝图永久性、资源 delta、

@@ -150,6 +150,7 @@ UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 Ap
 | `BattleSession` | `RefCounted` | 单场 owner；不得进入 Autoload |
 | `CampaignObjectiveProjection` | `RefCounted` 静态只读投影 | 从持久状态、引导 snapshot 与 `WarReadinessReport` 生成跨页面一致的大/中/小目标；不得成为 Autoload |
 | 首章卡点定义 | `ObjectiveHurdleDefinition` typed Resource + 七个 `.tres` | 运行时共享只读；只承载稳定 task ID、大小坎、原因和过坎办法 |
+| 首章行动任务与目标条件 | `OnboardingTaskDefinition` / `OnboardingObjectiveDefinition` typed Resource + 七个任务、十个目标 `.tres` | 运行时共享只读；定义任务顺序、玩家文案、CTA、完成条件与奖励预算，不保存完成进度 |
 | 免费研究突破配方 | `ResearchBreakthroughCardDefinition` typed Resource + 十个 `.tres` | 运行时共享只读；恰好两名永久援军与八张研究物资，服务按定义原子发奖 |
 | UI view model | duplicate-safe Dictionary，后续按压力升级 typed value | 只读投影；不得保存 Node 引用 |
 
@@ -174,7 +175,24 @@ ObjectiveHurdleDefinition .tres
 此路径没有运行时信号：定义是只读查询，玩家事件仍由 `OnboardingService` 消费并写入
 `GameState.onboarding`，完成/奖励仍由 `CommandExecutor` 幂等提交。Resource 不保存进度、不引用
 Node，Catalog 不注册 Autoload；App Shell 重建页面时重新推导 view，因此不存在重复连接或陈旧引用。
-本里程碑先证明一个端到端卡点定义边界，再评估是否值得把任务目标条件迁为独立 typed Resource。
+
+首章行动任务迁移的所有权脊柱为：
+
+```text
+10 × OnboardingObjectiveDefinition .tres
+  --references---------> 7 × OnboardingTaskDefinition .tres
+  --fixed preload/validate--> OnboardingDefinitionCatalog
+  --detached Dictionary view--> OnboardingCatalog compatibility facade
+  --event matching/progress--> OnboardingService + GameState.onboarding
+  --claim-once reward-------> CommandExecutor
+```
+
+目标定义只描述一个自然行为证据及其玩家 CTA；任务定义只组合目标、教学文案和显式非负奖励字段。
+Catalog 必须锁定七个任务、十个目标、稳定顺序和唯一 ID，并在内容异常时 fail closed。
+`OnboardingCatalog` 保留既有 Dictionary API，避免一次性改写服务、UI 与存档追赶逻辑；返回值始终
+深复制，调用者不能修改共享 Resource。此路径不增加运行时信号：玩家事件仍由
+`OnboardingService` 消费并写入 `GameState.onboarding`，奖励仍由 `CommandExecutor` 在持久命令内
+原子结算，Resource 不保存进度、不引用 Node、不注册 Autoload。
 
 免费十连的所有权脊柱为：
 

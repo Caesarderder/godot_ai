@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="OnboardingObjectiveDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/onboarding_objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+objective_id = &"capture_1_5"
+label = "击败 1-5 灰镜核心巨炮"
+event_type = &"battle_settled"
+stage_id = &"stage_1_5"
+outcome = "victory"
+target = "expedition"
+stage_target = &"stage_1_5"
+cta_label = "进攻章节 Boss"
