@@ -38,8 +38,8 @@ func _init() -> void:
 				var max_hp := maxi(1, int(row["final_gman_max_hp"]))
 				if final_hp <= 0 or final_hp * 3 > max_hp:
 					failures.append("stage_1_3 seed %d should leave starter Gman alive at one-third health or less" % run_seed)
-				if int(row["ticks"]) < 275 or int(row["ticks"]) > 375:
-					failures.append("stage_1_3 seed %d should finish in 55-75 seconds, got %d ticks" % [run_seed, int(row["ticks"])])
+				if int(row["ticks"]) < 250 or int(row["ticks"]) > 350:
+					failures.append("stage_1_3 seed %d should finish in 50-70 seconds, got %d ticks" % [run_seed, int(row["ticks"])])
 			if stage_id in ["stage_1_4", "stage_1_5"] and outcome == "victory":
 				failures.append("%s seed %d should preserve the intended first growth wall" % [stage_id, run_seed])
 			var ratio := float(row["cp"]) / float(maxi(1, int(row["recommended"])))
