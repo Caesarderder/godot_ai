@@ -12,5 +12,5 @@ recommended_power = 6500
 enemy_power_bp = 10750
 solo_pressure_bp = 10000
 structure_hp_bp = 8500
-threat_summary = "核心巨炮在外围电池和护甲层保护下持续轰炸，检验三人军团的第一次成长选择。"
-counter_hint = "二选一：把冲锋马桶人升到二星抢拆炮台，或把装甲马桶人升到二星稳住巨炮；两条路线都已验证能翻盘。"
+threat_summary = "章节 Boss · 核心巨炮在外围电池和护甲层保护下持续轰炸，检验三人军团的第一次成长选择。"
+counter_hint = "Boss 战二选一：把冲锋马桶人升到二星抢拆炮台，或把装甲马桶人升到二星稳住巨炮；两条路线都已验证能翻盘。"

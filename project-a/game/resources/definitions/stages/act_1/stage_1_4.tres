@@ -13,4 +13,4 @@ enemy_power_bp = 9000
 solo_pressure_bp = 22000
 structure_hp_bp = 10000
 threat_summary = "固定炮台会迅速击溃单独推进的 Gman；这是首次必须依靠永久军团的火力墙。"
-counter_hint = "解锁冲锋与装甲蓝图，把两名永久角色都编入队伍后再发动复仇战。"
+counter_hint = "首次失败后建造研究所，完成免费突破十连；把永久获得的装甲与冲锋援军编入队伍再反攻。"

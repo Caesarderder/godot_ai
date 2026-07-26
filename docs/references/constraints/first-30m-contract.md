@@ -165,6 +165,12 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 不会强制连续开战。`run_chapter_one_completion_tests.gd` 同时覆盖冲锋和装甲证明、真实解锁摘要
 与精确地图出口，`artifacts/ui-chapter-one-complete-844x390.png` 提供高潮首屏证据。
 
+战区侦察与结算恢复链使用同一首章事实。1-4 的反制提示明确写出“首败后建研究所 → 免费突破
+十连 → 永久装甲与冲锋援军 → 编队反攻”，不得再出现旧版图纸、九兵量产或三合一。1-5 只推荐
+已经过固定 seed 验证的冲锋二星与装甲二星两条路线，不提前推荐尚未获得的火箭单位。
+`run_campaign_tests.gd` 锁定领域配置，`run_ui_smoke_tests.gd` 锁定玩家可见文案，视觉证据为
+`artifacts/ui-first-wall-reconnaissance-844x390.png`。
+
 ## 关卡合同
 
 数值区间是首轮 `target`；玩家感受是 `playtest hypothesis`。
@@ -256,6 +262,8 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
   不引入首局挂机门禁；
 - 冲锋二星与装甲二星路线各用 7 个干净新档完成全部七行动，资源全程非负且最终存档可恢复；
 - HUD 推荐战力、能力比与扫描使用同一 `CombatPower` 和 `Demand_stage`。
+- 1-4 战区侦察只描述研究所免费十连与两名永久援军，不出现图纸、九兵量产或三合一旧路径；
+- 1-5 战区推荐只包含已验证的冲锋二星与装甲二星路线，且首章巨炮保持 5 秒操作预警。
 
 ### 真人证据
 

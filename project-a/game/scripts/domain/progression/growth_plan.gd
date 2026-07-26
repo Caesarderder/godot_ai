@@ -34,7 +34,7 @@ static func for_stage(state: RefCounted, stage_config: Dictionary) -> Dictionary
 	if stage_id == "stage_1_4" and int(state.attempt_counters.get(stage_id, 0)) == 0:
 		result["action"] = "challenge"
 		result["title"] = "先侦察炮台防线"
-		result["detail"] = "本次首战用于发现真实威胁；失败后博士会获得冲锋兵图纸。"
+		result["detail"] = "本次首战用于发现真实威胁；失败后建研究所完成免费突破十连，永久获得装甲与冲锋援军。"
 		result["estimated_gold_value"] = 0
 		result["estimate_label"] = "无需新增金币投入"
 		return result

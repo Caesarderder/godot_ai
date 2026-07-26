@@ -371,12 +371,12 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 		"stage_1_4": {
 			"recommended": [],
 			"fallback": ["ordinary.assault"],
-			"reason": "炮台防线是设计好的首次失败点；失败后研究图纸、生产九兵并完成第一次三合一。",
+			"reason": "炮台防线是设计好的首次失败点；失败后建研究所完成免费突破十连，再把永久装甲与冲锋援军编入反攻队。",
 		},
 		"stage_1_5": {
-			"recommended": ["heavy.armored", "ordinary.sonic", "ordinary.assault"],
-			"fallback": ["flying.rocket"],
-			"reason": "章节 Boss 先用装甲抗炮击，火箭作为胜利后的结构反制预期。",
+			"recommended": ["heavy.armored", "ordinary.assault"],
+			"fallback": [],
+			"reason": "首次成长二选一：冲锋二星压制巨炮，或装甲二星格挡反震；两条路线都能完成首章。",
 		},
 		"stage_2_1": {
 			"recommended": ["heavy.armored", "flying.rocket"],
@@ -522,7 +522,7 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		5: "先拆外围模块降低炮击压力，再在核心暴露时集中技能。",
 	}
 	var chapter_feedback: Dictionary = {
-		1: "灰镜街区让玩家确认：工厂生产和升星能直接改变攻城结果。",
+		1: "灰镜街区让玩家确认：研究突破、永久援军和自主升星会直接改变攻城结果。",
 		2: "震荡封锁线提醒玩家：技能节奏、范围爆发和维修同样重要。",
 		3: "黑屏城区强调反控制与特殊单位价值，战斗不再只是正面推血条。",
 		4: "三军联合防线要求玩家根据敌方模块换阵，单一套路开始失效。",
@@ -548,7 +548,7 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		},
 		"stage_1_4": {
 			"threat": "联盟部署固定炮台、精英守军与交叉火力，形成首次必败墙。",
-			"counter": "失败后带回冲锋马桶人设计图，交给博士研究并生产 9 个援军。",
+			"counter": "首次失败后建研究所完成免费突破十连，把永久装甲与冲锋援军编入队伍再反攻。",
 		},
 	}
 	if opening_readability.has(stage_id):

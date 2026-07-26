@@ -51,7 +51,11 @@ func _run() -> void:
 			_check(String(config.get("threat_summary", "")).contains("章节 Boss"), "%s marks boss threat readability" % stage_id)
 			_check(String(config.get("counter_hint", "")).contains("Boss 战"), "%s marks boss counter readability" % stage_id)
 			_check(bool(config.get("suppressible_cannon", false)), "%s enables suppressible core cannon" % stage_id)
-			_check(int(config.get("cannon_warning_ticks", 0)) == 20, "%s uses a four-second boss cannon warning")
+			var expected_warning_ticks := 25 if int(config.get("chapter", 0)) == 1 else 20
+			_check(
+				int(config.get("cannon_warning_ticks", 0)) == expected_warning_ticks,
+				"%s uses the authored %d-second boss cannon warning" % [stage_id, int(expected_warning_ticks / 5)]
+			)
 			_check(int(config.get("cannon_suppression_target", 0)) > 0, "%s has a positive cannon suppression target" % stage_id)
 			boss_suppression_targets.append(int(config.get("cannon_suppression_target", 0)))
 		else:
@@ -180,6 +184,14 @@ func _test_opening_defense_curve() -> void:
 	_check(int(StageCatalogScript.stage("stage_1_4").get("solo_pressure_bp", 10000)) >= 20000, "stage 1-4 creates the intended solo turret power wall")
 	_check(int(StageCatalogScript.stage("stage_1_4").get("factory_production_target", 0)) == 0, "stage 1-4 does not require a legacy nine-unit merge batch")
 	_check((StageCatalogScript.stage("stage_1_4").get("unlock_on_victory", []) as Array).is_empty(), "stage 1-4 does not drop the armored blueprint")
+	var wall_counter := String(StageCatalogScript.stage("stage_1_4").get("counter_hint", ""))
+	_check(wall_counter.contains("免费突破十连"), "stage 1-4 reconnaissance names the actual breakthrough recovery")
+	_check(wall_counter.contains("永久") and wall_counter.contains("装甲") and wall_counter.contains("冲锋"), "stage 1-4 reconnaissance explains the permanent two-role counter")
+	_check(not wall_counter.contains("图纸") and not wall_counter.contains("生产 9") and not wall_counter.contains("三合一"), "stage 1-4 reconnaissance removes the retired production path")
+	var boss_counter := String(StageCatalogScript.stage("stage_1_5").get("counter_hint", ""))
+	_check(boss_counter.contains("冲锋马桶人升到二星") and boss_counter.contains("装甲马桶人升到二星"), "stage 1-5 reconnaissance preserves both verified mastery routes")
+	var boss_recommendations := _string_array(StageCatalogScript.stage("stage_1_5").get("recommended_recipe_ids", []))
+	_check(boss_recommendations == ["heavy.armored", "ordinary.assault"], "stage 1-5 recommendations contain only the two verified first-growth heroes")
 
 
 func _release_roster() -> Array[Dictionary]:
