@@ -448,6 +448,7 @@ func _apply_events(events: Array[Dictionary]) -> void:
 		elif event_type == &"structure_destroyed":
 			_play_audio(&"collapse", -8.0, 0.82)
 			_add_camera_shake(0.34, 0.22)
+			_spawn_structure_breakthrough(event)
 
 
 func _sync_unit_view(unit: Dictionary) -> void:
@@ -623,6 +624,71 @@ func _spawn_explosion(road_position: int, lane: int) -> void:
 	wave_tween.parallel().tween_property(shockwave, "transparency", 1.0, 0.16 if _reduced_motion else 0.22)
 	wave_tween.tween_callback(shockwave.queue_free)
 	tween.finished.connect(func() -> void: _active_high_vfx = maxi(0, _active_high_vfx - 1))
+
+
+func _spawn_structure_breakthrough(event: Dictionary) -> void:
+	var root := Node3D.new()
+	root.name = "StructureBreakthroughFeedback"
+	root.position = _world_position(
+		int(event.get("road_position", 500)),
+		int(event.get("lane", 1))
+	) + Vector3(0.0, 4.0, 0.0)
+	_vfx_root.add_child(root)
+	var kind := String(event.get("kind", "structure"))
+	var headline := "防线突破"
+	if kind == "city":
+		headline = "城市攻陷"
+	elif kind == "core":
+		headline = "核心摧毁"
+	var label := Label3D.new()
+	label.name = "BreakthroughLabel"
+	label.text = "%s · %s" % [
+		headline,
+		String(event.get("display_name", "防御结构")),
+	]
+	label.font = CJK_FONT
+	label.font_size = 54
+	label.pixel_size = 0.012
+	label.outline_size = 14
+	label.modulate = Color("#ffd37a")
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	root.add_child(label)
+	if not _reduced_motion and _effects_quality != "low":
+		var ring_node := MeshInstance3D.new()
+		ring_node.name = "BreakthroughRing"
+		var ring := TorusMesh.new()
+		ring.inner_radius = 0.72
+		ring.outer_radius = 0.82
+		ring.rings = 18
+		ring.ring_segments = 4
+		ring_node.mesh = ring
+		ring_node.rotation_degrees.x = 90.0
+		ring_node.position.y = -1.5
+		ring_node.material_override = _emissive_material(
+			Color("#ffd37a"),
+			Color("#ff9f43"),
+			1.3 * _flash_scale,
+			0.3
+		)
+		root.add_child(ring_node)
+	var record := {
+		"type": "structure_breakthrough",
+		"structure_id": String(event.get("structure_id", "")),
+		"headline": headline,
+		"display_name": String(event.get("display_name", "")),
+	}
+	_presentation_records.append(record)
+	var duration := 0.55 if _reduced_motion else 0.9
+	var tween := root.create_tween()
+	if not _reduced_motion:
+		tween.tween_property(root, "position:y", root.position.y + 0.65, duration)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, duration)
+	var active_ring := root.get_node_or_null("BreakthroughRing") as MeshInstance3D
+	if active_ring != null:
+		tween.parallel().tween_property(active_ring, "scale", Vector3(2.8, 2.8, 2.8), duration)
+		tween.parallel().tween_property(active_ring, "transparency", 1.0, duration)
+	tween.tween_callback(root.queue_free)
 
 
 func _spawn_warning(lane: int, impact_tick: int = 0) -> void:

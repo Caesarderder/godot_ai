@@ -218,6 +218,9 @@ related:
   “突破/摧毁 + 名称 + 耐久”，并在路障死亡后切换到城市；表现、UI 与 battle 回归证明它没有
   改变领域结果。`ui-first-skill-tutorial-844x390.png` 使用真实 1-1 单阶段配置证明目标前缀与
   技能教学、三个战斗操作按钮在基准横屏内共存。
+- 结构突破反馈：`run_battle_tests.gd` 锁定摧毁事件的 ID/名称/lane/kind，
+  `run_presentation_tests.gd` 锁定普通画质的世界文字+冲击环以及低画质/减少动态的纯文字预算；
+  `ui-first-breakthrough-844x390.png` 证明首战“防线突破”与 HUD 下一城市目标同时可读。
 - 仍缺：Firefox 桌面、Android Chrome、iOS Safari、生产 HTTPS、真人首 20–30 分钟及最终 IP/商店审查。
 
 ## 必测不变量

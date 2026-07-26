@@ -19,6 +19,8 @@ func _run() -> void:
 	await _check_cannon_suppressed_low_reduced_budget()
 	await _check_cannon_guard_counter_feedback()
 	await _check_cannon_guard_counter_low_reduced_budget()
+	await _check_structure_breakthrough_feedback()
+	await _check_structure_breakthrough_low_reduced_budget()
 	_finish()
 
 
@@ -228,6 +230,55 @@ func _check_cannon_guard_counter_low_reduced_budget() -> void:
 		_ok(feedback.get_node_or_null("CounterImpactFlash") == null, "low quality omits the secondary reflected flash")
 	_ok(int(world.get("_active_high_vfx")) <= int(world.get("_max_high_vfx")), "guard counter respects the high-vfx cap")
 	_ok(float(world.get("_shake_time")) == 0.0, "reduced motion removes guard counter camera shake")
+	await _dispose_world(world)
+
+
+func _check_structure_breakthrough_feedback() -> void:
+	var world := BattleWorldScript.new()
+	world.configure_presentation("medium", false)
+	root.add_child(world)
+	await process_frame
+	var events: Array[Dictionary] = [{
+		"type": &"structure_destroyed",
+		"structure_id": "opening_barricade",
+		"display_name": "废弃路障",
+		"road_position": 430,
+		"lane": 1,
+		"kind": "structure",
+	}]
+	world.call("_apply_events", events)
+	var feedback := world.get_node("LightweightVFX").get_node_or_null("StructureBreakthroughFeedback")
+	_ok(feedback != null, "destroyed structure creates a bounded breakthrough feedback node")
+	if feedback != null:
+		var label := feedback.get_node_or_null("BreakthroughLabel") as Label3D
+		_ok(label != null and label.text == "防线突破 · 废弃路障", "breakthrough feedback names the completed micro-objective")
+		_ok(feedback.get_node_or_null("BreakthroughRing") != null, "medium quality adds one lightweight breakthrough ring")
+	var records: Array = world.get("_presentation_records")
+	_ok(records.size() == 1 and records[0]["headline"] == "防线突破", "breakthrough feedback appends one testable presentation record")
+	await _dispose_world(world)
+
+
+func _check_structure_breakthrough_low_reduced_budget() -> void:
+	var world := BattleWorldScript.new()
+	world.configure_presentation("low", true)
+	root.add_child(world)
+	await process_frame
+	var events: Array[Dictionary] = [{
+		"type": &"structure_destroyed",
+		"structure_id": "alliance_core",
+		"display_name": "灰镜核心巨炮",
+		"road_position": 1000,
+		"lane": 1,
+		"kind": "core",
+	}]
+	world.call("_apply_events", events)
+	var feedback := world.get_node("LightweightVFX").get_node_or_null("StructureBreakthroughFeedback")
+	_ok(feedback != null, "low reduced mode keeps textual structure completion feedback")
+	if feedback != null:
+		var label := feedback.get_node_or_null("BreakthroughLabel") as Label3D
+		_ok(label != null and label.text == "核心摧毁 · 灰镜核心巨炮", "core completion remains understandable without motion or color alone")
+		_ok(feedback.get_child_count() == 1, "low reduced mode omits the optional breakthrough ring")
+	_ok(float(world.get("_shake_time")) == 0.0, "reduced motion suppresses destruction shake while preserving text")
 	await _dispose_world(world)
 
 

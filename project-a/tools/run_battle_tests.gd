@@ -91,6 +91,7 @@ func _test_three_layer_siege_with_enemy_contact() -> void:
 	var elite_seen := false
 	var structure_damage_seen_after_enemy := false
 	var core_layers_respected := true
+	var destroyed_payload_semantic := true
 	while not session.is_finished:
 		for event in session.advance_tick():
 			if event["type"] == &"stage_changed":
@@ -98,6 +99,12 @@ func _test_three_layer_siege_with_enemy_contact() -> void:
 			elif event["type"] == &"structure_destroyed":
 				destroyed.append(String(event["structure_id"]))
 				structure_damage_seen_after_enemy = structure_damage_seen_after_enemy or enemy_contact_seen
+				destroyed_payload_semantic = (
+					destroyed_payload_semantic
+					and not String(event.get("display_name", "")).is_empty()
+					and int(event.get("lane", -1)) in [0, 1, 2]
+					and not String(event.get("kind", "")).is_empty()
+				)
 			elif event["type"] == &"enemy_damaged":
 				enemy_contact_seen = true
 			elif event["type"] == &"enemy_defeated" and bool(event.get("elite", false)):
@@ -113,6 +120,7 @@ func _test_three_layer_siege_with_enemy_contact() -> void:
 			core_layers_respected = core_layers_respected and not bool(left_battery["alive"]) and not bool(right_battery["alive"]) and not bool(core_armor["alive"])
 	var final_snapshot: Dictionary = session.snapshot()
 	_check(String(session.result.get("outcome", "")) == "victory", "six-unit archetype squad completes the siege")
+	_check(destroyed_payload_semantic, "structure destruction events carry presentation-safe identity, name, lane, and kind")
 	_check(stages == [0, 1, 2], "battle advances through outskirts, fire zone, then base plaza")
 	_check(enemy_contact_seen, "battle has unit-vs-unit contact before pure structure race")
 	_check(elite_seen, "battle includes and defeats an alliance elite")

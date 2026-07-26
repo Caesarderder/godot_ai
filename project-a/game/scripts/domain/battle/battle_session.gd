@@ -540,7 +540,15 @@ func _damage_structure(structure: Dictionary, damage: int, source_id: StringName
 		events.append({"type": &"structure_damage_stage_changed", "tick": tick_index, "structure_id": structure["structure_id"], "damage_stage": structure["damage_stage"]})
 	if int(structure["hp"]) == 0:
 		structure["alive"] = false
-		events.append({"type": &"structure_destroyed", "tick": tick_index, "structure_id": structure["structure_id"], "road_position": structure["road_position"], "kind": structure["kind"]})
+		events.append({
+			"type": &"structure_destroyed",
+			"tick": tick_index,
+			"structure_id": structure["structure_id"],
+			"display_name": structure["display_name"],
+			"road_position": structure["road_position"],
+			"lane": structure["lane"],
+			"kind": structure["kind"],
+		})
 		events.append({"type": &"explosion", "tick": tick_index, "source_id": structure["structure_id"], "road_position": structure["road_position"], "lane": structure["lane"], "hits": 1})
 
 
