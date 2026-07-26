@@ -19,6 +19,12 @@ or network addresses. The report stays in `user://`, can be downloaded by the pl
 with its backup when the player disables recording or selects the clear action. Project code never
 uploads this report.
 
+When the player downloads the report, the game derives a first-session summary from those same
+whitelisted events: eight onboarding milestone timestamps, per-stage attempt counts, failed-command
+count, navigation-only streaks, and the longest non-battle event gap. These values add no new source
+data or identifier. They can help locate friction, but cannot establish player comprehension,
+enjoyment, or intent to continue without observation and a neutral interview.
+
 Stored local data may include:
 
 - save schema version;

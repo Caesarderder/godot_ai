@@ -22,6 +22,16 @@ const ROOT_KEYS: Array[String] = [
 	"events",
 ]
 const EVENT_KEYS: Array[String] = ["sequence", "elapsed_seconds", "event_type", "details"]
+const FIRST_SESSION_MILESTONES: Array[String] = [
+	"first_battle_started",
+	"first_city_captured",
+	"pressure_stage_cleared",
+	"high_wall_failed",
+	"research_breakthrough",
+	"counterattack_won",
+	"growth_chosen",
+	"chapter_boss_defeated",
+]
 
 var report_path: String = REPORT_PATH
 var enabled: bool = false
@@ -69,14 +79,26 @@ func record_event(event_type: String, details: Dictionary = {}, now_unix: int = 
 
 func summary(now_unix: int = -1) -> Dictionary:
 	if report.is_empty():
-		return {"enabled": enabled, "event_count": 0, "duration_seconds": 0}
-	return {
+		return {
+			"enabled": enabled,
+			"event_count": 0,
+			"duration_seconds": 0,
+			"milestone_count": 0,
+			"milestone_total": FIRST_SESSION_MILESTONES.size(),
+		}
+	var result := {
 		"enabled": enabled,
 		"event_count": (report.get("events", []) as Array).size(),
 		"duration_seconds": maxi(0, _now(now_unix) - int(report.get("started_at_unix", 0))),
 		"started_at_unix": int(report.get("started_at_unix", 0)),
 		"product_version": String(report.get("product_version", "")),
 	}
+	var metrics := _derive_first_session_metrics()
+	result["milestone_count"] = int(metrics.get("milestone_count", 0))
+	result["milestone_total"] = int(metrics.get("milestone_total", FIRST_SESSION_MILESTONES.size()))
+	result["longest_non_battle_gap_seconds"] = int(metrics.get("longest_non_battle_gap_seconds", 0))
+	result["max_navigation_only_streak"] = int(metrics.get("max_navigation_only_streak", 0))
+	return result
 
 
 func export_report(now_unix: int = -1) -> Dictionary:
@@ -85,10 +107,106 @@ func export_report(now_unix: int = -1) -> Dictionary:
 	var exported := report.duplicate(true)
 	exported["duration_seconds"] = maxi(0, _now(now_unix) - int(exported.get("started_at_unix", 0)))
 	exported["event_count"] = (exported.get("events", []) as Array).size()
+	exported["first_session_metrics"] = _derive_first_session_metrics()
+	exported["evidence_limit"] = (
+		"Derived events can locate funnel loss and friction; only observed behavior and a neutral "
+		+ "post-session interview can establish comprehension or desire to continue."
+	)
 	var text := JSON.stringify(exported, "\t", true)
 	if text.to_utf8_buffer().size() > MAX_BYTES:
 		return {"ok": false, "error": "PLAYTEST_REPORT_TOO_LARGE"}
 	return {"ok": true, "text": text, "summary": summary(now_unix)}
+
+
+func _derive_first_session_metrics() -> Dictionary:
+	var completed: Array[String] = []
+	var milestone_seconds: Dictionary = {}
+	var battle_attempts: Dictionary = {}
+	var failed_command_count := 0
+	var longest_non_battle_gap := 0
+	var navigation_streak := 0
+	var max_navigation_streak := 0
+	var previous_event: Dictionary = {}
+	for event_value in report.get("events", []):
+		var event := event_value as Dictionary
+		var event_type := String(event.get("event_type", ""))
+		var details := event.get("details", {}) as Dictionary
+		var elapsed := int(event.get("elapsed_seconds", 0))
+		if not previous_event.is_empty():
+			var previous_type := String(previous_event.get("event_type", ""))
+			var is_active_battle_interval := (
+				previous_type == "battle_started" and event_type == "battle_finished"
+			)
+			if not is_active_battle_interval:
+				longest_non_battle_gap = maxi(
+					longest_non_battle_gap,
+					elapsed - int(previous_event.get("elapsed_seconds", elapsed))
+				)
+		if event_type == "screen_view":
+			navigation_streak += 1
+			max_navigation_streak = maxi(max_navigation_streak, navigation_streak)
+		else:
+			navigation_streak = 0
+		if event_type == "command_result" and not bool(details.get("ok", false)):
+			failed_command_count += 1
+		if event_type == "battle_started":
+			var started_stage := String(details.get("stage_id", ""))
+			battle_attempts[started_stage] = int(battle_attempts.get(started_stage, 0)) + 1
+			if started_stage == "stage_1_1":
+				_mark_milestone("first_battle_started", elapsed, completed, milestone_seconds)
+		elif event_type == "battle_finished":
+			var stage_id := String(details.get("stage_id", ""))
+			var outcome := String(details.get("outcome", ""))
+			if stage_id == "stage_1_1" and outcome == "victory":
+				_mark_milestone("first_city_captured", elapsed, completed, milestone_seconds)
+			elif stage_id == "stage_1_3" and outcome == "victory":
+				_mark_milestone("pressure_stage_cleared", elapsed, completed, milestone_seconds)
+			elif stage_id == "stage_1_4" and outcome != "victory":
+				_mark_milestone("high_wall_failed", elapsed, completed, milestone_seconds)
+			elif (
+				stage_id == "stage_1_4"
+				and outcome == "victory"
+				and completed.has("high_wall_failed")
+			):
+				_mark_milestone("counterattack_won", elapsed, completed, milestone_seconds)
+			elif stage_id == "stage_1_5" and outcome == "victory":
+				_mark_milestone("chapter_boss_defeated", elapsed, completed, milestone_seconds)
+		elif event_type == "command_result" and bool(details.get("ok", false)):
+			var command_type := String(details.get("command_type", ""))
+			if command_type == "claim_research_breakthrough":
+				_mark_milestone("research_breakthrough", elapsed, completed, milestone_seconds)
+			elif command_type == "upgrade_hero_star":
+				_mark_milestone("growth_chosen", elapsed, completed, milestone_seconds)
+		previous_event = event
+	var repeated_battles := 0
+	for attempts_value in battle_attempts.values():
+		repeated_battles += maxi(0, int(attempts_value) - 1)
+	return {
+		"milestone_count": completed.size(),
+		"milestone_total": FIRST_SESSION_MILESTONES.size(),
+		"completed_milestones": completed,
+		"milestone_elapsed_seconds": milestone_seconds,
+		"first_meaningful_input_seconds": int(milestone_seconds.get("first_battle_started", -1)),
+		"longest_non_battle_gap_seconds": longest_non_battle_gap,
+		"has_90_second_non_battle_gap": longest_non_battle_gap >= 90,
+		"max_navigation_only_streak": max_navigation_streak,
+		"failed_command_count": failed_command_count,
+		"battle_attempts": battle_attempts,
+		"repeated_battle_count": repeated_battles,
+		"chapter_loop_completed": completed.has("chapter_boss_defeated"),
+	}
+
+
+func _mark_milestone(
+	milestone_id: String,
+	elapsed: int,
+	completed: Array[String],
+	milestone_seconds: Dictionary
+) -> void:
+	if completed.has(milestone_id):
+		return
+	completed.append(milestone_id)
+	milestone_seconds[milestone_id] = elapsed
 
 
 func clear() -> bool:

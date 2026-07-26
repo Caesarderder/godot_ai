@@ -373,6 +373,9 @@ async function main() {
 				|| playtestJson.product_version !== "0.11.0-audio-feedback.1"
 			|| playtestJson.event_count < 2
 			|| !Array.isArray(playtestJson.events)
+			|| typeof playtestJson.first_session_metrics !== "object"
+			|| playtestJson.first_session_metrics.milestone_total !== 8
+			|| typeof playtestJson.evidence_limit !== "string"
 			|| "save_id" in playtestJson
 			|| "device_id" in playtestJson
 			|| "account_id" in playtestJson

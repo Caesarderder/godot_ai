@@ -535,9 +535,12 @@ func _settings_view() -> Dictionary:
 		"reduced_motion": settings_store.reduced_motion,
 		"global_auto_skill": settings_store.global_auto_skill,
 		"local_playtest_logging": settings_store.local_playtest_logging,
-		"playtest_status": "已记录 %d 条本地事件 · %d 分钟 · 不含设备或账号标识" % [
+		"playtest_status": "首章里程碑 %d/%d · %d 条本地事件 · %d 分钟\n最长非战斗停滞 %d 秒 · 不含设备或账号标识" % [
+			int(journal_summary.get("milestone_count", 0)),
+			int(journal_summary.get("milestone_total", 8)),
 			int(journal_summary.get("event_count", 0)),
 			int(journal_summary.get("duration_seconds", 0)) / 60,
+			int(journal_summary.get("longest_non_battle_gap_seconds", 0)),
 		],
 		"storage_persistent": persistent,
 		"persistence_copy": (

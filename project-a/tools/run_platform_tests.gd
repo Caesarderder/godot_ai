@@ -17,6 +17,7 @@ func _run() -> void:
 	_test_settings_corrupt_file_returns_defaults()
 	_test_settings_normalizes_ranges()
 	_test_local_playtest_journal_opt_in_and_export()
+	_test_local_playtest_first_session_metrics()
 	_test_web_runtime_capabilities_and_state()
 	if failures.is_empty():
 		print("PLATFORM TESTS PASS")
@@ -149,6 +150,8 @@ func _test_local_playtest_journal_opt_in_and_export() -> void:
 		_eq(int(report.get("event_count", 0)), 3, "playtest report declares its sample size")
 		_eq(int(report.get("duration_seconds", 0)), 60, "playtest report declares its time window")
 		_check(not report.has("save_id") and not report.has("device_id") and not report.has("account_id"), "playtest report has no player or device identifier fields")
+		_check(report.has("first_session_metrics"), "export includes derived first-session funnel evidence")
+		_check(report.has("evidence_limit"), "export states that event metrics cannot prove comprehension or fun")
 
 	var resumed: RefCounted = LocalPlaytestJournalScript.new(path)
 	_check(resumed.set_enabled(true, "test-1", 1070), "same-version journal resumes after reload")
@@ -163,6 +166,53 @@ func _test_local_playtest_journal_opt_in_and_export() -> void:
 	_check(resumed.set_enabled(false, "test-1", 1401), "opting out clears the local report")
 	for suffix in ["", ".tmp", ".bak"]:
 		_check(not FileAccess.file_exists(path + suffix), "opt-out removes playtest journal%s" % suffix)
+
+
+func _test_local_playtest_first_session_metrics() -> void:
+	var path := "user://platform_playtest_metrics.json"
+	_cleanup_settings(path)
+	var journal: RefCounted = LocalPlaytestJournalScript.new(path)
+	_check(journal.set_enabled(true, "test-metrics", 2000), "metrics fixture opts in")
+	var events: Array[Dictionary] = [
+		{"type": "battle_started", "details": {"stage_id": "stage_1_1"}, "time": 2012},
+		{"type": "battle_finished", "details": {"stage_id": "stage_1_1", "outcome": "victory"}, "time": 2068},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_3"}, "time": 2130},
+		{"type": "battle_finished", "details": {"stage_id": "stage_1_3", "outcome": "victory"}, "time": 2200},
+		{"type": "screen_view", "details": {"screen": "map"}, "time": 2208},
+		{"type": "screen_view", "details": {"screen": "base"}, "time": 2216},
+		{"type": "screen_view", "details": {"screen": "goals"}, "time": 2224},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_4"}, "time": 2232},
+		{"type": "battle_finished", "details": {"stage_id": "stage_1_4", "outcome": "defeat"}, "time": 2264},
+		{"type": "command_result", "details": {"command_type": "claim_research_breakthrough", "ok": true}, "time": 2370},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_4"}, "time": 2380},
+		{"type": "battle_finished", "details": {"stage_id": "stage_1_4", "outcome": "victory"}, "time": 2445},
+		{"type": "command_result", "details": {"command_type": "upgrade_hero_star", "ok": true}, "time": 2460},
+		{"type": "command_result", "details": {"command_type": "upgrade_facility", "ok": false}, "time": 2465},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_5"}, "time": 2472},
+		{"type": "battle_finished", "details": {"stage_id": "stage_1_5", "outcome": "victory"}, "time": 2560},
+	]
+	for event in events:
+		_check(
+			journal.record_event(String(event["type"]), event["details"] as Dictionary, int(event["time"])),
+			"metrics fixture records %s" % String(event["type"])
+		)
+	var exported: Dictionary = journal.export_report(2570)
+	var report := JSON.parse_string(String(exported.get("text", ""))) as Dictionary
+	var metrics := report.get("first_session_metrics", {}) as Dictionary
+	_eq(int(metrics.get("milestone_count", 0)), 8, "derived funnel recognizes all eight first-session milestones")
+	_check(bool(metrics.get("chapter_loop_completed", false)), "derived funnel recognizes chapter-loop completion")
+	_eq(int(metrics.get("first_meaningful_input_seconds", -1)), 12, "first meaningful input uses relative session time")
+	_eq(int(metrics.get("max_navigation_only_streak", 0)), 3, "derived funnel measures navigation-only churn")
+	_eq(int(metrics.get("failed_command_count", 0)), 1, "derived funnel counts rejected player commands")
+	_eq(int(metrics.get("repeated_battle_count", 0)), 1, "derived funnel counts the intentional high-wall retry")
+	_eq(int(metrics.get("longest_non_battle_gap_seconds", 0)), 106, "derived funnel measures the longest non-battle pause")
+	_check(bool(metrics.get("has_90_second_non_battle_gap", false)), "derived funnel flags a 90-second non-battle stall")
+	_eq(
+		int((metrics.get("battle_attempts", {}) as Dictionary).get("stage_1_4", 0)),
+		2,
+		"derived funnel reports per-stage attempts"
+	)
+	_cleanup_settings(path)
 
 
 func _test_web_runtime_capabilities_and_state() -> void:

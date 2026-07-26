@@ -65,7 +65,7 @@ related:
 | `project-a/game/scripts/domain/achievement/**` | domain-kernel | 24 个永久一次性成就、可靠回填、event key 去重、成就领取 | present / Meta + UI smoke |
 | `project-a/game/scripts/domain/{equipment,idle}/**` | domain-kernel | 装备、离线规则 | absent / deferred |
 | `project-a/game/scripts/persistence/**` | persistence | 严格 JSON schema、2 MiB 上限、candidate writer、主档/备份与导入恢复 | present / Meta headless tests |
-| `project-a/game/scripts/platform/local_playtest_journal.gd` | platform-evidence | 显式 opt-in、白名单本地事件、256 条上限、报告导出与关闭删除 | present / Platform + Chrome smoke |
+| `project-a/game/scripts/platform/local_playtest_journal.gd` | platform-evidence | 显式 opt-in、白名单本地事件、256 条上限、首章 8 里程碑/停滞派生、报告导出与关闭删除 | present / Platform + Chrome smoke |
 | `project-a/game/scripts/autoloads/{save_manager,game,app_bootstrap}.gd` | application | 保存服务、游戏状态/命令、显式应用组合根 | present / bootstrap + lifecycle tests |
 | `project-a/game/scripts/platform/web/**` | platform | visibility、持久性探测、音频解锁、Web bridge | absent / M0-M1 |
 | `project-a/game/scripts/presentation_3d/**` | presentation | 程序化马桶人、结构目标和战斗 snapshot/event 的 3D 投影 | present / runtime smoke + capture |
