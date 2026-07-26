@@ -342,6 +342,15 @@ App Shell 只投影现有 `SettingsStore` / Web 能力、执行持久化与浏�
 行动；1-4 反攻后以“选择工业支援”进入工厂，并隐藏重复的通用工厂按钮，直到设施投产、后勤
 收取和援军升星完成后才把 1-5 暴露为主 CTA。
 
+主动技能的玩家文案与确定性公式保持分层：`ActiveSkillDefinition.tres` 拥有稳定 ID、职责、效果
+和时机说明，`BattleSession` 拥有伤害、护盾、目标选择和事件。仅对跨多个调用点、必须进入平衡
+回归的公式系数使用具名 basis-point 常量；不把单个技能的运行时公式塞进 UI Resource，也不让
+UI 按文案重演伤害。G-Man 使用 `GMAN_OVERRUN_BASE_DAMAGE_BP` 作为通用倍率；只有明确需要
+power fantasy 的关卡可以通过 StageCatalog 的 `gman_opening_damage_bp` 提高该场第一次号令。
+运行时单位只保存本局 `skill_casts`，不进入永久存档；事件和 snapshot 可携带该事实但 UI 不
+据此重算。当前仅 1-1 使用 30000bp，其余和重复施法均为 20000bp；修改必须同时通过首技能有效
+伤害、7-seed 首章扫描和 14 条干净新档旅程，不能只因截图数字更大而调整。
+
 ## 战斗镜头与当前目标投影
 
 `BattleWorld` 是战斗 `Camera3D` 和世界内目标强调的唯一 owner。它每帧只读取一次

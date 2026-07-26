@@ -82,7 +82,10 @@ func _run() -> void:
 		}],
 	})
 	_check(hud.status_label.text.contains("突破废弃路障 · 耐久 63%"), "first battle names the current destructible objective and remaining durability")
-	_check(hud.status_label.text.contains("点击下方发光的 测试先锋 卡"), "first battle teaches the full-card skill action in context")
+	_check(
+		hud.status_label.text.contains("首次反攻强化 · 点击发光的 测试先锋 卡"),
+		"first battle teaches the full-card skill action and names the one-off power fantasy"
+	)
 	_check(
 		String(hud.call("_objective_copy", {
 			"stage_index": 0,

@@ -33,8 +33,8 @@ func _init() -> void:
 			var outcome := String(row["outcome"])
 			if stage_id in ["stage_1_1", "stage_1_2", "stage_1_3"] and outcome != "victory":
 				failures.append("%s seed %d should clear with the starter legion" % [stage_id, run_seed])
-			if stage_id == "stage_1_1" and (int(row["ticks"]) < 225 or int(row["ticks"]) > 300):
-				failures.append("stage_1_1 seed %d should finish in 45-60 seconds, got %d ticks" % [run_seed, int(row["ticks"])])
+			if stage_id == "stage_1_1" and (int(row["ticks"]) < 200 or int(row["ticks"]) > 300):
+				failures.append("stage_1_1 seed %d should finish in 40-60 seconds, got %d ticks" % [run_seed, int(row["ticks"])])
 			if stage_id == "stage_1_3":
 				var final_hp := int(row["final_gman_hp"])
 				var max_hp := maxi(1, int(row["final_gman_max_hp"]))

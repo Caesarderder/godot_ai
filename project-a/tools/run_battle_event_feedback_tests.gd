@@ -1,6 +1,8 @@
 extends SceneTree
 
 const BattleWorldScript := preload("res://game/scripts/presentation_3d/battle_world.gd")
+const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
+const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 
 var failures: Array[String] = []
 
@@ -80,6 +82,7 @@ func _check_real_skill_request_pipeline() -> void:
 	var events := holder.get("events", []) as Array
 	var has_skill_used := false
 	var effective_damage := 0
+	var skill_hit_count := 0
 	for event_value in events:
 		var event := event_value as Dictionary
 		if StringName(event.get("type", &"")) == &"skill_used" and event.get("unit_id", &"") == &"real_skill_hero":
@@ -89,8 +92,15 @@ func _check_real_skill_request_pipeline() -> void:
 			and event.get("source_id", &"") == &"real_skill_hero"
 		):
 			effective_damage += int(event.get("effective_damage", 0))
+			skill_hit_count += 1
 	_check(has_skill_used, "accepted request emits the real deterministic skill_used fact")
-	_check(effective_damage > 0, "accepted request emits positive effective damage from deterministic combat")
+	_check(skill_hit_count == 2, "G-Man overrun reaches both current-stage structures in the opening fixture")
+	_check(effective_damage == 144, "three-times G-Man overrun produces deterministic opening-fixture damage")
+	_check(int(StageCatalogScript.stage("stage_1_1").get("gman_opening_damage_bp", 0)) == 30000, "opening power fantasy is authored on stage 1-1")
+	_check(not StageCatalogScript.stage("stage_1_2").has("gman_opening_damage_bp"), "ordinary stages do not inherit the tutorial burst")
+	_check(BattleSessionScript.gman_overrun_damage_bp(0, 30000) == 30000, "authored opening battle can grant one visible G-Man burst")
+	_check(BattleSessionScript.gman_overrun_damage_bp(0) == 20000, "ordinary battles keep the sustained G-Man multiplier")
+	_check(BattleSessionScript.gman_overrun_damage_bp(1, 30000) == 20000, "repeat G-Man orders return to the sustained multiplier")
 	var snapshot := world.snapshot()
 	var hero := (snapshot.get("units", []) as Array)[0] as Dictionary
 	_check(int(hero.get("energy", -1)) == 0, "accepted skill consumes authoritative energy in the post-skill snapshot")

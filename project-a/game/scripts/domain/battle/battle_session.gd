@@ -15,6 +15,7 @@ const CANNON_FUSE_TICKS: int = 7
 const DAMAGE_ENERGY_PER_MAX_HP_PERCENT: int = 1
 const DAMAGE_ENERGY_PER_HIT_CAP: int = 10
 const DAMAGE_ENERGY_PER_SECOND_CAP: int = 20
+const GMAN_OVERRUN_BASE_DAMAGE_BP: int = 20000
 
 var tick_index: int = 0
 var is_finished: bool = false
@@ -396,8 +397,10 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 	var star := int(unit["star"])
 	var base_attack := int(unit["attack"])
 	var skill_level := clampi(int(unit.get("skill_level", 1)), 1, 3)
+	var casts_used := maxi(0, int(unit.get("skill_casts", 0)))
 	unit["attack"] = int(round(float(base_attack) * float(10000 + (skill_level - 1) * 2000) / 10000.0))
 	unit["energy"] = 0
+	unit["skill_casts"] = casts_used + 1
 	unit["cooldown_ticks"] = maxi(int(unit["cooldown_ticks"]), 2)
 	events.append({
 		"type": &"skill_used",
@@ -410,8 +413,19 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 	})
 	match skill_id:
 		"gman_overrun":
+			var opening_damage_bp := maxi(
+				GMAN_OVERRUN_BASE_DAMAGE_BP,
+				int(_stage_config.get("gman_opening_damage_bp", GMAN_OVERRUN_BASE_DAMAGE_BP))
+			)
+			var damage_bp := gman_overrun_damage_bp(casts_used, opening_damage_bp)
 			for target in _current_stage_targets():
-				_damage_target(target, int(unit["attack"]) * 2, unit["unit_id"], true, events)
+				_damage_target(
+					target,
+					int(unit["attack"]) * damage_bp / 10000,
+					unit["unit_id"],
+					true,
+					events
+				)
 			unit["shield"] = maxi(int(unit.get("shield", 0)), 80)
 			unit["shield_ticks"] = 20
 		"plunger_charge":
@@ -514,6 +528,10 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 		_:
 			push_error("Unhandled known battle skill: %s" % skill_id)
 	unit["attack"] = base_attack
+
+
+static func gman_overrun_damage_bp(casts_used: int, opening_damage_bp: int = GMAN_OVERRUN_BASE_DAMAGE_BP) -> int:
+	return maxi(GMAN_OVERRUN_BASE_DAMAGE_BP, opening_damage_bp) if casts_used <= 0 else GMAN_OVERRUN_BASE_DAMAGE_BP
 
 
 func _damage_target(target: Dictionary, damage: int, source_id: StringName, is_skill: bool, events: Array[Dictionary]) -> void:
@@ -954,6 +972,7 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"cooldown_ticks": 1 + slot % 3,
 		"energy": clampi(int(hero.get("starting_energy", 0)), 0, SKILL_COST),
 		"energy_per_attack": 20,
+		"skill_casts": 0,
 		"damage_energy_window_second": -1,
 		"damage_energy_in_window": 0,
 		"shield": 0,
@@ -993,6 +1012,7 @@ func _make_summon(owner: Dictionary, serial: int, display_name: String = "寄生
 		"cooldown_ticks": 1,
 		"energy": 0,
 		"energy_per_attack": 0,
+		"skill_casts": 0,
 		"shield": 0,
 		"shield_ticks": 0,
 		"weakness_ticks": 0,

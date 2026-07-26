@@ -154,7 +154,7 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		and _manual_skills
 		and not ready_unit_name.is_empty()
 	):
-		status_label.text = "%s · 技能已充满 · 点击下方发光的 %s 卡释放" % [
+		status_label.text = "%s · 首次反攻强化 · 点击发光的 %s 卡释放" % [
 			objective_copy if not objective_copy.is_empty() else "继续推进",
 			ready_unit_name,
 		]

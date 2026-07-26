@@ -55,6 +55,7 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 		config["display_name"] = "1-1 无防备城市"
 		config["stage_names"] = ["城市外围"]
 		config["final_structure_id"] = "unguarded_city"
+		config["gman_opening_damage_bp"] = 30000
 		config["enemies"] = []
 		config["structures"] = [
 			_structure("abandoned_barricade", "废弃路障", "structure", 0, 430, 1, 180, 1, 0, 0),
