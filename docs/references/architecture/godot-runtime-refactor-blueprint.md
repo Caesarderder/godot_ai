@@ -9,6 +9,7 @@ source_of_truth:
   - project-a/project.godot
   - project-a/scenes/screens/main.tscn
   - project-a/scripts/slg_main.gd
+  - project-a/game/scripts/domain/objectives/campaign_objective_projection.gd
   - project-a/game/scenes/ui/stage_detail_panel.tscn
   - project-a/game/scripts/ui/stage_detail_panel.gd
   - project-a/game/scripts/autoloads/game.gd
@@ -16,6 +17,7 @@ source_of_truth:
 validated_by:
   - godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd
   - godot --headless --path project-a --script res://tools/run_battle_tests.gd
+  - godot --headless --path project-a --script res://tools/run_campaign_objective_projection_tests.gd
   - python3 tools/docs_lint.py
 tags:
   - reference:architecture-blueprint
@@ -136,6 +138,7 @@ UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 Ap
 | Catalog 索引 | typed Resource 或静态只读 catalog | 稳定 ID；启动校验重复 ID、缺失引用和范围 |
 | `GameState` / save candidate | `RefCounted` / 有界 JSON snapshot | 权威可变态；不得写回 `.tres` |
 | `BattleSession` | `RefCounted` | 单场 owner；不得进入 Autoload |
+| `CampaignObjectiveProjection` | `RefCounted` 静态只读投影 | 从持久状态、引导 snapshot 与 `WarReadinessReport` 生成跨页面一致的大/中/小目标；不得成为 Autoload |
 | UI view model | duplicate-safe Dictionary，后续按压力升级 typed value | 只读投影；不得保存 Node 引用 |
 
 Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` 和 `Game` 先注册，
@@ -182,6 +185,12 @@ scene tree、延迟 configure 生命周期和单向语义信号；UI smoke、bat
 只读 view 并路由领域命令。
 `TitleScreen` 进一步接管存档感知的摘要、下一目标和三项入口；App Shell 只生成进度 view、
 播放统一点击反馈并路由到基地、设置或帮助。
+标题、基地“前线来电”和目标中心不再各自判断章节完成与下一行动：
+`game/scripts/domain/objectives/campaign_objective_projection.gd` 作为纯 `RefCounted` 投影 owner，
+组合 `OnboardingService` snapshot、当前关卡与 `WarReadinessReport`，统一产出标题目标、基地任务、
+大/中/小目标、挑战线缺口和语义 CTA。它没有 Node、信号或可变全局状态，因此不提升为 Autoload；
+App Shell 只把同一投影拆给各 authored scene。聚焦状态矩阵同时覆盖首章进行中、第二章需培养和
+达到挑战线后的侦察恢复。
 `SettingsScreen` 接管双栏布局、偏好控件、本地数据状态、导入预览和危险操作确认呈现；
 App Shell 只投影现有 `SettingsStore` / Web 能力、执行持久化与浏览器文件动作并处理返回路由。
 `HelpScreen` 把 1-4 设计卡点、研究所免费突破十连、冲锋/装甲两条路线、战后完全恢复、

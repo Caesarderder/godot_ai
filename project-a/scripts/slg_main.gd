@@ -14,6 +14,7 @@ const HeroProgression := preload("res://game/scripts/domain/progression/hero_pro
 const CombatPower := preload("res://game/scripts/domain/progression/combat_power.gd")
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const WarReadinessReport := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
+const CampaignObjectiveProjection := preload("res://game/scripts/domain/objectives/campaign_objective_projection.gd")
 const WarZoneScreenScene := preload("res://game/scenes/screens/war_zone_screen.tscn")
 const BattleResultScreenScene := preload("res://game/scenes/screens/battle_result_screen.tscn")
 const BattleHudScreenScene := preload("res://game/scenes/screens/battle_hud_screen.tscn")
@@ -477,37 +478,17 @@ func _on_title_action_requested(action_id: String) -> void:
 
 func _title_progress_snapshot() -> Dictionary:
 	var state: RefCounted = game.current_state()
-	var cleared_values: Array = state.stage_progress.get("cleared_stages", [])
-	var cleared_count := 0
-	for stage_id in StageCatalog.ACT1_STAGE_IDS:
-		if cleared_values.has(stage_id):
-			cleared_count += 1
+	var objective_projection := CampaignObjectiveProjection.derive(
+		state,
+		OnboardingService.snapshot(state)
+	)
+	var title := objective_projection.get("title", {}) as Dictionary
+	var cleared_count := int(objective_projection.get("campaign_cleared", 0))
 	var hero_count := int(state.roster.size())
-	var highest := String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
-	var objective := ""
-	var primary_label := ""
-	if cleared_count <= 0:
-		primary_label = "唤醒 Gman"
-		objective = "联盟尚未发现这座工厂"
-	elif cleared_count >= StageCatalog.ACT1_STAGE_IDS.size():
-		primary_label = "重返前线"
-		objective = "灰镜防线已崩溃，战争仍未结束"
-	else:
-		primary_label = "返回指挥室"
-		var next_config := StageCatalog.stage(highest)
-		var next_report := WarReadinessReport.derive(state, next_config)
-		var next_action := next_report.get("next_action", {}) as Dictionary
-		if cleared_values.has("stage_1_5") and String(next_action.get("id", "attack")) == "upgrade":
-			objective = "第二章备战 · 还差 %d 战力到挑战线" % maxi(
-				0,
-				int(next_report.get("minimum_power", 0)) - int(next_report.get("cp_ready", 0))
-			)
-		else:
-			objective = "前线等待命令 · %s" % String(next_config.get("display_name", highest))
 	return {
-		"primary_label": primary_label,
+		"primary_label": String(title.get("primary_label", "返回指挥室")),
 		"summary": "已夺回 %d 座城镇 · %d 名战士仍在回应" % [cleared_count, hero_count],
-		"objective": objective,
+		"objective": String(title.get("objective", "")),
 	}
 
 
@@ -866,39 +847,10 @@ func _factory_view() -> Dictionary:
 
 func _factory_task_view(state: RefCounted) -> Dictionary:
 	var onboarding := OnboardingService.snapshot(state)
-	if not bool(onboarding.get("finished", false)):
-		return onboarding
-	var stage_id := String(state.stage_progress.get("highest_unlocked_stage", "stage_2_1"))
-	var config := StageCatalog.stage(stage_id)
-	var report := WarReadinessReport.derive(state, config)
-	var action := report.get("next_action", {}) as Dictionary
-	var needs_growth := String(action.get("id", "attack")) == "upgrade"
-	var challenge_gap := maxi(
-		0,
-		int(report.get("minimum_power", 0)) - int(report.get("cp_ready", 0))
+	return (
+		CampaignObjectiveProjection.derive(state, onboarding).get("factory_task", onboarding)
+		as Dictionary
 	)
-	return {
-		"finished": false,
-		"onboarding_finished": true,
-		"title": "第二章备战：震荡封锁线",
-		"lesson": "首章资产全部保留；先跨过新的成长坎，再侦察声波防线。",
-		"cta_label": "先培养军团" if needs_growth else "侦察 %s" % String(config.get("display_name", stage_id)),
-		"target": "legion" if needs_growth else "map",
-		"stage_id": stage_id,
-		"progress": 0 if needs_growth else 1,
-		"target_value": 1,
-		"completed": false,
-		"claimed": true,
-		"objectives": [{
-			"id": "reach_next_challenge_line",
-			"label": (
-				"将军团提升至挑战线（还差 %d 战力）" % challenge_gap
-				if needs_growth
-				else "侦察并准备进攻 %s" % String(config.get("display_name", stage_id))
-			),
-			"completed": false,
-		}],
-	}
 
 
 func _factory_facility_view(state: RefCounted, facility_id: String, now_unix: int) -> Dictionary:
@@ -1618,62 +1570,10 @@ func _goals_view(state: RefCounted) -> Dictionary:
 	var unlock_state := MetaCatalog.unlocks(state)
 	var cleared := state.stage_progress.get("cleared_stages", []) as Array
 	var task := OnboardingService.snapshot(state)
-	var first_incomplete: Dictionary = {}
-	for objective_value in task.get("objectives", []):
-		var objective := objective_value as Dictionary
-		if not bool(objective.get("completed", false)):
-			first_incomplete = objective
-			break
-	var onboarding_finished := bool(task.get("finished", false))
-	var hierarchy := {
-		"macro": (
-			"推进第二章，扩大战争工厂"
-			if cleared.has("stage_1_5")
-			else "摧毁灰镜核心，完成第一章"
-		),
-		"medium": String(task.get("title", "建立下一条战线")),
-		"small": (
-			"选择下一座未占领城镇"
-			if bool(task.get("finished", false))
-			else String(first_incomplete.get("label", task.get("cta_label", "继续推进")))
-		),
-		"hurdle": OnboardingCatalog.hurdle_for_task(String(task.get("task_id", ""))),
-		"finished": onboarding_finished,
-		"actionable": not onboarding_finished,
-		"cta_label": String(task.get("cta_label", "继续")),
-		"target": String(task.get("target", "expedition")),
-		"stage_id": String(task.get("stage_id", "")),
-	}
-	if onboarding_finished:
-		var next_stage_id := String(state.stage_progress.get("highest_unlocked_stage", "stage_2_1"))
-		var next_config := StageCatalog.stage(next_stage_id)
-		var next_report := WarReadinessReport.derive(state, next_config)
-		var next_action := next_report.get("next_action", {}) as Dictionary
-		var needs_growth := String(next_action.get("id", "attack")) == "upgrade"
-		var challenge_gap := maxi(
-			0,
-			int(next_report.get("minimum_power", 0)) - int(next_report.get("cp_ready", 0))
-		)
-		hierarchy["medium"] = "第二章：突破震荡封锁线"
-		hierarchy["small"] = (
-			"将军团提升至挑战线（还差 %d 战力）" % challenge_gap
-			if needs_growth
-			else "侦察并准备进攻 %s" % String(next_config.get("display_name", next_stage_id))
-		)
-		hierarchy["hurdle"] = {
-			"scale": "中坎",
-			"title": "第二章声波防线",
-			"reason": "首章队伍已证明基础职责，但第二章要求更高的永久成长与后勤供给。",
-			"recovery": (
-				"先培养现有军团；所有首章资产保留，不需要付费解锁路线。"
-				if needs_growth
-				else "先侦察敌方声波结构，再决定阵容和技能时机。"
-			),
-		}
-		hierarchy["actionable"] = true
-		hierarchy["cta_label"] = "先培养军团" if needs_growth else "侦察 %s" % String(next_config.get("display_name", next_stage_id))
-		hierarchy["target"] = "legion" if needs_growth else "map"
-		hierarchy["stage_id"] = next_stage_id
+	var hierarchy := (
+		CampaignObjectiveProjection.derive(state, task).get("hierarchy", {})
+		as Dictionary
+	)
 	var chapter_parts: Array[String] = []
 	for chapter in range(1, 6):
 		var chapter_clear := 0

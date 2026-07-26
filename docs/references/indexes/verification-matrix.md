@@ -18,6 +18,7 @@ source_of_truth:
   - project-a/tools/run_factory_screen_tests.gd
   - project-a/tools/run_research_breakthrough_tests.gd
   - project-a/tools/run_goals_screen_tests.gd
+  - project-a/tools/run_campaign_objective_projection_tests.gd
 validated_by:
   - manual-verification-plan-review-2026-07-26
   - python3 tools/docs_lint.py
@@ -26,6 +27,7 @@ validated_by:
   - godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd
   - godot --headless --path project-a -s tools/run_legion_screen_tests.gd
   - godot --headless --path project-a -s tools/run_factory_screen_tests.gd
+  - godot --headless --path project-a -s tools/run_campaign_objective_projection_tests.gd
   - godot --headless --path project-a -s tools/run_research_breakthrough_tests.gd
   - godot --headless --path project-a -s tools/run_goals_screen_tests.gd
   - godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
@@ -163,6 +165,10 @@ related:
   新手卡并继续以“先培养军团”进入军团，不回旧章节或自动开战；
   `ui-chapter-two-resume-title-844x390.png` 与 `ui-chapter-two-resume-base-844x390.png`
   保存 844×390 恢复态证据。
+  `run_campaign_objective_projection_tests.gd` 在不经过 UI 的情况下锁定同一事实 owner：
+  首章进行中保留当前小目标；首章完成但低于 2-1 挑战线时，标题/基地/目标中心共享精确战力缺口
+  与“先培养军团”；达到挑战线后，三者共同切换为侦察 2-1。该测试防止 App Shell 的跨页面
+  文案和路由重新分叉。
   网格建造回归覆盖用途卡、费用可读性、三步引导、空格选择、确认前不扣款、坐标持久化以及
   `ui-construction-placement-844x390.png` 放置态证据。
   帮助中心回归覆盖标题/设置双入口、双栏滚动、建造与技能说明、隐私与运行版本、48 像素返回

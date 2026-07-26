@@ -8,6 +8,7 @@ last_verified: 2026-07-27
 source_of_truth:
   - project-a/project.godot
   - project-a/scripts/slg_main.gd
+  - project-a/game/scripts/domain/objectives/campaign_objective_projection.gd
   - project-a/game/scripts/state/game_state.gd
   - project-a/game/scripts/state/factory_state.gd
   - project-a/game/scripts/state/hero_state.gd
@@ -22,6 +23,7 @@ validated_by:
   - godot --headless --path project-a --script res://tools/run_slg_loop_tests.gd
   - godot --headless --path project-a -s tools/run_research_onboarding_tests.gd
   - godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
+  - godot --headless --path project-a -s tools/run_campaign_objective_projection_tests.gd
 tags:
   - reference:implementation-status
   - risk:contract-drift
@@ -180,6 +182,10 @@ related:
 奖励与无尽入口均可达；第二、三章 Boss 分别永久解锁自爆与双锯角色，其他角色由后续招募进度
 补充。第五章 Boss 胜利进入独立终章尾声，汇总 25 城战果并提供里程碑与无尽前线续战入口。
 新 App Shell 已补齐标题页、设置页与“目标”第四入口，呈现当前行动、25 城进度和新合同永久里程碑。
+跨入口目标状态已从 App Shell 重复判断迁移到纯 `RefCounted`
+`CampaignObjectiveProjection`：标题、基地任务和目标中心共享同一关卡、挑战线缺口与语义行动，
+并在达到挑战线后共同切换到侦察，而不是由各界面分别猜测。该 owner 不持有 Node、不写
+`GameState`、不注册 Autoload；专用状态矩阵和现有章节完成/UI smoke 回归均通过。
 三星机制、主动技能三级研究、资源容量系统、统一战情仪表盘和 3D 建筑点击/独立收取已实现；研究所等级约束技能
 研究，库存上限、升级扩容、溢出结算和存满时间均可见。14 条真实命令新档旅程已证明两条首章
 成长路线在完成一次真实工厂产出闭环后仍经济可达、账本非负并可恢复存档；Android Chrome、iOS Safari 和真人
