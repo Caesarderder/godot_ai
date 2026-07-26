@@ -35,6 +35,7 @@ var _cannon_warning_ticks: int = CANNON_FUSE_TICKS
 var _cannons_suppressed: int = 0
 var _cannon_impacts: int = 0
 var _cannon_impacts_guarded: int = 0
+var _cannon_guard_counter_damage: int = 0
 var _summon_serial: int = 0
 var _revived_unit_ids: Dictionary = {}
 var _ally_damage_taken: int = 0
@@ -74,6 +75,7 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_cannons_suppressed = 0
 	_cannon_impacts = 0
 	_cannon_impacts_guarded = 0
+	_cannon_guard_counter_damage = 0
 	_summon_serial = 0
 	_revived_unit_ids.clear()
 	_ally_damage_taken = 0
@@ -335,11 +337,13 @@ func _resolve_cannon_warnings(events: Array[Dictionary]) -> void:
 			var source_structure := _structure_by_id(StringName(String(warning.get("source_structure_id", ""))))
 			if not source_structure.is_empty():
 				_damage_structure(source_structure, 60, &"siege_shield_counter", true, events)
+				_cannon_guard_counter_damage += 60
 				events.append({
 					"type": &"cannon_guard_counter",
 					"tick": tick_index,
 					"warning_id": warning.get("warning_id", ""),
 					"structure_id": source_structure.get("structure_id", &""),
+					"lane": int(warning.get("lane", 1)),
 					"damage": 60,
 				})
 		events.append({"type": &"explosion", "tick": tick_index, "source_id": &"core_cannon", "lane": warning["lane"], "road_position": 865, "hits": hits})
@@ -462,12 +466,22 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 		"siege_shield":
 			var shield_percent := 48 if star >= 3 else (40 if star >= 2 else 26)
 			for ally in _living_allies():
-				ally["shield"] = int(ally["shield"]) + maxi(18, int(ally["max_hp"]) * shield_percent / 100)
+				var shield_gain := maxi(18, int(ally["max_hp"]) * shield_percent / 100)
+				ally["shield"] = int(ally["shield"]) + shield_gain
 				ally["shield_ticks"] = 35
 				if star >= 2:
 					# Two-star armor turns one well-timed warning cast into an
 					# anti-artillery stance for the rest of the core assault.
 					ally["cannon_guard_ticks"] = 300
+				events.append({
+					"type": &"unit_shielded",
+					"tick": tick_index,
+					"unit_id": ally["unit_id"],
+					"source_id": unit["unit_id"],
+					"shield": shield_gain,
+					"shield_total": int(ally["shield"]),
+					"cannon_guard": star >= 2,
+				})
 			if star >= 2:
 				var gate := _structure_by_id(&"armored_gate")
 				var target := gate if _is_structure_attackable(gate) else _current_target()
@@ -693,6 +707,7 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"cannon_suppressed_count": _cannons_suppressed,
 		"cannon_hit_count": _cannon_impacts,
 		"cannon_guarded_count": _cannon_impacts_guarded,
+		"cannon_guard_counter_damage": _cannon_guard_counter_damage,
 		"ally_damage_taken": _ally_damage_taken,
 		"troop_damage_taken": _troop_damage_taken,
 		"troop_damage_share_percent": troop_damage_share_percent,

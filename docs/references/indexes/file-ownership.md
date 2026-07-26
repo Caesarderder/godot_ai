@@ -74,7 +74,7 @@ related:
 | `project-a/game/scenes/**` | presentation | app、battle_3d、screens、dialogs、ui | 战前面板、完整战区、战斗 HUD、结算、军团、工厂与目标 screen present；其余 planned |
 | `project-a/tools/run_meta_tests.gd` | independent-verifier | Meta、命令、存档、任务、成就和 bootstrap headless tests | present / passing |
 | `project-a/tools/run_battle_tests.gd` | independent-verifier | 六人三阶段攻城、技能、核心炮、结构事件、确定性、超时与 result-once | present / passing |
-| `project-a/tools/capture_*.gd` | visual-verifier | 标题与战斗画面的确定性截图入口 | present / desktop GL Compatibility |
+| `project-a/tools/capture_*.gd` | visual-verifier | 标题、战斗和关键操作反馈的确定性截图入口 | present / desktop GL Compatibility；装甲格挡反震 844×390 evidence |
 | `project-a/tests/**`、其余 `project-a/tools/**` | independent-verifier | GUT、内容校验、seed、经济、Web smoke | absent / Test Spec §3 |
 | `taptap/**` | historical-reference | 旧 UrhoX Lua 2D 可玩原型 | present / 非当前交付 |
 

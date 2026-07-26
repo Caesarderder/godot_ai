@@ -29,6 +29,7 @@ const STREAMS := {
 	&"explosion": IMPACT_HEAVY,
 	&"collapse": IMPACT_HEAVY,
 	&"cannon_suppressed": IMPACT_HEAVY,
+	&"cannon_guard_counter": IMPACT_HEAVY,
 }
 
 var _players: Array[AudioStreamPlayer] = []

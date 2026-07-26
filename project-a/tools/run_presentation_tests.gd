@@ -17,6 +17,8 @@ func _run() -> void:
 	await _check_snapshot_signal_reuse()
 	await _check_cannon_suppressed_feedback()
 	await _check_cannon_suppressed_low_reduced_budget()
+	await _check_cannon_guard_counter_feedback()
+	await _check_cannon_guard_counter_low_reduced_budget()
 	_finish()
 
 
@@ -27,7 +29,7 @@ func _check_audio_asset_pool() -> void:
 	_eq(audio.get_child_count(), 8, "audio feedback uses a bounded eight-voice pool")
 	for cue_id in [
 		&"ui_click", &"build", &"victory", &"defeat",
-		&"warning", &"skill", &"hit", &"explosion", &"cannon_suppressed",
+		&"warning", &"skill", &"hit", &"explosion", &"cannon_suppressed", &"cannon_guard_counter",
 	]:
 		_ok(audio.has_cue(cue_id), "audio cue is backed by an imported asset: %s" % cue_id)
 	for child in audio.get_children():
@@ -175,6 +177,57 @@ func _check_cannon_suppressed_low_reduced_budget() -> void:
 		_ok(feedback.get_node_or_null("PowerCutFlash") == null, "low reduced cannon_suppressed skips flash")
 	_ok(int(world.get("_active_high_vfx")) <= int(world.get("_max_high_vfx")), "low reduced cannon_suppressed respects high-vfx cap")
 	_ok(float(world.get("_shake_time")) == 0.0, "reduced motion keeps cannon_suppressed from shaking camera")
+	await _dispose_world(world)
+
+
+func _check_cannon_guard_counter_feedback() -> void:
+	var world := BattleWorldScript.new()
+	world.configure_presentation("medium", false)
+	root.add_child(world)
+	await process_frame
+	var events: Array[Dictionary] = [{
+		"type": &"cannon_guard_counter",
+		"warning_id": "shell_guard_120",
+		"lane": 2,
+		"damage": 60,
+	}]
+	world.call("_apply_events", events)
+	var records: Array = world.get("_presentation_records")
+	_ok(records.size() == 1, "guard counter appends one presentation record")
+	if records.size() == 1:
+		_eq(records[0]["type"], "cannon_guard_counter", "guard counter record type is testable")
+		_eq(records[0]["damage"], 60, "guard counter record preserves reflected damage")
+	var feedback := world.get_node("LightweightVFX").get_node_or_null("CannonGuardCounterFeedback")
+	_ok(feedback != null, "guard counter creates world-space feedback")
+	if feedback != null:
+		_ok(feedback.get_node_or_null("CyanGuardRing") != null, "guard counter uses a distinct cyan defense ring")
+		var label := feedback.get_node_or_null("GuardCounterLabel") as Label3D
+		_ok(label != null and label.text.contains("格挡 · 反震 60"), "guard counter names the successful player action without relying on color")
+		_ok(feedback.get_node_or_null("CounterImpactFlash") != null, "medium quality shows the reflected core impact")
+	_ok(float(world.get("_shake_time")) > 0.0, "normal motion gives guard counter a bounded impact shake")
+	await _dispose_world(world)
+
+
+func _check_cannon_guard_counter_low_reduced_budget() -> void:
+	var world := BattleWorldScript.new()
+	world.configure_presentation("low", true)
+	root.add_child(world)
+	await process_frame
+	var events: Array[Dictionary] = [{
+		"type": &"cannon_guard_counter",
+		"warning_id": "shell_guard_low",
+		"lane": 1,
+		"damage": 60,
+	}]
+	world.call("_apply_events", events)
+	var feedback := world.get_node("LightweightVFX").get_node_or_null("CannonGuardCounterFeedback")
+	_ok(feedback != null, "low reduced guard counter keeps critical feedback")
+	if feedback != null:
+		_ok(feedback.get_node_or_null("CyanGuardRing") != null, "low reduced guard counter keeps the defense ring")
+		_ok(feedback.get_node_or_null("GuardCounterLabel") != null, "low reduced guard counter keeps the semantic label")
+		_ok(feedback.get_node_or_null("CounterImpactFlash") == null, "low quality omits the secondary reflected flash")
+	_ok(int(world.get("_active_high_vfx")) <= int(world.get("_max_high_vfx")), "guard counter respects the high-vfx cap")
+	_ok(float(world.get("_shake_time")) == 0.0, "reduced motion removes guard counter camera shake")
 	await _dispose_world(world)
 
 

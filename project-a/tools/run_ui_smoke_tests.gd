@@ -1031,6 +1031,8 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		"stage_reached": 2,
 		"cannon_hit_count": 1,
 		"cannon_suppressed_count": 0,
+		"cannon_guarded_count": 2,
+		"cannon_guard_counter_damage": 120,
 		"ally_damage_dealt_by_unit": {result_hero_id: 1200},
 	})
 	instance.set("last_settlement", {
@@ -1049,7 +1051,11 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_show_result")
 	await _wait_frames(3)
 	_ok(_tree_has_text(instance, "胜利 · 工厂与军团获得成长"), "result uses text and shape in addition to color for outcome")
-	_ok(_tree_has_text(instance, "战斗复盘") and _tree_has_text(instance, "巨炮命中"), "result explains battle performance and one actionable lesson")
+	_ok(_tree_has_text(instance, "战斗复盘") and _tree_has_text(instance, "装甲护盾格挡巨炮 2 次并反震 120 伤害"), "result celebrates successful defensive timing instead of misreporting it as a cannon failure")
+	_ok(
+		String(instance.call("_battle_debrief_copy", {"cannon_hit_count": 1}, "defeat")).contains("下次切换手动技能"),
+		"unguarded cannon hits still explain the recovery action"
+	)
 	_ok(_tree_has_text(instance, "核心贡献"), "result celebrates a contribution measured by the battle session")
 	_ok(_tree_has_text(instance, "下一步成长"), "result maps rewards to the next growth action")
 	_ok(_tree_has_text(instance, "突破战果"), "boss result exposes breakthrough rewards")

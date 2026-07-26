@@ -101,6 +101,9 @@ related:
   `run_battle_hud_screen_tests.gd` 另对独立 `BattleHudScreen` 验证阶段/战线/炮击倒计时投影、
   编队对应的冲锋打断/装甲承炮提示、自动/手动技能状态、满能量 CTA 与阵亡解释；Compatibility 844×390 截图和 Web Chrome smoke
   均已覆盖集成后的真实战斗画面。
+  `run_presentation_tests.gd` 进一步验证 accepted 装甲格挡事件在中画质产生文字、防御环、核心
+  闪击、受控镜头震动与独立音效，在低画质/减少动态下保留文字和形状但移除次级闪击与震动；
+  `ui-battle-guard-counter-844x390.png` 证明关键反馈位于基地轮廓上方且不遮挡技能卡。
   `run_legion_screen_tests.gd` 对独立 `LegionScreen` 验证下一关战力差、候选职责、换人后的军团
   战力变化和语义部署请求；新 844×390 军团截图显示首屏即可比较阵位，而旧动态军团树移除后
   UI smoke 与 Compatibility capture 均不再产生退出资源泄漏。

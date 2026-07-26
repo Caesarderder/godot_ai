@@ -21,6 +21,7 @@ func _init() -> void:
 	_test_boss_cannon_suppression_window()
 	_test_boss_cannon_suppression_high_output()
 	_test_boss_cannon_low_output_impacts()
+	_test_armored_warning_guard_counter()
 	_test_normal_stage_has_no_suppressible_warning()
 	_test_boss_cannon_determinism()
 	_test_same_input_same_result()
@@ -388,6 +389,33 @@ func _test_boss_cannon_low_output_impacts() -> void:
 	_check(impact_seen, "low output fails the suppression race and receives cannon impact")
 	_check(not suppressed_seen, "low output does not emit cannon_suppressed")
 	_check(int(session.result.get("cannon_impacts", 0)) > 0, "battle result records cannon impacts")
+
+
+func _test_armored_warning_guard_counter() -> void:
+	var session := _forced_final_stage_session("stage_1_5", _mechanic_heroes("armored", 2))
+	for unit in session._units:
+		if int(unit.get("team", BattleSessionScript.TEAM_ENEMY)) == BattleSessionScript.TEAM_ALLY:
+			unit["attack"] = 1
+	session._units[0]["energy"] = BattleSessionScript.SKILL_COST
+	_check(session.request_skill(&"hero_0"), "two-star armor can receive a manual warning skill order")
+	var shield_events := 0
+	for event in session.advance_tick():
+		if event["type"] == &"unit_shielded":
+			shield_events += 1
+	_check(shield_events == 6, "siege shield emits accepted feedback for every living ally")
+	var counter: Dictionary = {}
+	for _i in 26:
+		for event in session.advance_tick():
+			if event["type"] == &"cannon_guard_counter":
+				counter = event
+	_check(not counter.is_empty(), "warning-timed two-star armor converts a cannon impact into a counter event")
+	if not counter.is_empty():
+		_check(int(counter.get("damage", 0)) == 60, "guard counter exposes its deterministic reflected damage")
+		_check(int(counter.get("lane", -1)) >= 0, "guard counter preserves the impacted lane for presentation")
+	_defeat_main_allies(session)
+	session.advance_tick()
+	_check(int(session.result.get("cannon_guarded_count", 0)) > 0, "battle result records guarded cannon impacts")
+	_check(int(session.result.get("cannon_guard_counter_damage", 0)) >= 60, "battle result records reflected guard damage")
 
 
 func _test_normal_stage_has_no_suppressible_warning() -> void:

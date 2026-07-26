@@ -7,6 +7,7 @@ signal battle_snapshot_updated(snapshot: Dictionary)
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const ToiletUnitViewScript := preload("res://game/scripts/presentation_3d/toilet_unit_view.gd")
 const AudioDirectorScript := preload("res://game/scripts/presentation/audio_director.gd")
+const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const TICK_SECONDS: float = 0.2
 
 var _session: RefCounted
@@ -442,6 +443,8 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			_spawn_warning(int(event.get("lane", 1)), int(event.get("impact_tick", 0)))
 		elif event_type == &"cannon_suppressed":
 			_spawn_cannon_suppressed(event)
+		elif event_type == &"cannon_guard_counter":
+			_spawn_cannon_guard_counter(event)
 		elif event_type == &"structure_destroyed":
 			_play_audio(&"collapse", -8.0, 0.82)
 			_add_camera_shake(0.34, 0.22)
@@ -709,6 +712,82 @@ func _spawn_cannon_suppressed(event: Dictionary) -> void:
 	tween.parallel().tween_property(ring_node, "transparency", 1.0, duration)
 	if flash != null:
 		tween.parallel().tween_property(flash, "transparency", 1.0, duration)
+	tween.tween_callback(root.queue_free)
+	tween.finished.connect(func() -> void: _active_high_vfx = maxi(0, _active_high_vfx - 1))
+
+
+func _spawn_cannon_guard_counter(event: Dictionary) -> void:
+	_presentation_records.append({
+		"type": "cannon_guard_counter",
+		"warning_id": String(event.get("warning_id", "")),
+		"damage": int(event.get("damage", 0)),
+		"effects_quality": _effects_quality,
+		"reduced_motion": _reduced_motion,
+	})
+	_play_audio(&"cannon_guard_counter", -9.0, 1.18)
+	if _active_high_vfx >= _max_high_vfx:
+		return
+	_active_high_vfx += 1
+	_add_camera_shake(0.16, 0.1)
+	var root := Node3D.new()
+	root.name = "CannonGuardCounterFeedback"
+	# Critical confirmation sits above the dense base silhouette so mobile
+	# players can read their successful timing without losing the action lane.
+	root.position = _world_position(865, int(event.get("lane", 1))) + Vector3(0.0, 3.2, 0.0)
+	_vfx_root.add_child(root)
+
+	var guard_ring := MeshInstance3D.new()
+	guard_ring.name = "CyanGuardRing"
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.78
+	ring.outer_radius = 0.94
+	ring.rings = 14 if _effects_quality == "low" else 20
+	ring.ring_segments = 4 if _effects_quality == "low" else 6
+	guard_ring.mesh = ring
+	guard_ring.rotation_degrees.x = 90.0
+	guard_ring.material_override = _emissive_material(
+		Color("#d9fbff"), Color("#64e8ff"), 1.8 * _flash_scale, 0.24
+	)
+	root.add_child(guard_ring)
+
+	var result_label := Label3D.new()
+	result_label.name = "GuardCounterLabel"
+	result_label.text = "格挡 · 反震 %d" % int(event.get("damage", 0))
+	result_label.position = Vector3(0.0, -1.15, 0.0)
+	result_label.font = CJK_FONT
+	result_label.font_size = 72
+	result_label.pixel_size = 0.013
+	result_label.outline_size = 14
+	result_label.modulate = Color("#d9fbff")
+	result_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	result_label.no_depth_test = true
+	root.add_child(result_label)
+
+	var counter_flash: MeshInstance3D = null
+	if _effects_quality != "low":
+		counter_flash = MeshInstance3D.new()
+		counter_flash.name = "CounterImpactFlash"
+		var flash_mesh := SphereMesh.new()
+		flash_mesh.radius = 0.34
+		flash_mesh.height = 0.58
+		flash_mesh.radial_segments = 8
+		flash_mesh.rings = 4
+		counter_flash.mesh = flash_mesh
+		counter_flash.position = Vector3(0.0, 0.0, -1.0)
+		counter_flash.material_override = _emissive_material(
+			Color("#fff0bd"), Color("#ffb44f"), 2.1 * _flash_scale, 0.22
+		)
+		root.add_child(counter_flash)
+
+	var duration := 0.24 if _reduced_motion else 0.42
+	var final_scale := Vector3.ONE * lerpf(1.15, 2.15, _motion_scale)
+	var tween := root.create_tween()
+	tween.tween_property(root, "scale", final_scale, duration)
+	tween.parallel().tween_property(guard_ring, "transparency", 1.0, duration)
+	if counter_flash != null:
+		tween.parallel().tween_property(counter_flash, "transparency", 1.0, duration)
+	tween.tween_interval(0.22)
+	tween.tween_property(result_label, "modulate:a", 0.0, 0.15)
 	tween.tween_callback(root.queue_free)
 	tween.finished.connect(func() -> void: _active_high_vfx = maxi(0, _active_high_vfx - 1))
 

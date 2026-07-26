@@ -2024,6 +2024,12 @@ func _open_research_lab() -> void:
 
 
 func _battle_debrief_copy(runtime_result: Dictionary, outcome: String) -> String:
+	var guarded_count := int(runtime_result.get("cannon_guarded_count", 0))
+	if guarded_count > 0:
+		return "装甲护盾格挡巨炮 %d 次并反震 %d 伤害：预警开盾成功把防守转成了推进。" % [
+			guarded_count,
+			int(runtime_result.get("cannon_guard_counter_damage", guarded_count * 60)),
+		]
 	if int(runtime_result.get("cannon_hit_count", 0)) > 0:
 		return "巨炮命中 %d 次：下次切换手动技能，在炮击倒计时内集中爆发。" % int(runtime_result["cannon_hit_count"])
 	if int(runtime_result.get("cannon_suppressed_count", 0)) > 0:
