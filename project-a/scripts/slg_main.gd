@@ -24,6 +24,7 @@ const TitleScreenScene := preload("res://game/scenes/screens/title_screen.tscn")
 const SettingsScreenScene := preload("res://game/scenes/screens/settings_screen.tscn")
 const HelpScreenScene := preload("res://game/scenes/screens/help_screen.tscn")
 const IntelligenceScreenScene := preload("res://game/scenes/screens/intelligence_screen.tscn")
+const BlueprintScreenScene := preload("res://game/scenes/screens/blueprint_screen.tscn")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const OnboardingCatalog := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
@@ -1202,136 +1203,124 @@ func _show_blueprints() -> void:
 	screen = Screen.BLUEPRINTS
 	_clear()
 	var shell := _shell("科技蓝图", "沿主干向外研究 · 两张基础蓝图各解锁一名永久马桶人")
-	shell.add_child(_segmented_tabs(
-		[["ordinary", "突击枝"], ["heavy", "重装枝"], ["flying", "飞行枝"], ["special", "支援枝"]],
-		blueprint_branch,
-		_set_blueprint_branch,
-		"Blueprint"
-	))
-	var tree := VBoxContainer.new()
-	tree.name = "BlueprintTree"
-	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tree.add_theme_constant_override("separation", 10)
-	shell.add_child(tree)
+	var blueprint_screen := BlueprintScreenScene.instantiate() as Control
+	blueprint_screen.call("configure", _blueprint_view())
+	blueprint_screen.connect("branch_selected", _set_blueprint_branch)
+	blueprint_screen.connect("action_requested", _on_blueprint_action_requested)
+	shell.add_child(blueprint_screen)
+	return
+
+
+func _blueprint_view() -> Dictionary:
 	var state: RefCounted = game.current_state()
-	var rows: Array[Dictionary] = FactoryCatalog.recipes()
-	var branches: Dictionary = {
+	var branches := {
 		"ordinary": {"title": "突击枝", "recipes": ["ordinary.assault", "ordinary.sonic"]},
 		"heavy": {"title": "重装枝", "recipes": ["heavy.armored", "heavy.saw"]},
 		"flying": {"title": "飞行枝", "recipes": ["flying.rocket", "flying.bomber"]},
 		"special": {"title": "支援枝", "recipes": ["special.repair", "special.parasite"]},
 	}
-	var root := _panel_vbox("研究核心", 4)
-	root.name = "BlueprintTreeRoot"
-	root.add_child(_label("首败信号已解析 · 选择两条基础树枝", 12, GOLD))
-	var breakthrough_claimed := (state.onboarding.get("claimed", {}) as Dictionary).has(
+	var branch_data := branches.get(blueprint_branch, branches["ordinary"]) as Dictionary
+	var claimed := (state.onboarding.get("claimed", {}) as Dictionary).has(
 		"reward.research_breakthrough_ten"
 	)
-	if int(state.factory.facilities.get("research_lab", 0)) > 0 and not breakthrough_claimed:
-		root.add_child(_label(
-			"跨过灰镜高墙后的研究突破：本次免费，不消耗招募券，不推进长期保底。",
-			12,
-			CYAN
-		))
-		var breakthrough := _button("免费启动研究突破十连", _claim_research_breakthrough, true)
-		breakthrough.name = "ClaimResearchBreakthroughTen"
-		root.add_child(breakthrough)
-	elif breakthrough_claimed:
-		root.add_child(_label("研究突破十连已完成 · 冲锋与装甲永久入列", 12, GREEN))
-	tree.add_child(root)
-	if not last_research_breakthrough_results.is_empty():
-		var reveal := _panel_vbox("十连解析结果", 6)
-		reveal.name = "ResearchBreakthroughResults"
-		var reveal_grid := GridContainer.new()
-		reveal_grid.columns = 5
-		for item_value in last_research_breakthrough_results:
-			var item := item_value as Dictionary
-			var kind := String(item.get("kind", ""))
-			var result_copy := ""
-			if kind == "hero":
-				result_copy = "%s\n永久援军" % HeroGenerator.archetype_display_name(
-					String(item.get("archetype_id", ""))
-				)
-			else:
-				var resource_names := {
-					"skill_chip": "技能芯片",
-					"porcelain": "陶瓷",
-					"parts": "零件",
-					"sludge": "能源",
-					"hero_data": "角色数据",
-				}
-				result_copy = "%s\n+%d" % [
-					String(resource_names.get(kind, "研究资源")),
-					int(item.get("amount", 0)),
-				]
-			var card := _label("%s\n%s" % [String(item.get("rarity", "R")), result_copy], 12, GOLD if String(item.get("rarity", "R")) == "A" else TEXT)
-			card.custom_minimum_size = Vector2(126, 66)
-			reveal_grid.add_child(card)
-		reveal.add_child(reveal_grid)
-		reveal.add_child(_button("立即编入反攻队", _show_legion, true))
-		tree.add_child(reveal)
-	for branch_index in 4:
-		var branch_id: String = ["ordinary", "heavy", "flying", "special"][branch_index]
-		if branch_id != blueprint_branch:
-			continue
-		var branch_data := branches[branch_id] as Dictionary
-		var branch_row := HBoxContainer.new()
-		branch_row.name = "BlueprintBranchRow_%s" % branch_id
-		branch_row.add_theme_constant_override("separation", 8)
-		var connector := _label("├──" if branch_index < 3 else "└──", 22, GOLD)
-		connector.custom_minimum_size = Vector2(46, 48)
-		branch_row.add_child(connector)
-		var branch := _panel_vbox(String(branch_data["title"]), 7)
-		branch.name = "BlueprintBranch_%s" % branch_id
-		branch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var node_row := HBoxContainer.new()
-		node_row.add_theme_constant_override("separation", 6)
-		for node_index in 2:
-			var recipe_id := String((branch_data["recipes"] as Array)[node_index])
-			var recipe: Dictionary = FactoryCatalog.recipe(recipe_id)
-			var unlocked := bool(state.factory.blueprints.get(recipe_id, false))
-			var available := bool(state.factory.discovered_blueprints.get(recipe_id, false))
-			var active_research := state.factory.blueprint_research as Dictionary
-			var is_researching := String(active_research.get("recipe_id", "")) == recipe_id
-			var card := _panel_vbox(String(recipe["display_name"]), 5)
-			card.name = "BlueprintNode_%s" % recipe_id.replace(".", "_")
-			card.custom_minimum_size = Vector2(270, 100)
-			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			card.add_child(_label(
-				"已解锁 · 永久角色已入列" if unlocked else (
-					"研发完成 · 等待领取" if is_researching and int(Time.get_unix_time_from_system()) >= int(active_research.get("completes_at_unix", 0))
-					else ("研发中 · 剩余 %s" % _duration_copy(maxi(0, int(active_research.get("completes_at_unix", 0)) - int(Time.get_unix_time_from_system()))) if is_researching
-					else ("可研发 · 耗时45秒" if available else "前置节点尚未开放"))
-				),
-				12,
-				GREEN if unlocked else (CYAN if is_researching else (GOLD if available else MUTED))
-			))
-			if is_researching:
-				var research_ready := int(Time.get_unix_time_from_system()) >= int(active_research.get("completes_at_unix", 0))
-				var claim_research := _button("领取新角色" if research_ready else "研发中…", _claim_foundational_blueprint, true)
-				claim_research.name = "ClaimFoundationalBlueprint"
-				claim_research.disabled = not research_ready
-				card.add_child(claim_research)
-			elif available and not unlocked:
-				var unlock := _button(
-					"开始研发%s" % String(recipe["display_name"]),
-					Callable(self, "_unlock_foundational_blueprint").bind(recipe_id),
-					true
-				)
-				unlock.name = "UnlockFoundationalBlueprint_%s" % recipe_id.replace(".", "_")
-				card.add_child(unlock)
-			node_row.add_child(card)
-			if node_index == 0:
-				var arrow := _label("→", 22, MUTED)
-				arrow.custom_minimum_size = Vector2(24, 48)
-				node_row.add_child(arrow)
-		branch.add_child(node_row)
-		branch_row.add_child(branch)
-		tree.add_child(branch_row)
-	var back := _button("返回研究所", _show_base, false)
-	back.name = "BlueprintBackButton"
-	shell.add_child(back)
+	var lab_built := int(state.factory.facilities.get("research_lab", 0)) > 0
+	var breakthrough := {
+		"claimable": lab_built and not claimed,
+		"copy": (
+			"跨过灰镜高墙后的研究突破：本次免费，不消耗招募券，不推进长期保底。"
+			if lab_built and not claimed
+			else ("研究突破十连已完成 · 冲锋与装甲永久入列" if claimed else "")
+		),
+	}
+	var result_views: Array[Dictionary] = []
+	var resource_names := {
+		"skill_chip": "技能芯片",
+		"porcelain": "陶瓷",
+		"parts": "零件",
+		"sludge": "能源",
+		"hero_data": "角色数据",
+	}
+	for item_value in last_research_breakthrough_results:
+		var item := item_value as Dictionary
+		var kind := String(item.get("kind", ""))
+		var result_copy := ""
+		if kind == "hero":
+			result_copy = "%s\n%s\n永久援军" % [
+				String(item.get("rarity", "A")),
+				HeroGenerator.archetype_display_name(String(item.get("archetype_id", ""))),
+			]
+		else:
+			result_copy = "%s\n%s\n+%d" % [
+				String(item.get("rarity", "R")),
+				String(resource_names.get(kind, "研究资源")),
+				int(item.get("amount", 0)),
+			]
+		result_views.append({"rarity": String(item.get("rarity", "R")), "copy": result_copy})
+	var nodes: Array[Dictionary] = []
+	var active_research := state.factory.blueprint_research as Dictionary
+	var now := int(Time.get_unix_time_from_system())
+	for recipe_id_value in branch_data.get("recipes", []):
+		var recipe_id := String(recipe_id_value)
+		var recipe := FactoryCatalog.recipe(recipe_id)
+		var unlocked := bool(state.factory.blueprints.get(recipe_id, false))
+		var available := bool(state.factory.discovered_blueprints.get(recipe_id, false))
+		var is_researching := String(active_research.get("recipe_id", "")) == recipe_id
+		var ready := is_researching and now >= int(active_research.get("completes_at_unix", 0))
+		var node := {
+			"recipe_id": recipe_id,
+			"display_name": String(recipe.get("display_name", recipe_id)),
+			"status_id": "locked",
+			"status_copy": "前置节点尚未开放",
+			"action_id": "",
+			"action_label": "",
+			"action_name": "",
+			"disabled": false,
+		}
+		if unlocked:
+			node["status_id"] = "unlocked"
+			node["status_copy"] = "已解锁 · 永久角色已入列"
+		elif is_researching:
+			node["status_id"] = "researching"
+			node["status_copy"] = (
+				"研发完成 · 等待领取"
+				if ready
+				else "研发中 · 剩余 %s" % _duration_copy(maxi(0, int(active_research.get("completes_at_unix", 0)) - now))
+			)
+			node["action_id"] = "claim_research"
+			node["action_label"] = "领取新角色" if ready else "研发中…"
+			node["action_name"] = "ClaimFoundationalBlueprint"
+			node["disabled"] = not ready
+		elif available:
+			node["status_id"] = "available"
+			node["status_copy"] = "可研发 · 耗时45秒"
+			node["action_id"] = "start_research"
+			node["action_label"] = "开始研发%s" % String(recipe.get("display_name", "蓝图"))
+			node["action_name"] = "UnlockFoundationalBlueprint_%s" % recipe_id.replace(".", "_")
+		nodes.append(node)
+	return {
+		"branch": blueprint_branch,
+		"branch_title": String(branch_data.get("title", "研究分支")),
+		"core_status": "首败信号已解析 · 选择两条基础树枝",
+		"breakthrough": breakthrough,
+		"results": result_views,
+		"nodes": nodes,
+	}
+
+
+func _on_blueprint_action_requested(action_id: String, payload: Dictionary) -> void:
+	_play_ui_click()
+	match action_id:
+		"claim_breakthrough":
+			_claim_research_breakthrough()
+		"open_legion":
+			_show_legion()
+		"start_research":
+			_unlock_foundational_blueprint(String(payload.get("recipe_id", "")))
+		"claim_research":
+			_claim_foundational_blueprint()
+		"back":
+			_show_base()
+
 
 
 func _set_blueprint_branch(branch_id: String) -> void:

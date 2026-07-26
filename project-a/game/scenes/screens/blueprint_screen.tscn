@@ -1,0 +1,158 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/ui/blueprint_screen.gd" id="1_script"]
+
+[node name="BlueprintScreen" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+script = ExtResource("1_script")
+
+[node name="BlueprintTabs" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BlueprintOrdinaryTab" type="Button" parent="BlueprintTabs"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = null
+text = "突击枝"
+
+[node name="BlueprintHeavyTab" type="Button" parent="BlueprintTabs"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "重装枝"
+
+[node name="BlueprintFlyingTab" type="Button" parent="BlueprintTabs"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "飞行枝"
+
+[node name="BlueprintSpecialTab" type="Button" parent="BlueprintTabs"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "支援枝"
+
+[node name="BlueprintTree" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="BlueprintTreeRoot" type="PanelContainer" parent="BlueprintTree"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="BlueprintTree/BlueprintTreeRoot"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="BlueprintTree/BlueprintTreeRoot/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Heading" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+layout_mode = 2
+text = "研究核心"
+
+[node name="BlueprintCoreStatus" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BlueprintBreakthroughCopy" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="ClaimResearchBreakthroughTen" type="Button" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "免费启动研究突破十连"
+
+[node name="ResearchBreakthroughResults" type="PanelContainer" parent="BlueprintTree"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="BlueprintTree/ResearchBreakthroughResults"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="BlueprintTree/ResearchBreakthroughResults/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Heading" type="Label" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
+layout_mode = 2
+text = "十连解析结果"
+
+[node name="BlueprintResultsGrid" type="GridContainer" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 5
+
+[node name="BlueprintResultsLegionButton" type="Button" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "立即编入反攻队"
+
+[node name="BlueprintBranchRow" type="HBoxContainer" parent="BlueprintTree"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Connector" type="Label" parent="BlueprintTree/BlueprintBranchRow"]
+custom_minimum_size = Vector2(40, 48)
+layout_mode = 2
+text = "└──"
+
+[node name="BlueprintBranchPanel" type="PanelContainer" parent="BlueprintTree/BlueprintBranchRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="BlueprintTree/BlueprintBranchRow/BlueprintBranchPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="BlueprintTree/BlueprintBranchRow/BlueprintBranchPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BlueprintBranchHeading" type="Label" parent="BlueprintTree/BlueprintBranchRow/BlueprintBranchPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "研究分支"
+
+[node name="BlueprintNodeRow" type="HBoxContainer" parent="BlueprintTree/BlueprintBranchRow/BlueprintBranchPanel/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="BlueprintBackButton" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "返回研究所"
