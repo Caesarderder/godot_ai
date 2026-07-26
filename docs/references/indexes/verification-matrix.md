@@ -122,6 +122,10 @@ related:
   PWA Service Worker 接管、在线刷新与关闭服务器后的离线重启；运行阶段无控制台/意外网络错误，
   `/userfs/.../save_v1.json` 在在线刷新及离线重启前后身份保持；设置页可下载合法 v8 JSON，再经
   浏览器文件选择器导回、预览、二次确认恢复，并将旧主档保留为 `.bak`。
+  候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
+  legacy `scripts/main.gd` 后，PCK 从 `15,606,228` 降至 `15,480,316` bytes，gzip 初始 payload
+  从 `24,964,377` 降至 `24,839,456` bytes，仍比 20 MiB 目标高 `3,867,936` bytes。当前约
+  14 MiB 的完整 Noto CJK fontdata 是下一项主因，不能用系统字体替代 Web 中文覆盖。
 - M8 本地试玩证据工具：`run_platform_tests.gd` 覆盖显式 opt-in、事件白名单/去重、256 条上限、
   版本/样本量/时间窗、续接、导出和关闭删除；Chrome smoke 覆盖报告下载、隐私字段检查、在线/离线
   续接与 IndexedDB opt-out 删除。真实 20–30 分钟样本与玩家访谈仍未发生。

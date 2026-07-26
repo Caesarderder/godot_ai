@@ -9,6 +9,7 @@ privacy evidence.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import shutil
@@ -38,6 +39,15 @@ REQUIRED_ARTIFACTS = [
     "release-candidate.json",
 ]
 
+INITIAL_PAYLOAD_FILES = [
+    "index.html",
+    "index.js",
+    "index.wasm",
+    "index.pck",
+]
+INITIAL_PAYLOAD_GZIP_TARGET_BYTES = 20 * 1024 * 1024
+INITIAL_PAYLOAD_GZIP_HARD_LIMIT_BYTES = 30 * 1024 * 1024
+
 FORBIDDEN_ARTIFACT_SUFFIXES = {
     ".gd",
     ".godot",
@@ -52,6 +62,7 @@ REQUIRED_PRESET_SNIPPETS = {
     'platform="Web"': "Web platform selected",
     'export_path="build/web/index.html"': "canonical Web export path",
     'include_filter="release/*"': "release materials included",
+    'exclude_filter="artifacts/*,build/*,tools/*,tests/*,scripts/main.gd"': "debug artifacts, tools, tests, and legacy App Shell excluded",
     'variant/thread_support=false': "single-thread Web export",
     'variant/extensions_support=false': "GDExtension disabled for Web",
     "html/canvas_resize_policy=2": "adaptive canvas resize",
@@ -78,12 +89,13 @@ EXTERNAL_BLOCKERS = [
 ]
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def _artifact_entry(path: Path) -> dict[str, int | str]:
+    data = path.read_bytes()
+    return {
+        "bytes": len(data),
+        "gzip_9_bytes": len(gzip.compress(data, compresslevel=9, mtime=0)),
+        "sha256": hashlib.sha256(data).hexdigest(),
+    }
 
 
 def _run_godot_version() -> str:
@@ -255,10 +267,7 @@ def _check_artifacts(artifact_dir: Path | None) -> tuple[list[str], list[str], d
         if not path.exists() or path.stat().st_size <= 0:
             failed.append(f"missing or empty artifact: {name}")
             continue
-        manifest[name] = {
-            "bytes": path.stat().st_size,
-            "sha256": _sha256(path),
-        }
+        manifest[name] = _artifact_entry(path)
         passed.append(f"artifact present with hash: {name}")
 
     candidate_path = artifact_dir / "release-candidate.json"
@@ -268,10 +277,7 @@ def _check_artifacts(artifact_dir: Path | None) -> tuple[list[str], list[str], d
             evidence["release_candidate"] = candidate
             declared = candidate.get("artifact_manifest", {})
             actual = {
-                path.relative_to(artifact_dir).as_posix(): {
-                    "bytes": path.stat().st_size,
-                    "sha256": _sha256(path),
-                }
+                path.relative_to(artifact_dir).as_posix(): _artifact_entry(path)
                 for path in shipped_files
                 if path.name != "release-candidate.json"
             }
@@ -289,6 +295,38 @@ def _check_artifacts(artifact_dir: Path | None) -> tuple[list[str], list[str], d
                 failed.append("release candidate was built from a dirty project-a source scope")
         except (json.JSONDecodeError, OSError) as exc:
             failed.append(f"release-candidate.json is invalid: {exc}")
+
+    initial_entries = [
+        _artifact_entry(artifact_dir / name)
+        for name in INITIAL_PAYLOAD_FILES
+        if (artifact_dir / name).is_file()
+    ]
+    initial_raw_bytes = sum(int(entry["bytes"]) for entry in initial_entries)
+    initial_gzip_bytes = sum(int(entry["gzip_9_bytes"]) for entry in initial_entries)
+    payload_budget = {
+        "files": INITIAL_PAYLOAD_FILES,
+        "raw_bytes": initial_raw_bytes,
+        "gzip_9_bytes": initial_gzip_bytes,
+        "target_bytes": INITIAL_PAYLOAD_GZIP_TARGET_BYTES,
+        "hard_limit_bytes": INITIAL_PAYLOAD_GZIP_HARD_LIMIT_BYTES,
+        "target_met": initial_gzip_bytes <= INITIAL_PAYLOAD_GZIP_TARGET_BYTES,
+        "hard_limit_met": initial_gzip_bytes <= INITIAL_PAYLOAD_GZIP_HARD_LIMIT_BYTES,
+    }
+    evidence["initial_payload_budget"] = payload_budget
+    if payload_budget["hard_limit_met"]:
+        passed.append(
+            "gzip-9 initial payload is within the 30 MiB hard limit"
+        )
+    else:
+        failed.append(
+            f"gzip-9 initial payload exceeds 30 MiB: {initial_gzip_bytes} bytes"
+        )
+    if payload_budget["target_met"]:
+        passed.append("gzip-9 initial payload meets the 20 MiB target")
+    else:
+        evidence["initial_payload_target_gap_bytes"] = (
+            initial_gzip_bytes - INITIAL_PAYLOAD_GZIP_TARGET_BYTES
+        )
 
     workers = sorted(path.name for path in artifact_dir.glob("*.worker.js"))
     service_workers = [name for name in workers if name.endswith(".service.worker.js")]

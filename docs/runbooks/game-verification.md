@@ -74,7 +74,9 @@ v8 JSON 备份，再通过浏览器文件选择器完成预览与二次确认恢
 `build_web_candidate.py` 会先在工程目录之外执行一次不晋级的导入缓存预热，再执行两次独立导出，
 只有后两次完整文件哈希一致时才替换
 `build/web`。这避免导出图标再次被 Godot 导入并把 `.import` 边车污染进候选包，同时写入绑定
-commit、Godot 版本、线程模式和全量文件哈希的 `release-candidate.json`。正式候选要求
+commit、Godot 版本、线程模式、全量文件哈希及确定性 gzip-9 体积的 `release-candidate.json`。
+审计按 HTML、JS、WASM 和 PCK 合计验证压缩后 30 MiB 硬上限，并单独报告 20 MiB 目标差额；
+实际 CDN 的 Brotli、请求头和传输结果仍必须在生产源复测。正式候选要求
 `project-a` 工作区干净；仅调试脚本自身时可显式使用 `--allow-dirty`，但这种结果会被审计拒绝。
 
 已有候选产物也可单独复核：

@@ -29,6 +29,7 @@ State labels:
 - [ ] Artifact sizes and SHA256 hashes are recorded.
 - [ ] `release-candidate.json` binds the clean source revision, Godot version, thread mode, full payload hashes, and matching second export.
 - [ ] No Godot editor/source sidecar such as `.import`, `.gd`, `.tscn`, `.tres`, or `.uid` ships.
+- [ ] The unused legacy `scripts/main.gd` App Shell remains available in source history but is excluded from the player Web package.
 - [ ] No unexpected threaded runtime `.worker.js` file exists; a Godot PWA `index.service.worker.js` is expected when PWA is enabled.
 - [ ] `index.html` declares `GODOT_THREADS_ENABLED = false`.
 - [ ] PWA manifest/service worker output is either present and inspected or explicitly marked unsupported for this candidate.
@@ -42,6 +43,8 @@ State labels:
 - [ ] Compression/cache/security headers.
 - [x] Local Chrome fresh-profile, Service Worker warm-reload, and offline engine-ready timings are recorded against explicit local ceilings.
 - [ ] Production-origin fresh-cache and warm-cache transfer/startup timings pass on the minimum target device.
+- [x] Candidate audit records raw and deterministic gzip-9 bytes for the initial HTML/JS/WASM/PCK payload and enforces the 30 MiB hard limit.
+- [ ] Initial compressed payload reaches the 20 MiB target; the current full CJK font keeps the candidate above target.
 - [x] Google Chrome desktop HTTP smoke, including touch input, online reload, server shutdown,
   offline PWA restart, and IndexedDB save identity (`node tools/run_web_browser_smoke.mjs`).
 - [ ] Firefox desktop smoke.

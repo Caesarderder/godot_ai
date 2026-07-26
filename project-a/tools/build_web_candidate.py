@@ -9,6 +9,7 @@ candidate replaces ``build/web``.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import re
@@ -23,20 +24,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PROJECT_ROOT.parent
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def _artifact_entry(path: Path) -> dict[str, int | str]:
+    data = path.read_bytes()
+    return {
+        "bytes": len(data),
+        "gzip_9_bytes": len(gzip.compress(data, compresslevel=9, mtime=0)),
+        "sha256": hashlib.sha256(data).hexdigest(),
+    }
 
 
 def _manifest(directory: Path) -> dict[str, dict[str, int | str]]:
     return {
-        path.relative_to(directory).as_posix(): {
-            "bytes": path.stat().st_size,
-            "sha256": _sha256(path),
-        }
+        path.relative_to(directory).as_posix(): _artifact_entry(path)
         for path in sorted(directory.rglob("*"))
         if path.is_file()
     }
