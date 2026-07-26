@@ -21,6 +21,7 @@ const LegionScreenScene := preload("res://game/scenes/screens/legion_screen.tscn
 const FactoryScreenScene := preload("res://game/scenes/screens/factory_screen.tscn")
 const GoalsScreenScene := preload("res://game/scenes/screens/goals_screen.tscn")
 const TitleScreenScene := preload("res://game/scenes/screens/title_screen.tscn")
+const SettingsScreenScene := preload("res://game/scenes/screens/settings_screen.tscn")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const OnboardingCatalog := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
@@ -503,157 +504,85 @@ func _show_settings(return_screen: Screen = Screen.BASE) -> void:
 	screen = Screen.SETTINGS
 	_clear()
 	var shell := _shell("设置", "音频、画面辅助与战斗偏好")
-	shell.name = "SettingsScreen"
-	var settings_columns := HBoxContainer.new()
-	settings_columns.name = "SettingsLandscapeColumns"
-	settings_columns.add_theme_constant_override("separation", 12)
-	settings_columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	settings_columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(settings_columns)
-	var scroll := ScrollContainer.new()
-	scroll.name = "SettingsScroll"
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_stretch_ratio = 1.0
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	settings_columns.add_child(scroll)
-	var panel := _panel_vbox("体验设置", 10)
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(panel)
+	shell.name = "SettingsShell"
+	var settings_screen := SettingsScreenScene.instantiate() as Control
+	settings_screen.call("configure", _settings_view())
+	settings_screen.connect("setting_changed", _on_settings_setting_changed)
+	settings_screen.connect("action_requested", _on_settings_action_requested)
+	shell.add_child(settings_screen)
+	return
 
-	var volume_row := HBoxContainer.new()
-	volume_row.custom_minimum_size.y = 44
-	var volume_label := _label("主音量", 15, TEXT)
-	volume_label.custom_minimum_size.x = 110
-	volume_row.add_child(volume_label)
-	var volume := HSlider.new()
-	volume.name = "SettingsMasterVolumeSlider"
-	volume.min_value = 0
-	volume.max_value = 100
-	volume.step = 1
-	volume.value = settings_store.master_volume
-	volume.custom_minimum_size = Vector2(260, 44)
-	volume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var volume_value := _label("%d" % settings_store.master_volume, 15, CYAN)
-	volume_value.name = "SettingsMasterVolumeValue"
-	volume.value_changed.connect(func(value: float) -> void:
-		settings_store.set_master_volume(value)
-		volume_value.text = "%d" % settings_store.master_volume
-		_apply_settings_to_runtime()
-	)
-	volume_row.add_child(volume)
-	volume_row.add_child(volume_value)
-	panel.add_child(volume_row)
 
-	var quality_row := HBoxContainer.new()
-	quality_row.custom_minimum_size.y = 44
-	var quality_label := _label("特效质量", 15, TEXT)
-	quality_label.custom_minimum_size.x = 110
-	quality_row.add_child(quality_label)
-	var quality := OptionButton.new()
-	quality.name = "SettingsEffectsQualityOption"
-	quality.custom_minimum_size = Vector2(260, 44)
-	quality.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for value in SettingsStoreScript.EFFECTS_QUALITIES:
-		quality.add_item(value)
-	quality.select(maxi(0, SettingsStoreScript.EFFECTS_QUALITIES.find(settings_store.effects_quality)))
-	quality.item_selected.connect(func(index: int) -> void:
-		settings_store.set_effects_quality(SettingsStoreScript.EFFECTS_QUALITIES[index])
-		_apply_settings_to_runtime()
-	)
-	quality_row.add_child(quality)
-	panel.add_child(quality_row)
-	panel.add_child(_settings_toggle("减少动态", "SettingsReducedMotionToggle", settings_store.reduced_motion, func(value: bool) -> void:
-		settings_store.set_reduced_motion(value)
-		_apply_settings_to_runtime()
-	))
-	panel.add_child(_settings_toggle("全局自动技能", "SettingsGlobalAutoSkillToggle", settings_store.global_auto_skill, func(value: bool) -> void:
-		settings_store.set_global_auto_skill(value)
-	))
-	var help := _button("玩法说明与制作信息", Callable(self, "_show_help").bind(Screen.SETTINGS), false)
-	help.name = "SettingsHelpButton"
-	panel.add_child(help)
-
-	var data_scroll := ScrollContainer.new()
-	data_scroll.name = "SettingsDataScroll"
-	data_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	data_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	data_scroll.size_flags_stretch_ratio = 1.0
-	data_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	settings_columns.add_child(data_scroll)
-	panel = _panel_vbox("本地数据", 10)
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	data_scroll.add_child(panel)
-	panel.add_child(_settings_toggle(
-		"本地试玩报告（不联网）",
-		"SettingsLocalPlaytestToggle",
-		settings_store.local_playtest_logging,
-		_set_local_playtest_logging
-	))
-	if settings_store.local_playtest_logging:
-		var journal_summary := playtest_journal.summary() as Dictionary
-		var journal_status := _label("已记录 %d 条本地事件 · %d 分钟 · 不含设备或账号标识" % [
-			int(journal_summary.get("event_count", 0)),
-			int(journal_summary.get("duration_seconds", 0)) / 60,
-		], 12, GREEN)
-		journal_status.name = "SettingsPlaytestStatus"
-		panel.add_child(journal_status)
-		var journal_actions := HBoxContainer.new()
-		journal_actions.alignment = BoxContainer.ALIGNMENT_CENTER
-		journal_actions.add_theme_constant_override("separation", 10)
-		var export_report := _button("下载试玩报告", _export_local_playtest_report, false)
-		export_report.name = "SettingsExportPlaytestButton"
-		journal_actions.add_child(export_report)
-		var clear_report := _button("清空试玩记录", _clear_local_playtest_report, false)
-		clear_report.name = "SettingsClearPlaytestButton"
-		journal_actions.add_child(clear_report)
-		panel.add_child(journal_actions)
+func _settings_view() -> Dictionary:
 	var persistence := web_runtime.platform_capabilities() as Dictionary
-	var persistence_copy := (
-		"浏览器存储当前可持久化；仍建议定期下载备份。"
-		if bool(persistence.get("userfs_persistent", false))
-		else "浏览器未确认持久存储，请立即下载备份，避免清理站点数据后丢失进度。"
-	)
-	var persistence_label := _label(persistence_copy, 12, GREEN if bool(persistence.get("userfs_persistent", false)) else GOLD)
-	persistence_label.name = "SettingsPersistenceStatus"
-	panel.add_child(persistence_label)
-
-	var backup_actions := HBoxContainer.new()
-	backup_actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	backup_actions.add_theme_constant_override("separation", 10)
-	var export_save := _button("下载存档备份", _export_local_save_backup, false)
-	export_save.name = "SettingsExportSaveButton"
-	backup_actions.add_child(export_save)
-	var import_copy := "确认覆盖当前进度" if not pending_save_import_text.is_empty() else "选择备份并校验"
-	var import_save := _button(import_copy, _request_local_save_import, not pending_save_import_text.is_empty())
-	import_save.name = "SettingsImportSaveButton"
-	backup_actions.add_child(import_save)
-	panel.add_child(backup_actions)
-	if not pending_save_import_summary.is_empty():
-		var preview_copy := "待导入：%d 城 · %d 名英雄 · 修订 %d（再次点击确认）" % [
+	var persistent := bool(persistence.get("userfs_persistent", false))
+	var journal_summary := playtest_journal.summary() as Dictionary
+	var has_import := not pending_save_import_text.is_empty()
+	var import_copy := ""
+	if has_import:
+		import_copy = "待导入：%d 城 · %d 名英雄 · 修订 %d（再次点击确认）" % [
 			int(pending_save_import_summary.get("captured_cities", 0)),
 			int(pending_save_import_summary.get("hero_count", 0)),
 			int(pending_save_import_summary.get("revision", 0)),
 		]
-		var preview := _label(preview_copy, 12, GOLD)
-		preview.name = "SettingsImportPreview"
-		panel.add_child(preview)
+	return {
+		"master_volume": settings_store.master_volume,
+		"effects_quality": settings_store.effects_quality,
+		"reduced_motion": settings_store.reduced_motion,
+		"global_auto_skill": settings_store.global_auto_skill,
+		"local_playtest_logging": settings_store.local_playtest_logging,
+		"playtest_status": "已记录 %d 条本地事件 · %d 分钟 · 不含设备或账号标识" % [
+			int(journal_summary.get("event_count", 0)),
+			int(journal_summary.get("duration_seconds", 0)) / 60,
+		],
+		"storage_persistent": persistent,
+		"persistence_copy": (
+			"浏览器存储当前可持久化；仍建议定期下载备份。"
+			if persistent
+			else "浏览器未确认持久存储，请立即下载备份，避免清理站点数据后丢失进度。"
+		),
+		"has_import_preview": has_import,
+		"import_preview": import_copy,
+		"delete_armed": local_save_delete_armed,
+	}
 
-	var actions := HBoxContainer.new()
-	actions.name = "SettingsFixedActions"
-	actions.alignment = BoxContainer.ALIGNMENT_CENTER
-	actions.add_theme_constant_override("separation", 10)
-	var save := _button("保存设置", _save_settings_from_ui, true)
-	save.name = "SettingsSaveButton"
-	actions.add_child(save)
-	var back := _button("返回", _return_from_settings, false)
-	back.name = "SettingsBackButton"
-	actions.add_child(back)
-	shell.add_child(actions)
-	var delete_save := _button("再次点击确认删除" if local_save_delete_armed else "删除本地存档", _request_delete_local_save, false)
-	delete_save.name = "SettingsDeleteLocalSaveButton"
-	panel.add_child(delete_save)
-	save.grab_focus()
+
+func _on_settings_setting_changed(setting_id: String, value: Variant) -> void:
+	match setting_id:
+		"master_volume":
+			settings_store.set_master_volume(float(value))
+		"effects_quality":
+			settings_store.set_effects_quality(String(value))
+		"reduced_motion":
+			settings_store.set_reduced_motion(bool(value))
+		"global_auto_skill":
+			settings_store.set_global_auto_skill(bool(value))
+		"local_playtest_logging":
+			_set_local_playtest_logging(bool(value))
+			return
+	_apply_settings_to_runtime()
+
+
+func _on_settings_action_requested(action_id: String) -> void:
+	_play_ui_click()
+	match action_id:
+		"help":
+			_show_help(Screen.SETTINGS)
+		"export_playtest":
+			_export_local_playtest_report()
+		"clear_playtest":
+			_clear_local_playtest_report()
+		"export_save":
+			_export_local_save_backup()
+		"import_save":
+			_request_local_save_import()
+		"delete_save":
+			_request_delete_local_save()
+		"save":
+			_save_settings_from_ui()
+		"back":
+			_return_from_settings()
+
 
 
 func _show_help(return_screen: Screen = Screen.TITLE) -> void:

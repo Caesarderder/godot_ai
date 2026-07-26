@@ -9,6 +9,7 @@ const SCENES: Array[PackedScene] = [
 	preload("res://game/scenes/screens/goals_screen.tscn"),
 	preload("res://game/scenes/ui/stage_detail_panel.tscn"),
 	preload("res://game/scenes/screens/title_screen.tscn"),
+	preload("res://game/scenes/screens/settings_screen.tscn"),
 ]
 
 var failures: Array[String] = []
@@ -23,6 +24,8 @@ func _run() -> void:
 		var scene := SCENES[scene_index]
 		var instance := scene.instantiate() as Control
 		root.add_child(instance)
+		await process_frame
+		await process_frame
 		await process_frame
 		var buttons: Array[Button] = []
 		_collect_buttons(instance, buttons)

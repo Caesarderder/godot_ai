@@ -703,7 +703,8 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(settings_columns != null and settings_columns.get_child_count() == 2, "SLG settings uses two balanced landscape columns")
 	_ok(playtest_toggle != null and not playtest_toggle.button_pressed, "local playtest reporting is explicit opt-in")
 	_ok(settings_help != null and settings_help.custom_minimum_size.y >= 48.0, "settings exposes the same gameplay and production information")
-	_ok(instance.find_child("SettingsExportPlaytestButton", true, false) == null, "playtest export stays hidden before opt-in")
+	var hidden_playtest_export := instance.find_child("SettingsExportPlaytestButton", true, false) as Button
+	_ok(hidden_playtest_export != null and not hidden_playtest_export.is_visible_in_tree(), "playtest export stays hidden before opt-in")
 	var settings_store: RefCounted = instance.get("settings_store")
 	_ok(settings_store != null, "SLG shell owns the persistent SettingsStore")
 	if settings_store != null:
