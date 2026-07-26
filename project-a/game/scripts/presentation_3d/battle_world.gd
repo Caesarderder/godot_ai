@@ -3,6 +3,7 @@ extends Node3D
 
 signal battle_finished(result: Dictionary)
 signal battle_snapshot_updated(snapshot: Dictionary)
+signal battle_events_applied(events: Array[Dictionary])
 
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const ToiletUnitViewScript := preload("res://game/scripts/presentation_3d/toilet_unit_view.gd")
@@ -409,6 +410,7 @@ func _sync_views(battle_snapshot: Dictionary) -> void:
 
 
 func _apply_events(events: Array[Dictionary]) -> void:
+	var has_skill_event := false
 	for event in events:
 		var event_type: StringName = event.get("type", &"")
 		if event_type in [&"attack_started", &"attack_hit", &"unit_damaged", &"enemy_damaged", &"skill_used", &"unit_healed", &"unit_shielded", &"unit_revived"]:
@@ -422,6 +424,7 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			if enemy_unit != null:
 				enemy_unit.play_battle_event(event)
 		if event_type == &"skill_used":
+			has_skill_event = true
 			_spawn_skill_vfx(event)
 			_play_audio(&"skill", -12.0, 0.92 + float(int(event.get("skill_tier", 1))) * 0.08)
 			_add_camera_shake(0.08, 0.06)
@@ -449,6 +452,11 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			_play_audio(&"collapse", -8.0, 0.82)
 			_add_camera_shake(0.34, 0.22)
 			_spawn_structure_breakthrough(event)
+	if has_skill_event:
+		var detached_events: Array[Dictionary] = []
+		for event in events:
+			detached_events.append(event.duplicate(true))
+		battle_events_applied.emit(detached_events)
 
 
 func _sync_unit_view(unit: Dictionary) -> void:

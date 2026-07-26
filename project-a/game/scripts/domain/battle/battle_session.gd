@@ -534,7 +534,7 @@ func _damage_structure(structure: Dictionary, damage: int, source_id: StringName
 	structure["hp"] = maxi(0, int(structure["hp"]) - actual)
 	structure["damage_stage"] = _damage_stage(int(structure["hp"]), int(structure["max_hp"]))
 	_record_ally_damage_dealt(source_id, effective_damage)
-	events.append({"type": &"structure_damaged", "tick": tick_index, "structure_id": structure["structure_id"], "source_id": source_id, "damage": actual, "hp": structure["hp"], "max_hp": structure["max_hp"], "is_skill": is_skill})
+	events.append({"type": &"structure_damaged", "tick": tick_index, "structure_id": structure["structure_id"], "source_id": source_id, "damage": actual, "effective_damage": effective_damage, "hp": structure["hp"], "max_hp": structure["max_hp"], "is_skill": is_skill})
 	_record_cannon_suppression_damage(structure, actual, events)
 	if int(structure["damage_stage"]) != old_damage_stage:
 		events.append({"type": &"structure_damage_stage_changed", "tick": tick_index, "structure_id": structure["structure_id"], "damage_stage": structure["damage_stage"]})
@@ -599,6 +599,7 @@ func _apply_unit_damage(unit: Dictionary, raw_damage: int, source_id: StringName
 			"unit_id": unit["unit_id"],
 			"source_id": source_id,
 			"damage": damage,
+			"effective_damage": effective_health_damage,
 			"hp": unit["hp"],
 			"max_hp": unit["max_hp"],
 			"is_skill": is_skill,

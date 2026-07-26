@@ -104,8 +104,9 @@ related:
   `run_battle_hud_screen_tests.gd` 另对独立 `BattleHudScreen` 验证阶段/战线/炮击倒计时投影、
   编队对应的冲锋打断/装甲承炮提示、自动/手动技能状态、满能量 CTA、阵亡解释，以及 1-1
   首次技能的整卡点击提示与成功确认；Compatibility 844×390 截图和 Web Chrome smoke 均已
-  覆盖集成后的真实战斗画面。`ui-first-skill-tutorial-844x390.png` 另记录提示位置、触控目标和
-  战场留白；它不替代目标玩家首次理解盲测。
+  覆盖集成后的真实战斗画面。`ui-first-skill-tutorial-844x390.png` 另记录提示位置、触控目标、
+  中文技能名和战场留白；`ui-first-skill-result-844x390.png` 记录 accepted 事件驱动的实际伤害
+  确认。两者都不替代目标玩家首次理解盲测。
   `run_presentation_tests.gd` 进一步验证 accepted 装甲格挡事件在中画质产生文字、防御环、核心
   闪击、受控镜头震动与独立音效，在低画质/减少动态下保留文字和形状但移除次级闪击与震动；
   `ui-battle-guard-counter-844x390.png` 证明关键反馈位于基地轮廓上方且不遮挡技能卡。

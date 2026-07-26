@@ -28,6 +28,9 @@ var _warning_tactic := "点亮技能集中爆发"
 var _first_skill_tutorial := false
 var _first_skill_confirmed := false
 var _skill_confirmation_updates := 0
+var _skill_feedback_updates := 0
+var _skill_feedback_copy := ""
+var _skill_feedback_queue: Array[String] = []
 var _reinforcement_rally_updates := 0
 var _unit_hud: Dictionary = {}
 var _skill_buttons: Dictionary = {}
@@ -50,6 +53,9 @@ func configure(
 	_first_skill_tutorial = first_skill_tutorial
 	_first_skill_confirmed = false
 	_skill_confirmation_updates = 0
+	_skill_feedback_updates = 0
+	_skill_feedback_copy = ""
+	_skill_feedback_queue.clear()
 	_reinforcement_rally_updates = 10 if reinforcement_rally else 0
 	_warning_tactic = _warning_tactic_for(snapshots)
 	skill_mode_button.text = "技能：手动" if _manual_skills else "技能：自动"
@@ -73,6 +79,18 @@ func confirm_skill_requested() -> void:
 		return
 	_first_skill_confirmed = true
 	_skill_confirmation_updates = 5
+
+
+func apply_battle_events(events: Array[Dictionary]) -> void:
+	for event in events:
+		if StringName(event.get("type", &"")) != &"skill_used":
+			continue
+		var copy := _skill_result_copy(String(event.get("unit_id", "")), events)
+		if not copy.is_empty():
+			_skill_feedback_queue.append(copy)
+	if not _skill_feedback_queue.is_empty():
+		_skill_confirmation_updates = 0
+	_start_next_skill_feedback()
 
 
 func skill_buttons() -> Dictionary:
@@ -113,11 +131,20 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 			ready_unit_name = _unit_display_name(String(unit.get("unit_id", "")))
 	status_label.text = battle_status
 	status_label.add_theme_color_override("font_color", RED if not warnings.is_empty() else GOLD)
-	if _skill_confirmation_updates > 0:
+	if not warnings.is_empty():
+		return
+	if _skill_feedback_updates > 0:
+		status_label.text = _skill_feedback_copy
+		status_label.add_theme_color_override("font_color", GREEN)
+		_skill_feedback_updates -= 1
+		if _skill_feedback_updates == 0:
+			_skill_feedback_copy = ""
+			_start_next_skill_feedback()
+	elif _skill_confirmation_updates > 0:
 		status_label.text = "指令生效 · %s 正在释放主动技能" % ready_unit_name if not ready_unit_name.is_empty() else "指令生效 · 主动技能正在释放"
 		status_label.add_theme_color_override("font_color", GREEN)
 		_skill_confirmation_updates -= 1
-	elif _reinforcement_rally_updates > 0 and warnings.is_empty():
+	elif _reinforcement_rally_updates > 0:
 		status_label.text = "援军已就位 · 装甲前排承伤，冲锋快速压制"
 		status_label.add_theme_color_override("font_color", CYAN)
 		_reinforcement_rally_updates -= 1
@@ -126,13 +153,83 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		and not _first_skill_confirmed
 		and _manual_skills
 		and not ready_unit_name.is_empty()
-		and warnings.is_empty()
 	):
 		status_label.text = "%s · 技能已充满 · 点击下方发光的 %s 卡释放" % [
 			objective_copy if not objective_copy.is_empty() else "继续推进",
 			ready_unit_name,
 		]
 		status_label.add_theme_color_override("font_color", GOLD)
+
+
+func _skill_result_copy(unit_id: String, events: Array[Dictionary]) -> String:
+	var hud := _unit_hud.get(unit_id, {}) as Dictionary
+	var hero_name := String(hud.get("display_name", "主力"))
+	var skill_name := String(hud.get("skill_display_name", "主动技能"))
+	var damage := 0
+	var healed := 0
+	var shielded := 0
+	var shielded_units := 0
+	var revived := 0
+	var weakened := 0
+	var stunned := 0
+	var summoned := 0
+	var converted := 0
+	var armor_broken := 0
+	for event in events:
+		var event_type := StringName(event.get("type", &""))
+		var source_id := String(event.get("source_id", ""))
+		if (
+			event_type in [&"enemy_damaged", &"structure_damaged"]
+			and bool(event.get("is_skill", false))
+			and source_id == unit_id
+		):
+			damage += maxi(0, int(event.get("effective_damage", event.get("damage", 0))))
+		elif event_type == &"unit_healed" and source_id == unit_id:
+			healed += maxi(0, int(event.get("heal", 0)))
+		elif event_type == &"unit_shielded" and source_id == unit_id:
+			shielded += maxi(0, int(event.get("shield", 0)))
+			shielded_units += 1
+		elif event_type == &"unit_revived" and source_id == unit_id:
+			revived += 1
+		elif event_type == &"enemy_weakened" and source_id == unit_id:
+			weakened += 1
+		elif event_type == &"enemy_stunned" and source_id == unit_id:
+			stunned += 1
+		elif event_type == &"structure_armor_broken" and source_id == unit_id:
+			armor_broken += 1
+		elif event_type == &"unit_summoned" and String(event.get("owner_id", "")) == unit_id:
+			summoned += 1
+		elif event_type == &"unit_converted" and String(event.get("owner_id", "")) == unit_id:
+			converted += 1
+	var results: Array[String] = []
+	if damage > 0:
+		results.append("造成 %d 伤害" % damage)
+	if shielded > 0:
+		results.append("为 %d 人提供 %d 护盾" % [shielded_units, shielded])
+	if healed > 0:
+		results.append("修复 %d 生命" % healed)
+	if revived > 0:
+		results.append("救回 %d 名主力" % revived)
+	if weakened > 0:
+		results.append("削弱 %d 名守军" % weakened)
+	if stunned > 0:
+		results.append("压制 %d 名守军" % stunned)
+	if armor_broken > 0:
+		results.append("击破结构护甲")
+	if summoned > 0:
+		results.append("召唤 %d 名幼体" % summoned)
+	if converted > 0:
+		results.append("策反 %d 名守军" % converted)
+	if results.is_empty():
+		results.append("技能生效")
+	return "%s · %s：%s" % [hero_name, skill_name, " · ".join(results)]
+
+
+func _start_next_skill_feedback() -> void:
+	if _skill_feedback_updates > 0 or _skill_feedback_queue.is_empty():
+		return
+	_skill_feedback_copy = _skill_feedback_queue.pop_front()
+	_skill_feedback_updates = 5
 
 
 func _objective_copy(snapshot: Dictionary) -> String:
@@ -253,6 +350,7 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 		"root": root,
 		"button": skill,
 		"display_name": String(snapshot.get("display_name", unit_id)),
+		"skill_display_name": String(snapshot.get("skill_display_name", "主动技能")),
 		"hp_bar": hp["bar"],
 		"energy_bar": energy["bar"],
 		"hp_label": hp["value"],

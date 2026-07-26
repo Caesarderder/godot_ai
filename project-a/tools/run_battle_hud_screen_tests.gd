@@ -160,6 +160,61 @@ func _run() -> void:
 	})
 	_check(hud.status_label.text.contains("援军已就位"), "counterattack opens with a short reinforcement rally")
 	_check(hud.status_label.text.contains("装甲前排承伤") and hud.status_label.text.contains("冲锋快速压制"), "rally restates both learned responsibilities")
+	hud.configure([{
+		"hero_id": "hero_test",
+		"display_name": "装甲先锋",
+		"max_hp": 200,
+		"skill_id": "siege_shield",
+		"skill_display_name": "攻城护盾",
+		"skill_timing": "核心巨炮预警倒计时内释放",
+		"star": 2,
+	}], true)
+	hud.apply_battle_events([
+		{"type": &"skill_used", "unit_id": &"hero_test", "skill_id": "siege_shield"},
+		{"type": &"unit_shielded", "unit_id": &"hero_test", "source_id": &"hero_test", "shield": 80},
+		{"type": &"unit_shielded", "unit_id": &"hero_ally", "source_id": &"hero_test", "shield": 60},
+		{"type": &"structure_damaged", "source_id": &"hero_test", "damage": 75, "effective_damage": 40, "is_skill": true},
+	])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "火力区",
+		"road_progress": 600,
+		"warnings": [],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 0,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		hud.status_label.text.contains("装甲先锋 · 攻城护盾")
+		and hud.status_label.text.contains("造成 40 伤害")
+		and hud.status_label.text.contains("为 2 人提供 140 护盾"),
+		"accepted battle events become a named, quantified skill result"
+	)
+	hud.apply_snapshot({
+		"stage_index": 2,
+		"stage_count": 3,
+		"stage_name": "核心巨炮",
+		"road_progress": 800,
+		"warnings": [{"remaining_ticks": 9}],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 0,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		hud.status_label.text.contains("炮击 1.8秒") and not hud.status_label.text.contains("造成 40 伤害"),
+		"boss warning keeps priority over general skill feedback"
+	)
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

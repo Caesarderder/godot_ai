@@ -143,6 +143,25 @@ Game/BattleSession --snapshot/result--> App Shell --> UI scenes
 UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 App Shell 创建并连接一次，
 销毁 scene 即释放连接。
 
+主动技能即时反馈切片沿用现有三个 owner，不增加 `.tscn`、Resource 或 Autoload：
+
+```text
+BattleSession accepted events
+  --Array[Dictionary] same-tick facts--> BattleWorld (3D / audio presentation)
+  --battle_events_applied(detached events)--> App Shell (connect once per battle scene)
+  --direct apply_battle_events(...)---------> BattleHudScreen (short queued result copy)
+```
+
+| Signal | Emitter | Connected by | Receiver | Payload | Lifetime rule |
+|---|---|---|---|---|---|
+| `battle_events_applied(events: Array[Dictionary])` | `BattleWorld` | App Shell | App Shell → `BattleHudScreen.apply_battle_events` | 仅包含技能施放的确定性 tick 已接受事件深拷贝；不含 Node | 每个 `BattleWorld` 创建后连接一次，战斗 screen 销毁时随 owner 释放 |
+
+HUD 只汇总事件中已经给出的实际技能伤害、护盾、治疗、复活、控制、召唤和策反；不得从技能 ID
+重演战斗公式。Boss 炮击预警始终高于一般技能结果，避免反馈遮住下一次生存判断；多个同 tick
+技能结果进入短队列逐条显示，普通攻击 tick 不发此信号，避免把 5Hz 战斗流变成高频事件总线；
+减少动态模式仍保留文字确认。实现顺序是先证明本地信号携带 detached
+事件，再验证 HUD 真实汇总，最后跑首章战斗和 844×390 截图。
+
 ## Resource、运行态与 Autoload
 
 | 数据 | Godot 形式 | 规则 |

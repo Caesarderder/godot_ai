@@ -1849,6 +1849,7 @@ func _start_battle() -> void:
 	world_host.add_child(battle_world)
 	battle_world.battle_finished.connect(_finish_battle)
 	battle_world.battle_snapshot_updated.connect(_apply_battle_hud_snapshot)
+	battle_world.battle_events_applied.connect(_apply_battle_hud_events)
 	battle_world.configure_presentation(settings_store.effects_quality, settings_store.reduced_motion)
 	_build_battle_pause_overlay()
 	active_battle_stage = selected_stage_id
@@ -1906,6 +1907,13 @@ func _apply_battle_hud_snapshot(snapshot: Dictionary) -> void:
 		return
 	if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
 		battle_hud_screen.apply_snapshot(snapshot)
+
+
+func _apply_battle_hud_events(events: Array[Dictionary]) -> void:
+	if screen != Screen.BATTLE:
+		return
+	if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
+		battle_hud_screen.apply_battle_events(events)
 
 
 func _set_battle_paused(paused: bool) -> void:
