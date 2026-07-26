@@ -1,0 +1,72 @@
+extends SceneTree
+
+const TITLE_SCENE := preload("res://game/scenes/screens/title_screen.tscn")
+
+var failures: Array[String] = []
+
+
+func _init() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	var title := TITLE_SCENE.instantiate() as Control
+	title.call("configure", {
+		"primary_label": "唤醒 Gman",
+		"summary": "已夺回 0 座城镇 · 1 名战士仍在回应",
+		"objective": "联盟尚未发现这座工厂",
+	})
+	root.add_child(title)
+	await process_frame
+	var primary_button := title.get_node("%TitlePrimaryButton") as Button
+	var settings_button := title.get_node("%TitleSettingsButton") as Button
+	var help_button := title.get_node("%TitleHelpButton") as Button
+	var progress_summary := title.get_node("%TitleProgressSummary") as Label
+	var next_objective := title.get_node("%TitleNextObjective") as Label
+	_check(primary_button.text == "唤醒 Gman", "new-save primary action is projected")
+	_check(progress_summary.text.contains("1 名战士"), "durable roster summary is projected")
+	_check(next_objective.text.contains("尚未发现"), "next objective is projected")
+	_check(primary_button.has_focus(), "primary action receives initial focus")
+	_check(
+		primary_button.get_theme_stylebox("focus") is StyleBoxFlat,
+		"primary action owns a visible focus style"
+	)
+
+	var requested := {"id": ""}
+	title.connect("action_requested", func(action_id: String) -> void: requested["id"] = action_id)
+	primary_button.pressed.emit()
+	_check(requested["id"] == "primary", "primary button emits a semantic action")
+	settings_button.pressed.emit()
+	_check(requested["id"] == "settings", "settings button emits a semantic action")
+	help_button.pressed.emit()
+	_check(requested["id"] == "help", "help button emits a semantic action")
+
+	title.call("configure", {
+		"primary_label": "返回指挥室",
+		"summary": "已夺回 3 座城镇 · 3 名战士仍在回应",
+		"objective": "前线等待命令 · 灰镜高墙",
+	})
+	_check(primary_button.text == "返回指挥室", "returning-save primary action updates in place")
+	_check(next_objective.text.contains("灰镜高墙"), "returning-save objective updates in place")
+
+	title.call("configure", {
+		"primary_label": "重返前线",
+		"summary": "已夺回 25 座城镇 · 8 名战士仍在回应",
+		"objective": "灰镜防线已崩溃，战争仍未结束",
+	})
+	_check(primary_button.text == "重返前线", "completed-campaign action updates in place")
+	title.queue_free()
+	await process_frame
+	if failures.is_empty():
+		print("TITLE_SCREEN_TESTS_OK")
+		quit(0)
+		return
+	for failure in failures:
+		push_error(failure)
+	print("TITLE_SCREEN_TESTS_FAIL: %d issue(s)" % failures.size())
+	quit(1)
+
+
+func _check(condition: bool, message: String) -> void:
+	if not condition:
+		failures.append(message)

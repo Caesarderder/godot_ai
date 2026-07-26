@@ -8,6 +8,7 @@ const SCENES: Array[PackedScene] = [
 	preload("res://game/scenes/screens/factory_screen.tscn"),
 	preload("res://game/scenes/screens/goals_screen.tscn"),
 	preload("res://game/scenes/ui/stage_detail_panel.tscn"),
+	preload("res://game/scenes/screens/title_screen.tscn"),
 ]
 
 var failures: Array[String] = []

@@ -88,12 +88,12 @@ related:
 
 - Autoload 固定为 `SaveManager → Game → AppBootstrap`；
 - `WarZoneScreen`、`BattleHudScreen`、`BattleResultScreen`、`LegionScreen`、
-  `FactoryScreen`、`GoalsScreen` 和 `StageDetailPanel` 已拆成 authored scene；
+  `FactoryScreen`、`GoalsScreen`、`TitleScreen` 和 `StageDetailPanel` 已拆成 authored scene；
 - 场景只投影 view model 并发出语义信号，App Shell 只负责 sibling wiring、路由和命令；
 - 首章五关使用 typed `StageDefinition .tres`，固定 preload、稳定 ID 和启动校验；
 - 八个角色 GLB 通过 game-owned wrapper scene 使用，不依赖导入器内部节点名。
 
-仍可继续提取：标题、设置/帮助、指挥情报、研究蓝图和尾声。只在提取能降低玩家流程迭代风险、
+仍可继续提取：设置/帮助、指挥情报、研究蓝图和尾声。只在提取能降低玩家流程迭代风险、
 提供独立预览或独立测试价值时进行，不以“文件越多越架构化”为目标。
 
 退出证据：各 screen focused test、`run_app_bootstrap_tests.gd`、`run_stage_definition_tests.gd`、

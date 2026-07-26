@@ -20,6 +20,7 @@ const BattleHudScreenScene := preload("res://game/scenes/screens/battle_hud_scre
 const LegionScreenScene := preload("res://game/scenes/screens/legion_screen.tscn")
 const FactoryScreenScene := preload("res://game/scenes/screens/factory_screen.tscn")
 const GoalsScreenScene := preload("res://game/scenes/screens/goals_screen.tscn")
+const TitleScreenScene := preload("res://game/scenes/screens/title_screen.tscn")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const OnboardingCatalog := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
@@ -451,44 +452,22 @@ func _show_title() -> void:
 	_clear()
 	_build_factory_world()
 	var shell := _shell("灰镜战线", "地下工厂信号已恢复", true)
-	shell.name = "TitleScreen"
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(spacer)
-	var panel := _panel_vbox("来自废墟下方的信号", 10)
-	panel.custom_minimum_size = Vector2(440, 0)
-	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	var transmission := _label("“Gman，地表已经失守。\n如果这座工厂还能启动，我们就还有一支军队。”", 16, TEXT)
-	transmission.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	panel.add_child(transmission)
-	var title_progress := _title_progress_snapshot()
-	var progress_label := _label(String(title_progress["summary"]), 12, CYAN)
-	progress_label.name = "TitleProgressSummary"
-	progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	panel.add_child(progress_label)
-	var objective_label := _label(String(title_progress["objective"]), 12, MUTED)
-	objective_label.name = "TitleNextObjective"
-	objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	panel.add_child(objective_label)
-	var primary := _button(String(title_progress["primary_label"]), _show_base, true)
-	primary.name = "TitlePrimaryButton"
-	panel.add_child(primary)
-	var quiet_actions := HBoxContainer.new()
-	quiet_actions.add_theme_constant_override("separation", 8)
-	panel.add_child(quiet_actions)
-	var settings := _button("设置", Callable(self, "_show_settings").bind(Screen.TITLE), false)
-	settings.name = "TitleSettingsButton"
-	settings.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	quiet_actions.add_child(settings)
-	var help := _button("档案", Callable(self, "_show_help").bind(Screen.TITLE), false)
-	help.name = "TitleHelpButton"
-	help.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	quiet_actions.add_child(help)
-	shell.add_child(panel)
-	var lower_spacer := Control.new()
-	lower_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(lower_spacer)
-	primary.grab_focus()
+	shell.name = "TitleShell"
+	var title_screen := TitleScreenScene.instantiate() as Control
+	title_screen.call("configure", _title_progress_snapshot())
+	title_screen.connect("action_requested", _on_title_action_requested)
+	shell.add_child(title_screen)
+
+
+func _on_title_action_requested(action_id: String) -> void:
+	_play_ui_click()
+	match action_id:
+		"primary":
+			_show_base()
+		"settings":
+			_show_settings(Screen.TITLE)
+		"help":
+			_show_help(Screen.TITLE)
 
 
 func _title_progress_snapshot() -> Dictionary:

@@ -1,0 +1,84 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/ui/title_screen.gd" id="1_script"]
+
+[node name="TitleScreen" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="UpperSpacer" type="Control" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PanelCenter" type="CenterContainer" parent="."]
+layout_mode = 2
+
+[node name="TitleSignalPanel" type="PanelContainer" parent="PanelCenter"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+
+[node name="PanelMargin" type="MarginContainer" parent="PanelCenter/TitleSignalPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="Content" type="VBoxContainer" parent="PanelCenter/TitleSignalPanel/PanelMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleSignalHeading" type="Label" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+text = "  来自废墟下方的信号"
+
+[node name="TitleTransmission" type="Label" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "“Gman，地表已经失守。\n如果这座工厂还能启动，我们就还有一支军队。”"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="TitleProgressSummary" type="Label" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="TitleNextObjective" type="Label" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="TitlePrimaryButton" type="Button" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "继续战役"
+
+[node name="QuietActions" type="HBoxContainer" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleSettingsButton" type="Button" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content/QuietActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "设置"
+
+[node name="TitleHelpButton" type="Button" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content/QuietActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "档案"
+
+[node name="LowerSpacer" type="Control" parent="."]
+layout_mode = 2
+size_flags_vertical = 3

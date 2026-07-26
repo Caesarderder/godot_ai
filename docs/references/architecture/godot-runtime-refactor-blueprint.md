@@ -60,6 +60,7 @@ project-a/
     │   └── legion_screen.tscn                # 已实现：编队比较、招募与成员成长 owner
     │   └── factory_screen.tscn               # 已实现：资源、行动、设施与建造 HUD owner
     │   └── goals_screen.tscn                 # 已实现：目标链、任务、战令与成就 owner
+    │   └── title_screen.tscn                 # 已实现：存档感知标题入口与帮助/设置语义 owner
     ├── scripts/ui/
     │   └── stage_detail_panel.gd            # 已实现：只读投影 + attack_requested
     │   └── war_zone_screen.gd               # 已实现：战区导航 + sibling signal
@@ -68,6 +69,7 @@ project-a/
     │   └── legion_screen.gd                  # 已实现：军团只读 view + 领域动作请求
     │   └── factory_screen.gd                 # 已实现：工厂只读 view + 建造/设施语义请求
     │   └── goals_screen.gd                   # 已实现：长期目标只读 view + 领取/导航语义请求
+    │   └── title_screen.gd                   # 已实现：标题只读 view + primary/settings/help 信号
     ├── resources/definitions/               # 只读 `.tres`
     │   ├── stages/
     │   │   └── act_1/stage_1_1..5.tres      # 已实现：首30分钟关卡高频策划字段
@@ -95,6 +97,7 @@ project-a/
 | `LegionScreen` | 六槽阵型、职责/战力差比较、招募与成员成长 | 军团 screen | `configure(view)`；`tab_selected`、`action_requested` |
 | `FactoryScreen` | 固定资源条、行动/设施/建造互斥 HUD、3D 交互留白 | 基地 screen | `configure(view)`；`panel_selected`、`action_requested` |
 | `GoalsScreen` | 大中小目标、当前卡点、战役进度、任务、战令和成就 | 目标 screen | `configure(view)`；`tab_selected`、`action_requested` |
+| `TitleScreen` | 存档摘要、下一目标和开始/继续/终章入口 | 标题 screen | `configure(view)`；`action_requested` |
 | `Game` Autoload | 当前 `GameState`、CommandExecutor | 应用 | 查询快照、执行领域命令 |
 | `SaveManager` Autoload | 存档 adapter | 应用 | 有界加载/发布/备份；不持有 UI Node |
 | `BattleSession` | 确定性战斗运行态 | 单场战斗 | tick、command、snapshot、result |
@@ -149,8 +152,8 @@ Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` �
 5. 搜索确认旧构建函数无调用后再删除，不做横跨全部 screen 的大爆炸迁移。
 6. 每刀通过编辑器解析、focused tests、844×390 与窄屏视觉证据；关键流程再跑浏览器。
 
-七块 UI 与首个内容切片完成证据：`StageDetailPanel`、`WarZoneScreen`、`BattleHudScreen`、
-`BattleResultScreen`、`LegionScreen`、`FactoryScreen` 与 `GoalsScreen` 已拥有 authored
+八块 UI 与首个内容切片完成证据：`StageDetailPanel`、`WarZoneScreen`、`BattleHudScreen`、
+`BattleResultScreen`、`LegionScreen`、`FactoryScreen`、`GoalsScreen` 与 `TitleScreen` 已拥有 authored
 scene tree、延迟 configure 生命周期和单向语义信号；UI smoke、battle tests 与真实 844×390
 截图通过。首章 Boss 首屏可读到战力差、风险及两条已验证路线；结算首屏可读到奖励、高光、
 按永久角色 ID 统计的核心贡献、巨炮表现和下一行动。首章五关的推荐战力、倍率、Boss 耐久和
@@ -160,3 +163,5 @@ scene tree、延迟 configure 生命周期和单向语义信号；UI smoke、bat
 首章行动、设施详情和三步网格建造，而 App Shell 只保留 3D 世界、镜头/射线、选格和命令路由。
 `GoalsScreen` 已接管大/中/小目标、大小卡点、行动任务、30 级战令与永久成就；App Shell 只投影
 只读 view 并路由领域命令。
+`TitleScreen` 进一步接管存档感知的摘要、下一目标和三项入口；App Shell 只生成进度 view、
+播放统一点击反馈并路由到基地、设置或帮助。
