@@ -153,6 +153,7 @@ UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 Ap
 | 首章行动任务与目标条件 | `OnboardingTaskDefinition` / `OnboardingObjectiveDefinition` typed Resource + 七个任务、十个目标 `.tres` | 运行时共享只读；定义任务顺序、玩家文案、CTA、完成条件与奖励预算，不保存完成进度 |
 | 免费研究突破配方 | `ResearchBreakthroughCardDefinition` typed Resource + 十个 `.tres` | 运行时共享只读；恰好两名永久援军与八张研究物资，服务按定义原子发奖 |
 | UI view model | duplicate-safe Dictionary，后续按压力升级 typed value | 只读投影；不得保存 Node 引用 |
+| 本地试玩心流证据 | `LocalPlaytestJournal` 有界 JSON + 导出派生指标 | 默认关闭、仅白名单相对时间与语义动作；不联网、不记录 payload、角色 ID、设备或账号标识 |
 
 Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` 和 `Game` 先注册，
 最后注册的 `AppBootstrap` 是唯一组合根，显式把保存服务注入 Game 并幂等初始化。`Game._ready()`
@@ -209,6 +210,22 @@ Catalog 必须锁定七个任务、十个目标、稳定顺序和唯一 ID，并
 八张资源、聚合资源预算和唯一 card ID。`ResearchBreakthroughService` 是唯一发奖 owner，失败时
 不发布 candidate；`CommandExecutor` 仍负责 revision、业务键、保存与 receipt。结果页和首次编队
 场景只消费 detached event/view，页面重建不会重复发奖或推进长期招募保底。
+
+首章真人心流证据的所有权脊柱为：
+
+```text
+App Shell semantic screen / command / battle-input facts
+  --opt-in bounded record--> LocalPlaytestJournal
+  --derive only on read----> 12-milestone funnel + non-battle gap
+                              + manual-battle decision gap
+  --detached JSON download-> observer / neutral post-session interview
+```
+
+App Shell 只发布“进入页面、命令成功/失败、开战/结算、技能请求是否被接受、手动/自动切换、
+暂停/恢复、撤退”等语义事实，不发布命令 payload、永久角色 ID 或节点引用。Journal 是普通
+`RefCounted`，由 App Shell 持有且默认关闭；自动技能和暂停区间不得被计入手动战斗无输入时长。
+派生指标只用于定位录像中的迷路、误触和 90 秒停滞，不能代替玩家对目标理解、乐趣和继续意愿的
+中立访谈，也不能晋升为联网遥测或应用级 Autoload。
 
 ## 资产治理
 

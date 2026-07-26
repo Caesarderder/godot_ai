@@ -180,27 +180,34 @@ func _test_local_playtest_first_session_metrics() -> void:
 	var journal: RefCounted = LocalPlaytestJournalScript.new(path)
 	_check(journal.set_enabled(true, "test-metrics", 2000), "metrics fixture opts in")
 	var events: Array[Dictionary] = [
-		{"type": "battle_started", "details": {"stage_id": "stage_1_1"}, "time": 2012},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_1", "manual_skills": true}, "time": 2012},
+		{"type": "battle_input", "details": {"action": "skill", "accepted": true}, "time": 2022},
+		{"type": "battle_input", "details": {"action": "pause", "manual_skills": true}, "time": 2030},
+		{"type": "battle_input", "details": {"action": "resume", "manual_skills": true}, "time": 2050},
+		{"type": "battle_input", "details": {"action": "skill", "accepted": false}, "time": 2060},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_1", "outcome": "victory"}, "time": 2068},
 		{"type": "battle_started", "details": {"stage_id": "stage_1_3"}, "time": 2130},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_3", "outcome": "victory"}, "time": 2200},
 		{"type": "screen_view", "details": {"screen": "map"}, "time": 2208},
 		{"type": "screen_view", "details": {"screen": "base"}, "time": 2216},
 		{"type": "screen_view", "details": {"screen": "goals"}, "time": 2224},
-		{"type": "battle_started", "details": {"stage_id": "stage_1_4"}, "time": 2232},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_4", "manual_skills": true}, "time": 2232},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_4", "outcome": "defeat"}, "time": 2264},
 		{"type": "command_result", "details": {"command_type": "upgrade_hero_star", "ok": true}, "time": 2270},
 		{"type": "command_result", "details": {"command_type": "construct_facility", "ok": true}, "time": 2320},
 		{"type": "command_result", "details": {"command_type": "claim_research_breakthrough", "ok": true}, "time": 2370},
 		{"type": "command_result", "details": {"command_type": "assign_formation_slot", "ok": true, "revision_after": 7}, "time": 2374},
 		{"type": "command_result", "details": {"command_type": "assign_formation_slot", "ok": true, "revision_after": 8}, "time": 2378},
-		{"type": "battle_started", "details": {"stage_id": "stage_1_4", "deployed_heroes": 3}, "time": 2380},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_4", "deployed_heroes": 3, "manual_skills": true}, "time": 2380},
+		{"type": "battle_input", "details": {"action": "skill", "accepted": true}, "time": 2390},
+		{"type": "battle_input", "details": {"action": "skill_mode", "manual_skills": false}, "time": 2392},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_4", "outcome": "victory"}, "time": 2445},
 		{"type": "command_result", "details": {"command_type": "construct_facility", "ok": true}, "time": 2450},
 		{"type": "command_result", "details": {"command_type": "claim_factory_output", "ok": true}, "time": 2455},
 		{"type": "command_result", "details": {"command_type": "upgrade_hero_star", "ok": true}, "time": 2460},
 		{"type": "command_result", "details": {"command_type": "upgrade_facility", "ok": false}, "time": 2465},
-		{"type": "battle_started", "details": {"stage_id": "stage_1_5"}, "time": 2472},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_5", "manual_skills": true}, "time": 2472},
+		{"type": "battle_input", "details": {"action": "skill", "accepted": true}, "time": 2500},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_5", "outcome": "victory"}, "time": 2560},
 	]
 	for event in events:
@@ -228,6 +235,18 @@ func _test_local_playtest_first_session_metrics() -> void:
 	_eq(int(metrics.get("max_navigation_only_streak", 0)), 3, "derived funnel measures navigation-only churn")
 	_eq(int(metrics.get("failed_command_count", 0)), 1, "derived funnel counts rejected player commands")
 	_eq(int(metrics.get("repeated_battle_count", 0)), 1, "derived funnel counts the intentional high-wall retry")
+	_eq(int(metrics.get("manual_battle_input_count", 0)), 4, "manual battle inputs retain accepted, rejected and repeated decisions")
+	_eq(int(metrics.get("successful_manual_skill_count", 0)), 3, "accepted manual skills are counted without hero identifiers")
+	_eq(int(metrics.get("rejected_manual_skill_count", 0)), 1, "premature skill attempts remain visible as friction")
+	_eq(
+		int(metrics.get("longest_manual_battle_input_gap_seconds", 0)),
+		60,
+		"manual battle decision gaps exclude paused and auto-skill intervals"
+	)
+	_check(
+		not bool(metrics.get("has_90_second_manual_battle_input_gap", true)),
+		"sub-90-second manual battle cadence does not trigger the flow risk"
+	)
 	_eq(int(metrics.get("longest_non_battle_gap_seconds", 0)), 62, "derived funnel measures the longest non-battle pause")
 	_check(
 		not bool(metrics.get("has_90_second_non_battle_gap", true)),

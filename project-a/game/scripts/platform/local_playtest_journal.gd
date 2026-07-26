@@ -10,6 +10,7 @@ const ALLOWED_EVENT_TYPES: Array[String] = [
 	"screen_view",
 	"command_result",
 	"battle_started",
+	"battle_input",
 	"battle_finished",
 ]
 const ROOT_KEYS: Array[String] = [
@@ -101,6 +102,9 @@ func summary(now_unix: int = -1) -> Dictionary:
 	result["milestone_count"] = int(metrics.get("milestone_count", 0))
 	result["milestone_total"] = int(metrics.get("milestone_total", FIRST_SESSION_MILESTONES.size()))
 	result["longest_non_battle_gap_seconds"] = int(metrics.get("longest_non_battle_gap_seconds", 0))
+	result["longest_manual_battle_input_gap_seconds"] = int(
+		metrics.get("longest_manual_battle_input_gap_seconds", 0)
+	)
 	result["max_navigation_only_streak"] = int(metrics.get("max_navigation_only_streak", 0))
 	return result
 
@@ -128,8 +132,17 @@ func _derive_first_session_metrics() -> Dictionary:
 	var battle_attempts: Dictionary = {}
 	var failed_command_count := 0
 	var longest_non_battle_gap := 0
+	var longest_manual_battle_input_gap := 0
+	var manual_battle_input_count := 0
+	var successful_manual_skill_count := 0
+	var rejected_manual_skill_count := 0
+	var manual_inputs_by_stage: Dictionary = {}
+	var active_battle_stage := ""
+	var manual_battle_active := false
+	var manual_battle_last_input_elapsed := -1
 	var navigation_streak := 0
 	var max_navigation_streak := 0
+	var in_battle := false
 	var previous_event: Dictionary = {}
 	for event_value in report.get("events", []):
 		var event := event_value as Dictionary
@@ -137,11 +150,7 @@ func _derive_first_session_metrics() -> Dictionary:
 		var details := event.get("details", {}) as Dictionary
 		var elapsed := int(event.get("elapsed_seconds", 0))
 		if not previous_event.is_empty():
-			var previous_type := String(previous_event.get("event_type", ""))
-			var is_active_battle_interval := (
-				previous_type == "battle_started" and event_type == "battle_finished"
-			)
-			if not is_active_battle_interval:
+			if not in_battle:
 				longest_non_battle_gap = maxi(
 					longest_non_battle_gap,
 					elapsed - int(previous_event.get("elapsed_seconds", elapsed))
@@ -154,7 +163,11 @@ func _derive_first_session_metrics() -> Dictionary:
 		if event_type == "command_result" and not bool(details.get("ok", false)):
 			failed_command_count += 1
 		if event_type == "battle_started":
+			in_battle = true
 			var started_stage := String(details.get("stage_id", ""))
+			active_battle_stage = started_stage
+			manual_battle_active = bool(details.get("manual_skills", false))
+			manual_battle_last_input_elapsed = elapsed if manual_battle_active else -1
 			battle_attempts[started_stage] = int(battle_attempts.get(started_stage, 0)) + 1
 			if started_stage == "stage_1_1":
 				_mark_milestone("first_battle_started", elapsed, completed, milestone_seconds)
@@ -169,7 +182,54 @@ func _derive_first_session_metrics() -> Dictionary:
 					completed,
 					milestone_seconds
 				)
+		elif event_type == "battle_input":
+			var action := String(details.get("action", ""))
+			if action == "resume":
+				manual_battle_active = bool(details.get("manual_skills", true))
+				manual_battle_last_input_elapsed = elapsed if manual_battle_active else -1
+			elif action == "skill_mode":
+				if manual_battle_active and manual_battle_last_input_elapsed >= 0:
+					longest_manual_battle_input_gap = maxi(
+						longest_manual_battle_input_gap,
+						elapsed - manual_battle_last_input_elapsed
+					)
+				manual_battle_active = bool(details.get("manual_skills", false))
+				manual_battle_last_input_elapsed = elapsed if manual_battle_active else -1
+			elif action == "pause":
+				if manual_battle_active and manual_battle_last_input_elapsed >= 0:
+					longest_manual_battle_input_gap = maxi(
+						longest_manual_battle_input_gap,
+						elapsed - manual_battle_last_input_elapsed
+					)
+				manual_battle_active = false
+				manual_battle_last_input_elapsed = -1
+			elif action in ["skill", "retreat"] and manual_battle_active:
+				if manual_battle_last_input_elapsed >= 0:
+					longest_manual_battle_input_gap = maxi(
+						longest_manual_battle_input_gap,
+						elapsed - manual_battle_last_input_elapsed
+					)
+				manual_battle_last_input_elapsed = elapsed
+				manual_battle_input_count += 1
+				if not active_battle_stage.is_empty():
+					manual_inputs_by_stage[active_battle_stage] = (
+						int(manual_inputs_by_stage.get(active_battle_stage, 0)) + 1
+					)
+				if action == "skill":
+					if bool(details.get("accepted", false)):
+						successful_manual_skill_count += 1
+					else:
+						rejected_manual_skill_count += 1
 		elif event_type == "battle_finished":
+			if manual_battle_active and manual_battle_last_input_elapsed >= 0:
+				longest_manual_battle_input_gap = maxi(
+					longest_manual_battle_input_gap,
+					elapsed - manual_battle_last_input_elapsed
+				)
+			manual_battle_active = false
+			manual_battle_last_input_elapsed = -1
+			active_battle_stage = ""
+			in_battle = false
 			var stage_id := String(details.get("stage_id", ""))
 			var outcome := String(details.get("outcome", ""))
 			if stage_id == "stage_1_1" and outcome == "victory":
@@ -255,6 +315,12 @@ func _derive_first_session_metrics() -> Dictionary:
 		"first_meaningful_input_seconds": int(milestone_seconds.get("first_battle_started", -1)),
 		"longest_non_battle_gap_seconds": longest_non_battle_gap,
 		"has_90_second_non_battle_gap": longest_non_battle_gap >= 90,
+		"longest_manual_battle_input_gap_seconds": longest_manual_battle_input_gap,
+		"has_90_second_manual_battle_input_gap": longest_manual_battle_input_gap >= 90,
+		"manual_battle_input_count": manual_battle_input_count,
+		"successful_manual_skill_count": successful_manual_skill_count,
+		"rejected_manual_skill_count": rejected_manual_skill_count,
+		"manual_inputs_by_stage": manual_inputs_by_stage,
 		"max_navigation_only_streak": max_navigation_streak,
 		"failed_command_count": failed_command_count,
 		"battle_attempts": battle_attempts,
@@ -333,6 +399,8 @@ func _append_event(event_type: String, details: Dictionary, now_unix: int) -> vo
 
 
 func _is_duplicate_tail(event_type: String, details: Dictionary) -> bool:
+	if event_type == "battle_input":
+		return false
 	var events := report.get("events", []) as Array
 	if events.is_empty():
 		return false

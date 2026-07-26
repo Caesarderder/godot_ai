@@ -530,12 +530,13 @@ func _settings_view() -> Dictionary:
 		"reduced_motion": settings_store.reduced_motion,
 		"global_auto_skill": settings_store.global_auto_skill,
 		"local_playtest_logging": settings_store.local_playtest_logging,
-		"playtest_status": "首章里程碑 %d/%d · %d 条本地事件 · %d 分钟\n最长非战斗停滞 %d 秒 · 不含设备或账号标识" % [
+		"playtest_status": "首章里程碑 %d/%d · %d 条本地事件 · %d 分钟\n流程停滞 %d 秒 · 手动战斗无输入 %d 秒 · 不含设备或账号标识" % [
 			int(journal_summary.get("milestone_count", 0)),
 			int(journal_summary.get("milestone_total", 12)),
 			int(journal_summary.get("event_count", 0)),
 			int(journal_summary.get("duration_seconds", 0)) / 60,
 			int(journal_summary.get("longest_non_battle_gap_seconds", 0)),
+			int(journal_summary.get("longest_manual_battle_input_gap_seconds", 0)),
 		],
 		"storage_persistent": persistent,
 		"persistence_copy": (
@@ -1845,6 +1846,10 @@ func _toggle_battle_skill_mode() -> void:
 	if battle_world == null or not is_instance_valid(battle_world):
 		return
 	battle_manual_skills = not battle_manual_skills
+	playtest_journal.record_event("battle_input", {
+		"action": "skill_mode",
+		"manual_skills": battle_manual_skills,
+	})
 	for unit_id in battle_skill_buttons:
 		battle_world.set_auto_skill(StringName(unit_id), not battle_manual_skills)
 	if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
@@ -1855,7 +1860,12 @@ func _toggle_battle_skill_mode() -> void:
 func _request_battle_skill(unit_id: String) -> void:
 	if battle_world == null or not is_instance_valid(battle_world):
 		return
-	if battle_world.request_skill(StringName(unit_id)):
+	var accepted: bool = battle_world.request_skill(StringName(unit_id))
+	playtest_journal.record_event("battle_input", {
+		"action": "skill",
+		"accepted": accepted,
+	})
+	if accepted:
 		if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
 			battle_hud_screen.confirm_skill_requested()
 		_notify("已下达技能指令")
@@ -1881,6 +1891,11 @@ func _apply_battle_hud_snapshot(snapshot: Dictionary) -> void:
 func _set_battle_paused(paused: bool) -> void:
 	if screen != Screen.BATTLE or battle_world == null or not is_instance_valid(battle_world):
 		return
+	if battle_is_paused != paused:
+		playtest_journal.record_event("battle_input", {
+			"action": "pause" if paused else "resume",
+			"manual_skills": battle_manual_skills,
+		})
 	battle_is_paused = paused
 	battle_world.process_mode = Node.PROCESS_MODE_DISABLED if paused else Node.PROCESS_MODE_INHERIT
 	if battle_pause_overlay != null and is_instance_valid(battle_pause_overlay):
@@ -2723,7 +2738,8 @@ func _reward_text(reward: Dictionary) -> String:
 
 
 func _retreat() -> void:
-	if battle_world != null:
+	if battle_world != null and is_instance_valid(battle_world):
+		playtest_journal.record_event("battle_input", {"action": "retreat"})
 		battle_world.request_retreat()
 
 
