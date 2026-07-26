@@ -14,6 +14,8 @@ State labels:
 - [ ] `project-a/export_presets.cfg` has Web preset, single-thread export, release material include filter, PWA metadata, and no GDExtension support.
 - [ ] `project-a/release/LICENSES.md` reflects every shipped asset.
 - [ ] `run_font_coverage_tests.gd` proves every runtime ASCII/CJK/symbol codepoint exists in the shipped font.
+- [ ] `python3 tools/build_runtime_font_subset.py --inspect` matches the reviewed runtime character inventory;
+  any generated subset is built from the recorded upstream font with official `fonttools`, never by overwriting it.
 - [ ] `project-a/release/PRIVACY.md` reflects actual runtime data behavior.
 - [ ] `project-a/release/FAN-CONTENT-NOTICE.md` is reviewed for store/legal risk.
 - [ ] Headless tests pass:
