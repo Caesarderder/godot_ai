@@ -60,6 +60,7 @@ godot --headless --path project-a -s tools/run_ui_focus_tests.gd
 python3 project-a/tools/build_runtime_font_subset.py --inspect
 python3 project-a/tools/build_web_candidate.py
 cd project-a && node tools/run_web_browser_smoke.mjs
+cd project-a && node tools/run_web_first_battle_smoke.mjs
 ```
 
 浏览器 smoke 使用 Chrome DevTools Protocol 发出真实触控事件，进入可滚动设置页，下载并解析
@@ -74,6 +75,13 @@ v8 JSON 备份，再通过浏览器文件选择器完成预览与二次确认恢
 的 `release-candidate.json`，记录 Chrome 精确版本，并分别测量新 profile 冷启动、Service Worker
 接管后的热重载和服务器关闭后的离线重启。当前本地上限只用于发现回归，不能替代最低目标手机、
 真实移动网络、压缩/CDN 或生产源测量。
+
+首战 smoke 必须使用独立新 Chrome profile，从标题页经基地真实触控进入 1-1，在战斗窗口持续
+练习英雄卡技能输入，并等待正常领域结算；不允许改存档、加速引擎或调用测试后门。通过条件是
+IndexedDB 中真实 `save_v1.json` 的 schema/content 合同正确、`cleared_stages` 新增
+`stage_1_1`、尝试次数为 1，并且无运行时异常、非预期控制台错误或网络失败。脚本同时保存战斗中
+与“城镇已占领”结算页截图；重复技能卡触控只证明真实输入路径被执行，主动技能是否被玩家理解和
+成功释放仍由真人协议与本地试玩报告交叉确认。
 
 `build_web_candidate.py` 会先在工程目录之外执行一次不晋级的导入缓存预热，再执行两次独立导出，
 只有后两次完整文件哈希一致时才替换
@@ -198,6 +206,7 @@ python3 tools/release_audit.py --artifact-dir build/web
 - Web release export 和 artifact audit；
 - HTTP(S) 访问，不能用 `file://`；
 - 本机 Chrome CDP smoke：844×390 Canvas、首屏进入基地、PWA、控制台/网络和 `/userfs` 存档刷新往返；
+- 独立新档首战 smoke：真实进入并结算 1-1、技能卡触控、持久化通关与结算页证据；
 - Chrome Android 与 Safari iOS；
 - 前后台、音频手势、刷新/关闭恢复；
 - 8–12 小时离线结算和时间回拨；

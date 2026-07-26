@@ -186,6 +186,11 @@ related:
   PWA Service Worker 接管、在线刷新与关闭服务器后的离线重启；运行阶段无控制台/意外网络错误，
   `/userfs/.../save_v1.json` 在在线刷新及离线重启前后身份保持；设置页可下载合法 v8 JSON，再经
   浏览器文件选择器导回、预览、二次确认恢复，并将旧主档保留为 `.bak`。
+  `run_web_first_battle_smoke.mjs` 另用隔离新 profile 从标题经基地真实进入 1-1，持续发出英雄卡
+  触控并等待正常结算；当前 Chrome 150 于 844×390 在 53.7 秒完成，IndexedDB 主档记录
+  `stage_1_1` 通关且尝试次数为 1，全程 0 运行时异常、0 非预期控制台错误、0 网络失败。
+  `browser-first-battle-844x390.png` 与 `browser-first-battle-result-844x390.png` 分别保留
+  战斗目标 HUD 和“城镇已占领”结算证据；重复触控本身不冒充真人主动技能理解证据。
   候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
   legacy `scripts/main.gd` 并加入正式品牌启动图后，当前 PCK 约 `15.63 MB`，gzip 初始
   payload 约 `27.60 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB 目标高约 `7.60 MiB`。新增两条
