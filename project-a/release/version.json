@@ -12,7 +12,7 @@
   "privacy_claim": "zero intentional network collection; local browser-origin save and opt-in local playtest report only",
   "fan_content_notice_required": true,
   "artifact_audit_command": "python tools/release_audit.py --artifact-dir build/web",
-  "export_command": "godot --headless --path project-a --export-release Web build/web/index.html",
+  "export_command": "python3 tools/build_web_candidate.py",
   "external_evidence_required": [
     "Builda-controlled runtime/template identity or approved replacement path",
     "final HTTPS deployment URL and version id",

@@ -54,8 +54,7 @@ godot --headless --path project-a -s tools/run_first_30m_journey_tests.gd
 godot --headless --path project-a -s tools/run_platform_tests.gd
 godot --headless --path project-a -s tools/run_presentation_tests.gd
 godot --headless --path project-a -s tools/run_asset_3d_tests.gd
-godot --headless --path project-a --export-release Web build/web/index.html
-python3 project-a/tools/release_audit.py --artifact-dir project-a/build/web
+python3 project-a/tools/build_web_candidate.py
 cd project-a && node tools/run_web_browser_smoke.mjs
 ```
 
@@ -68,7 +67,13 @@ v8 JSON 备份，再通过浏览器文件选择器完成预览与二次确认恢
 390×844，确认短屏触控目标仍达到 48 CSS 像素、CSS 安全区探针生效、竖屏原生提示可读且输入被
 拦截、平板和超宽横屏可用，并在恢复 844×390 后不丢失当前页面。
 
-从仓库根执行导出后，产物审计也可在 `project-a/` 中运行：
+`build_web_candidate.py` 会先在工程目录之外执行一次不晋级的导入缓存预热，再执行两次独立导出，
+只有后两次完整文件哈希一致时才替换
+`build/web`。这避免导出图标再次被 Godot 导入并把 `.import` 边车污染进候选包，同时写入绑定
+commit、Godot 版本、线程模式和全量文件哈希的 `release-candidate.json`。正式候选要求
+`project-a` 工作区干净；仅调试脚本自身时可显式使用 `--allow-dirty`，但这种结果会被审计拒绝。
+
+已有候选产物也可单独复核：
 
 ```bash
 python3 tools/release_audit.py --artifact-dir build/web

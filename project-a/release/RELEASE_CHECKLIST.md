@@ -23,10 +23,12 @@ State labels:
 
 ## Local artifact gate
 
-- [ ] Export command is recorded:
-  - `godot --headless --path project-a --export-release Web build/web/index.html`
+- [ ] Candidate build command is recorded:
+  - `python3 project-a/tools/build_web_candidate.py`
 - [ ] Artifact files exist: `index.html`, `index.js`, `index.wasm`, `index.pck`.
 - [ ] Artifact sizes and SHA256 hashes are recorded.
+- [ ] `release-candidate.json` binds the clean source revision, Godot version, thread mode, full payload hashes, and matching second export.
+- [ ] No Godot editor/source sidecar such as `.import`, `.gd`, `.tscn`, `.tres`, or `.uid` ships.
 - [ ] No unexpected threaded runtime `.worker.js` file exists; a Godot PWA `index.service.worker.js` is expected when PWA is enabled.
 - [ ] `index.html` declares `GODOT_THREADS_ENABLED = false`.
 - [ ] PWA manifest/service worker output is either present and inspected or explicitly marked unsupported for this candidate.

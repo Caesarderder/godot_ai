@@ -35,7 +35,17 @@ REQUIRED_ARTIFACTS = [
     "index.js",
     "index.wasm",
     "index.pck",
+    "release-candidate.json",
 ]
+
+FORBIDDEN_ARTIFACT_SUFFIXES = {
+    ".gd",
+    ".godot",
+    ".import",
+    ".tscn",
+    ".tres",
+    ".uid",
+}
 
 REQUIRED_PRESET_SNIPPETS = {
     'name="Web"': "Web preset exists",
@@ -214,11 +224,30 @@ def _check_artifacts(artifact_dir: Path | None) -> tuple[list[str], list[str], d
     if artifact_dir is None:
         return passed, failed, evidence
 
-    artifact_dir = artifact_dir if artifact_dir.is_absolute() else PROJECT_ROOT / artifact_dir
+    if not artifact_dir.is_absolute():
+        cwd_candidate = (Path.cwd() / artifact_dir).resolve()
+        project_candidate = (PROJECT_ROOT / artifact_dir).resolve()
+        artifact_dir = cwd_candidate if cwd_candidate.exists() else project_candidate
     evidence["artifact_dir"] = str(artifact_dir)
     if not artifact_dir.exists():
         failed.append(f"artifact directory does not exist: {artifact_dir}")
         return passed, failed, evidence
+
+    shipped_files = sorted(
+        path for path in artifact_dir.rglob("*")
+        if path.is_file()
+    )
+    shipped_names = [path.relative_to(artifact_dir).as_posix() for path in shipped_files]
+    forbidden_files = [
+        name for name in shipped_names
+        if Path(name).suffix.lower() in FORBIDDEN_ARTIFACT_SUFFIXES
+    ]
+    evidence["shipped_files"] = shipped_names
+    evidence["forbidden_source_files"] = forbidden_files
+    if forbidden_files:
+        failed.append(f"forbidden editor/source sidecars shipped: {forbidden_files}")
+    else:
+        passed.append("no Godot editor/source sidecars shipped")
 
     manifest: dict[str, dict[str, int | str]] = {}
     for name in REQUIRED_ARTIFACTS:
@@ -231,6 +260,35 @@ def _check_artifacts(artifact_dir: Path | None) -> tuple[list[str], list[str], d
             "sha256": _sha256(path),
         }
         passed.append(f"artifact present with hash: {name}")
+
+    candidate_path = artifact_dir / "release-candidate.json"
+    if candidate_path.exists():
+        try:
+            candidate = json.loads(_load_text(candidate_path))
+            evidence["release_candidate"] = candidate
+            declared = candidate.get("artifact_manifest", {})
+            actual = {
+                path.relative_to(artifact_dir).as_posix(): {
+                    "bytes": path.stat().st_size,
+                    "sha256": _sha256(path),
+                }
+                for path in shipped_files
+                if path.name != "release-candidate.json"
+            }
+            if declared == actual:
+                passed.append("release candidate manifest matches every shipped payload file")
+            else:
+                failed.append("release candidate manifest does not match shipped payload files")
+            if candidate.get("reproducible") is True:
+                passed.append("release candidate records a matching second clean export")
+            else:
+                failed.append("release candidate does not prove a matching second clean export")
+            if candidate.get("project_dirty") is False:
+                passed.append("release candidate records a clean project-a source scope")
+            else:
+                failed.append("release candidate was built from a dirty project-a source scope")
+        except (json.JSONDecodeError, OSError) as exc:
+            failed.append(f"release-candidate.json is invalid: {exc}")
 
     workers = sorted(path.name for path in artifact_dir.glob("*.worker.js"))
     service_workers = [name for name in workers if name.endswith(".service.worker.js")]
