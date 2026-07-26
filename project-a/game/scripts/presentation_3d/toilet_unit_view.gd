@@ -32,6 +32,7 @@ var _hit_pulse: float = 0.0
 var _skill_pulse: float = 0.0
 var _status_tint: Color = Color.WHITE
 var _is_alive: bool = true
+var _reduced_motion: bool = false
 var _target_position: Vector3 = Vector3.ZERO
 var _use_external_model: bool = false
 
@@ -79,8 +80,24 @@ func apply_snapshot(unit_snapshot: Dictionary) -> void:
 		show()
 
 
+func set_reduced_motion(enabled: bool) -> void:
+	_reduced_motion = enabled
+	if _reduced_motion and _body_pivot != null:
+		_attack_pulse = 0.0
+		_hit_pulse = 0.0
+		_skill_pulse = 0.0
+		_body_pivot.position = Vector3.ZERO
+		_body_pivot.scale = Vector3.ONE
+
+
 func play_battle_event(event: Dictionary) -> void:
 	var event_type: StringName = event.get("type", &"")
+	if _reduced_motion:
+		if event_type == &"skill_used" and event.get("unit_id", &"") == unit_id:
+			_status_tint = _skill_color(String(event.get("skill_id", "")))
+		elif event_type in [&"unit_healed", &"unit_shielded", &"unit_revived"] and event.get("unit_id", &"") == unit_id:
+			_status_tint = Color("#77f2a2")
+		return
 	if event_type == &"attack_started" and event.get("unit_id", &"") == unit_id:
 		_attack_pulse = 1.0
 	elif event_type in [&"attack_hit", &"unit_damaged"] and event.get("unit_id", &"") == unit_id:
@@ -102,6 +119,11 @@ func _process(delta: float) -> void:
 		return
 	_anim_time += delta
 	position = position.lerp(_target_position, minf(1.0, delta * 7.0))
+	if _reduced_motion:
+		_body_pivot.position = Vector3.ZERO
+		_body_pivot.scale = Vector3.ONE
+		_name_label.modulate = _status_tint
+		return
 	_attack_pulse = maxf(0.0, _attack_pulse - delta * 4.5)
 	_hit_pulse = maxf(0.0, _hit_pulse - delta * 6.0)
 	_skill_pulse = maxf(0.0, _skill_pulse - delta * 2.8)

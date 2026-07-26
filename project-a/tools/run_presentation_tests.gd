@@ -62,6 +62,32 @@ func _check_reduced_motion_low_quality() -> void:
 	_ok(float(world.get("_shake_scale")) == 0.0, "reduced motion disables shake scale")
 	world.call("_add_camera_shake", 1.0, 1.0)
 	_ok(float(world.get("_shake_time")) == 0.0, "reduced motion blocks camera shake")
+	var unit_view_script: Script = load("res://game/scripts/presentation_3d/toilet_unit_view.gd")
+	var unit_view := unit_view_script.new() as Node3D
+	unit_view.call("setup", {
+		"unit_id": &"reduced_motion_unit",
+		"display_name": "减少动态测试",
+		"team": &"ally",
+		"slot": 0,
+		"hp": 100,
+		"max_hp": 100,
+		"alive": true,
+	})
+	world.get_node("AttackingArmy").add_child(unit_view)
+	unit_view.call("set_reduced_motion", true)
+	unit_view.call("play_battle_event", {
+		"type": &"skill_used",
+		"unit_id": &"reduced_motion_unit",
+		"skill_id": "test_skill",
+	})
+	unit_view.call("_process", 0.2)
+	var body_pivot := unit_view.get_node("BodyPivot") as Node3D
+	_eq(body_pivot.position, Vector3.ZERO, "reduced motion removes unit bob and attack lunge")
+	_eq(body_pivot.scale, Vector3.ONE, "reduced motion removes unit hit and skill squash")
+	world.configure_presentation("low", false)
+	world.set("_shake_time", 0.5)
+	world.configure_presentation("low", true)
+	_ok(float(world.get("_shake_time")) == 0.0, "live reduced-motion toggle clears active camera shake")
 	for _index in range(5):
 		world.call("_spawn_explosion", 500, 1)
 	_ok(int(world.get("_active_high_vfx")) <= 2, "low quality explosion cap is enforced")

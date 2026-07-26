@@ -105,6 +105,10 @@ func configure_presentation(effects_quality: String = "medium", reduced_motion: 
 		_motion_scale = minf(_motion_scale, 0.45)
 		_shake_time = 0.0
 		_shake_intensity = 0.0
+	for view_value in _unit_views.values():
+		var view := view_value as Node
+		if view != null and view.has_method("set_reduced_motion"):
+			view.call("set_reduced_motion", _reduced_motion)
 
 
 func request_skill(unit_id: StringName) -> bool:
@@ -451,6 +455,8 @@ func _sync_unit_view(unit: Dictionary) -> void:
 		_units_root.add_child(view)
 		view.setup(unit)
 		_unit_views[unit_id] = view
+	if view.has_method("set_reduced_motion"):
+		view.call("set_reduced_motion", _reduced_motion)
 	view.apply_snapshot(unit)
 
 
@@ -558,6 +564,9 @@ func _apply_structure_snapshot(view: Node3D, data: Dictionary) -> void:
 
 
 func _pulse_structure(view: Node3D) -> void:
+	if _reduced_motion:
+		view.scale = Vector3.ONE
+		return
 	var tween := view.create_tween()
 	tween.tween_property(view, "scale", Vector3(1.08, 0.92, 1.08), 0.06)
 	tween.tween_property(view, "scale", Vector3.ONE, 0.12)

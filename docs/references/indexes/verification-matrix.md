@@ -139,6 +139,11 @@ related:
   专属数据升星、招募英雄六槽替换和顶层待领取计数；
   `ui-pass-844x390.png`、`ui-achievements-844x390.png`、`ui-recruit-result-844x390.png`、
   `ui-formation-edit-844x390.png` 提供本机渲染证据。
+- 可访问性本地基线：`run_ui_focus_tests.gd` 验证作者场景和动态按钮均可聚焦且有高对比焦点样式；
+  `run_font_coverage_tests.gd` 扫描运行时中文字符覆盖；`run_presentation_tests.gd` 验证“减少动态”
+  会即时清除镜头震动，并关闭单位呼吸摆动、受击缩放和技能前冲，同时保留血条、状态颜色、
+  炮击文字倒计时、技能结果和胜负结算等静音可读反馈。屏幕阅读器语义仍须在真实浏览器/设备验证，
+  自动测试不能替代该项。
 - 仍缺：Firefox 桌面、Android Chrome、iOS Safari、生产 HTTPS、真人首 20–30 分钟及最终 IP/商店审查。
 
 ## 必测不变量
