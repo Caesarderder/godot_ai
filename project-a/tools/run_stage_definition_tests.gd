@@ -26,6 +26,8 @@ func _init() -> void:
 		_check(String(config.get("threat_summary", "")).strip_edges() != "", "%s owns player-facing threat copy" % stage_id)
 		_check(String(config.get("counter_hint", "")).strip_edges() != "", "%s owns player-facing counter copy" % stage_id)
 	var boss := StageCatalogScript.stage("stage_1_5")
+	var opening := StageCatalogScript.stage("stage_1_1")
+	_check(int(opening.get("structure_hp_bp", 0)) == 9500, "opening effective durability multiplier is authored")
 	_check(int(boss.get("structure_hp_bp", 0)) == 8500, "boss effective durability multiplier is authored")
 	if failures.is_empty():
 		print("STAGE_DEFINITION_TESTS_OK")

@@ -11,6 +11,6 @@ display_name = "1-1 无防备城市"
 recommended_power = 1950
 enemy_power_bp = 6200
 solo_pressure_bp = 10000
-structure_hp_bp = 10000
+structure_hp_bp = 9500
 threat_summary = "城市没有组织防守；先撞开废弃路障，再摧毁城市目标。"
 counter_hint = "让 Gman 自动推进，能量充满后点击头像快速突破路障。"
