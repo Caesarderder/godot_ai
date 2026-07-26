@@ -15,6 +15,11 @@ const ARTIFACT_DIR = resolve(PROJECT_DIR, "build/web");
 const EVIDENCE_DIR = resolve(PROJECT_DIR, "artifacts");
 const CHROME = process.env.GODOT_WEB_SMOKE_CHROME
 	?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const LOCAL_STARTUP_BUDGET_MS = {
+	coldEngineReady: 15000,
+	warmEngineReady: 10000,
+	offlineEngineReady: 10000,
+};
 const MIME = {
 	".html": "text/html; charset=utf-8",
 	".js": "text/javascript; charset=utf-8",
@@ -222,6 +227,17 @@ async function main() {
 	for (const file of ["index.html", "index.js", "index.wasm", "index.pck"]) {
 		await readFile(join(ARTIFACT_DIR, file));
 	}
+	const releaseCandidate = JSON.parse(
+		await readFile(join(ARTIFACT_DIR, "release-candidate.json"), "utf8"),
+	);
+	if (
+		releaseCandidate.project !== "project-a"
+		|| releaseCandidate.project_dirty !== false
+		|| releaseCandidate.reproducible !== true
+		|| !/^[0-9a-f]{40}$/.test(releaseCandidate.revision ?? "")
+	) {
+		throw new Error("Web artifact is not a clean reproducible project-a release candidate");
+	}
 	await readFile(CHROME);
 	const profile = await mkdtemp(join(tmpdir(), "godot-web-smoke-"));
 	const downloadDir = join(profile, "downloads");
@@ -238,7 +254,7 @@ async function main() {
 		`--remote-debugging-port=${debugPort}`,
 		`--user-data-dir=${profile}`,
 		"--window-size=844,390",
-		url,
+		"about:blank",
 	], { stdio: ["ignore", "pipe", "pipe"] });
 	let chromeStderr = "";
 	chrome.stderr.on("data", (chunk) => { chromeStderr += String(chunk); });
@@ -248,7 +264,7 @@ async function main() {
 			const response = await fetch(`http://127.0.0.1:${debugPort}/json/list`);
 			if (!response.ok) return null;
 			const values = await response.json();
-			return values.find((value) => value.type === "page" && value.url.startsWith(url));
+			return values.find((value) => value.type === "page");
 		});
 		cdp = new CdpSession(target.webSocketDebuggerUrl);
 		await cdp.open();
@@ -274,6 +290,7 @@ async function main() {
 			cdp.send("Network.enable"),
 			cdp.send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: downloadDir }),
 		]);
+		const browserVersion = await cdp.send("Browser.getVersion");
 		await cdp.send("Emulation.setDeviceMetricsOverride", {
 			width: 844,
 			height: 390,
@@ -284,6 +301,8 @@ async function main() {
 			enabled: true,
 			maxTouchPoints: 5,
 		});
+		const coldStartedAt = Date.now();
+		await cdp.send("Page.navigate", { url });
 		const boot = await waitFor("Godot canvas boot", async () => {
 			const value = await evaluate(cdp, `(() => {
 				const canvas = document.querySelector("canvas");
@@ -291,12 +310,22 @@ async function main() {
 				if (text.includes("WebGL2") && text.includes("missing")) {
 					throw new Error(text.trim());
 				}
-				return canvas && canvas.width === 844 && canvas.height === 390
-					? { width: canvas.width, height: canvas.height, ready: document.readyState }
+				return !document.getElementById("status")
+					&& canvas && canvas.width === 844 && canvas.height === 390
+					? {
+						width: canvas.width,
+						height: canvas.height,
+						ready: document.readyState,
+						navigation: performance.getEntriesByType("navigation")[0]?.toJSON() ?? {},
+					}
 					: null;
 			})()`);
 			return value?.ready === "complete" ? value : null;
 		}, 30000);
+		const coldEngineReadyMs = Date.now() - coldStartedAt;
+		if (coldEngineReadyMs > LOCAL_STARTUP_BUDGET_MS.coldEngineReady) {
+			throw new Error(`cold engine ready exceeded local budget: ${coldEngineReadyMs}ms`);
+		}
 		await new Promise((accept) => setTimeout(accept, 2500));
 		await screenshot(cdp, "browser-title-844x390.png");
 		await setViewport(cdp, 568, 320, "small landscape browser viewport");
@@ -399,15 +428,21 @@ async function main() {
 			exceptions.length = 0;
 			consoleErrors.length = 0;
 			failedRequests.length = 0;
+			const warmStartedAt = Date.now();
 			await cdp.send("Page.reload", { ignoreCache: false });
 		await waitFor("Godot canvas reload", async () => {
 			const value = await evaluate(cdp, `(() => {
 				const canvas = document.querySelector("canvas");
-				return document.readyState === "complete" && canvas
+				return !document.getElementById("status")
+					&& document.readyState === "complete" && canvas
 					&& canvas.width === 844 && canvas.height === 390;
 			})()`);
 			return value === true;
 		}, 30000);
+		const warmEngineReadyMs = Date.now() - warmStartedAt;
+		if (warmEngineReadyMs > LOCAL_STARTUP_BUDGET_MS.warmEngineReady) {
+			throw new Error(`warm engine ready exceeded local budget: ${warmEngineReadyMs}ms`);
+		}
 		await new Promise((accept) => setTimeout(accept, 1800));
 		const storageAfterReload = await evaluate(cdp, `Promise.all([
 			indexedDB.databases ? indexedDB.databases() : Promise.resolve([])
@@ -437,15 +472,21 @@ async function main() {
 			failedRequests.length = 0;
 			await new Promise((accept, reject) => server.close((error) => error ? reject(error) : accept()));
 			serverClosed = true;
+		const offlineStartedAt = Date.now();
 		await cdp.send("Page.reload", { ignoreCache: false });
 		await waitFor("offline PWA canvas boot", async () => {
 			const value = await evaluate(cdp, `(() => {
 				const canvas = document.querySelector("canvas");
-				return document.readyState === "complete" && canvas
+				return !document.getElementById("status")
+					&& document.readyState === "complete" && canvas
 					&& canvas.width === 844 && canvas.height === 390;
 			})()`);
 			return value === true;
 		}, 30000);
+		const offlineEngineReadyMs = Date.now() - offlineStartedAt;
+		if (offlineEngineReadyMs > LOCAL_STARTUP_BUDGET_MS.offlineEngineReady) {
+			throw new Error(`offline engine ready exceeded local budget: ${offlineEngineReadyMs}ms`);
+		}
 		await new Promise((accept) => setTimeout(accept, 1800));
 		const offlineStorage = await evaluate(cdp, STORAGE_INSPECTION_EXPRESSION);
 		await screenshot(cdp, "browser-offline-844x390.png");
@@ -507,7 +548,23 @@ async function main() {
 		console.log("WEB_BROWSER_SMOKE_PASS");
 		console.log(JSON.stringify({
 			url,
+			candidate: {
+				revision: releaseCandidate.revision,
+				version: releaseCandidate.version,
+				godotVersion: releaseCandidate.godot_version,
+			},
+			browser: {
+				product: browserVersion.product,
+				userAgent: browserVersion.userAgent,
+				jsVersion: browserVersion.jsVersion,
+			},
 			canvas: boot,
+			startupMs: {
+				coldEngineReady: coldEngineReadyMs,
+				warmEngineReady: warmEngineReadyMs,
+				offlineEngineReady: offlineEngineReadyMs,
+				budget: LOCAL_STARTUP_BUDGET_MS,
+			},
 				serviceWorkers: registrations,
 					touchInput: true,
 					saveBackupDownload: true,

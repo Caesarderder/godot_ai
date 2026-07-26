@@ -40,7 +40,8 @@ State labels:
 - [ ] Final HTTPS URL and deployment/version id.
 - [ ] Correct production MIME types, especially `application/wasm`.
 - [ ] Compression/cache/security headers.
-- [ ] Fresh-cache and warm-cache startup timings.
+- [x] Local Chrome fresh-profile, Service Worker warm-reload, and offline engine-ready timings are recorded against explicit local ceilings.
+- [ ] Production-origin fresh-cache and warm-cache transfer/startup timings pass on the minimum target device.
 - [x] Google Chrome desktop HTTP smoke, including touch input, online reload, server shutdown,
   offline PWA restart, and IndexedDB save identity (`node tools/run_web_browser_smoke.mjs`).
 - [ ] Firefox desktop smoke.
