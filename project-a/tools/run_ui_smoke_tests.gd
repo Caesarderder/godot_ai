@@ -628,6 +628,11 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(instance.find_child("TitlePrimaryButton", true, false) != null, "SLG shell boots into a dedicated title screen")
 	_ok(instance.find_child("TitleSettingsButton", true, false) != null, "title screen exposes settings before entering the campaign")
 	_ok(instance.find_child("TitleHelpButton", true, false) != null, "title screen exposes gameplay help before entering the campaign")
+	var music_director := instance.find_child("MusicDirector", true, false)
+	_ok(
+		music_director != null and music_director.current_state() == &"silent",
+		"title stays silent before a player gesture unlocks Web audio"
+	)
 	var fresh_primary := instance.find_child("TitlePrimaryButton", true, false) as Button
 	var title_summary := instance.find_child("TitleProgressSummary", true, false) as Label
 	var title_objective := instance.find_child("TitleNextObjective", true, false) as Label
@@ -680,6 +685,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_show_settings", 2)
 	await _wait_frames(3)
 	var volume_slider := instance.find_child("SettingsMasterVolumeSlider", true, false) as HSlider
+	var music_volume_slider := instance.find_child("SettingsMusicVolumeSlider", true, false) as HSlider
 	var quality_option := instance.find_child("SettingsEffectsQualityOption", true, false) as OptionButton
 	var reduced_toggle := instance.find_child("SettingsReducedMotionToggle", true, false) as CheckButton
 	var global_auto_toggle := instance.find_child("SettingsGlobalAutoSkillToggle", true, false) as CheckButton
@@ -693,6 +699,10 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	var playtest_toggle := instance.find_child("SettingsLocalPlaytestToggle", true, false) as CheckButton
 	var settings_help := instance.find_child("SettingsHelpButton", true, false) as Button
 	_ok(volume_slider != null and volume_slider.custom_minimum_size.y >= 44.0, "SLG settings volume slider is touch sized")
+	_ok(
+		music_volume_slider != null and music_volume_slider.custom_minimum_size.y >= 44.0,
+		"SLG settings exposes a touch-sized independent music mix"
+	)
 	_ok(quality_option != null and quality_option.item_count == 3, "SLG settings exposes three effects quality levels")
 	_ok(reduced_toggle != null and reduced_toggle.custom_minimum_size.y >= 44.0, "SLG settings exposes reduced motion")
 	_ok(global_auto_toggle != null and global_auto_toggle.custom_minimum_size.y >= 44.0, "SLG settings exposes global auto skill")
@@ -716,6 +726,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(settings_store != null, "SLG shell owns the persistent SettingsStore")
 	if settings_store != null:
 		settings_store.set_master_volume(37)
+		settings_store.set_music_volume(33)
 		settings_store.set_effects_quality("high")
 		settings_store.set_reduced_motion(true)
 		settings_store.set_global_auto_skill(true)
@@ -829,6 +840,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.set("construction_cell", Vector2i(-1, 0))
 	instance.call("_show_base")
 	await _wait_frames(3)
+	_ok(music_director.current_state() == &"base", "factory route selects the low-priority industrial ambience")
 	var confirm_porcelain := instance.find_child("ConfirmFacilityConstruction", true, false) as Button
 	_ok(confirm_porcelain != null and not confirm_porcelain.disabled, "an empty grid cell enables explicit construction confirmation")
 	if confirm_porcelain != null:
@@ -1129,6 +1141,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		_ok(_tree_has_text(instance, "无尽前线 1"), "epilogue continuation reaches the first endless stage")
 	instance.call("_start_battle")
 	await _wait_frames(6)
+	_ok(music_director.current_state() == &"battle", "ordinary frontline route selects the battle music state")
 	var pause_button := instance.find_child("BattlePauseButton", true, false) as Button
 	var skill_mode_button := instance.find_child("BattleSkillModeButton", true, false) as Button
 	var tactical_status := instance.find_child("BattleTacticalStatus", true, false) as Label

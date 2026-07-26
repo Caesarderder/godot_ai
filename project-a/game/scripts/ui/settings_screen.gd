@@ -19,6 +19,8 @@ const GREEN := Color("#78b982")
 @onready var data_panel: PanelContainer = %SettingsDataPanel
 @onready var volume: HSlider = %SettingsMasterVolumeSlider
 @onready var volume_value: Label = %SettingsMasterVolumeValue
+@onready var music_volume: HSlider = %SettingsMusicVolumeSlider
+@onready var music_volume_value: Label = %SettingsMusicVolumeValue
 @onready var quality: OptionButton = %SettingsEffectsQualityOption
 @onready var reduced_motion: CheckButton = %SettingsReducedMotionToggle
 @onready var global_auto_skill: CheckButton = %SettingsGlobalAutoSkillToggle
@@ -38,6 +40,7 @@ var _projecting := false
 func _ready() -> void:
 	_apply_theme()
 	volume.value_changed.connect(_on_volume_changed)
+	music_volume.value_changed.connect(_on_music_volume_changed)
 	quality.item_selected.connect(_on_quality_selected)
 	reduced_motion.toggled.connect(_emit_setting.bind("reduced_motion"))
 	global_auto_skill.toggled.connect(_emit_setting.bind("global_auto_skill"))
@@ -65,6 +68,8 @@ func _apply_view() -> void:
 	_projecting = true
 	volume.value = clampf(float(_view.get("master_volume", 80)), 0.0, 100.0)
 	volume_value.text = "%d" % roundi(volume.value)
+	music_volume.value = clampf(float(_view.get("music_volume", 55)), 0.0, 100.0)
+	music_volume_value.text = "%d" % roundi(music_volume.value)
 	var quality_id := String(_view.get("effects_quality", "medium"))
 	quality.select(maxi(0, ["low", "medium", "high"].find(quality_id)))
 	reduced_motion.button_pressed = bool(_view.get("reduced_motion", false))
@@ -93,6 +98,12 @@ func _on_volume_changed(value: float) -> void:
 	volume_value.text = "%d" % roundi(value)
 	if not _projecting:
 		setting_changed.emit("master_volume", value)
+
+
+func _on_music_volume_changed(value: float) -> void:
+	music_volume_value.text = "%d" % roundi(value)
+	if not _projecting:
+		setting_changed.emit("music_volume", value)
 
 
 func _on_quality_selected(index: int) -> void:
@@ -137,6 +148,7 @@ func _apply_theme() -> void:
 	import_preview.add_theme_color_override("font_color", GOLD)
 	playtest_status.add_theme_color_override("font_color", GREEN)
 	volume_value.add_theme_color_override("font_color", CYAN)
+	music_volume_value.add_theme_color_override("font_color", CYAN)
 
 
 func _style_button(button: Button, primary: bool) -> void:

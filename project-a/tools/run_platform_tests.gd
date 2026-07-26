@@ -37,6 +37,7 @@ func _test_settings_defaults() -> void:
 	_check(not bool(result.get("ok", true)), "missing settings reports a load miss")
 	_eq(store.to_dictionary(), {
 		"master_volume": 80,
+		"music_volume": 55,
 		"effects_quality": "medium",
 			"reduced_motion": false,
 			"global_auto_skill": false,
@@ -50,6 +51,7 @@ func _test_settings_roundtrip() -> void:
 	_cleanup_settings(path)
 	var store: RefCounted = SettingsStoreScript.new(path)
 	store.set_master_volume(42)
+	store.set_music_volume(31)
 	store.set_effects_quality("high")
 	store.set_reduced_motion(true)
 	store.set_global_auto_skill(true)
@@ -76,6 +78,7 @@ func _test_settings_corrupt_file_returns_defaults() -> void:
 	_check(not bool(result.get("ok", true)), "corrupt settings report failure")
 	_eq(store.to_dictionary(), {
 		"master_volume": 80,
+		"music_volume": 55,
 		"effects_quality": "medium",
 			"reduced_motion": false,
 			"global_auto_skill": false,
@@ -98,6 +101,7 @@ func _test_settings_normalizes_ranges() -> void:
 	_check(bool(result.get("ok", false)), "normalizable settings load")
 	_eq(store.to_dictionary(), {
 		"master_volume": 100,
+		"music_volume": 55,
 		"effects_quality": "low",
 			"reduced_motion": true,
 			"global_auto_skill": false,
@@ -105,6 +109,7 @@ func _test_settings_normalizes_ranges() -> void:
 	}, "settings ranges and enums normalize")
 	store.apply_values({
 		"master_volume": -9,
+		"music_volume": 140,
 		"effects_quality": "ultra",
 			"reduced_motion": true,
 			"global_auto_skill": true,
@@ -112,6 +117,7 @@ func _test_settings_normalizes_ranges() -> void:
 	})
 	_eq(store.to_dictionary(), {
 		"master_volume": 0,
+		"music_volume": 100,
 		"effects_quality": "medium",
 		"reduced_motion": true,
 		"global_auto_skill": true,

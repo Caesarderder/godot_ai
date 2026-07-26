@@ -108,8 +108,10 @@ flowchart TD
 2. `Game`：持有 live `GameState` 和 `CommandExecutor`，只在耐久写入成功后交换候选状态。
 3. `AppBootstrap`：显式取得前两项服务，幂等启动并暴露失败状态。
 
-`WebRuntime`、音频、表现与本地试玩日志由 App Shell 或功能场景拥有，不升级为全局服务。当前没有
-为了“解耦”而建立万能 EventBus；同一功能内优先直接调用/typed signal，跨场景事件也不得执行命令或发奖励。
+`WebRuntime`、音频、表现与本地试玩日志由 App Shell 或功能场景拥有，不升级为全局服务。
+`MusicDirector.tscn` 是 App Shell 应用生命周期子场景，以两个 Stream 播放器保持跨页面音乐
+连续并处理淡化/后台暂停；它不保存领域或页面状态，也不是 Autoload。当前没有为了“解耦”而建立
+万能 EventBus；同一功能内优先直接调用/typed signal，跨场景事件也不得执行命令或发奖励。
 
 ## 状态、命令和持久化
 
@@ -171,7 +173,9 @@ BattleScreen (Node)
 - Language：纯 GDScript；不使用 C#、原生平台插件或未编译 Web 版本的 GDExtension。
 - Threads：默认关闭，减少 Safari/iOS 与托管站点兼容问题。确需开启时，托管必须提供 HTTPS、COOP/COEP 和完整跨源隔离。
 - PWA：开启主屏幕图标、display mode 和离线启动缓存；缓存可能被浏览器回收。
-- Audio：当前使用程序化原创音效并由用户点击开始进入游戏；生产源首次手势解锁仍需真机验证。
+- Audio：审计过的 OGG 音效/战果曲与两条 CC0 循环音乐均走 Stream 或有界音效池；标题静音，
+  用户首次手势进入后启动基地音乐，后台暂停。生产源首次手势、循环接缝与移动端 Stream
+  仍需浏览器/真机验证。
 - Canvas：自适应浏览器 viewport、安全区和 DPI；主要触控目标至少 48 基准像素。
 - 当前已锁横屏斜俯视和程序化风格化写实低模；商业资产与动画预算仍需发行前冻结。
 

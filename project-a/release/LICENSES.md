@@ -33,6 +33,7 @@ This inventory covers the assets currently intended to ship from `project-a/`.
 | `assets/audio/ui/` | Kenney UI Audio, selected `click1.ogg` and `switch3.ogg` | Creative Commons CC0 | Commercial use and redistribution permitted; official notice retained |
 | `assets/audio/sfx/` | Kenney Impact Sounds, selected light/heavy metal impact OGG files | Creative Commons CC0 | Commercial use and redistribution permitted; official notice retained |
 | `assets/audio/jingles/` | Kenney Music Jingles, selected HIT00 and NES03 OGG files | Creative Commons CC0 | Commercial use and redistribution permitted; official notice retained |
+| `assets/audio/music/` | OpenGameArt Factory ambiance by yd and Friendly Talk On a Robotic Battlefield (Looped) by illin | Creative Commons CC0 | Commercial use and redistribution permitted; source records retained |
 
 Exact upstream filenames, official asset pages, SHA-256 hashes, and omitted files are recorded in
 `assets/audio/asset_manifest.md`; official pack notices are retained in `assets/audio/licenses/`.
@@ -50,5 +51,7 @@ Upstream references:
 - `https://kenney.nl/assets/ui-audio`
 - `https://kenney.nl/assets/impact-sounds`
 - `https://kenney.nl/assets/music-jingles`
+- `https://opengameart.org/content/factory-ambiance`
+- `https://opengameart.org/content/friendly-talk-on-a-robotic-battlefield-looped`
 
 Public release remains blocked until the final shipped artifact has a complete asset manifest with exact upstream sources, license texts, attribution obligations, and distribution permission for every asset, plus an independent legal/IP review of the fan-content premise.

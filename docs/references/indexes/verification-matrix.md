@@ -188,7 +188,8 @@ related:
   浏览器文件选择器导回、预览、二次确认恢复，并将旧主档保留为 `.bak`。
   候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
   legacy `scripts/main.gd` 并加入正式品牌启动图后，当前 PCK 约 `15.63 MB`，gzip 初始
-  payload 约 `24.96 MiB`，仍比 20 MiB 目标高约 `3.99 MiB`。当前约
+  payload 约 `27.60 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB 目标高约 `7.60 MiB`。新增两条
+  OGG 音乐约占 3.88 MiB 原始体积；当前约
   14 MiB 的完整 Noto CJK fontdata 是下一项主因，不能用系统字体替代 Web 中文覆盖。
 - M8 本地试玩证据工具：`run_platform_tests.gd` 覆盖显式 opt-in、事件白名单/去重、256 条上限、
   版本/样本量/时间窗、续接、导出和关闭删除；同一报告从白名单事件派生 12 个首章里程碑、相邻
@@ -209,6 +210,10 @@ related:
   会即时清除镜头震动，并关闭单位呼吸摆动、受击缩放和技能前冲，同时保留血条、状态颜色、
   炮击文字倒计时、技能结果和胜负结算等静音可读反馈。屏幕阅读器语义仍须在真实浏览器/设备验证，
   自动测试不能替代该项。
+- 音乐表现基线：`run_music_director_tests.gd` 锁定标题静音、基地/战斗/Boss 状态、任意连续或
+  中断淡化后只有一个 Stream voice、后台暂停/恢复和清理；Platform/Settings 测试覆盖默认值、
+  旧配置回退、持久化、归一化与语义 UI 事件，UI smoke 锁定 App Shell 的标题、基地和普通战斗
+  路由。真实 Web 首次手势、循环接缝和移动端 Stream 仍是浏览器/设备门禁。
 - 仍缺：Firefox 桌面、Android Chrome、iOS Safari、生产 HTTPS、真人首 20–30 分钟及最终 IP/商店审查。
 
 ## 必测不变量

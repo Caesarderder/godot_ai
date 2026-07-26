@@ -1,0 +1,23 @@
+Selected music sources
+======================
+
+Base music:
+- Title: Factory ambiance
+- Author: yd
+- Source: https://opengameart.org/content/factory-ambiance
+- Original file: Factory.ogg
+- License shown by the official asset page: Creative Commons CC0
+
+Battle music:
+- Title: Friendly Talk On a Robotic Battlefield (Looped)
+- Author: illin
+- Source: https://opengameart.org/content/friendly-talk-on-a-robotic-battlefield-looped
+- Original file: Friendly Talk On a Robotic Battlefield.ogg
+- License shown by the official asset page: Creative Commons CC0
+- The official page explicitly states that commercial use is permitted.
+
+CC0 1.0 Universal:
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Imported on 2026-07-27. The OGG source files are unmodified. Attribution is
+not required by CC0, but the project retains author and source information.

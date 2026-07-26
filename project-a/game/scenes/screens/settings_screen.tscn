@@ -65,6 +65,30 @@ custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 text = "80"
 
+[node name="MusicVolumeRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/MusicVolumeRow"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+text = "音乐音量"
+
+[node name="SettingsMusicVolumeSlider" type="HSlider" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/MusicVolumeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+step = 1.0
+value = 55.0
+
+[node name="SettingsMusicVolumeValue" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/MusicVolumeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 0)
+layout_mode = 2
+text = "55"
+
 [node name="QualityRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2

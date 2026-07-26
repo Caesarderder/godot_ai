@@ -52,6 +52,7 @@ godot --headless --path project-a -s tools/run_stage_definition_tests.gd
 godot --headless --path project-a -s tools/run_first_chapter_balance_scan.gd
 godot --headless --path project-a -s tools/run_first_30m_journey_tests.gd
 godot --headless --path project-a -s tools/run_platform_tests.gd
+godot --headless --path project-a -s tools/run_music_director_tests.gd
 godot --headless --path project-a -s tools/run_presentation_tests.gd
 godot --headless --path project-a -s tools/run_asset_3d_tests.gd
 godot --headless --path project-a -s tools/run_font_coverage_tests.gd

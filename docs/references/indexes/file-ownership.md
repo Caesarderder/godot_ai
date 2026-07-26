@@ -69,6 +69,7 @@ related:
 | `project-a/game/scripts/autoloads/{save_manager,game,app_bootstrap}.gd` | application | 保存服务、游戏状态/命令、显式应用组合根 | present / bootstrap + lifecycle tests |
 | `project-a/game/scripts/platform/web/**` | platform | visibility、持久性探测、音频解锁、Web bridge | absent / M0-M1 |
 | `project-a/game/scripts/presentation_3d/**` | presentation | 程序化马桶人、结构目标和战斗 snapshot/event 的 3D 投影 | present / runtime smoke + capture |
+| `project-a/game/{scenes/presentation,scripts/presentation}/music_director.*` | audio-presentation | 双 Stream 播放器、可取消淡化、路线音乐状态、后台暂停与独立音量 | present / MusicDirector + UI + Web smoke |
 | `project-a/game/scenes/actors/ally_models/**` | asset-integration | 八个项目自有 GLB wrapper，隔离导入器子树与运行时变换 | present / asset 3D tests |
 | `project-a/game/scripts/ui/**` | presentation | 可复用独立 UI 场景/组件 | 战前面板、战区、战斗 HUD、结算、军团、工厂与目标中心 present；其余主要 UI 仍在 App Shell |
 | `project-a/game/scenes/**` | presentation | app、battle_3d、screens、dialogs、ui | 战前面板、完整战区、战斗 HUD、结算、军团、工厂与目标 screen present；其余 planned |

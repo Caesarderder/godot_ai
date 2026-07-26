@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/presentation/music_director.gd" id="1_script"]
+
+[node name="MusicDirector" type="Node"]
+process_mode = 3
+script = ExtResource("1_script")
+
+[node name="MusicA" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
+volume_db = -60.0
+playback_type = 1
+
+[node name="MusicB" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
+volume_db = -60.0
+playback_type = 1

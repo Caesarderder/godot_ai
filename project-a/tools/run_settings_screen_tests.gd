@@ -13,6 +13,7 @@ func _run() -> void:
 	var settings := SETTINGS_SCENE.instantiate() as Control
 	settings.call("configure", {
 		"master_volume": 37,
+		"music_volume": 29,
 		"effects_quality": "high",
 		"reduced_motion": true,
 		"global_auto_skill": true,
@@ -27,12 +28,14 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	var volume := settings.get_node("%SettingsMasterVolumeSlider") as HSlider
+	var music_volume := settings.get_node("%SettingsMusicVolumeSlider") as HSlider
 	var quality := settings.get_node("%SettingsEffectsQualityOption") as OptionButton
 	var reduced := settings.get_node("%SettingsReducedMotionToggle") as CheckButton
 	var playtest_status := settings.get_node("%SettingsPlaytestStatus") as Label
 	var import_button := settings.get_node("%SettingsImportSaveButton") as Button
 	var save := settings.get_node("%SettingsSaveButton") as Button
 	_check(is_equal_approx(volume.value, 37.0), "master volume is projected")
+	_check(is_equal_approx(music_volume.value, 29.0), "music volume is projected")
 	_check(quality.get_item_text(quality.selected) == "high", "effects quality is projected")
 	_check(reduced.button_pressed, "reduced motion is projected")
 	_check(not playtest_status.visible, "playtest details stay hidden before opt-in")
@@ -46,6 +49,8 @@ func _run() -> void:
 	)
 	volume.value = 42
 	_check(changed["id"] == "master_volume" and is_equal_approx(float(changed["value"]), 42.0), "volume emits semantic setting change")
+	music_volume.value = 33
+	_check(changed["id"] == "music_volume" and is_equal_approx(float(changed["value"]), 33.0), "music volume emits semantic setting change")
 
 	var requested := {"id": ""}
 	settings.connect("action_requested", func(id: String) -> void: requested["id"] = id)
@@ -54,6 +59,7 @@ func _run() -> void:
 
 	settings.call("configure", {
 		"master_volume": 42,
+		"music_volume": 33,
 		"effects_quality": "medium",
 		"reduced_motion": false,
 		"global_auto_skill": false,

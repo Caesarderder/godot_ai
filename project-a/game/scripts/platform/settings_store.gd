@@ -7,6 +7,7 @@ const SECTION_VIDEO: String = "video"
 const SECTION_GAMEPLAY: String = "gameplay"
 const EFFECTS_QUALITIES: Array[String] = ["low", "medium", "high"]
 const DEFAULT_MASTER_VOLUME: int = 80
+const DEFAULT_MUSIC_VOLUME: int = 55
 const DEFAULT_EFFECTS_QUALITY: String = "medium"
 const DEFAULT_REDUCED_MOTION: bool = false
 const DEFAULT_GLOBAL_AUTO_SKILL: bool = false
@@ -14,6 +15,7 @@ const DEFAULT_LOCAL_PLAYTEST_LOGGING: bool = false
 
 var settings_path: String = SETTINGS_PATH
 var master_volume: int = DEFAULT_MASTER_VOLUME
+var music_volume: int = DEFAULT_MUSIC_VOLUME
 var effects_quality: String = DEFAULT_EFFECTS_QUALITY
 var reduced_motion: bool = DEFAULT_REDUCED_MOTION
 var global_auto_skill: bool = DEFAULT_GLOBAL_AUTO_SKILL
@@ -26,6 +28,7 @@ func _init(path: String = SETTINGS_PATH) -> void:
 
 func reset_to_defaults() -> void:
 	master_volume = DEFAULT_MASTER_VOLUME
+	music_volume = DEFAULT_MUSIC_VOLUME
 	effects_quality = DEFAULT_EFFECTS_QUALITY
 	reduced_motion = DEFAULT_REDUCED_MOTION
 	global_auto_skill = DEFAULT_GLOBAL_AUTO_SKILL
@@ -35,6 +38,7 @@ func reset_to_defaults() -> void:
 func to_dictionary() -> Dictionary:
 	return {
 		"master_volume": master_volume,
+		"music_volume": music_volume,
 		"effects_quality": effects_quality,
 		"reduced_motion": reduced_motion,
 		"global_auto_skill": global_auto_skill,
@@ -44,6 +48,7 @@ func to_dictionary() -> Dictionary:
 
 func apply_values(values: Dictionary) -> void:
 	master_volume = _normalize_master_volume(values.get("master_volume", master_volume))
+	music_volume = _normalize_music_volume(values.get("music_volume", music_volume))
 	effects_quality = _normalize_effects_quality(values.get("effects_quality", effects_quality))
 	reduced_motion = _normalize_bool(values.get("reduced_motion", reduced_motion), reduced_motion)
 	global_auto_skill = _normalize_bool(values.get("global_auto_skill", global_auto_skill), global_auto_skill)
@@ -70,6 +75,10 @@ func save_settings() -> bool:
 
 func set_master_volume(value: Variant) -> void:
 	master_volume = _normalize_master_volume(value)
+
+
+func set_music_volume(value: Variant) -> void:
+	music_volume = _normalize_music_volume(value)
 
 
 func set_effects_quality(value: Variant) -> void:
@@ -100,6 +109,11 @@ func _apply_config(config: ConfigFile) -> bool:
 
 	var loaded_values := {
 		"master_volume": config.get_value(SECTION_AUDIO, "master_volume"),
+		"music_volume": config.get_value(
+			SECTION_AUDIO,
+			"music_volume",
+			DEFAULT_MUSIC_VOLUME
+		),
 		"effects_quality": config.get_value(SECTION_VIDEO, "effects_quality"),
 		"reduced_motion": config.get_value(SECTION_VIDEO, "reduced_motion"),
 		"global_auto_skill": config.get_value(SECTION_GAMEPLAY, "global_auto_skill"),
@@ -117,6 +131,7 @@ func _apply_config(config: ConfigFile) -> bool:
 
 func _write_config(config: ConfigFile) -> void:
 	config.set_value(SECTION_AUDIO, "master_volume", master_volume)
+	config.set_value(SECTION_AUDIO, "music_volume", music_volume)
 	config.set_value(SECTION_VIDEO, "effects_quality", effects_quality)
 	config.set_value(SECTION_VIDEO, "reduced_motion", reduced_motion)
 	config.set_value(SECTION_GAMEPLAY, "global_auto_skill", global_auto_skill)
@@ -161,6 +176,7 @@ func _config_matches(config: ConfigFile) -> bool:
 func _can_normalize(values: Dictionary) -> bool:
 	return (
 		_is_number_like(values.get("master_volume"))
+		and _is_number_like(values.get("music_volume"))
 		and _is_string_like(values.get("effects_quality"))
 		and _is_bool_like(values.get("reduced_motion"))
 		and _is_bool_like(values.get("global_auto_skill"))
@@ -176,6 +192,16 @@ func _normalize_master_volume(value: Variant) -> int:
 	if typeof(value) == TYPE_STRING and String(value).is_valid_int():
 		return clampi(int(String(value)), 0, 100)
 	return DEFAULT_MASTER_VOLUME
+
+
+func _normalize_music_volume(value: Variant) -> int:
+	if typeof(value) == TYPE_INT:
+		return clampi(value, 0, 100)
+	if typeof(value) == TYPE_FLOAT:
+		return clampi(roundi(value), 0, 100)
+	if typeof(value) == TYPE_STRING and String(value).is_valid_int():
+		return clampi(int(String(value)), 0, 100)
+	return DEFAULT_MUSIC_VOLUME
 
 
 func _normalize_effects_quality(value: Variant) -> String:

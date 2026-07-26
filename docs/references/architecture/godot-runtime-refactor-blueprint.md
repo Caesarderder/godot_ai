@@ -144,8 +144,9 @@ UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 Ap
 Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` 和 `Game` 先注册，
 最后注册的 `AppBootstrap` 是唯一组合根，显式把保存服务注入 Game 并幂等初始化。`Game._ready()`
 不再查找 sibling，也不依赖 sibling `_ready()` 完成业务初始化。当前不合并成巨型
-`AppServices`；若后续跨场景音频连续性和浏览器解锁证明
-需要应用生命周期，才将 AudioDirector 提升为有持久播放器子树的 Autoload scene。
+`AppServices`。跨页面音乐由不会随 screen sibling 重建的 App Shell 子场景
+`MusicDirector.tscn` 持有，已足以保持连续性和浏览器解锁状态，因此不提升为 Autoload；
+只有未来出现脱离 App Shell 的真实跨主场景生命周期需求时才重新评估。
 当前入口 `slg_main.gd` 只调用 Game 的备份、预览、恢复和重置窄接口，不再查找
 `/root/SaveManager` 或把保存服务对象穿过 UI。
 

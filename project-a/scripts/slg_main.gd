@@ -40,6 +40,7 @@ const WebRuntimeScript := preload("res://game/scripts/platform/web_runtime.gd")
 const MobileViewportAdapterScript := preload("res://game/scripts/platform/mobile_viewport_adapter.gd")
 const LocalPlaytestJournalScript := preload("res://game/scripts/platform/local_playtest_journal.gd")
 const AudioDirectorScript := preload("res://game/scripts/presentation/audio_director.gd")
+const MusicDirectorScene := preload("res://game/scenes/presentation/music_director.tscn")
 const CJKFont := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 
 enum Screen { BOOT, TITLE, SETTINGS, BASE, MAP, LEGION, GOALS, INTELLIGENCE, BATTLE, RESULT, EPILOGUE, HELP, BLUEPRINTS }
@@ -145,6 +146,7 @@ var mobile_viewport: Node
 var active_safe_margin: MarginContainer
 var playtest_journal: RefCounted
 var audio_director: Node
+var music_director: Node
 var settings_return_screen: Screen = Screen.TITLE
 var help_return_screen: Screen = Screen.TITLE
 var local_save_delete_armed: bool = false
@@ -189,6 +191,8 @@ func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
 	audio_director.name = "AudioDirector"
 	add_child(audio_director)
+	music_director = MusicDirectorScene.instantiate()
+	add_child(music_director)
 	_apply_settings_to_runtime()
 	game = get_node_or_null("/root/Game")
 	ui_root.theme = _theme()
@@ -520,6 +524,7 @@ func _settings_view() -> Dictionary:
 		]
 	return {
 		"master_volume": settings_store.master_volume,
+		"music_volume": settings_store.music_volume,
 		"effects_quality": settings_store.effects_quality,
 		"reduced_motion": settings_store.reduced_motion,
 		"global_auto_skill": settings_store.global_auto_skill,
@@ -547,6 +552,8 @@ func _on_settings_setting_changed(setting_id: String, value: Variant) -> void:
 	match setting_id:
 		"master_volume":
 			settings_store.set_master_volume(float(value))
+		"music_volume":
+			settings_store.set_music_volume(float(value))
 		"effects_quality":
 			settings_store.set_effects_quality(String(value))
 		"reduced_motion":
@@ -745,6 +752,8 @@ func _apply_settings_to_runtime() -> void:
 		var ratio := float(settings_store.master_volume) / 100.0
 		AudioServer.set_bus_volume_db(master_bus, linear_to_db(maxf(0.0001, ratio)))
 		AudioServer.set_bus_mute(master_bus, settings_store.master_volume <= 0)
+	if music_director != null and is_instance_valid(music_director):
+		music_director.set_music_volume(settings_store.music_volume)
 	if battle_world != null and is_instance_valid(battle_world):
 		battle_world.configure_presentation(settings_store.effects_quality, settings_store.reduced_motion)
 
@@ -1766,6 +1775,7 @@ func _start_battle() -> void:
 		_notify("当前编队没有可出战角色")
 		return
 	screen = Screen.BATTLE
+	_sync_music_for_screen()
 	last_battle_runtime_result = {}
 	battle_skill_buttons.clear()
 	battle_unit_hud.clear()
@@ -1970,6 +1980,8 @@ func _build_battle_pause_overlay() -> void:
 
 
 func _on_runtime_state_changed(state: Dictionary) -> void:
+	if music_director != null and is_instance_valid(music_director):
+		music_director.set_runtime_active(bool(state.get("is_interactive", true)))
 	if screen == Screen.BATTLE and not bool(state.get("is_interactive", true)):
 		_set_battle_paused(true)
 
@@ -2780,6 +2792,7 @@ func _command(type: String, payload: Dictionary, business_key: String = "") -> D
 
 
 func _shell(title_text: String, subtitle: String, reveal_world: bool = false) -> VBoxContainer:
+	_sync_music_for_screen()
 	playtest_journal.record_event("screen_view", {"screen": _screen_id(screen)})
 	var bg := ColorRect.new()
 	bg.color = Color(BG, 0.18) if reveal_world else BG
@@ -2845,6 +2858,21 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	ui_root.add_child(toast)
 	_apply_mobile_interactive_targets.call_deferred()
 	return root
+
+
+func _sync_music_for_screen() -> void:
+	if music_director == null or not is_instance_valid(music_director):
+		return
+	if screen in [Screen.BOOT, Screen.TITLE]:
+		music_director.request_state(&"silent")
+		return
+	if screen == Screen.BATTLE:
+		var config := StageCatalog.stage(active_battle_stage if not active_battle_stage.is_empty() else selected_stage_id)
+		music_director.request_state(
+			&"boss" if int(config.get("stage_in_chapter", 0)) == 5 else &"battle"
+		)
+		return
+	music_director.request_state(&"base")
 
 
 func _screen_id(value: Screen) -> String:
