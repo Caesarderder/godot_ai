@@ -691,6 +691,11 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(global_auto_toggle != null and global_auto_toggle.custom_minimum_size.y >= 44.0, "SLG settings exposes global auto skill")
 	_ok(delete_save_button != null and delete_save_button.text == "删除本地存档", "SLG settings exposes explicit local-save deletion")
 	_ok(persistence_status != null and persistence_status.text.contains("备份"), "SLG settings explains browser persistence risk")
+	_ok(
+		String(instance.call("_error_copy", "SAVE_FAILED")).contains("操作未生效")
+			and String(instance.call("_error_copy", "SAVE_FAILED")).contains("下载备份"),
+		"storage write failure is translated into an actionable no-progress-loss recovery message"
+	)
 	_ok(export_save_button != null and export_save_button.custom_minimum_size.y >= 44.0, "SLG settings exposes a touch-sized save export")
 	_ok(import_save_button != null and import_save_button.text == "选择备份并校验", "SLG settings validates an import before overwrite")
 	_ok(settings_scroll != null and settings_scroll.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED, "SLG settings scrolls vertically instead of shrinking touch targets")

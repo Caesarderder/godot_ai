@@ -3493,5 +3493,7 @@ func _error_copy(code: String) -> String:
 		"FACILITY_WORK_NOT_READY": "当前工程还未完成",
 		"BLUEPRINT_RESEARCH_BUSY": "研究所正在研发其他角色",
 		"BLUEPRINT_RESEARCH_NOT_READY": "角色研发还未完成",
+		"SAVE_UNAVAILABLE": "本次操作未生效：存档服务不可用，请打开设置并下载备份",
+		"SAVE_FAILED": "本次操作未生效：浏览器存储写入失败，请打开设置下载备份后再重试",
 	}
 	return String(known.get(code, code))
