@@ -365,17 +365,24 @@ async function main() {
 		await touch(cdp, 566, 158);
 		const downloadedPlaytest = await waitFor("local playtest report download", async () => {
 			const names = (await readdir(downloadDir)).filter((name) => name.startsWith("toilet-factory-playtest-") && name.endsWith(".json"));
-			return names.length === 1 ? join(downloadDir, names[0]) : null;
+			if (names.length !== 1) return null;
+			const path = join(downloadDir, names[0]);
+			const text = await readFile(path, "utf8");
+			if (text.length === 0) return null;
+			JSON.parse(text);
+			return path;
 		}, 10000);
 		const playtestJson = JSON.parse(await readFile(downloadedPlaytest, "utf8"));
 		if (
 			playtestJson.schema_version !== 1
 				|| playtestJson.product_version !== "0.11.0-audio-feedback.1"
-			|| playtestJson.event_count < 2
-			|| !Array.isArray(playtestJson.events)
-			|| typeof playtestJson.first_session_metrics !== "object"
-			|| playtestJson.first_session_metrics.milestone_total !== 8
-			|| typeof playtestJson.evidence_limit !== "string"
+				|| playtestJson.event_count < 2
+				|| !Array.isArray(playtestJson.events)
+				|| typeof playtestJson.first_session_metrics !== "object"
+				|| playtestJson.first_session_metrics.milestone_total !== 12
+				|| typeof playtestJson.first_session_metrics.milestone_intervals_seconds !== "object"
+				|| typeof playtestJson.first_session_metrics.next_missing_milestone !== "string"
+				|| typeof playtestJson.evidence_limit !== "string"
 			|| "save_id" in playtestJson
 			|| "device_id" in playtestJson
 			|| "account_id" in playtestJson
