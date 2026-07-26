@@ -12,6 +12,7 @@ config_version=5
 
 config/name="Project A"
 config/version="0.11.0-audio-feedback.1"
+config/icon="res://release/web-icon.svg"
 run/main_scene="res://scenes/screens/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
