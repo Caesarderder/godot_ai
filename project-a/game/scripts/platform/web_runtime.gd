@@ -14,16 +14,31 @@ var _text_import_callback: JavaScriptObject
 
 func platform_capabilities() -> Dictionary:
 	var is_web := OS.has_feature("web")
+	var engine_reports_persistence := (
+		OS.is_userfs_persistent()
+		if OS.has_method("is_userfs_persistent")
+		else false
+	)
 	return {
 		"is_web": is_web,
 		"platform_name": OS.get_name(),
-		"userfs_persistent": OS.is_userfs_persistent() if OS.has_method("is_userfs_persistent") else false,
+		"userfs_persistent": resolve_userfs_persistence(
+			is_web,
+			engine_reports_persistence
+		),
 		"safe_area_supported": DisplayServer.has_method("get_display_safe_area"),
 		"visibility_events": true,
 		"focus_events": true,
 		"javascript_bridge": is_web,
 		"threaded_runtime": false,
 	}
+
+
+static func resolve_userfs_persistence(is_web_build: bool, engine_reports_persistence: bool) -> bool:
+	# Godot's Web value can be true when IndexedDB writes work for this session, including
+	# an isolated private context whose data disappears when that context closes. Do not
+	# present that capability signal to players as confirmed long-term retention.
+	return engine_reports_persistence and not is_web_build
 
 
 func is_web() -> bool:

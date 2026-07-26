@@ -136,6 +136,9 @@ related:
   有效输入、关卡尝试、失败命令、纯导航连跳和排除战斗区间后的最长停滞，并明确这些指标不能证明
   理解或乐趣。Chrome smoke 覆盖报告下载、隐私字段检查、在线/离线续接与 IndexedDB opt-out
   删除。真实 20–30 分钟样本与玩家访谈仍未发生。
+- Web 私密存储证据：`run_web_private_storage_smoke.mjs` 通过 CDP 原生隔离上下文证明同一 Chrome
+  私密会话刷新后存档 hash 不变，销毁上下文再新建时得到不同存档；设置页截图同时证明玩家看到
+  “未确认持久存储”与下载备份指引。该证据不等于 IndexedDB 被完全禁用，也不替代生产源验证。
 - M7 领域与 UI：`run_meta_progression_tests.gd`、`run_meta_tests.gd`、`run_ui_smoke_tests.gd`
   覆盖 v8 往返、v5/v6/v7 迁移、任务与批量等级/战令/成就领奖、30 项成就、十抽 A、60 抽 S、
   专属数据升星、招募英雄六槽替换和顶层待领取计数；

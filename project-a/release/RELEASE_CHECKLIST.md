@@ -54,8 +54,11 @@ State labels:
 - [ ] Chrome Android real-device smoke.
 - [ ] Safari iOS real-device smoke.
 - [ ] Browser reload/restart persistence proof on the final production origin (local HTTP proof passes).
-- [ ] Private/blocked storage browser proof; domain commands already reject failed writes atomically and
-  the UI directs players to download a backup instead of reporting false success.
+- [x] Chrome private-context proof: reload within one context preserves the save, closing it discards that
+  save, and a new private context starts with distinct local data (`node tools/run_web_private_storage_smoke.mjs`).
+- [ ] Fully blocked-storage browser proof; domain commands already reject failed writes atomically.
+- [x] Web UI treats engine persistence capability conservatively and directs players to download a backup
+  instead of presenting a private/session-only IndexedDB write as guaranteed retention.
 - [ ] Accessibility review: focus visibility, readable/scalable text, non-color cues, reduced motion where needed, critical-audio alternatives.
 - [ ] `run_ui_focus_tests.gd` proves every authored and dynamic screen action is focusable and has a non-empty visible focus style.
 - [ ] Final legal review for font notice, fan-content/IP risk, store copy, and every asset license.

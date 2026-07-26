@@ -83,7 +83,7 @@ EXTERNAL_BLOCKERS = [
     "Builda-controlled runtime/template identity was not proven by this script.",
     "Final HTTPS deployment URL and production headers were not tested.",
     "Chrome Android and Safari iOS real-device smoke were not tested.",
-    "Production-origin persistence, blocked storage, and private browsing were not tested.",
+    "Production-origin persistence and fully blocked storage were not tested; local Chrome private-context behavior is covered separately.",
     "Final legal/IP/store review is still required.",
     "Monitoring and rollback rehearsal are still required.",
 ]

@@ -133,7 +133,8 @@ related:
 - Firefox 桌面、Android Chrome、iOS Safari 真机；
 - 最低目标手机的冷启动、30 FPS、峰值内存与 30 分钟稳定性；
 - 最终 HTTPS URL、WASM MIME、压缩、缓存、安全头和生产源存档身份；
-- 私密/禁用存储降级、PWA 更新、回滚 artifact、触发条件和演练；
+- 完全禁用存储降级、PWA 更新、回滚 artifact、触发条件和演练；Chrome 私密上下文隔离与
+  会话关闭后丢弃已由本地真实浏览器覆盖；
 - 完整素材来源、字体 OFL、同人/IP、商店文案、隐私、支付与目标地区法律审查；
 - Builda-controlled runtime/template 身份或经批准的替代发布路径；
 - GitHub 凭据配置后推送冻结候选。
@@ -155,7 +156,7 @@ related:
 ## 推荐后续提交序列
 
 1. `build: subset runtime CJK font reproducibly`
-2. `test: add private-storage and Firefox Web evidence`
+2. `test: add blocked-storage and Firefox Web evidence`
 3. `fix: iterate first-session friction from blind playtests`
 4. `release: freeze production-origin candidate and rollback evidence`
 

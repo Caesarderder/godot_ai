@@ -37,6 +37,9 @@ Stored local data may include:
 Known release limitations:
 
 - Browser storage may be cleared, blocked, isolated by private browsing, or stranded by an origin/path change.
+- A real Chrome private-context check confirms that reloads inside one private session can retain progress,
+  while closing that context and opening a new private context produces distinct local data. The settings
+  screen therefore does not present Godot's Web persistence capability flag as guaranteed retention.
 - This declaration has not yet been validated on the final hosted HTTPS origin.
 - If hosting, analytics, ads, crash reporting, account systems, CDN logs, or platform SDKs are added, this document must be updated to match the actual runtime behavior before release.
 

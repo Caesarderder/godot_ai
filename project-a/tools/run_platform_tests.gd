@@ -221,6 +221,18 @@ func _test_web_runtime_capabilities_and_state() -> void:
 	var capabilities: Dictionary = runtime.platform_capabilities()
 	_check(capabilities.has("is_web"), "capabilities expose is_web")
 	_check(capabilities.has("userfs_persistent"), "capabilities expose userfs persistence")
+	_check(
+		not WebRuntimeScript.resolve_userfs_persistence(true, true),
+		"Web persistence stays unconfirmed even when the engine reports session storage"
+	)
+	_check(
+		WebRuntimeScript.resolve_userfs_persistence(false, true),
+		"native persistence retains the engine capability result"
+	)
+	_check(
+		not WebRuntimeScript.resolve_userfs_persistence(false, false),
+		"unavailable persistence remains unconfirmed"
+	)
 	_check(bool(capabilities.get("visibility_events", false)), "capabilities expose visibility support")
 	_check(bool(capabilities.get("focus_events", false)), "capabilities expose focus support")
 	var events: Array[String] = []
