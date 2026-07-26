@@ -2,6 +2,9 @@ class_name OnboardingService
 extends RefCounted
 
 const OnboardingCatalogScript := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
+const ResearchBreakthroughCatalogScript := preload(
+	"res://game/scripts/content/research_breakthrough_catalog.gd"
+)
 
 
 static func default_state() -> Dictionary:
@@ -282,7 +285,7 @@ static func _objective_satisfied_by_state(state: RefCounted, objective: Dictiona
 			return not recipe_id.is_empty() and bool(state.factory.blueprints.get(recipe_id, false))
 		"research_breakthrough_resolved":
 			return (state.onboarding.get("claimed", {}) as Dictionary).has(
-				"reward.research_breakthrough_ten"
+				ResearchBreakthroughCatalogScript.CLAIM_KEY
 			)
 	return false
 

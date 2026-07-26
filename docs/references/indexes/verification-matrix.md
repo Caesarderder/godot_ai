@@ -231,6 +231,12 @@ related:
   `CampaignObjectiveProjection` 返回 detached view。`run_objective_hurdle_definition_tests.gd`
   覆盖七段引导一一对应、1-4 大坎与免费十连恢复、未知 ID fail-closed 和共享 Resource 不可被
   view 调用方篡改；投影、研究引导、UI smoke 与 14 条新档旅程回归通过。
+- 免费突破十连内容边界：`ResearchBreakthroughCardDefinition` 与十个 `.tres` 锁定两张 A 级
+  冲锋/装甲和八张研究物资；Catalog 校验顺序、稀有度、字段、重复英雄转数据与聚合预算。
+  `run_research_breakthrough_tests.gd` 验证研究所门禁、十卡、英雄/蓝图永久性、资源 delta、
+  pity 隔离、重复业务拒绝、receipt replay、存档往返及已有英雄转数据；`run_blueprint_screen_tests.gd`
+  与 `run_first_formation_flow_tests.gd` 验证结果专注态、唯一编队 CTA、装甲/冲锋两次真实上阵和
+  完成后直达 1-4 反攻。14 条新档旅程证明两条后续二星路线经济结果未漂移。
 - 仍缺：Firefox 桌面、Android Chrome、iOS Safari、生产 HTTPS、真人首 20–30 分钟及最终 IP/商店审查。
 
 ## 必测不变量

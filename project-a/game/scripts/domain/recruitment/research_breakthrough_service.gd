@@ -2,37 +2,38 @@ class_name ResearchBreakthroughService
 extends RefCounted
 
 const HeroGeneratorScript := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
-
-const CLAIM_KEY: String = "reward.research_breakthrough_ten"
-const FOUNDATIONAL: Array[Dictionary] = [
-	{
-		"rarity": "A",
-		"recipe_id": "ordinary.assault",
-		"archetype_id": "assault",
-		"class_id": "fighter",
-	},
-	{
-		"rarity": "A",
-		"recipe_id": "heavy.armored",
-		"archetype_id": "armored",
-		"class_id": "guardian",
-	},
-]
+const ResearchBreakthroughCatalogScript := preload(
+	"res://game/scripts/content/research_breakthrough_catalog.gd"
+)
 
 
 static func claim(state: RefCounted) -> Dictionary:
+	var content_errors := ResearchBreakthroughCatalogScript.validate_all()
+	if not content_errors.is_empty():
+		return {
+			"ok": false,
+			"error": "RESEARCH_BREAKTHROUGH_CONTENT_INVALID: %s" % "; ".join(content_errors),
+		}
 	if int(state.factory.facilities.get("research_lab", 0)) <= 0:
 		return {"ok": false, "error": "RESEARCH_BREAKTHROUGH_REQUIRES_LAB"}
 	var claimed := state.onboarding.get("claimed", {}) as Dictionary
-	if claimed.has(CLAIM_KEY):
+	if claimed.has(ResearchBreakthroughCatalogScript.CLAIM_KEY):
 		return {"ok": false, "error": "RESEARCH_BREAKTHROUGH_ALREADY_CLAIMED"}
 	var results: Array[Dictionary] = []
-	for definition in FOUNDATIONAL:
-		var recipe_id := String(definition["recipe_id"])
-		var archetype_id := String(definition["archetype_id"])
+	for definition in ResearchBreakthroughCatalogScript.CARDS:
+		var kind := String(definition.kind)
+		if kind != "hero":
+			results.append({
+				"rarity": String(definition.rarity),
+				"kind": kind,
+				"amount": int(definition.amount),
+			})
+			continue
+		var recipe_id := String(definition.recipe_id)
+		var archetype_id := String(definition.archetype_id)
 		var existing := _hero_for_archetype(state, archetype_id)
 		var result := {
-			"rarity": String(definition["rarity"]),
+			"rarity": String(definition.rarity),
 			"recipe_id": recipe_id,
 			"archetype_id": archetype_id,
 		}
@@ -48,7 +49,7 @@ static func claim(state: RefCounted) -> Dictionary:
 				state.run_seed,
 				roster_index,
 				archetype_id,
-				String(definition["class_id"])
+				String(definition.class_id)
 			)
 			hero.display_name = HeroGeneratorScript.archetype_display_name(archetype_id)
 			hero.aptitude_id = "A"
@@ -58,25 +59,13 @@ static func claim(state: RefCounted) -> Dictionary:
 		else:
 			state.meta_progression.hero_data[archetype_id] = int(
 				state.meta_progression.hero_data.get(archetype_id, 0)
-			) + 2
+			) + int(definition.duplicate_data_amount)
 			result["kind"] = "hero_data"
-			result["amount"] = 2
+			result["amount"] = int(definition.duplicate_data_amount)
 		results.append(result)
-	var resource_cards: Array[Dictionary] = [
-		{"rarity": "A", "kind": "skill_chip", "amount": 1},
-		{"rarity": "R", "kind": "porcelain", "amount": 6},
-		{"rarity": "R", "kind": "porcelain", "amount": 6},
-		{"rarity": "R", "kind": "porcelain", "amount": 6},
-		{"rarity": "R", "kind": "parts", "amount": 5},
-		{"rarity": "R", "kind": "parts", "amount": 5},
-		{"rarity": "R", "kind": "sludge", "amount": 4},
-		{"rarity": "R", "kind": "sludge", "amount": 4},
-	]
-	for card in resource_cards:
-		results.append(card.duplicate(true))
-	state.economy.skill_chips += 1
-	state.factory.grant({"porcelain": 18, "parts": 10, "sludge": 8})
-	claimed[CLAIM_KEY] = true
+	state.economy.skill_chips += ResearchBreakthroughCatalogScript.skill_chip_grant()
+	state.factory.grant(ResearchBreakthroughCatalogScript.material_grant())
+	claimed[ResearchBreakthroughCatalogScript.CLAIM_KEY] = true
 	state.onboarding["claimed"] = claimed
 	return {
 		"ok": true,
@@ -84,14 +73,16 @@ static func claim(state: RefCounted) -> Dictionary:
 			"type": "research_breakthrough_resolved",
 			"count": results.size(),
 			"results": results,
-			"guaranteed_archetypes": ["assault", "armored"],
+			"guaranteed_archetypes": ResearchBreakthroughCatalogScript.guaranteed_archetypes(),
 			"pity_advanced": false,
 		},
 	}
 
 
 static func is_claimed(state: RefCounted) -> bool:
-	return (state.onboarding.get("claimed", {}) as Dictionary).has(CLAIM_KEY)
+	return (state.onboarding.get("claimed", {}) as Dictionary).has(
+		ResearchBreakthroughCatalogScript.CLAIM_KEY
+	)
 
 
 static func _hero_for_archetype(state: RefCounted, archetype_id: String) -> RefCounted:

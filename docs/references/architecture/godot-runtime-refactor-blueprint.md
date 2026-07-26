@@ -10,6 +10,7 @@ source_of_truth:
   - project-a/scenes/screens/main.tscn
   - project-a/scripts/slg_main.gd
   - project-a/game/scripts/content/objective_hurdle_catalog.gd
+  - project-a/game/scripts/content/research_breakthrough_catalog.gd
   - project-a/game/scripts/domain/objectives/campaign_objective_projection.gd
   - project-a/game/scenes/ui/stage_detail_panel.tscn
   - project-a/game/scripts/ui/stage_detail_panel.gd
@@ -86,6 +87,8 @@ project-a/
     ├── resources/definitions/               # 只读 `.tres`
     │   ├── objectives/
     │   │   └── hurdles/*.tres               # 当前里程碑：首章七段卡点定义
+    │   ├── research/
+    │   │   └── breakthrough/*.tres           # 当前里程碑：免费十连十张确定性奖励卡
     │   ├── stages/
     │   │   └── act_1/stage_1_1..5.tres      # 已实现：首30分钟关卡高频策划字段
     │   ├── archetypes/
@@ -94,6 +97,8 @@ project-a/
     └── scripts/content/
         ├── objective_hurdle_definition.gd    # 当前里程碑：typed 卡点 Resource + 自校验
         ├── objective_hurdle_catalog.gd       # 当前里程碑：固定 preload、唯一 task ID 与只读 view
+        ├── research_breakthrough_card_definition.gd # 当前里程碑：typed 十连卡定义
+        ├── research_breakthrough_catalog.gd # 当前里程碑：固定十卡、聚合预算与保底隔离校验
         ├── stage_definition.gd               # 已实现：typed Resource class + 自校验
         └── stage_definition_catalog.gd       # 已实现：固定 preload、唯一 ID 与完整性校验
 ```
@@ -145,6 +150,7 @@ UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 Ap
 | `BattleSession` | `RefCounted` | 单场 owner；不得进入 Autoload |
 | `CampaignObjectiveProjection` | `RefCounted` 静态只读投影 | 从持久状态、引导 snapshot 与 `WarReadinessReport` 生成跨页面一致的大/中/小目标；不得成为 Autoload |
 | 首章卡点定义 | `ObjectiveHurdleDefinition` typed Resource + 七个 `.tres` | 运行时共享只读；只承载稳定 task ID、大小坎、原因和过坎办法 |
+| 免费研究突破配方 | `ResearchBreakthroughCardDefinition` typed Resource + 十个 `.tres` | 运行时共享只读；恰好两名永久援军与八张研究物资，服务按定义原子发奖 |
 | UI view model | duplicate-safe Dictionary，后续按压力升级 typed value | 只读投影；不得保存 Node 引用 |
 
 Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` 和 `Game` 先注册，
@@ -169,6 +175,22 @@ ObjectiveHurdleDefinition .tres
 `GameState.onboarding`，完成/奖励仍由 `CommandExecutor` 幂等提交。Resource 不保存进度、不引用
 Node，Catalog 不注册 Autoload；App Shell 重建页面时重新推导 view，因此不存在重复连接或陈旧引用。
 本里程碑先证明一个端到端卡点定义边界，再评估是否值得把任务目标条件迁为独立 typed Resource。
+
+免费十连的所有权脊柱为：
+
+```text
+10 × ResearchBreakthroughCardDefinition .tres
+  --fixed preload/budget validation--> ResearchBreakthroughCatalog
+  --read-only definitions-----------> ResearchBreakthroughService
+  --one durable command transaction-> GameState candidate + receipt
+  --detached result event-----------> BlueprintScreen
+  --semantic CTA--------------------> LegionScreen first-formation flow
+```
+
+卡定义不生成角色、不修改钱包、不持有 pity 或 Node；Catalog 只校验恰好十张、两名指定 A 级援军、
+八张资源、聚合资源预算和唯一 card ID。`ResearchBreakthroughService` 是唯一发奖 owner，失败时
+不发布 candidate；`CommandExecutor` 仍负责 revision、业务键、保存与 receipt。结果页和首次编队
+场景只消费 detached event/view，页面重建不会重复发奖或推进长期招募保底。
 
 ## 资产治理
 

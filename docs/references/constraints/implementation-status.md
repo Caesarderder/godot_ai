@@ -173,6 +173,13 @@ related:
   只读取 detached Dictionary view。玩家完成进度、奖励和 command receipt 仍由
   `OnboardingService`、`GameState` 与 `CommandExecutor` 权威持有，没有新增 Autoload 或把
   可变存档写入 Resource。
+- 研究所免费突破十连的十张奖励已从 `ResearchBreakthroughService` 硬编码数组迁移为
+  `ResearchBreakthroughCardDefinition` 与十个 `.tres`：两张 A 级永久援军卡固定为冲锋/装甲，
+  八张研究物资聚合为技能芯片 1、陶瓷 18、零件 10、能源 8。固定 Catalog 校验十卡数量、
+  唯一 card ID、英雄字段、稀有度、出现顺序、重复转数据量与完整资源预算；
+  `ResearchBreakthroughService` 仍是唯一事务 owner，先 fail-closed 校验内容，再由同一个 durable
+  command candidate 发放角色、蓝图与资源，不推进长期招募保底。结果专注页、三槽首次编队和
+  1-4 反攻仍由既有 authored scene 路径承担，没有把运行态或钱包写进 Resource。
 - 结构摧毁事件提供表现所需的语义字段，`BattleWorld` 生成短时“防线突破/城市攻陷/核心摧毁”
   世界文字；中高画质增加一个轻量冲击环，低画质/减少动态只保留文字。效果节点在一秒内释放，
   不增加灯光、阴影、Shader 或常驻粒子，也不反向推进战斗阶段。

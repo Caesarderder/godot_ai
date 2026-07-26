@@ -15,6 +15,7 @@ const CombatPower := preload("res://game/scripts/domain/progression/combat_power
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const WarReadinessReport := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
 const CampaignObjectiveProjection := preload("res://game/scripts/domain/objectives/campaign_objective_projection.gd")
+const ResearchBreakthroughCatalog := preload("res://game/scripts/content/research_breakthrough_catalog.gd")
 const WarZoneScreenScene := preload("res://game/scenes/screens/war_zone_screen.tscn")
 const BattleResultScreenScene := preload("res://game/scenes/screens/battle_result_screen.tscn")
 const BattleHudScreenScene := preload("res://game/scenes/screens/battle_hud_screen.tscn")
@@ -1386,7 +1387,7 @@ func _blueprint_view() -> Dictionary:
 	}
 	var branch_data := branches.get(blueprint_branch, branches["ordinary"]) as Dictionary
 	var claimed := (state.onboarding.get("claimed", {}) as Dictionary).has(
-		"reward.research_breakthrough_ten"
+		ResearchBreakthroughCatalog.CLAIM_KEY
 	)
 	var lab_built := int(state.factory.facilities.get("research_lab", 0)) > 0
 	var breakthrough := {
