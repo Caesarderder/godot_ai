@@ -935,12 +935,33 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(_tree_has_text(instance, "威胁等级"), "opening town expresses combat readiness as an in-world threat")
 	_ok(_tree_has_text(instance, "我方"), "selected stage compares current squad power with the recommendation")
 	_ok(_tree_has_text(instance, "能力比"), "selected stage explains risk with a player-readable capability ratio")
+	game_autoload.current_state().stage_progress["cleared_stages"] = ["stage_1_1", "stage_1_2", "stage_1_3"]
+	game_autoload.current_state().stage_progress["highest_unlocked_stage"] = "stage_1_4"
 	instance.call("_select_stage_card", "stage_1_4")
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "fourth town clearly marks the first growth wall")
 	_ok(_tree_has_text(instance, "免费突破十连"), "first wall reconnaissance names the actual recovery action")
 	_ok(_tree_has_text(instance, "永久获得的装甲与冲锋援军"), "first wall reconnaissance connects permanent roles to the counterattack")
 	_ok(not _tree_has_text(instance, "冲锋与装甲蓝图"), "first wall reconnaissance hides the retired blueprint path")
+	_ok(_tree_has_text(instance, "下一步 · 先试探炮台防线"), "first wall reconnaissance prioritizes discovery over premature growth")
+	var wall_attack: Button = null
+	var visible_growth := false
+	for candidate in instance.find_children("AttackButton", "Button", true, false):
+		var button := candidate as Button
+		if button.is_visible_in_tree():
+			wall_attack = button
+			break
+	for candidate in instance.find_children("GrowthButton", "Button", true, false):
+		visible_growth = visible_growth or (candidate as Button).is_visible_in_tree()
+	_ok(wall_attack != null and wall_attack.text == "试探炮台防线" and wall_attack.is_visible_in_tree(), "first wall reconnaissance exposes the authored information battle")
+	_ok(not visible_growth, "first wall reconnaissance does not send the player to an unavailable pre-discovery solution")
+	game_autoload.current_state().attempt_counters["stage_1_4"] = 1
+	instance.call("_select_stage_card", "stage_1_4")
+	await _wait_frames(2)
+	var known_wall_growth_visible := false
+	for candidate in instance.find_children("GrowthButton", "Button", true, false):
+		known_wall_growth_visible = known_wall_growth_visible or (candidate as Button).is_visible_in_tree()
+	_ok(known_wall_growth_visible, "known first wall hands control back to the normal growth recommendation")
 	instance.call("_select_stage_card", "stage_1_5")
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "chapter boss renders a high-threat mastery target")

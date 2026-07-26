@@ -89,15 +89,21 @@ func _apply_configuration() -> void:
 	threat_level.add_theme_color_override("font_color", RED if _estimated_threat == "高" else GOLD)
 	threat_level.visible = false
 	var action := _report.get("next_action", {}) as Dictionary
-	var needs_growth := String(action.get("id", "attack")) == "upgrade" and _unlocked and not _cleared
+	var action_id := String(action.get("id", "attack"))
+	var needs_growth := action_id == "upgrade" and _unlocked and not _cleared
+	var needs_discovery := action_id == "discover" and _unlocked and not _cleared
 	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
-	next_action.visible = needs_growth
+	next_action.visible = needs_growth or needs_discovery
 	growth_button.visible = needs_growth
 	attack_button.disabled = not _unlocked
 	attack_button.text = (
 		"再次夺取"
 		if _cleared
-		else ("仍要试探" if needs_growth else ("立即出击" if _unlocked else "尚未侦测"))
+		else (
+			"仍要试探"
+			if needs_growth
+			else ("试探炮台防线" if needs_discovery else ("立即出击" if _unlocked else "尚未侦测"))
+		)
 	)
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = PANEL

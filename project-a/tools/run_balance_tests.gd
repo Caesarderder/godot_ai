@@ -50,6 +50,12 @@ func _test_war_readiness_report() -> void:
 	state.factory.materials = {"porcelain": 100, "parts": 1, "sludge": 100}
 	var scarce := WarReadinessReportScript.derive(state, config)
 	_eq(String(scarce.get("weakest_resource_id", "")), "parts", "war report identifies the weakest capacity-adjusted resource")
+	var first_wall := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
+	_eq(String((first_wall.get("next_action", {}) as Dictionary).get("id", "")), "discover", "first 1-4 encounter prioritizes the authored information battle over generic growth")
+	_check(String((first_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("试探炮台"), "first 1-4 encounter names the discovery action")
+	state.attempt_counters["stage_1_4"] = 1
+	var known_wall := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
+	_eq(String((known_wall.get("next_action", {}) as Dictionary).get("id", "")), "upgrade", "known 1-4 wall returns to the normal growth recommendation")
 
 
 func _test_economy_valuation() -> void:

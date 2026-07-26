@@ -45,8 +45,21 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 		recommended,
 		most_damaged_hero_id
 	)
+	var stage_id := String(stage_config.get("stage_id", ""))
+	var cleared_stages := state.stage_progress.get("cleared_stages", []) as Array
+	if (
+		stage_id == "stage_1_4"
+		and int(state.attempt_counters.get(stage_id, 0)) == 0
+		and not cleared_stages.has(stage_id)
+	):
+		next_action = {
+			"id": "discover",
+			"title": "先试探炮台防线",
+			"detail": "这是设计好的首次情报战；先亲自观察单人职责缺口，失败不会损失永久资产。",
+			"hero_id": "",
+		}
 	return {
-		"stage_id": String(stage_config.get("stage_id", "")),
+		"stage_id": stage_id,
 		"stage_name": String(stage_config.get("display_name", "")),
 		"cp_full": full_power,
 		"cp_ready": ready_power,
