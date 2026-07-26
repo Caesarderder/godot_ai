@@ -5,6 +5,7 @@ const CommandExecutorScript := preload("res://game/scripts/commands/command_exec
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const GameStateScript := preload("res://game/scripts/state/game_state.gd")
 const HeroProgressionScript := preload("res://game/scripts/domain/progression/hero_progression.gd")
+const LogisticsServiceScript := preload("res://game/scripts/domain/factory/logistics_service.gd")
 const OnboardingServiceScript := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const SaveManagerCoreScript := preload("res://game/scripts/persistence/save_manager.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
@@ -142,6 +143,20 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 		_check(run_seed, int(boss.get("cannon_suppressed_count", 0)) > 0, "assault growth interrupts at least one cannon warning")
 	else:
 		_check(run_seed, int(boss.get("cannon_guarded_count", 0)) > 0, "armored growth guards at least one cannon impact")
+	var skill_quote := LogisticsServiceScript.active_skill_research_quote(
+		executor.state,
+		growth_hero_id
+	)
+	_check(
+		run_seed,
+		bool(skill_quote.get("ok", false)),
+		"Boss settlement converts the saved chip into an immediately affordable skill-II choice"
+	)
+	_check(
+		run_seed,
+		int((skill_quote.get("cost", {}) as Dictionary).get("skill_chips", 0)) == 1,
+		"post-chapter skill quote consumes exactly the one-chip first research tier"
+	)
 
 	var snapshot := OnboardingServiceScript.snapshot(executor.state)
 	_check(run_seed, bool(snapshot.get("finished", false)), "seven-action onboarding reaches its durable finished state")

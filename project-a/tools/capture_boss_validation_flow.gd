@@ -77,6 +77,16 @@ func _capture() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_1"
 	state.onboarding["active_index"] = 7
 	state.meta_progression.commander_xp = 450
+	var economy_before_skill_capture := {
+		"toilet_coins": int(state.economy.toilet_coins),
+		"industrial_tech": int(state.economy.industrial_tech),
+		"skill_chips": int(state.economy.skill_chips),
+		"materials": state.factory.materials.duplicate(true),
+	}
+	state.economy.toilet_coins = 500
+	state.economy.industrial_tech = 20
+	state.economy.skill_chips = 3
+	state.factory.materials = {"porcelain": 100, "parts": 100, "sludge": 100}
 	main.set("last_settlement", {
 		"ok": true,
 		"event": {
@@ -120,6 +130,27 @@ func _capture() -> void:
 		return
 	if not _save("res://artifacts/ui-chapter-two-handoff-844x390.png"):
 		return
+	var grow := _button_with_text(main, "先培养军团")
+	if grow == null:
+		_fail("chapter two permanent-growth action unavailable")
+		return
+	grow.pressed.emit()
+	for _frame in 10:
+		await process_frame
+	if (
+		main.find_child("LegionContentScroll_roster", true, false) == null
+		or not _tree_has_text(main, "80 币 · 6 技术 · 1 芯片")
+	):
+		_fail("chapter two skill-chip conversion unavailable")
+		return
+	if not _save("res://artifacts/ui-chapter-two-skill-growth-844x390.png"):
+		return
+	state.economy.toilet_coins = int(economy_before_skill_capture["toilet_coins"])
+	state.economy.industrial_tech = int(economy_before_skill_capture["industrial_tech"])
+	state.economy.skill_chips = int(economy_before_skill_capture["skill_chips"])
+	state.factory.materials = (
+		economy_before_skill_capture["materials"] as Dictionary
+	).duplicate(true)
 	main.call("_show_goals")
 	for _frame in 10:
 		await process_frame

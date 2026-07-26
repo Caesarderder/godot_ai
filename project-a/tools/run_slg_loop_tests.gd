@@ -3,6 +3,7 @@ extends SceneTree
 const GameState := preload("res://game/scripts/state/game_state.gd")
 const CommandExecutor := preload("res://game/scripts/commands/command_executor.gd")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
+const LogisticsService := preload("res://game/scripts/domain/factory/logistics_service.gd")
 const GameService := preload("res://game/scripts/autoloads/game.gd")
 const SaveManagerCore := preload("res://game/scripts/persistence/save_manager.gd")
 
@@ -267,6 +268,17 @@ func _verify_skill_research_contract() -> void:
 	probe.state.economy.skill_chips = 9
 	probe.state.economy.toilet_coins = 999
 	probe.state.factory.materials = {"porcelain": 999, "parts": 999, "sludge": 999}
+	var quote := LogisticsService.active_skill_research_quote(probe.state, hero_id)
+	_expect_ok(quote, "active-skill quote recognizes an affordable level-two research")
+	_expect(
+		quote.get("cost", {}) == {
+			"toilet_coins": 80,
+			"industrial_tech": 6,
+			"skill_chips": 1,
+			"materials": {"porcelain": 24, "parts": 16, "sludge": 20},
+		},
+		"active-skill quote exposes the same complete cost used by the transaction"
+	)
 	var level_two := probe.execute({
 		"command_id": "skill-research-2",
 		"type": "research_active_skill",

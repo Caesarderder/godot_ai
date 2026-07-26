@@ -1083,6 +1083,8 @@ func _on_map_preparation_requested(action_id: String) -> void:
 	if action_id == "research":
 		_open_research_lab()
 	else:
+		if action_id == "upgrade":
+			legion_tab = "roster"
 		_show_legion()
 
 
@@ -1152,6 +1154,10 @@ func _legion_view() -> Dictionary:
 	for hero in state.roster:
 		var power := CombatPower.hero_power(hero)
 		var specialty_id := String(LogisticsService.SPECIALTY_FACILITY.get(String(hero.archetype_id), "energy_station"))
+		var skill_quote := LogisticsService.active_skill_research_quote(
+			state,
+			String(hero.hero_id)
+		)
 		var next_growth := "升级提高基础属性"
 		if int(hero.star) < 2:
 			next_growth = "升至 2★ 解锁职责被动"
@@ -1179,10 +1185,18 @@ func _legion_view() -> Dictionary:
 			"power": power,
 			"skill_name": FactoryCatalog.active_skill_for_archetype(String(hero.archetype_id)),
 			"skill_level": int(hero.active_skill_level),
+			"skill_research_target": int(skill_quote.get("target_level", 0)),
+			"skill_research_cost": (
+				(skill_quote.get("cost", {}) as Dictionary).duplicate(true)
+			),
+			"skill_research_error": String(skill_quote.get("error", "")),
+			"skill_research_affordable": bool(skill_quote.get("ok", false)),
 			"owned_data": int(state.meta_progression.hero_data.get(String(hero.archetype_id), 0)),
 			"next_star_data": 4 if int(hero.star) == 1 else 8,
 			"next_growth": next_growth,
-			"skill_research_allowed": int(hero.active_skill_level) + 1 <= int(state.factory.facilities.get("research_lab", 1)) + 1,
+			"skill_research_allowed": (
+				String(skill_quote.get("error", "")) != "RESEARCH_LAB_LEVEL_TOO_LOW"
+			),
 			"specialty_id": specialty_id,
 			"specialty_name": String(FACILITY_NAMES.get(specialty_id, specialty_id)),
 			"specialty_assigned": String(hero.assigned_facility_id) == specialty_id,

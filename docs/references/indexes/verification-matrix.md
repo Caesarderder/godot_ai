@@ -206,6 +206,10 @@ related:
 - 首章战斗心流诊断：`run_platform_tests.gd` 锁定技能成功/过早点击、分关手动输入和最长手动
   战斗决策间隔，不携带英雄 ID；暂停及自动技能区间不会产生假 90 秒停滞。Settings/UI/Lifecycle
   回归锁定玩家可见状态与 App Shell 记录路径；这些指标只为 5 人盲测定位录像，不替代中立访谈。
+- 技能芯片转化：`run_slg_loop_tests.gd` 锁定技能 II/III 的同源 quote、原子消费和研究所门禁；
+  14 条 `run_first_30m_journey_tests.gd` 新档证明冲锋/装甲路线在 Boss 后都立即负担得起技能 II。
+  `run_chapter_one_completion_tests.gd` 锁定第二章成长直达成员页、精确 80/6/1/24/16/20 成本与
+  可操作按钮；`ui-chapter-two-skill-growth-844x390.png` 提供基准横屏首屏证据。
 - Web 私密存储证据：`run_web_private_storage_smoke.mjs` 通过 CDP 原生隔离上下文证明同一 Chrome
   私密会话刷新后存档 hash 不变，销毁上下文再新建时得到不同存档；设置页截图同时证明玩家看到
   “未确认持久存储”与下载备份指引。该证据不等于 IndexedDB 被完全禁用，也不替代生产源验证。

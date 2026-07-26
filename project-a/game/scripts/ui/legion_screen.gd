@@ -378,6 +378,28 @@ func _hero_card(hero: Dictionary) -> Control:
 			11,
 			GOLD if int(hero.get("owned_data", 0)) > 0 else MUTED
 		))
+	if int(hero.get("skill_level", 1)) < 3:
+		var skill_cost := hero.get("skill_research_cost", {}) as Dictionary
+		if not skill_cost.is_empty():
+			var materials := skill_cost.get("materials", {}) as Dictionary
+			info.add_child(_label(
+				"技能 Lv.%d：%d 币 · %d 技术 · %d 芯片 · 陶瓷/零件/能源 %d/%d/%d" % [
+					int(hero.get("skill_research_target", int(hero.get("skill_level", 1)) + 1)),
+					int(skill_cost.get("toilet_coins", 0)),
+					int(skill_cost.get("industrial_tech", 0)),
+					int(skill_cost.get("skill_chips", 0)),
+					int(materials.get("porcelain", 0)),
+					int(materials.get("parts", 0)),
+					int(materials.get("sludge", 0)),
+				],
+				11,
+				MUTED
+			))
+			info.add_child(_label(
+				_skill_research_status(String(hero.get("skill_research_error", ""))),
+				11,
+				GREEN if bool(hero.get("skill_research_affordable", false)) else GOLD
+			))
 	var actions := GridContainer.new()
 	actions.columns = 2
 	actions.custom_minimum_size.x = 360
@@ -393,7 +415,14 @@ func _hero_card(hero: Dictionary) -> Control:
 			hero,
 			false
 		)
-		research.disabled = not bool(hero.get("skill_research_allowed", false))
+		research.name = "ResearchSkill_%s" % String(hero.get("archetype_id", "hero"))
+		research.disabled = (
+			not bool(hero.get("skill_research_allowed", false))
+			or (
+				hero.has("skill_research_affordable")
+				and not bool(hero.get("skill_research_affordable", false))
+			)
+		)
 	if int(hero.get("star", 1)) >= 2:
 		_add_action(
 			actions,
@@ -413,6 +442,24 @@ func _hero_card(hero: Dictionary) -> Control:
 		false
 	)
 	return panel
+
+
+func _skill_research_status(error: String) -> String:
+	match error:
+		"":
+			return "资源已齐 · 研究后主动技能威力提高 20%"
+		"RESEARCH_LAB_LEVEL_TOO_LOW":
+			return "需先升级研究所"
+		"NOT_ENOUGH_INDUSTRIAL_TECH":
+			return "工业技术不足 · 继续首次占领新城"
+		"NOT_ENOUGH_SKILL_CHIPS":
+			return "技能芯片不足 · 击败章节 Boss 或领取长期进度"
+		"NOT_ENOUGH_TOILET_COINS":
+			return "马桶币不足 · 继续攻城获得战果"
+		"NOT_ENOUGH_FACTORY_MATERIALS":
+			return "工业材料不足 · 收取工厂产出"
+		_:
+			return "当前不可研究"
 
 
 func _add_action(parent: Control, text: String, action_id: String, hero: Dictionary, primary: bool) -> Button:

@@ -227,6 +227,21 @@ App Shell 只发布“进入页面、命令成功/失败、开战/结算、技�
 派生指标只用于定位录像中的迷路、误触和 90 秒停滞，不能代替玩家对目标理解、乐趣和继续意愿的
 中立访谈，也不能晋升为联网遥测或应用级 Autoload。
 
+首章后技能芯片转化的所有权脊柱为：
+
+```text
+LogisticsService active-skill cost table
+  --same cost query-------> App Shell detached hero growth view
+  --exact cost/status-----> LegionScreen roster card
+  --player command-------> CommandExecutor
+  --atomic validation-----> LogisticsService research_active_skill
+```
+
+成本只能由领域层定义一次，UI 不复制数值或自行判断余额。首章 Boss 前的专注成长仍只允许已验证的
+冲锋/装甲二星路线，避免技能研究抢走通关必需材料；Boss 后“先培养军团”直接进入角色成长页，
+把已经获得的芯片、技术和工厂材料显示为一个可比较的自主成长选项。此路径不自动消费奖励、不新增
+任务硬锁，也不通过弹窗打断第二章侦察。
+
 ## 资产治理
 
 - 全局字体、共享 UI 主题放 `assets/fonts`、未来 `game/ui/themes`；feature-only 资产随 feature；

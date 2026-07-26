@@ -34,6 +34,10 @@ func _run() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_1"
 	state.onboarding["active_index"] = 7
 	state.meta_progression.commander_xp = 450
+	state.economy.toilet_coins = 500
+	state.economy.industrial_tech = 20
+	state.economy.skill_chips = 3
+	state.factory.materials = {"porcelain": 100, "parts": 100, "sludge": 100}
 	main.set("last_settlement", {
 		"ok": true,
 		"event": {
@@ -82,6 +86,20 @@ func _run() -> void:
 		grow_first.pressed.emit()
 		await _wait_frames(4)
 	_check(main.find_child("LegionFormationTab", true, false) != null, "reconnaissance growth action routes to the legion without starting a battle")
+	_check(
+		main.find_child("LegionContentScroll_roster", true, false) != null,
+		"chapter-two growth opens permanent hero growth instead of an unrelated formation overview"
+	)
+	_check(
+		_tree_has_text(main, "80 币 · 6 技术 · 1 芯片")
+			and _tree_has_text(main, "陶瓷/零件/能源 24/16/20"),
+		"the first skill-chip sink exposes its exact canonical cost"
+	)
+	var skill_research := main.find_child("ResearchSkill_assault", true, false) as Button
+	_check(
+		skill_research != null and not skill_research.disabled,
+		"Boss rewards make active-skill level two an immediately actionable post-chapter option"
+	)
 
 	main.call("_show_goals")
 	await _wait_frames(4)

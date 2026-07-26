@@ -273,34 +273,16 @@ static func upgrade_star(state: RefCounted, hero_id: String) -> Dictionary:
 
 
 static func research_active_skill(state: RefCounted, hero_id: String) -> Dictionary:
+	var quote := active_skill_research_quote(state, hero_id)
+	if not bool(quote.get("ok", false)):
+		return {"ok": false, "error": String(quote.get("error", "ACTIVE_SKILL_RESEARCH_UNAVAILABLE"))}
 	var hero: RefCounted = state.hero_by_id(hero_id)
-	if hero == null:
-		return {"ok": false, "error": "HERO_NOT_FOUND"}
-	var target_level := int(hero.active_skill_level) + 1
-	if target_level > 3:
-		return {"ok": false, "error": "ACTIVE_SKILL_LEVEL_CAP_REACHED"}
-	var lab_level := int(state.factory.facilities.get("research_lab", 1))
-	if target_level > lab_level + 1:
-		return {"ok": false, "error": "RESEARCH_LAB_LEVEL_TOO_LOW"}
-	var tech_cost := 6 if target_level == 2 else 12
-	var chip_cost := 1 if target_level == 2 else 2
-	var coin_cost := 80 if target_level == 2 else 160
-	var material_cost := {
-		"porcelain": 24 if target_level == 2 else 48,
-		"parts": 16 if target_level == 2 else 32,
-		"sludge": 20 if target_level == 2 else 40,
-	}
-	if int(state.economy.industrial_tech) < tech_cost:
-		return {"ok": false, "error": "NOT_ENOUGH_INDUSTRIAL_TECH"}
-	if int(state.economy.skill_chips) < chip_cost:
-		return {"ok": false, "error": "NOT_ENOUGH_SKILL_CHIPS"}
-	if int(state.economy.toilet_coins) < coin_cost:
-		return {"ok": false, "error": "NOT_ENOUGH_TOILET_COINS"}
-	if not state.factory.can_spend(material_cost):
-		return {"ok": false, "error": "NOT_ENOUGH_FACTORY_MATERIALS"}
-	state.economy.industrial_tech -= tech_cost
-	state.economy.skill_chips -= chip_cost
-	state.economy.toilet_coins -= coin_cost
+	var target_level := int(quote["target_level"])
+	var cost := quote["cost"] as Dictionary
+	var material_cost := cost["materials"] as Dictionary
+	state.economy.industrial_tech -= int(cost["industrial_tech"])
+	state.economy.skill_chips -= int(cost["skill_chips"])
+	state.economy.toilet_coins -= int(cost["toilet_coins"])
 	state.factory.spend(material_cost)
 	hero.active_skill_level = target_level
 	return {"ok": true, "event": {
@@ -308,12 +290,56 @@ static func research_active_skill(state: RefCounted, hero_id: String) -> Diction
 		"hero_id": hero_id,
 		"skill_id": FactoryCatalogScript.active_skill_for_archetype(String(hero.archetype_id)),
 		"skill_level": target_level,
-		"industrial_tech_cost": tech_cost,
-		"skill_chip_cost": chip_cost,
-		"coin_cost": coin_cost,
-		"material_cost": material_cost,
+		"industrial_tech_cost": int(cost["industrial_tech"]),
+		"skill_chip_cost": int(cost["skill_chips"]),
+		"coin_cost": int(cost["toilet_coins"]),
+		"material_cost": material_cost.duplicate(true),
 		"skill_power_bp": 10000 + (target_level - 1) * 2000,
 	}}
+
+
+static func active_skill_research_quote(state: RefCounted, hero_id: String) -> Dictionary:
+	var hero: RefCounted = state.hero_by_id(hero_id)
+	if hero == null:
+		return {"ok": false, "error": "HERO_NOT_FOUND"}
+	var target_level := int(hero.active_skill_level) + 1
+	if target_level > 3:
+		return {"ok": false, "error": "ACTIVE_SKILL_LEVEL_CAP_REACHED"}
+	var cost := {
+		"toilet_coins": 80 if target_level == 2 else 160,
+		"industrial_tech": 6 if target_level == 2 else 12,
+		"skill_chips": 1 if target_level == 2 else 2,
+		"materials": {
+			"porcelain": 24 if target_level == 2 else 48,
+			"parts": 16 if target_level == 2 else 32,
+			"sludge": 20 if target_level == 2 else 40,
+		},
+	}
+	var lab_level := int(state.factory.facilities.get("research_lab", 1))
+	if target_level > lab_level + 1:
+		return {
+			"ok": false,
+			"error": "RESEARCH_LAB_LEVEL_TOO_LOW",
+			"target_level": target_level,
+			"cost": cost,
+			"lab_level": lab_level,
+		}
+	var error := ""
+	if int(state.economy.industrial_tech) < int(cost["industrial_tech"]):
+		error = "NOT_ENOUGH_INDUSTRIAL_TECH"
+	elif int(state.economy.skill_chips) < int(cost["skill_chips"]):
+		error = "NOT_ENOUGH_SKILL_CHIPS"
+	elif int(state.economy.toilet_coins) < int(cost["toilet_coins"]):
+		error = "NOT_ENOUGH_TOILET_COINS"
+	elif not state.factory.can_spend(cost["materials"] as Dictionary):
+		error = "NOT_ENOUGH_FACTORY_MATERIALS"
+	return {
+		"ok": error.is_empty(),
+		"error": error,
+		"target_level": target_level,
+		"cost": cost,
+		"lab_level": lab_level,
+	}
 
 
 static func assign_specialist(state: RefCounted, hero_id: String, facility_id: String) -> Dictionary:
