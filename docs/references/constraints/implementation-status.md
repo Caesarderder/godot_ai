@@ -157,7 +157,10 @@ related:
   `scripts/main.gd` App Shell；它保留在源码供迁移追溯，不再占用玩家首包。
 - Chrome 私密上下文已验证同会话刷新保留、关闭上下文后丢弃并与新上下文隔离。Web 端不再把
   `OS.is_userfs_persistent()` 的引擎能力值展示成长期保留保证；设置页统一提示下载备份。
-  完全禁用 IndexedDB 与最终生产源持久化仍是独立发布门禁。
+  完全阻断 IndexedDB 也已由隔离 Chrome profile 在页面脚本前注入 `SecurityError` 验证：Godot
+  会退化为刷新即丢失的内存会话，因此 `WebRuntime` 异步区分 `checking / session_available /
+  blocked`，阻断时标题首屏在玩家开始前显示红色警告，设置页要求允许站点存储或立即导出备份；
+  `browser-blocked-storage-844x390.png` 证明警告与主 CTA 同时可读。最终生产源持久化仍是独立门禁。
 - 工厂右侧 HUD 已进一步改为“行动 / 设施 / 建造”互斥按钮组，每次只投影一个系统面板，不再使用
   工厂详情 `ScrollContainer`。点击 3D 建筑会直接切到对应设施面板；建造目录收敛为两列紧凑按钮，
   选择后继续在左侧网格完成选址与确认。该 HUD 已由独立 `FactoryScreen.tscn + .gd` 接管，

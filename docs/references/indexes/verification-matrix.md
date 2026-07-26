@@ -220,7 +220,11 @@ related:
   可操作按钮；`ui-chapter-two-skill-growth-844x390.png` 提供基准横屏首屏证据。
 - Web 私密存储证据：`run_web_private_storage_smoke.mjs` 通过 CDP 原生隔离上下文证明同一 Chrome
   私密会话刷新后存档 hash 不变，销毁上下文再新建时得到不同存档；设置页截图同时证明玩家看到
-  “未确认持久存储”与下载备份指引。该证据不等于 IndexedDB 被完全禁用，也不替代生产源验证。
+  “未确认持久存储”与下载备份指引。
+- Web 阻断存储证据：设置 `GODOT_WEB_SMOKE_BLOCK_INDEXEDDB=1` 后，同一工具会在任何页面脚本前
+  注入 `SecurityError`，断言候选仍启动为 844×390 可见 Canvas，并记录浏览器与候选 revision；
+  `run_platform_tests.gd` 锁定 `blocked` 能力状态，`run_title_screen_tests.gd` 锁定首屏明确写出
+  “刷新后会丢失”，浏览器截图复核主 CTA 未被风险提示挤出。最终生产源持久化仍是独立门禁。
 - M7 领域与 UI：`run_meta_progression_tests.gd`、`run_meta_tests.gd`、`run_ui_smoke_tests.gd`
   覆盖 v8 往返、v5/v6/v7 迁移、任务与批量等级/战令/成就领奖、30 项成就、十抽 A、60 抽 S、
   专属数据升星、招募英雄六槽替换和顶层待领取计数；

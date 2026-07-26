@@ -57,7 +57,10 @@ State labels:
 - [ ] Browser reload/restart persistence proof on the final production origin (local HTTP proof passes).
 - [x] Chrome private-context proof: reload within one context preserves the save, closing it discards that
   save, and a new private context starts with distinct local data (`node tools/run_web_private_storage_smoke.mjs`).
-- [ ] Fully blocked-storage browser proof; domain commands already reject failed writes atomically.
+- [x] Fully blocked-storage local Chrome proof: IndexedDB throws `SecurityError` before Godot boot,
+  the title remains usable and warns before play that refresh will lose progress
+  (`GODOT_WEB_SMOKE_BLOCK_INDEXEDDB=1 node tools/run_web_private_storage_smoke.mjs`);
+  domain commands separately reject synchronous save failures atomically.
 - [x] Web UI treats engine persistence capability conservatively and directs players to download a backup
   instead of presenting a private/session-only IndexedDB write as guaranteed retention.
 - [ ] Accessibility review: focus visibility, readable/scalable text, non-color cues, reduced motion where needed, critical-audio alternatives.

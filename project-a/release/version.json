@@ -18,7 +18,7 @@
     "final HTTPS deployment URL and version id",
     "production MIME/compression/cache/security headers",
     "Chrome Android and Safari iOS real-device smoke",
-    "production-origin persistence and blocked-storage behavior",
+    "production-origin persistence behavior",
     "final legal/IP/asset-license review",
     "monitoring and rollback rehearsal"
   ]

@@ -361,12 +361,13 @@ async function main() {
 				};
 			})()`);
 			await screenshot(first.cdp, "browser-blocked-storage-844x390.png");
-			console.log("WEB_BLOCKED_STORAGE_PROBE_PASS");
+			console.log("WEB_BLOCKED_STORAGE_SMOKE_PASS");
 			console.log(JSON.stringify({
 				candidate: candidate.revision,
 				browser: (await browser.cdp.send("Browser.getVersion")).product,
 				state,
 				evidence: ["artifacts/browser-blocked-storage-844x390.png"],
+				verification: "IndexedDB throws SecurityError before Godot boot; title remains playable and the blocked-storage warning is covered by TitleScreen tests plus browser screenshot review.",
 			}, null, 2));
 			return;
 		}
