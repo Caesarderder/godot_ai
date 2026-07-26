@@ -47,17 +47,39 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 	)
 	var stage_id := String(stage_config.get("stage_id", ""))
 	var cleared_stages := state.stage_progress.get("cleared_stages", []) as Array
-	if (
-		stage_id == "stage_1_4"
-		and int(state.attempt_counters.get(stage_id, 0)) == 0
-		and not cleared_stages.has(stage_id)
-	):
-		next_action = {
-			"id": "discover",
-			"title": "先试探炮台防线",
-			"detail": "这是设计好的首次情报战；先亲自观察单人职责缺口，失败不会损失永久资产。",
-			"hero_id": "",
-		}
+	if stage_id == "stage_1_4" and not cleared_stages.has(stage_id):
+		var attempts := int(state.attempt_counters.get(stage_id, 0))
+		if attempts == 0:
+			next_action = {
+				"id": "discover",
+				"title": "先试探炮台防线",
+				"detail": "这是设计好的首次情报战；先亲自观察单人职责缺口，失败不会损失永久资产。",
+				"hero_id": "",
+			}
+		elif int(state.factory.facilities.get("research_lab", 0)) <= 0:
+			next_action = {
+				"id": "research",
+				"title": "建造研究所",
+				"detail": "首败已经揭示职责缺口；使用保障币建造研究所，打开确定性援军方案。",
+				"hero_id": "",
+			}
+		elif not (_has_archetype(state, "assault") and _has_archetype(state, "armored")):
+			next_action = {
+				"id": "research",
+				"title": "启动免费突破十连",
+				"detail": "研究所已经就绪；免费突破固定获得冲锋与装甲，不消耗招募券或长期保底。",
+				"hero_id": "",
+			}
+		elif not (
+			_formation_has_archetype(state, "assault")
+			and _formation_has_archetype(state, "armored")
+		):
+			next_action = {
+				"id": "formation",
+				"title": "把两名援军编入队伍",
+				"detail": "永久援军已经到位；让装甲承伤、冲锋压制，再发动反攻。",
+				"hero_id": "",
+			}
 	return {
 		"stage_id": stage_id,
 		"stage_name": String(stage_config.get("display_name", "")),
@@ -137,3 +159,18 @@ static func _next_action(
 		"detail": "当前战力和战备均达到推荐线，可以主动推进。",
 		"hero_id": "",
 	}
+
+
+static func _has_archetype(state: RefCounted, archetype_id: String) -> bool:
+	for hero in state.roster:
+		if String(hero.archetype_id) == archetype_id:
+			return true
+	return false
+
+
+static func _formation_has_archetype(state: RefCounted, archetype_id: String) -> bool:
+	for hero_id in state.formation.hero_ids():
+		var hero: RefCounted = state.hero_by_id(String(hero_id))
+		if hero != null and String(hero.archetype_id) == archetype_id:
+			return true
+	return false

@@ -2,7 +2,7 @@ class_name StageDetailPanel
 extends PanelContainer
 
 signal attack_requested(stage_id: String)
-signal growth_requested()
+signal preparation_requested(action_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const PANEL := Color("#12171c")
@@ -32,12 +32,13 @@ var _report: Dictionary = {}
 var _unlocked := false
 var _cleared := false
 var _estimated_threat := "未知"
+var _preparation_action_id := "upgrade"
 
 
 func _ready() -> void:
 	_apply_theme()
 	attack_button.pressed.connect(_on_attack_pressed)
-	growth_button.pressed.connect(growth_requested.emit)
+	growth_button.pressed.connect(_on_preparation_pressed)
 	if not _config.is_empty():
 		_apply_configuration()
 
@@ -90,18 +91,25 @@ func _apply_configuration() -> void:
 	threat_level.visible = false
 	var action := _report.get("next_action", {}) as Dictionary
 	var action_id := String(action.get("id", "attack"))
-	var needs_growth := action_id == "upgrade" and _unlocked and not _cleared
+	var needs_preparation := action_id in ["upgrade", "research", "formation"] and _unlocked and not _cleared
 	var needs_discovery := action_id == "discover" and _unlocked and not _cleared
+	_preparation_action_id = action_id
 	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
-	next_action.visible = needs_growth or needs_discovery
-	growth_button.visible = needs_growth
+	next_action.visible = needs_preparation or needs_discovery
+	growth_button.visible = needs_preparation
+	if action_id == "upgrade":
+		growth_button.text = "先培养军团"
+	elif action_id == "formation":
+		growth_button.text = "编入两名援军"
+	else:
+		growth_button.text = String(action.get("title", "建造研究所")) if needs_preparation else "先培养军团"
 	attack_button.disabled = not _unlocked
 	attack_button.text = (
 		"再次夺取"
 		if _cleared
 		else (
 			"仍要试探"
-			if needs_growth
+			if needs_preparation
 			else ("试探炮台防线" if needs_discovery else ("立即出击" if _unlocked else "尚未侦测"))
 		)
 	)
@@ -171,3 +179,7 @@ func _risk_color(risk_id: String) -> Color:
 func _on_attack_pressed() -> void:
 	if not _stage_id.is_empty():
 		attack_requested.emit(_stage_id)
+
+
+func _on_preparation_pressed() -> void:
+	preparation_requested.emit(_preparation_action_id)

@@ -956,12 +956,23 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(wall_attack != null and wall_attack.text == "试探炮台防线" and wall_attack.is_visible_in_tree(), "first wall reconnaissance exposes the authored information battle")
 	_ok(not visible_growth, "first wall reconnaissance does not send the player to an unavailable pre-discovery solution")
 	game_autoload.current_state().attempt_counters["stage_1_4"] = 1
+	game_autoload.current_state().factory.eligible_facilities["research_lab"] = true
+	game_autoload.current_state().factory.facilities["research_lab"] = 0
+	game_autoload.current_state().factory.facility_placements.erase("research_lab")
 	instance.call("_select_stage_card", "stage_1_4")
 	await _wait_frames(2)
-	var known_wall_growth_visible := false
+	var known_wall_preparation: Button = null
 	for candidate in instance.find_children("GrowthButton", "Button", true, false):
-		known_wall_growth_visible = known_wall_growth_visible or (candidate as Button).is_visible_in_tree()
-	_ok(known_wall_growth_visible, "known first wall hands control back to the normal growth recommendation")
+		if (candidate as Button).is_visible_in_tree():
+			known_wall_preparation = candidate as Button
+			break
+	_ok(known_wall_preparation != null and known_wall_preparation.text == "建造研究所", "known first wall advances to the exact research recovery")
+	if known_wall_preparation != null:
+		known_wall_preparation.pressed.emit()
+		await _wait_frames(3)
+	_ok(String(instance.get("selected_facility_id")) == "research_lab", "map recovery action opens the research facility instead of generic legion growth")
+	instance.call("_show_map")
+	await _wait_frames(2)
 	instance.call("_select_stage_card", "stage_1_5")
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "chapter boss renders a high-threat mastery target")

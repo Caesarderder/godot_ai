@@ -1095,7 +1095,7 @@ func _show_map() -> void:
 	war_zone.chapter_selected.connect(_select_chapter)
 	war_zone.stage_selected.connect(_select_stage_card)
 	war_zone.attack_requested.connect(_start_stage_battle)
-	war_zone.growth_requested.connect(_show_legion)
+	war_zone.preparation_requested.connect(_on_map_preparation_requested)
 	shell.add_child(war_zone)
 	_add_nav(shell, Screen.MAP)
 
@@ -1114,6 +1114,13 @@ func _select_stage_card(stage_id: String) -> void:
 func _start_stage_battle(stage_id: String) -> void:
 	selected_stage_id = stage_id
 	_start_battle()
+
+
+func _on_map_preparation_requested(action_id: String) -> void:
+	if action_id == "research":
+		_open_research_lab()
+	else:
+		_show_legion()
 
 
 func _show_legion() -> void:

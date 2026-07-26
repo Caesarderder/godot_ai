@@ -31,5 +31,16 @@ func _capture() -> void:
 		push_error("FIRST WALL RECONNAISSANCE CAPTURE FAIL: %s" % error_string(error))
 		quit(1)
 		return
+	state.attempt_counters["stage_1_4"] = 1
+	state.factory.eligible_facilities["research_lab"] = true
+	main.call("_show_map")
+	for _frame in 8:
+		await process_frame
+	image = root.get_viewport().get_texture().get_image()
+	error = image.save_png("res://artifacts/ui-first-wall-recovery-844x390.png")
+	if error != OK:
+		push_error("FIRST WALL RECOVERY CAPTURE FAIL: %s" % error_string(error))
+		quit(1)
+		return
 	print("FIRST_WALL_RECONNAISSANCE_CAPTURE_OK")
 	quit(0)

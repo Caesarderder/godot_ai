@@ -4,7 +4,7 @@ extends VBoxContainer
 signal chapter_selected(chapter: int)
 signal stage_selected(stage_id: String)
 signal attack_requested(stage_id: String)
-signal growth_requested()
+signal preparation_requested(action_id: String)
 
 const STAGE_DETAIL_PANEL_SCENE := preload("res://game/scenes/ui/stage_detail_panel.tscn")
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
@@ -98,7 +98,7 @@ func _rebuild() -> void:
 		_estimated_threat
 	)
 	detail.attack_requested.connect(_on_attack_requested)
-	detail.growth_requested.connect(growth_requested.emit)
+	detail.preparation_requested.connect(preparation_requested.emit)
 	detail_host.add_child(detail)
 
 

@@ -36,7 +36,7 @@ func _run() -> void:
 
 
 func _test_war_readiness_report() -> void:
-	var state: RefCounted = GameStateScript.create_new(20260726, 1000)
+	var state: RefCounted = GameStateScript.create_new(20260726, 1000, false)
 	var config := StageCatalogScript.stage("stage_1_1")
 	var healthy := WarReadinessReportScript.derive(state, config)
 	_check(int(healthy.get("cp_full", 0)) > 0, "war report derives positive formation power")
@@ -54,8 +54,23 @@ func _test_war_readiness_report() -> void:
 	_eq(String((first_wall.get("next_action", {}) as Dictionary).get("id", "")), "discover", "first 1-4 encounter prioritizes the authored information battle over generic growth")
 	_check(String((first_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("试探炮台"), "first 1-4 encounter names the discovery action")
 	state.attempt_counters["stage_1_4"] = 1
+	state.factory.eligible_facilities["research_lab"] = true
 	var known_wall := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
-	_eq(String((known_wall.get("next_action", {}) as Dictionary).get("id", "")), "upgrade", "known 1-4 wall returns to the normal growth recommendation")
+	_eq(String((known_wall.get("next_action", {}) as Dictionary).get("id", "")), "research", "known 1-4 wall routes to research instead of generic growth")
+	_check(String((known_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("建造研究所"), "known 1-4 wall names the first executable recovery")
+	state.factory.facilities["research_lab"] = 1
+	var lab_ready := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
+	_check(String((lab_ready.get("next_action", {}) as Dictionary).get("title", "")).contains("免费突破十连"), "built lab advances the recovered action to the deterministic breakthrough")
+	var assault: RefCounted = HeroGeneratorScript.generate_archetype(20260726, 2, "assault", "fighter")
+	var armored: RefCounted = HeroGeneratorScript.generate_archetype(20260726, 3, "armored", "guardian")
+	state.roster.append(assault)
+	state.roster.append(armored)
+	var reinforcements_ready := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
+	_eq(String((reinforcements_ready.get("next_action", {}) as Dictionary).get("id", "")), "formation", "claimed breakthrough advances the recovered action to formation")
+	state.formation.slots["troop_1"] = armored.hero_id
+	state.formation.slots["troop_2"] = assault.hero_id
+	var counterattack_ready := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
+	_check(String((counterattack_ready.get("next_action", {}) as Dictionary).get("id", "")) not in ["research", "formation", "upgrade"], "deployed reinforcements release the player to counterattack")
 
 
 func _test_economy_valuation() -> void:
