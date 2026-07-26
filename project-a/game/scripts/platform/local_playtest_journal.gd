@@ -27,8 +27,12 @@ const FIRST_SESSION_MILESTONES: Array[String] = [
 	"first_city_captured",
 	"pressure_stage_cleared",
 	"high_wall_failed",
+	"research_lab_constructed",
 	"research_breakthrough",
+	"counterattack_formation_ready",
 	"counterattack_won",
+	"resource_facility_constructed",
+	"first_factory_output_claimed",
 	"growth_chosen",
 	"chapter_boss_defeated",
 ]
@@ -154,6 +158,17 @@ func _derive_first_session_metrics() -> Dictionary:
 			battle_attempts[started_stage] = int(battle_attempts.get(started_stage, 0)) + 1
 			if started_stage == "stage_1_1":
 				_mark_milestone("first_battle_started", elapsed, completed, milestone_seconds)
+			if (
+				started_stage == "stage_1_4"
+				and completed.has("high_wall_failed")
+				and int(details.get("deployed_heroes", 0)) >= 3
+			):
+				_mark_milestone(
+					"counterattack_formation_ready",
+					elapsed,
+					completed,
+					milestone_seconds
+				)
 		elif event_type == "battle_finished":
 			var stage_id := String(details.get("stage_id", ""))
 			var outcome := String(details.get("outcome", ""))
@@ -173,19 +188,70 @@ func _derive_first_session_metrics() -> Dictionary:
 				_mark_milestone("chapter_boss_defeated", elapsed, completed, milestone_seconds)
 		elif event_type == "command_result" and bool(details.get("ok", false)):
 			var command_type := String(details.get("command_type", ""))
-			if command_type == "claim_research_breakthrough":
+			if (
+				command_type == "construct_facility"
+				and completed.has("high_wall_failed")
+				and not completed.has("research_breakthrough")
+			):
+				_mark_milestone("research_lab_constructed", elapsed, completed, milestone_seconds)
+			elif (
+				command_type == "claim_research_breakthrough"
+				and completed.has("research_lab_constructed")
+			):
 				_mark_milestone("research_breakthrough", elapsed, completed, milestone_seconds)
-			elif command_type == "upgrade_hero_star":
+			elif (
+				command_type == "construct_facility"
+				and completed.has("counterattack_won")
+			):
+				_mark_milestone(
+					"resource_facility_constructed",
+					elapsed,
+					completed,
+					milestone_seconds
+				)
+			elif (
+				command_type == "claim_factory_output"
+				and completed.has("resource_facility_constructed")
+			):
+				_mark_milestone(
+					"first_factory_output_claimed",
+					elapsed,
+					completed,
+					milestone_seconds
+				)
+			elif (
+				command_type == "upgrade_hero_star"
+				and completed.has("first_factory_output_claimed")
+			):
 				_mark_milestone("growth_chosen", elapsed, completed, milestone_seconds)
 		previous_event = event
 	var repeated_battles := 0
 	for attempts_value in battle_attempts.values():
 		repeated_battles += maxi(0, int(attempts_value) - 1)
+	var milestone_intervals: Dictionary = {}
+	var previous_milestone := ""
+	for milestone_id in FIRST_SESSION_MILESTONES:
+		if not milestone_seconds.has(milestone_id):
+			continue
+		var milestone_elapsed := int(milestone_seconds[milestone_id])
+		milestone_intervals[milestone_id] = (
+			milestone_elapsed
+			if previous_milestone.is_empty()
+			else milestone_elapsed - int(milestone_seconds[previous_milestone])
+		)
+		previous_milestone = milestone_id
+	var next_milestone := ""
+	for milestone_id in FIRST_SESSION_MILESTONES:
+		if not completed.has(milestone_id):
+			next_milestone = milestone_id
+			break
 	return {
 		"milestone_count": completed.size(),
 		"milestone_total": FIRST_SESSION_MILESTONES.size(),
 		"completed_milestones": completed,
 		"milestone_elapsed_seconds": milestone_seconds,
+		"milestone_intervals_seconds": milestone_intervals,
+		"next_missing_milestone": next_milestone,
 		"first_meaningful_input_seconds": int(milestone_seconds.get("first_battle_started", -1)),
 		"longest_non_battle_gap_seconds": longest_non_battle_gap,
 		"has_90_second_non_battle_gap": longest_non_battle_gap >= 90,

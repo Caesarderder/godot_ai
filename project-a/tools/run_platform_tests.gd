@@ -183,9 +183,15 @@ func _test_local_playtest_first_session_metrics() -> void:
 		{"type": "screen_view", "details": {"screen": "goals"}, "time": 2224},
 		{"type": "battle_started", "details": {"stage_id": "stage_1_4"}, "time": 2232},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_4", "outcome": "defeat"}, "time": 2264},
+		{"type": "command_result", "details": {"command_type": "upgrade_hero_star", "ok": true}, "time": 2270},
+		{"type": "command_result", "details": {"command_type": "construct_facility", "ok": true}, "time": 2320},
 		{"type": "command_result", "details": {"command_type": "claim_research_breakthrough", "ok": true}, "time": 2370},
-		{"type": "battle_started", "details": {"stage_id": "stage_1_4"}, "time": 2380},
+		{"type": "command_result", "details": {"command_type": "assign_formation_slot", "ok": true, "revision_after": 7}, "time": 2374},
+		{"type": "command_result", "details": {"command_type": "assign_formation_slot", "ok": true, "revision_after": 8}, "time": 2378},
+		{"type": "battle_started", "details": {"stage_id": "stage_1_4", "deployed_heroes": 3}, "time": 2380},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_4", "outcome": "victory"}, "time": 2445},
+		{"type": "command_result", "details": {"command_type": "construct_facility", "ok": true}, "time": 2450},
+		{"type": "command_result", "details": {"command_type": "claim_factory_output", "ok": true}, "time": 2455},
 		{"type": "command_result", "details": {"command_type": "upgrade_hero_star", "ok": true}, "time": 2460},
 		{"type": "command_result", "details": {"command_type": "upgrade_facility", "ok": false}, "time": 2465},
 		{"type": "battle_started", "details": {"stage_id": "stage_1_5"}, "time": 2472},
@@ -199,14 +205,28 @@ func _test_local_playtest_first_session_metrics() -> void:
 	var exported: Dictionary = journal.export_report(2570)
 	var report := JSON.parse_string(String(exported.get("text", ""))) as Dictionary
 	var metrics := report.get("first_session_metrics", {}) as Dictionary
-	_eq(int(metrics.get("milestone_count", 0)), 8, "derived funnel recognizes all eight first-session milestones")
+	_eq(int(metrics.get("milestone_count", 0)), 12, "derived funnel recognizes all twelve first-session milestones")
 	_check(bool(metrics.get("chapter_loop_completed", false)), "derived funnel recognizes chapter-loop completion")
+	_eq(String(metrics.get("next_missing_milestone", "missing")), "", "completed funnel has no missing milestone")
+	_eq(
+		int((metrics.get("milestone_intervals_seconds", {}) as Dictionary).get("research_breakthrough", -1)),
+		50,
+		"derived funnel isolates time between laboratory construction and breakthrough"
+	)
+	_eq(
+		int((metrics.get("milestone_elapsed_seconds", {}) as Dictionary).get("growth_chosen", -1)),
+		460,
+		"out-of-order growth does not advance the first-session funnel before factory output"
+	)
 	_eq(int(metrics.get("first_meaningful_input_seconds", -1)), 12, "first meaningful input uses relative session time")
 	_eq(int(metrics.get("max_navigation_only_streak", 0)), 3, "derived funnel measures navigation-only churn")
 	_eq(int(metrics.get("failed_command_count", 0)), 1, "derived funnel counts rejected player commands")
 	_eq(int(metrics.get("repeated_battle_count", 0)), 1, "derived funnel counts the intentional high-wall retry")
-	_eq(int(metrics.get("longest_non_battle_gap_seconds", 0)), 106, "derived funnel measures the longest non-battle pause")
-	_check(bool(metrics.get("has_90_second_non_battle_gap", false)), "derived funnel flags a 90-second non-battle stall")
+	_eq(int(metrics.get("longest_non_battle_gap_seconds", 0)), 62, "derived funnel measures the longest non-battle pause")
+	_check(
+		not bool(metrics.get("has_90_second_non_battle_gap", true)),
+		"meaningful laboratory progress prevents a false 90-second stall flag"
+	)
 	_eq(
 		int((metrics.get("battle_attempts", {}) as Dictionary).get("stage_1_4", 0)),
 		2,

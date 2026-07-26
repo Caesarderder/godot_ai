@@ -20,10 +20,13 @@ with its backup when the player disables recording or selects the clear action. 
 uploads this report.
 
 When the player downloads the report, the game derives a first-session summary from those same
-whitelisted events: eight onboarding milestone timestamps, per-stage attempt counts, failed-command
-count, navigation-only streaks, and the longest non-battle event gap. These values add no new source
-data or identifier. They can help locate friction, but cannot establish player comprehension,
-enjoyment, or intent to continue without observation and a neutral interview.
+whitelisted events: twelve onboarding milestone timestamps, time between consecutive milestones,
+the next missing milestone, per-stage attempt counts, failed-command count, navigation-only streaks,
+and the longest non-battle event gap. The added milestones separate laboratory construction,
+breakthrough, formation, resource-facility commissioning, first output, and growth without recording
+their command payloads. These values add no new source data or identifier. They can help locate
+friction, but cannot establish player comprehension, enjoyment, or intent to continue without
+observation and a neutral interview.
 
 Stored local data may include:
 
