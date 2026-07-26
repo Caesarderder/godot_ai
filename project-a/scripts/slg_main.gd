@@ -3161,11 +3161,16 @@ func _clear() -> void:
 	var restore_generation := ui_rebuild_generation
 	_restore_scroll_positions.call_deferred(restore_generation)
 	active_safe_margin = null
+	get_viewport().gui_release_focus()
 	for child in ui_root.get_children():
-		ui_root.remove_child(child)
+		child.name = "_RetiredUI%d" % child.get_instance_id()
+		child.process_mode = Node.PROCESS_MODE_DISABLED
+		if child is Control:
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		child.queue_free()
 	for child in world_host.get_children():
-		world_host.remove_child(child)
+		child.name = "_RetiredWorld%d" % child.get_instance_id()
+		child.process_mode = Node.PROCESS_MODE_DISABLED
 		child.queue_free()
 	battle_world = null
 	battle_pause_button = null

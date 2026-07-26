@@ -18,6 +18,8 @@ func _run() -> void:
 	})
 	root.add_child(title)
 	await process_frame
+	await process_frame
+	await process_frame
 	var primary_button := title.get_node("%TitlePrimaryButton") as Button
 	var settings_button := title.get_node("%TitleSettingsButton") as Button
 	var help_button := title.get_node("%TitleHelpButton") as Button

@@ -32,13 +32,24 @@ func _ready() -> void:
 	help_button.pressed.connect(action_requested.emit.bind("help"))
 	if not _view.is_empty():
 		_apply_view()
-	primary_button.grab_focus()
+	# Web viewport sizing can replace the initial title instance during its first
+	# frame. Wait until that responsive pass settles, then reject stale instances
+	# before touching Control focus.
+	_focus_primary_after_layout()
 
 
 func configure(view: Dictionary) -> void:
 	_view = view.duplicate(true)
 	if is_node_ready():
 		_apply_view()
+
+
+func _focus_primary_after_layout() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not is_inside_tree() or not primary_button.is_inside_tree():
+		return
+	primary_button.grab_focus()
 
 
 func _apply_view() -> void:
