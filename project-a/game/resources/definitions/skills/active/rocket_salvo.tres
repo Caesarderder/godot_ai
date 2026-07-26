@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"rocket_salvo"
+archetype_id = &"rocket"
+display_name = "火箭齐射"
+short_label = "箭"
+role_copy = "远程攻城 · 快速拆除结构"
+effect_copy = "轰击当前目标；二星齐射本阶段目标，三星破坏结构护甲。"
+timing_copy = "设施层或 Boss 外甲暴露时释放。"

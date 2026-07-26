@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"siege_shield"
+archetype_id = &"armored"
+display_name = "攻城护盾"
+short_label = "盾"
+role_copy = "全队承伤 · 格挡核心巨炮"
+effect_copy = "为全队提供护盾；二星冲门并进入巨炮格挡反震，三星嘲讽精英。"
+timing_copy = "核心巨炮预警倒计时内释放，挡住炮击并反伤炮台。"

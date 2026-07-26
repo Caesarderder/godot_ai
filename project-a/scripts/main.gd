@@ -1,6 +1,7 @@
 extends Node
 
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const ActiveSkillCatalog := preload("res://game/scripts/content/active_skill_catalog.gd")
 const FactoryService := preload("res://game/scripts/domain/factory/factory_service.gd")
 const HeroProgression := preload("res://game/scripts/domain/progression/hero_progression.gd")
 const CombatPower := preload("res://game/scripts/domain/progression/combat_power.gd")
@@ -3920,16 +3921,8 @@ func _workshop_index(workshop_id: String) -> int:
 
 
 func _skill_short(skill_id: String) -> String:
-	return {
-		"plunger_charge": "冲",
-		"sonic_disruptor": "音",
-		"rocket_salvo": "箭",
-		"suicide_dive": "爆",
-		"siege_shield": "盾",
-		"saw_rush": "锯",
-		"field_repair": "修",
-		"parasite_swarm": "寄",
-	}.get(skill_id, "技")
+	var skill_view := ActiveSkillCatalog.view(skill_id)
+	return String(skill_view.get("short_label", "技"))
 
 
 func _role_name(role_id: String) -> String:

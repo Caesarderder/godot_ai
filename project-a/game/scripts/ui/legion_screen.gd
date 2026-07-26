@@ -369,6 +369,15 @@ func _hero_card(hero: Dictionary) -> Control:
 		12,
 		CYAN
 	))
+	info.add_child(_label(
+		"%s\n%s\n最佳时机：%s" % [
+			String(hero.get("skill_role", "")),
+			String(hero.get("skill_effect", "")),
+			String(hero.get("skill_timing", "")),
+		],
+		11,
+		MUTED
+	))
 	if int(hero.get("star", 1)) < 3:
 		info.add_child(_label(
 			"专属数据 %d/%d · 不足部分可由通用碎片补足" % [

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"plunger_charge"
+archetype_id = &"assault"
+display_name = "皮搋冲锋"
+short_label = "冲"
+role_copy = "前线突破 · 优先重击守军"
+effect_copy = "重击最近守军；二星顺劈同阶段敌人，三星追加眩晕。"
+timing_copy = "精英准备攻击或守军密集时释放。"

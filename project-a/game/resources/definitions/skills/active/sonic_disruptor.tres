@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"sonic_disruptor"
+archetype_id = &"sonic"
+display_name = "音波干扰"
+short_label = "音"
+role_copy = "群体控制 · 削弱守军火力"
+effect_copy = "伤害并削弱同路守军；二星覆盖全线，三星短暂压制普通守军。"
+timing_copy = "守军火力高峰前释放，让全队安全输出。"

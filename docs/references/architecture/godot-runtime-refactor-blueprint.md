@@ -93,12 +93,15 @@ project-a/
     │   │   └── act_1/stage_1_1..5.tres      # 已实现：首30分钟关卡高频策划字段
     │   ├── archetypes/
     │   ├── skills/
+    │   │   └── active/*.tres                # 当前里程碑：九个主动技能的玩家可读定义
     │   └── facilities/
     └── scripts/content/
         ├── objective_hurdle_definition.gd    # 当前里程碑：typed 卡点 Resource + 自校验
         ├── objective_hurdle_catalog.gd       # 当前里程碑：固定 preload、唯一 task ID 与只读 view
         ├── research_breakthrough_card_definition.gd # 当前里程碑：typed 十连卡定义
         ├── research_breakthrough_catalog.gd # 当前里程碑：固定十卡、聚合预算与保底隔离校验
+        ├── active_skill_definition.gd        # 当前里程碑：稳定技能 ID、名称、效果与时机
+        ├── active_skill_catalog.gd           # 当前里程碑：固定九技能、原型引用与内容校验
         ├── stage_definition.gd               # 已实现：typed Resource class + 自校验
         └── stage_definition_catalog.gd       # 已实现：固定 preload、唯一 ID 与完整性校验
 ```
@@ -152,6 +155,7 @@ UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 Ap
 | 首章卡点定义 | `ObjectiveHurdleDefinition` typed Resource + 七个 `.tres` | 运行时共享只读；只承载稳定 task ID、大小坎、原因和过坎办法 |
 | 首章行动任务与目标条件 | `OnboardingTaskDefinition` / `OnboardingObjectiveDefinition` typed Resource + 七个任务、十个目标 `.tres` | 运行时共享只读；定义任务顺序、玩家文案、CTA、完成条件与奖励预算，不保存完成进度 |
 | 免费研究突破配方 | `ResearchBreakthroughCardDefinition` typed Resource + 十个 `.tres` | 运行时共享只读；恰好两名永久援军与八张研究物资，服务按定义原子发奖 |
+| 主动技能玩家定义 | `ActiveSkillDefinition` typed Resource + 九个 `.tres` | 运行时共享只读；稳定 ID 继续供战斗逻辑使用，名称、职责、实际效果和释放时机供 UI 投影；不保存等级、能量、冷却或伤害运行态 |
 | UI view model | duplicate-safe Dictionary，后续按压力升级 typed value | 只读投影；不得保存 Node 引用 |
 | 本地试玩心流证据 | `LocalPlaytestJournal` 有界 JSON + 导出派生指标 | 默认关闭、仅白名单相对时间与语义动作；不联网、不记录 payload、角色 ID、设备或账号标识 |
 
@@ -242,6 +246,21 @@ LogisticsService active-skill cost table
 把已经获得的芯片、技术和工厂材料显示为一个可比较的自主成长选项。此路径不自动消费奖励、不新增
 任务硬锁，也不通过弹窗打断第二章侦察。
 
+主动技能内容的所有权脊柱为：
+
+```text
+FactoryCatalog archetype --stable active_skill ID--> ActiveSkillCatalog fixed preload
+BattleSession -----------same stable ID-----------> deterministic combat rule
+ActiveSkillCatalog -------detached player view----> App Shell
+App Shell ----------------display fields----------> LegionScreen / BattleHudScreen
+```
+
+`ActiveSkillCatalog` 必须校验恰好九个唯一技能、每个 `FactoryCatalog` 原型都能解析到定义且
+`archetype_id` 反向一致；未知 ID 失败关闭并返回空 view。UI 不显示内部 ID，也不自行解释战斗公式。
+`BattleSession` 仍是伤害、目标、星级分支和事件的唯一权威，Resource 只用与当前实现一致的玩家语言
+解释“做什么、何时用”。此切片不新增场景或 Autoload：现有 App Shell 是定义查询与 screen view
+组装 owner，screen 重建时只消费 detached Dictionary，因此没有新增信号或重复连接生命周期。
+
 ## 资产治理
 
 - 全局字体、共享 UI 主题放 `assets/fonts`、未来 `game/ui/themes`；feature-only 资产随 feature；
@@ -297,6 +316,9 @@ App Shell 只投影现有 `SettingsStore` / Web 能力、执行持久化与浏�
 `EpilogueScreen` 接管第一幕完成后的叙事兑现、25 城占领、永久角色与军团养成总结，并把
 “挑战无尽前线、刷新军团极限”设为新的大目标；App Shell 只计算战果投影并路由无尽、里程碑
 和基地三个延续行动。
+九个主动技能已迁入 `ActiveSkillDefinition` typed Resource 与固定 preload Catalog；军团培养页
+显示中文技能名、职责、实际效果和最佳时机，战斗技能卡显示“角色 · 技能名”并携带同源时机提示。
+稳定内部 ID 仍只用于 `FactoryCatalog`、存档引用和 `BattleSession` 确定性规则，不再泄漏给玩家。
 `BattleResultScreen` 在首章引导未完成时优先使用 `OnboardingService.snapshot()` 的下一真实
 行动；1-4 反攻后以“选择工业支援”进入工厂，并隐藏重复的通用工厂按钮，直到设施投产、后勤
 收取和援军升星完成后才把 1-5 暴露为主 CTA。

@@ -216,7 +216,10 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	stack.add_theme_constant_override("separation", 2)
 	root.add_child(stack)
 	var header := HBoxContainer.new()
-	var name_label := _label(String(snapshot.get("display_name", unit_id)), 12, TEXT)
+	var name_label := _label("%s · %s" % [
+		String(snapshot.get("display_name", unit_id)),
+		String(snapshot.get("skill_display_name", "主动技能")),
+	], 12, TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	header.add_child(name_label)
@@ -235,7 +238,10 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	skill.flat = true
 	skill.focus_mode = Control.FOCUS_ALL
 	skill.custom_minimum_size.y = 72
-	skill.tooltip_text = "能量达到 100% 后释放主动技能"
+	skill.tooltip_text = "%s\n%s" % [
+		String(snapshot.get("skill_display_name", "主动技能")),
+		String(snapshot.get("skill_timing", "能量达到 100% 后释放")),
+	]
 	var empty_style := StyleBoxEmpty.new()
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		skill.add_theme_stylebox_override(state, empty_style)

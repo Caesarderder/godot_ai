@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"parasite_swarm"
+archetype_id = &"parasite"
+display_name = "寄生虫群"
+short_label = "寄"
+role_copy = "召唤干扰 · 分担敌方火力"
+effect_copy = "召唤寄生幼体作战；二星召唤更多幼体，三星优先策反普通守军。"
+timing_copy = "精英波次或持续炮火需要分担目标时释放。"

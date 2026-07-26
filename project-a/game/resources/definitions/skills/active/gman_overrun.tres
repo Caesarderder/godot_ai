@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"gman_overrun"
+archetype_id = &"gman"
+display_name = "统帅碾压"
+short_label = "统"
+role_copy = "全线攻坚 · 同时建立自保护盾"
+effect_copy = "重创当前阶段全部目标，并获得短时护盾。"
+timing_copy = "敌人或结构集中出现时释放，一次处理整段防线。"

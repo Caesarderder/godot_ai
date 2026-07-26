@@ -16,6 +16,7 @@ const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_gener
 const WarReadinessReport := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
 const CampaignObjectiveProjection := preload("res://game/scripts/domain/objectives/campaign_objective_projection.gd")
 const ResearchBreakthroughCatalog := preload("res://game/scripts/content/research_breakthrough_catalog.gd")
+const ActiveSkillCatalog := preload("res://game/scripts/content/active_skill_catalog.gd")
 const WarZoneScreenScene := preload("res://game/scenes/screens/war_zone_screen.tscn")
 const BattleResultScreenScene := preload("res://game/scenes/screens/battle_result_screen.tscn")
 const BattleHudScreenScene := preload("res://game/scenes/screens/battle_hud_screen.tscn")
@@ -1154,6 +1155,8 @@ func _legion_view() -> Dictionary:
 	for hero in state.roster:
 		var power := CombatPower.hero_power(hero)
 		var specialty_id := String(LogisticsService.SPECIALTY_FACILITY.get(String(hero.archetype_id), "energy_station"))
+		var skill_id := FactoryCatalog.active_skill_for_archetype(String(hero.archetype_id))
+		var skill_view := ActiveSkillCatalog.view(skill_id)
 		var skill_quote := LogisticsService.active_skill_research_quote(
 			state,
 			String(hero.hero_id)
@@ -1183,7 +1186,10 @@ func _legion_view() -> Dictionary:
 			"level": int(hero.level),
 			"star": int(hero.star),
 			"power": power,
-			"skill_name": FactoryCatalog.active_skill_for_archetype(String(hero.archetype_id)),
+			"skill_name": String(skill_view.get("display_name", "未知主动技能")),
+			"skill_role": String(skill_view.get("role_copy", "")),
+			"skill_effect": String(skill_view.get("effect_copy", "")),
+			"skill_timing": String(skill_view.get("timing_copy", "")),
 			"skill_level": int(hero.active_skill_level),
 			"skill_research_target": int(skill_quote.get("target_level", 0)),
 			"skill_research_cost": (
@@ -2448,6 +2454,8 @@ func _battle_snapshots() -> Array[Dictionary]:
 		if hero == null:
 			continue
 		var stats := HeroProgression.derived_battle_stats(hero)
+		var skill_id := FactoryCatalog.active_skill_for_archetype(hero.archetype_id)
+		var skill_view := ActiveSkillCatalog.view(skill_id)
 		snapshots.append({
 			"hero_id": hero.hero_id,
 			"display_name": hero.display_name,
@@ -2460,7 +2468,9 @@ func _battle_snapshots() -> Array[Dictionary]:
 			"speed_milli": int(stats["speed_milli"]),
 			"crit_bp": int(stats["crit_bp"]),
 			"slot": slot_index,
-			"skill_id": FactoryCatalog.active_skill_for_archetype(hero.archetype_id),
+			"skill_id": skill_id,
+			"skill_display_name": String(skill_view.get("display_name", "主动技能")),
+			"skill_timing": String(skill_view.get("timing_copy", "")),
 			"skill_level": int(hero.active_skill_level),
 			"auto_skill": bool(hero.auto_skill_enabled) or bool(settings_store.global_auto_skill),
 		})

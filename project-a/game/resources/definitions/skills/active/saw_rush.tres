@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"saw_rush"
+archetype_id = &"saw"
+display_name = "双锯突袭"
+short_label = "锯"
+role_copy = "精英斩杀 · 专切高防目标"
+effect_copy = "优先突袭精英；二星追加连斩，三星击杀后返还能量。"
+timing_copy = "精英或高防结构出现时释放。"

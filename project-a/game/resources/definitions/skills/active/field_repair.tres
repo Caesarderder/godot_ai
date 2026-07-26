@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"field_repair"
+archetype_id = &"repair"
+display_name = "战地抢修"
+short_label = "修"
+role_copy = "持续修复 · 挽救最低血主力"
+effect_copy = "抢修当前最低血队友；二星同时治疗三人，三星可拉起一名本局倒下的主力。"
+timing_copy = "炮击后或主力即将倒下时释放。"

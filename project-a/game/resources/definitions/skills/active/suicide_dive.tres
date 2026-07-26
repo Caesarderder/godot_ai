@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"suicide_dive"
+archetype_id = &"bomber"
+display_name = "舍身俯冲"
+short_label = "爆"
+role_copy = "范围爆发 · 以生存换取伤害"
+effect_copy = "对当前目标造成高额伤害；二星波及同阶段目标，三星取消自损。"
+timing_copy = "密集增援出现时释放；一二星注意施放后的残血风险。"

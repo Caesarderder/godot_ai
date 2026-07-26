@@ -18,6 +18,8 @@ func _run() -> void:
 		"display_name": "测试先锋",
 		"max_hp": 200,
 		"skill_id": "siege_shield",
+		"skill_display_name": "攻城护盾",
+		"skill_timing": "核心巨炮预警倒计时内释放",
 		"star": 2,
 	}], true, true)
 	await process_frame
@@ -26,6 +28,8 @@ func _run() -> void:
 	_check(hud.find_child("BattleSkillModeButton", true, false) != null, "HUD owns an explicit skill mode")
 	var skill_button := hud.find_child("BattleSkillButton_hero_test", true, false) as Button
 	_check(skill_button != null, "HUD builds one skill action for each permanent hero")
+	_check(_tree_has_text(hud, "测试先锋 · 攻城护盾"), "HUD names the real player-facing skill")
+	_check(skill_button != null and skill_button.tooltip_text.contains("核心巨炮预警"), "HUD exposes the skill timing")
 	hud.apply_snapshot({
 		"stage_index": 2,
 		"stage_count": 3,
@@ -171,3 +175,12 @@ func _run() -> void:
 func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+
+func _tree_has_text(node: Node, expected: String) -> bool:
+	if node is Label and expected in String((node as Label).text):
+		return true
+	for child in node.get_children():
+		if _tree_has_text(child, expected):
+			return true
+	return false
