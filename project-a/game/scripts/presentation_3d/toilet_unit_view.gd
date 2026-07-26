@@ -152,6 +152,8 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 	var display_name := String(unit_snapshot.get("display_name", ""))
 	var elite := bool(unit_snapshot.get("elite", false))
 	_use_external_model = _add_external_ally_model(archetype_id)
+	if team == TEAM_ALLY and slot == 0 and not bool(unit_snapshot.get("temporary", false)):
+		_add_command_marker()
 	var porcelain_key := "ally_porcelain" if team == TEAM_ALLY else "enemy_porcelain"
 	var accent_key := "ally_accent" if team == TEAM_ALLY else "enemy_accent"
 	_add_part("Base", "base", porcelain_key, Vector3(0.0, 0.34, 0.0))
@@ -207,6 +209,32 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 	_body_pivot.add_child(_hp_label)
 	if team != TEAM_ALLY:
 		_build_enemy_health_bar()
+
+
+func _add_command_marker() -> void:
+	var marker := Node3D.new()
+	marker.name = "CommandMarker"
+	marker.position.y = 0.06
+	var ring := MeshInstance3D.new()
+	ring.name = "CommandRing"
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.78
+	ring_mesh.outer_radius = 0.92
+	ring_mesh.rings = 14
+	ring_mesh.ring_segments = 5
+	ring.mesh = ring_mesh
+	ring.material_override = _material(Color("#7eeaff"), 0.35, Color("#24c9ff"), 1.05)
+	marker.add_child(ring)
+	var chevron := MeshInstance3D.new()
+	chevron.name = "CommandChevron"
+	var chevron_mesh := PrismMesh.new()
+	chevron_mesh.size = Vector3(0.52, 0.06, 0.68)
+	chevron.mesh = chevron_mesh
+	chevron.position = Vector3(0.0, 0.04, 1.18)
+	chevron.rotation_degrees.y = 180.0
+	chevron.material_override = _material(Color("#d8fbff"), 0.3, Color("#44ddff"), 1.2)
+	marker.add_child(chevron)
+	_body_pivot.add_child(marker)
 
 
 func _build_enemy_health_bar() -> void:

@@ -29,6 +29,7 @@ func _capture() -> void:
 		if int(hero_snapshot.get("energy", 0)) >= 100:
 			break
 		world.call("_process", 0.2)
+		_step_unit_views(world, 0.2)
 		battle_snapshot = world.call("snapshot")
 	if int(_permanent_hero(battle_snapshot).get("energy", 0)) < 100:
 		push_error("FIRST SKILL CAPTURE FAIL: real battle never reached the first ready skill")
@@ -95,3 +96,12 @@ func _permanent_hero(battle_snapshot: Dictionary) -> Dictionary:
 		if bool(unit.get("alive", false)) and not bool(unit.get("temporary", false)):
 			return unit
 	return {}
+
+
+func _step_unit_views(world: Node, delta: float) -> void:
+	var units_root := world.get_node_or_null("AttackingArmy")
+	if units_root == null:
+		return
+	for child in units_root.get_children():
+		if child.has_method("_process"):
+			child.call("_process", delta)

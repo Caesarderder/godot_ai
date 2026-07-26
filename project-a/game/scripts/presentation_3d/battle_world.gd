@@ -237,7 +237,7 @@ func _build_stage(stage: Node3D) -> void:
 	road_mesh.size = Vector3(12.0, 0.18, 38.0)
 	road.mesh = road_mesh
 	road.position = Vector3(0.0, -0.12, -3.0)
-	road.material_override = _material(Color("#28323d"), 0.96)
+	road.material_override = _material(Color("#202a34"), 0.96)
 	stage.add_child(road)
 	for side in [-1.0, 1.0]:
 		var sidewalk := MeshInstance3D.new()
@@ -245,7 +245,7 @@ func _build_stage(stage: Node3D) -> void:
 		sidewalk_mesh.size = Vector3(3.2, 0.28, 38.0)
 		sidewalk.mesh = sidewalk_mesh
 		sidewalk.position = Vector3(side * 7.55, -0.04, -3.0)
-		sidewalk.material_override = _material(Color("#48515b"), 0.94)
+		sidewalk.material_override = _material(Color("#343e48"), 0.94)
 		stage.add_child(sidewalk)
 	for marker in range(11):
 		var stripe := MeshInstance3D.new()
@@ -280,7 +280,7 @@ func _build_stage(stage: Node3D) -> void:
 		var side := -1.0 if index % 2 == 0 else 1.0
 		building.position = Vector3(side * 8.2, building_mesh.size.y * 0.5, 11.0 - float(index / 2) * 5.5)
 		building.rotation_degrees.z = float((index % 3) - 1) * 1.8
-		building.material_override = _material(Color("#34414d").lightened(float(index % 4) * 0.035), 0.9)
+		building.material_override = _material(Color("#27333e").lightened(float(index % 4) * 0.025), 0.92)
 		stage.add_child(building)
 		if index % 3 == 0:
 			_add_fire_window(stage, building.position + Vector3(side * -0.08, building_mesh.size.y * 0.28, -1.28))
@@ -416,7 +416,8 @@ func _sync_views(battle_snapshot: Dictionary) -> void:
 func _create_target_marker() -> Node3D:
 	var root := Node3D.new()
 	root.name = "BattleTargetMarker"
-	for ring_index in range(2):
+	var ring_count := 1 if _effects_quality == "low" else 2
+	for ring_index in range(ring_count):
 		var ring_node := MeshInstance3D.new()
 		ring_node.name = "TargetRing%d" % (ring_index + 1)
 		var ring := TorusMesh.new()
@@ -425,7 +426,6 @@ func _create_target_marker() -> Node3D:
 		ring.rings = 18 if _effects_quality != "low" else 12
 		ring.ring_segments = 5 if _effects_quality != "low" else 4
 		ring_node.mesh = ring
-		ring_node.rotation_degrees.x = 90.0
 		ring_node.material_override = _emissive_material(Color("#ffd36a"), Color("#ffb52e"), 1.25, 0.2)
 		root.add_child(ring_node)
 	var arrow := MeshInstance3D.new()
@@ -556,10 +556,11 @@ func _create_structure_view(data: Dictionary) -> Node3D:
 	body.mesh = mesh
 	body.position.y = mesh.size.y * 0.5
 	body.material_override = _material(
-		Color("#7b858d") if kind == "city" else (Color("#6f7780") if kind != "core" else Color("#4b5969")),
+		Color("#4d5662") if kind == "city" else (Color("#555c64") if kind != "core" else Color("#3f4856")),
 		0.78
 	)
 	root.add_child(body)
+	_add_hostile_structure_marks(root, mesh.size, kind)
 	if kind == "city":
 		for tower_index in range(3):
 			var tower := _box_node(
@@ -613,6 +614,35 @@ func _create_structure_view(data: Dictionary) -> Node3D:
 	label.no_depth_test = true
 	root.add_child(label)
 	return root
+
+
+func _add_hostile_structure_marks(root: Node3D, body_size: Vector3, kind: String) -> void:
+	var stripe := _box_node(
+		"HostileFacadeStripe",
+		Vector3(maxf(1.4, body_size.x * 0.72), 0.34, 0.08),
+		Color("#a94231"),
+		0.48,
+		Color("#ff5b32"),
+		0.72
+	)
+	stripe.position = Vector3(0.0, maxf(0.72, body_size.y * 0.58), body_size.z * 0.5 + 0.05)
+	root.add_child(stripe)
+	var lamp_count := 3 if kind in ["city", "core"] else 2
+	for lamp_index in range(lamp_count):
+		var lamp := _box_node(
+			"HostileLamp_%d" % lamp_index,
+			Vector3(0.34, 0.34, 0.1),
+			Color("#ffb04b"),
+			0.38,
+			Color("#ff6a32"),
+			1.15
+		)
+		lamp.position = Vector3(
+			(float(lamp_index) - float(lamp_count - 1) * 0.5) * 1.05,
+			maxf(1.05, body_size.y * 0.76),
+			body_size.z * 0.5 + 0.065
+		)
+		root.add_child(lamp)
 
 
 func _apply_structure_snapshot(view: Node3D, data: Dictionary) -> void:

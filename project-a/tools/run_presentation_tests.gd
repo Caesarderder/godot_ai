@@ -87,6 +87,8 @@ func _check_reduced_motion_low_quality() -> void:
 	})
 	unit_view.call("_process", 0.2)
 	var body_pivot := unit_view.get_node("BodyPivot") as Node3D
+	_ok(body_pivot.get_node_or_null("CommandMarker/CommandRing") != null, "squad leader keeps one cyan shape marker independent of labels")
+	_ok(body_pivot.get_node_or_null("CommandMarker/CommandChevron") != null, "squad leader marker includes a directional chevron")
 	_eq(body_pivot.position, Vector3.ZERO, "reduced motion removes unit bob and attack lunge")
 	_eq(body_pivot.scale, Vector3.ONE, "reduced motion removes unit hit and skill squash")
 	world.configure_presentation("low", false)
@@ -156,6 +158,16 @@ func _check_target_camera_framing() -> void:
 		_ok(marker.get_node_or_null("TargetRing1") != null, "target marker keeps a shape cue independent of color")
 		_ok(marker.get_node_or_null("AdvanceArrow") != null, "target marker shows the army advance direction")
 		_eq(marker.position, world.call("_world_position", 250, 0) + Vector3(0.0, 0.08, 0.0), "target marker follows the projected target")
+	var structure_view := world.call("_create_structure_view", {
+		"structure_id": &"visual_target",
+		"display_name": "视觉目标",
+		"kind": "city",
+		"road_position": 430,
+		"lane": 1,
+	}) as Node3D
+	_ok(structure_view.get_node_or_null("HostileFacadeStripe") != null, "hostile structure uses a facade stripe distinct from background buildings")
+	_ok(structure_view.get_node_or_null("HostileLamp_0") != null, "hostile structure keeps a shape-localized warning lamp")
+	structure_view.queue_free()
 	await _dispose_world(world)
 
 

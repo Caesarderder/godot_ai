@@ -240,6 +240,11 @@ related:
   越过军团。`run_presentation_tests.gd` 覆盖敌人优先级、结构回退、远距截断和单一 marker。
   `capture_first_skill_tutorial.gd` 不再伪造 HUD 前线而保留出生点世界，而是推进真实 1-1 直到
   首次技能充满后，用同一 snapshot 生成 844×390 教学与实际结果证据；真人两秒识别仍待盲测。
+- 首战世界视觉层级：背景道路/建筑使用低饱和冷灰；敌方结构拥有面向进攻方的橙红立面条和结构
+  灯；零号永久角色独占青色指挥环与方向楔形，当前目标继续使用更大的金色环和箭头。
+  `run_presentation_tests.gd` 验证结构标记与队长标记节点，Compatibility 截图验证两种地面环方向
+  正确且角色位于真实推进位置。截图工具在每个领域 tick 同步步进 `ToiletUnitView`，不再把已推进
+  的 snapshot 与仍停在出生点的表现模型拼成伪证据；50% 缩图识别仍待目标玩家盲测。
 - 目标卡点内容边界：`ObjectiveHurdleDefinition` 与七个首章 `.tres` 分离稳定 task ID、大小坎、
   失败原因和过坎办法；固定 preload Catalog 校验唯一性与完整性，并向
   `CampaignObjectiveProjection` 返回 detached view。`run_objective_hurdle_definition_tests.gd`
