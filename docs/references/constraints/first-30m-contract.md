@@ -179,6 +179,12 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 必须完成的内容。证据为 `run_chapter_one_completion_tests.gd`、
 `artifacts/ui-chapter-two-handoff-844x390.png` 与 `artifacts/ui-chapter-two-goal-844x390.png`。
 
+跨会话恢复必须保持同一目标。首章完成存档重新进入标题页时，摘要显示第二章挑战线真实缺口；
+“返回指挥室”进入基地后，“前线来电”投影为第二章备战任务及同一“先培养军团”主行动，不能
+退回“新兵训练完成”或无定位地打开第一章地图。该行动直接进入军团，不自动启动 2-1。
+视觉证据为 `artifacts/ui-chapter-two-resume-title-844x390.png` 与
+`artifacts/ui-chapter-two-resume-base-844x390.png`。
+
 ## 关卡合同
 
 数值区间是首轮 `target`；玩家感受是 `playtest hypothesis`。

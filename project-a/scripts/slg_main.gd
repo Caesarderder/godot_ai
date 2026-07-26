@@ -495,7 +495,15 @@ func _title_progress_snapshot() -> Dictionary:
 	else:
 		primary_label = "返回指挥室"
 		var next_config := StageCatalog.stage(highest)
-		objective = "前线等待命令 · %s" % String(next_config.get("display_name", highest))
+		var next_report := WarReadinessReport.derive(state, next_config)
+		var next_action := next_report.get("next_action", {}) as Dictionary
+		if cleared_values.has("stage_1_5") and String(next_action.get("id", "attack")) == "upgrade":
+			objective = "第二章备战 · 还差 %d 战力到挑战线" % maxi(
+				0,
+				int(next_report.get("minimum_power", 0)) - int(next_report.get("cp_ready", 0))
+			)
+		else:
+			objective = "前线等待命令 · %s" % String(next_config.get("display_name", highest))
 	return {
 		"primary_label": primary_label,
 		"summary": "已夺回 %d 座城镇 · %d 名战士仍在回应" % [cleared_count, hero_count],
@@ -778,7 +786,7 @@ func _show_base() -> void:
 
 func _factory_view() -> Dictionary:
 	var state: RefCounted = game.current_state()
-	var onboarding := OnboardingService.snapshot(state)
+	var onboarding := _factory_task_view(state)
 	var growth_facility_choice := (
 		String(onboarding.get("task_id", "")) == "operation.choose_growth"
 		and _onboarding_objective_id(onboarding) == "commission_resource_facility"
@@ -853,6 +861,43 @@ func _factory_view() -> Dictionary:
 			"can_confirm": cell_selected and not occupied,
 			"occupied": occupied,
 		},
+	}
+
+
+func _factory_task_view(state: RefCounted) -> Dictionary:
+	var onboarding := OnboardingService.snapshot(state)
+	if not bool(onboarding.get("finished", false)):
+		return onboarding
+	var stage_id := String(state.stage_progress.get("highest_unlocked_stage", "stage_2_1"))
+	var config := StageCatalog.stage(stage_id)
+	var report := WarReadinessReport.derive(state, config)
+	var action := report.get("next_action", {}) as Dictionary
+	var needs_growth := String(action.get("id", "attack")) == "upgrade"
+	var challenge_gap := maxi(
+		0,
+		int(report.get("minimum_power", 0)) - int(report.get("cp_ready", 0))
+	)
+	return {
+		"finished": false,
+		"onboarding_finished": true,
+		"title": "第二章备战：震荡封锁线",
+		"lesson": "首章资产全部保留；先跨过新的成长坎，再侦察声波防线。",
+		"cta_label": "先培养军团" if needs_growth else "侦察 %s" % String(config.get("display_name", stage_id)),
+		"target": "legion" if needs_growth else "map",
+		"stage_id": stage_id,
+		"progress": 0 if needs_growth else 1,
+		"target_value": 1,
+		"completed": false,
+		"claimed": true,
+		"objectives": [{
+			"id": "reach_next_challenge_line",
+			"label": (
+				"将军团提升至挑战线（还差 %d 战力）" % challenge_gap
+				if needs_growth
+				else "侦察并准备进攻 %s" % String(config.get("display_name", stage_id))
+			),
+			"completed": false,
+		}],
 	}
 
 

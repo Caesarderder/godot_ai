@@ -128,6 +128,26 @@ func _capture() -> void:
 		return
 	if not _save("res://artifacts/ui-chapter-two-goal-844x390.png"):
 		return
+	main.call("_show_title")
+	for _frame in 10:
+		await process_frame
+	if not _tree_has_text(main, "第二章备战 · 还差"):
+		_fail("chapter two resume title unavailable")
+		return
+	if not _save("res://artifacts/ui-chapter-two-resume-title-844x390.png"):
+		return
+	var resume := _button_with_text(main, "返回指挥室")
+	if resume == null:
+		_fail("chapter two resume action unavailable")
+		return
+	resume.pressed.emit()
+	for _frame in 10:
+		await process_frame
+	if not _tree_has_text(main, "第二章备战：震荡封锁线"):
+		_fail("chapter two resumed factory task unavailable")
+		return
+	if not _save("res://artifacts/ui-chapter-two-resume-base-844x390.png"):
+		return
 	main.queue_free()
 	await process_frame
 	print("BOSS VALIDATION FLOW CAPTURE PASS")

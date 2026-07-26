@@ -95,6 +95,23 @@ func _run() -> void:
 		await _wait_frames(4)
 	_check(main.find_child("LegionFormationTab", true, false) != null, "post-onboarding goal action opens the executable growth screen")
 
+	main.call("_show_title")
+	await _wait_frames(4)
+	_check(_tree_has_text(main, "第二章备战 · 还差"), "returning title summarizes the same chapter-two challenge-line gap")
+	var resume := _button_with_text(main, "返回指挥室")
+	_check(resume != null, "returning chapter-one save exposes a safe command-room resume")
+	if resume != null:
+		resume.pressed.emit()
+		await _wait_frames(4)
+	_check(_tree_has_text(main, "第二章备战：震荡封锁线"), "resumed factory replaces the completed onboarding card with the next campaign task")
+	_check(_tree_has_text(main, "将军团提升至挑战线"), "resumed factory preserves the quantified growth objective")
+	var resumed_growth := _button_with_text(main, "先培养军团")
+	_check(resumed_growth != null, "resumed factory keeps the safe growth route as its primary action")
+	if resumed_growth != null:
+		resumed_growth.pressed.emit()
+		await _wait_frames(4)
+	_check(main.find_child("LegionFormationTab", true, false) != null, "resumed factory growth action opens the legion instead of an obsolete map target")
+
 	state = game.current_state()
 	assault = _hero_for(state, "assault")
 	armored = _hero_for(state, "armored")
