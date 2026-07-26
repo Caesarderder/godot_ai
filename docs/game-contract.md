@@ -138,7 +138,7 @@ related:
 - handoff_request: 维护新档状态机、首败分支、免费突破、三人反攻、自主成长、Boss 决战和 Web 验证
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 7-seed 战斗扫描和 14 条干净新档旅程已证明规则、工厂首批后勤、经济可达性与存档恢复；尚缺 5 名目标玩家
+- deviation: 7-seed 战斗扫描和 14 条默认手动技能的干净新档旅程已证明规则、工厂首批后勤、经济可达性、手动操作路径与存档恢复；冲锋靠预警爆发压制，装甲靠预警护盾承炮反震。尚缺 5 名目标玩家
   盲测，不能由自动证据宣称节奏、Boss 可读性或继续游玩意愿达标。
 - last_updated: 2026-07-27
 - last_verified: —
@@ -213,7 +213,8 @@ related:
 - handoff_blocking: true
 - deviation: 当前自动证据已证明首章规则台阶和两条 Boss 成长路线；首章行动已改为随领域结果
   exact-once 自动结算奖励并直接暴露下一真实行动，删除七次无意义领奖门禁；行动六加入资源设施
-  投产与首批后勤收取，使工厂产出在 Boss 前真正进入军团成长闭环。尚无目标玩家盲测，
+  投产与首批后勤收取，使工厂产出在 Boss 前真正进入军团成长闭环；默认手动技能旅程要求玩家
+  在 Boss 预警中作出时机判断，冲锋打断、装甲承炮反震形成两种可见解法。尚无目标玩家盲测，
   因此不能宣称首 30 分钟好玩或达到上线质量。
 - last_updated: 2026-07-27
 - last_verified: —

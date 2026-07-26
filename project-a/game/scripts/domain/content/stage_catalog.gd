@@ -223,7 +223,7 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"final_structure_id": "alliance_core",
 		"suppressible_cannon": is_boss,
 		"cannon_suppression_target": _cannon_suppression_target(chapter) if is_boss else 0,
-		"cannon_warning_ticks": 20 if is_boss else 0,
+		"cannon_warning_ticks": (25 if chapter == 1 else 20) if is_boss else 0,
 		"next_stage_id": next_id,
 		"reward_victory": {
 			"gold": 35 + chapter * 8 + stage_in_chapter * 3,

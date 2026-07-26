@@ -34,6 +34,7 @@ var _cannon_suppression_target: int = 0
 var _cannon_warning_ticks: int = CANNON_FUSE_TICKS
 var _cannons_suppressed: int = 0
 var _cannon_impacts: int = 0
+var _cannon_impacts_guarded: int = 0
 var _summon_serial: int = 0
 var _revived_unit_ids: Dictionary = {}
 var _ally_damage_taken: int = 0
@@ -72,6 +73,7 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_warnings.clear()
 	_cannons_suppressed = 0
 	_cannon_impacts = 0
+	_cannon_impacts_guarded = 0
 	_summon_serial = 0
 	_revived_unit_ids.clear()
 	_ally_damage_taken = 0
@@ -323,13 +325,28 @@ func _resolve_cannon_warnings(events: Array[Dictionary]) -> void:
 			remaining.append(warning)
 			continue
 		var hits := 0
+		var guarded := false
 		for unit in _units:
 			if bool(unit["alive"]) and int(unit["team"]) == TEAM_ALLY and int(unit["lane"]) == int(warning["lane"]):
+				guarded = guarded or int(unit.get("cannon_guard_ticks", 0)) > 0
 				_apply_unit_damage(unit, int(warning["damage"]), &"core_cannon", false, events)
 				hits += 1
+		if guarded:
+			var source_structure := _structure_by_id(StringName(String(warning.get("source_structure_id", ""))))
+			if not source_structure.is_empty():
+				_damage_structure(source_structure, 60, &"siege_shield_counter", true, events)
+				events.append({
+					"type": &"cannon_guard_counter",
+					"tick": tick_index,
+					"warning_id": warning.get("warning_id", ""),
+					"structure_id": source_structure.get("structure_id", &""),
+					"damage": 60,
+				})
 		events.append({"type": &"explosion", "tick": tick_index, "source_id": &"core_cannon", "lane": warning["lane"], "road_position": 865, "hits": hits})
 		_cannon_impacts += 1
-		events.append({"type": &"artillery_impact", "tick": tick_index, "warning_id": warning.get("warning_id", ""), "lane": warning["lane"], "hits": hits})
+		if guarded:
+			_cannon_impacts_guarded += 1
+		events.append({"type": &"artillery_impact", "tick": tick_index, "warning_id": warning.get("warning_id", ""), "lane": warning["lane"], "hits": hits, "guarded": guarded})
 	_warnings = remaining
 
 
@@ -443,9 +460,14 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 				if star < 3:
 					unit["hp"] = maxi(1, int(unit["max_hp"]) * 35 / 100)
 		"siege_shield":
+			var shield_percent := 48 if star >= 3 else (40 if star >= 2 else 26)
 			for ally in _living_allies():
-				ally["shield"] = int(ally["shield"]) + maxi(18, int(ally["max_hp"]) * (36 if star >= 3 else 26) / 100)
+				ally["shield"] = int(ally["shield"]) + maxi(18, int(ally["max_hp"]) * shield_percent / 100)
 				ally["shield_ticks"] = 35
+				if star >= 2:
+					# Two-star armor turns one well-timed warning cast into an
+					# anti-artillery stance for the rest of the core assault.
+					ally["cannon_guard_ticks"] = 300
 			if star >= 2:
 				var gate := _structure_by_id(&"armored_gate")
 				var target := gate if _is_structure_attackable(gate) else _current_target()
@@ -511,6 +533,8 @@ func _damage_structure(structure: Dictionary, damage: int, source_id: StringName
 func _apply_unit_damage(unit: Dictionary, raw_damage: int, source_id: StringName, is_skill: bool, events: Array[Dictionary]) -> void:
 	if unit.is_empty() or not bool(unit["alive"]):
 		return
+	if source_id == &"core_cannon" and int(unit.get("cannon_guard_ticks", 0)) > 0:
+		raw_damage = int(ceil(float(raw_damage) * 0.5))
 	if int(unit["team"]) == TEAM_ALLY and _started_solo:
 		raw_damage = int(raw_damage * _solo_pressure_bp / 10000)
 	var damage := maxi(1, raw_damage - int(unit["defense"]) / 4)
@@ -668,6 +692,7 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"cannon_impacts": _cannon_impacts,
 		"cannon_suppressed_count": _cannons_suppressed,
 		"cannon_hit_count": _cannon_impacts,
+		"cannon_guarded_count": _cannon_impacts_guarded,
 		"ally_damage_taken": _ally_damage_taken,
 		"troop_damage_taken": _troop_damage_taken,
 		"troop_damage_share_percent": troop_damage_share_percent,
@@ -842,6 +867,7 @@ func _tick_common_combat(unit: Dictionary) -> void:
 func _tick_status_effects() -> void:
 	for unit in _units:
 		unit["weakness_ticks"] = maxi(0, int(unit.get("weakness_ticks", 0)) - 1)
+		unit["cannon_guard_ticks"] = maxi(0, int(unit.get("cannon_guard_ticks", 0)) - 1)
 		unit["stun_ticks"] = maxi(0, int(unit.get("stun_ticks", 0)) - 1)
 		unit["taunt_ticks"] = maxi(0, int(unit.get("taunt_ticks", 0)) - 1)
 		if int(unit["taunt_ticks"]) == 0:
@@ -908,6 +934,7 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"damage_energy_in_window": 0,
 		"shield": 0,
 		"shield_ticks": 0,
+		"cannon_guard_ticks": 0,
 		"weakness_ticks": 0,
 		"stun_ticks": 0,
 		"taunt_ticks": 0,

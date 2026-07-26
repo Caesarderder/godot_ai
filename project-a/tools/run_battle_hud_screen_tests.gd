@@ -17,6 +17,8 @@ func _run() -> void:
 		"hero_id": "hero_test",
 		"display_name": "测试先锋",
 		"max_hp": 200,
+		"skill_id": "siege_shield",
+		"star": 2,
 	}], true)
 	await process_frame
 	_check(hud.find_child("BattleWorldViewportArea", true, false) != null, "HUD reserves the world view area")
@@ -41,6 +43,7 @@ func _run() -> void:
 	})
 	_check(hud.status_label.text.contains("阶段 3/3"), "HUD projects battle phase from the runtime snapshot")
 	_check(hud.status_label.text.contains("炮击 2.0秒"), "HUD exposes the boss warning countdown")
+	_check(hud.status_label.text.contains("点装甲护盾扛炮"), "HUD explains the roster-specific cannon response")
 	_check(skill_button != null and not skill_button.disabled, "manual skill becomes actionable at full energy")
 	hud.set_manual_skills(false)
 	hud.apply_snapshot({

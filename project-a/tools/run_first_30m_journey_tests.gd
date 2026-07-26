@@ -137,6 +137,11 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	clock += int(boss.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(boss.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_5 %s route" % growth_route, boss, "victory")
+	_check(run_seed, int(boss.get("manual_skill_uses", 0)) > 0, "Boss route uses player-requested skills")
+	if growth_route == "ordinary.assault":
+		_check(run_seed, int(boss.get("cannon_suppressed_count", 0)) > 0, "assault growth interrupts at least one cannon warning")
+	else:
+		_check(run_seed, int(boss.get("cannon_guarded_count", 0)) > 0, "armored growth guards at least one cannon impact")
 
 	var snapshot := OnboardingServiceScript.snapshot(executor.state)
 	_check(run_seed, bool(snapshot.get("finished", false)), "seven-action onboarding reaches its durable finished state")
@@ -155,6 +160,12 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 		"growth_route": growth_route,
 		"elapsed_seconds": clock - 1000,
 		"battle_seconds": battle_seconds,
+		"boss_manual_skill_uses": int(boss.get("manual_skill_uses", 0)),
+		"boss_cannon_suppressed": int(boss.get("cannon_suppressed_count", 0)),
+		"boss_cannon_hits": int(boss.get("cannon_hit_count", 0)),
+		"boss_cannon_guarded": int(boss.get("cannon_guarded_count", 0)),
+		"boss_reason": String(boss.get("reason", "")),
+		"boss_dead_units": boss.get("dead_unit_ids", []),
 		"coins_after": int(executor.state.economy.toilet_coins),
 		"materials_after": executor.state.factory.materials,
 		"revision": int(executor.state.revision),
@@ -166,8 +177,27 @@ func _battle_and_settle(executor: RefCounted, stage_id: String, now_unix: int) -
 	var session: RefCounted = BattleSessionScript.new()
 	session.start(_snapshots(executor.state), stage_id, StageCatalogScript.stage(stage_id))
 	var safety := 0
+	var manual_skill_uses := 0
 	while not session.is_finished and safety < 10000:
-		session.advance_tick()
+		var snapshot := session.snapshot() as Dictionary
+		var should_release := (
+			stage_id != "stage_1_5"
+			or int(snapshot.get("stage_index", 0)) < int(snapshot.get("stage_count", 3)) - 1
+			or not (snapshot.get("warnings", []) as Array).is_empty()
+		)
+		if should_release:
+			for unit_value in snapshot.get("units", []):
+				var unit := unit_value as Dictionary
+				if (
+					not bool(unit.get("temporary", false))
+					and bool(unit.get("alive", false))
+					and int(unit.get("energy", 0)) >= BattleSessionScript.SKILL_COST
+				):
+					session.request_skill(StringName(String(unit.get("unit_id", ""))))
+		var events: Array = session.advance_tick()
+		for event_value in events:
+			if String((event_value as Dictionary).get("type", "")) == "skill_used":
+				manual_skill_uses += 1
 		safety += 1
 	if not session.is_finished:
 		return {"outcome": "timeout", "seconds": 2000, "settlement_ok": false}
@@ -183,6 +213,12 @@ func _battle_and_settle(executor: RefCounted, stage_id: String, now_unix: int) -
 	return {
 		"outcome": String(runtime.get("outcome", "defeat")),
 		"seconds": int(ceil(float(runtime.get("ticks", 1)) / BattleSessionScript.TICKS_PER_SECOND)),
+		"manual_skill_uses": manual_skill_uses,
+		"cannon_suppressed_count": int(runtime.get("cannon_suppressed_count", 0)),
+		"cannon_hit_count": int(runtime.get("cannon_hit_count", 0)),
+		"cannon_guarded_count": int(runtime.get("cannon_guarded_count", 0)),
+		"reason": String(runtime.get("reason", "")),
+		"dead_unit_ids": (runtime.get("dead_unit_ids", []) as Array).duplicate(),
 		"settlement_ok": bool(settlement.get("ok", false)),
 		"settlement_error": String(settlement.get("error", "")),
 	}
@@ -207,7 +243,7 @@ func _snapshots(state: RefCounted) -> Array[Dictionary]:
 			"slot": slot,
 			"skill_id": FactoryCatalogScript.active_skill_for_archetype(hero.archetype_id),
 			"skill_level": int(hero.active_skill_level),
-			"auto_skill": true,
+			"auto_skill": false,
 		})
 	return values
 

@@ -354,12 +354,12 @@ func _test_boss_cannon_suppression_window() -> void:
 	_check(not warning.is_empty(), "chapter boss emits a cannon warning in the final base phase")
 	_check(bool(warning.get("suppressible", false)), "chapter boss cannon warning is suppressible")
 	_check(int(warning.get("suppression_target", 0)) == 70, "chapter one boss suppression target is 70")
-	_check(int(warning.get("impact_tick", 0)) - int(warning.get("tick", 0)) == 20, "boss cannon warning lasts twenty ticks at five hertz")
+	_check(int(warning.get("impact_tick", 0)) - int(warning.get("tick", 0)) == 25, "chapter one boss cannon warning lasts twenty-five ticks at five hertz")
 	var warnings := session.snapshot().get("warnings", []) as Array
 	_check(warnings.size() == 1, "unsuppressed boss warning remains visible in the snapshot")
 	if not warnings.is_empty():
 		var snapshot_warning := warnings[0] as Dictionary
-		_check(int(snapshot_warning.get("remaining_ticks", 0)) == 20, "boss warning snapshot exposes remaining ticks")
+		_check(int(snapshot_warning.get("remaining_ticks", 0)) == 25, "boss warning snapshot exposes remaining ticks")
 		_check(int(snapshot_warning.get("suppression_remaining", 0)) == 70, "boss warning snapshot exposes suppression remaining")
 
 
@@ -379,7 +379,7 @@ func _test_boss_cannon_low_output_impacts() -> void:
 	var session := _forced_final_stage_session("stage_1_5", _low_pressure_heroes())
 	var impact_seen := false
 	var suppressed_seen := false
-	for _i in 22:
+	for _i in 27:
 		for event in session.advance_tick():
 			impact_seen = impact_seen or event["type"] == &"artillery_impact"
 			suppressed_seen = suppressed_seen or event["type"] == &"cannon_suppressed"

@@ -24,6 +24,7 @@ const GREEN := Color("#78b982")
 @onready var skill_grid: GridContainer = %BattleSkillGrid
 
 var _manual_skills := false
+var _warning_tactic := "点亮技能集中爆发"
 var _unit_hud: Dictionary = {}
 var _skill_buttons: Dictionary = {}
 
@@ -37,6 +38,7 @@ func _ready() -> void:
 
 func configure(snapshots: Array[Dictionary], manual_skills: bool) -> void:
 	_manual_skills = manual_skills
+	_warning_tactic = _warning_tactic_for(snapshots)
 	skill_mode_button.text = "技能：手动" if _manual_skills else "技能：自动"
 	skill_grid.columns = maxi(1, snapshots.size())
 	_clear_units()
@@ -64,7 +66,10 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	var warning_copy := ""
 	if not warnings.is_empty():
 		var warning := warnings[0] as Dictionary
-		warning_copy = " · 炮击 %0.1f秒" % (float(warning.get("remaining_ticks", 0)) / 5.0)
+		warning_copy = " · 炮击 %0.1f秒 · %s" % [
+			float(warning.get("remaining_ticks", 0)) / 5.0,
+			_warning_tactic,
+		]
 	status_label.text = "阶段 %d/%d · %s · 战线 %d%%%s" % [
 		int(snapshot.get("stage_index", 0)) + 1,
 		int(snapshot.get("stage_count", 3)),
@@ -78,6 +83,16 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		if bool(unit.get("temporary", false)):
 			continue
 		_apply_unit_snapshot(unit)
+
+
+func _warning_tactic_for(snapshots: Array[Dictionary]) -> String:
+	for snapshot in snapshots:
+		if String(snapshot.get("skill_id", "")) == "siege_shield" and int(snapshot.get("star", 1)) >= 2:
+			return "点装甲护盾扛炮"
+	for snapshot in snapshots:
+		if String(snapshot.get("skill_id", "")) == "assault_rush":
+			return "点冲锋技能打断"
+	return "点亮技能集中爆发"
 
 
 func _apply_unit_snapshot(unit: Dictionary) -> void:
