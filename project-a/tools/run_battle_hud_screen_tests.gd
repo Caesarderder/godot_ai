@@ -93,6 +93,30 @@ func _run() -> void:
 	})
 	_check(skill_button != null and skill_button.disabled, "automatic or defeated units cannot receive manual skill orders")
 	_check(state_label != null and state_label.text == "阵亡", "HUD explains disabled skill state with text")
+	hud.configure([{
+		"hero_id": "hero_test",
+		"display_name": "测试先锋",
+		"max_hp": 200,
+		"skill_id": "siege_shield",
+		"star": 2,
+	}], true, false, true)
+	hud.apply_snapshot({
+		"stage_index": 0,
+		"stage_count": 3,
+		"stage_name": "高墙接敌",
+		"road_progress": 100,
+		"warnings": [],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 0,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(hud.status_label.text.contains("援军已就位"), "counterattack opens with a short reinforcement rally")
+	_check(hud.status_label.text.contains("装甲前排承伤") and hud.status_label.text.contains("冲锋快速压制"), "rally restates both learned responsibilities")
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

@@ -123,6 +123,12 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 1-4”CTA。`run_first_formation_flow_tests.gd` 覆盖十连到两次 `assign_formation_slot` 命令和
 精确反攻出口，`artifacts/ui-first-formation-844x390.png` 证明第一次候选无需滚动即可操作。
 
+反攻开场用短时战场提示明确“装甲前排承伤，冲锋快速压制”；胜利结算读取 `BattleSession`
+的真实出战角色、逐角色伤害和队伍承伤占比，呈现“单人首战失败 → 三人反攻成功”及援军实际
+承伤/输出比例，而不是由 UI 猜测贡献。三个聚焦测试覆盖这条因果链，
+`artifacts/ui-counterattack-proof-844x390.png` 提供真实 Compatibility 视觉证据；真人是否
+因此明显感到战力跃迁仍须盲测。
+
 ### 首个战斗成长选择
 
 | 成长 | 成本 | TFA | FL | 当前证据 |

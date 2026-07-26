@@ -130,6 +130,10 @@ related:
   `run_battle_result_screen_tests.gd` 验证 1-4 反攻后“选择工业支援”成为唯一高优先 CTA，
   不再让“进攻下一城镇”绕过资源设施、收取后勤与自主升星；`ui-action-auto-settlement-844x390.png`
   提供 844×390 Compatibility 视觉证据。
+  `run_battle_hud_screen_tests.gd` 验证反攻开场的装甲承伤/冲锋压制提示；
+  `run_first_formation_flow_tests.gd` 与 `run_battle_result_screen_tests.gd` 验证结算从真实出战、
+  逐角色伤害和承伤统计生成过坎证据；`ui-counterattack-proof-844x390.png` 证明 844×390 下
+  因果复盘与下一行动同时可读。
   网格建造回归覆盖用途卡、费用可读性、三步引导、空格选择、确认前不扣款、坐标持久化以及
   `ui-construction-placement-844x390.png` 放置态证据。
   帮助中心回归覆盖标题/设置双入口、双栏滚动、建造与技能说明、隐私与运行版本、48 像素返回

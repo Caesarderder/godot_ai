@@ -69,6 +69,11 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="HurdleProof" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
 [node name="Debrief" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 unique_name_in_owner = true
 layout_mode = 2

@@ -1704,7 +1704,19 @@ func _start_battle() -> void:
 		selected_stage_id == StageCatalog.DEFAULT_STAGE_ID
 		and not (state.stage_progress.get("cleared_stages", []) as Array).has(StageCatalog.DEFAULT_STAGE_ID)
 	)
-	battle_hud_screen.configure(snapshots, battle_manual_skills, first_skill_tutorial)
+	var reinforcement_rally := (
+		selected_stage_id == "stage_1_4"
+		and int(state.attempt_counters.get("stage_1_4", 0)) > 0
+		and snapshots.size() >= 3
+	)
+	battle_hud_screen.configure(
+		snapshots,
+		battle_manual_skills,
+		first_skill_tutorial,
+		reinforcement_rally
+	)
+	if reinforcement_rally:
+		audio_director.play_cue(&"success", -12.0)
 	battle_pause_button = battle_hud_screen.pause_button
 	battle_status_label = battle_hud_screen.status_label
 	battle_auto_button = battle_hud_screen.skill_mode_button
@@ -1959,6 +1971,7 @@ func _show_result() -> void:
 	var combat_summary := ""
 	var debrief := ""
 	var contribution := ""
+	var hurdle_proof := ""
 	if not last_battle_runtime_result.is_empty():
 		combat_summary = "战斗复盘 · %d秒 · 击破%d个目标 · 消灭%d名守军" % [
 			maxi(1, int(last_battle_runtime_result.get("ticks", 1)) / 5),
@@ -1967,6 +1980,11 @@ func _show_result() -> void:
 		]
 		debrief = _battle_debrief_copy(last_battle_runtime_result, outcome)
 		contribution = _battle_contribution_copy(last_battle_runtime_result)
+		hurdle_proof = _counterattack_proof_copy(
+			last_battle_runtime_result,
+			outcome,
+			String(event.get("stage_id", ""))
+		)
 	var next_stage_id := String(event.get("next_stage_id", ""))
 	var cleared_stage_id := String(event.get("stage_id", ""))
 	var onboarding := OnboardingService.snapshot(game.current_state())
@@ -2019,6 +2037,7 @@ func _show_result() -> void:
 		"unlocked_hero": unlocked_copy,
 		"combat_summary": combat_summary,
 		"contribution": contribution,
+		"hurdle_proof": hurdle_proof,
 		"debrief": debrief,
 		"growth": _growth_opportunity_copy(event),
 		"safety": "全员无损返回 · 无维修消耗 · 可立即再次出征",
@@ -2081,6 +2100,33 @@ func _battle_contribution_copy(runtime_result: Dictionary) -> String:
 	var hero_name := String(hero.display_name) if hero != null else "先锋单位"
 	var share := int(round(float(top_damage) * 100.0 / maxi(1, total_damage)))
 	return "核心贡献 · %s造成 %d 伤害，占编队输出 %d%%" % [hero_name, top_damage, share]
+
+
+func _counterattack_proof_copy(
+	runtime_result: Dictionary,
+	outcome: String,
+	stage_id: String
+) -> String:
+	var deployed := runtime_result.get("deployed_unit_ids", []) as Array
+	if outcome != "victory" or stage_id != "stage_1_4" or deployed.size() < 3:
+		return ""
+	var contribution := runtime_result.get("ally_damage_dealt_by_unit", {}) as Dictionary
+	var total_damage := 0
+	var reinforcement_damage := 0
+	for hero_id_value in contribution:
+		var hero_id := String(hero_id_value)
+		var damage := maxi(0, int(contribution[hero_id_value]))
+		total_damage += damage
+		var hero: RefCounted = game.current_state().hero_by_id(hero_id)
+		if hero != null and String(hero.archetype_id) in ["assault", "armored"]:
+			reinforcement_damage += damage
+	var output_share := int(round(
+		float(reinforcement_damage) * 100.0 / float(maxi(1, total_damage))
+	))
+	return "高墙复盘 · 单人首战失败 → 三人反攻成功 · 援军分担 %d%% 承伤、贡献 %d%% 输出" % [
+		clampi(int(runtime_result.get("troop_damage_share_percent", 0)), 0, 100),
+		clampi(output_share, 0, 100),
+	]
 
 
 func _open_research_lab() -> void:

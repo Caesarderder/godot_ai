@@ -28,6 +28,7 @@ var _warning_tactic := "点亮技能集中爆发"
 var _first_skill_tutorial := false
 var _first_skill_confirmed := false
 var _skill_confirmation_updates := 0
+var _reinforcement_rally_updates := 0
 var _unit_hud: Dictionary = {}
 var _skill_buttons: Dictionary = {}
 
@@ -42,12 +43,14 @@ func _ready() -> void:
 func configure(
 	snapshots: Array[Dictionary],
 	manual_skills: bool,
-	first_skill_tutorial: bool = false
+	first_skill_tutorial: bool = false,
+	reinforcement_rally: bool = false
 ) -> void:
 	_manual_skills = manual_skills
 	_first_skill_tutorial = first_skill_tutorial
 	_first_skill_confirmed = false
 	_skill_confirmation_updates = 0
+	_reinforcement_rally_updates = 10 if reinforcement_rally else 0
 	_warning_tactic = _warning_tactic_for(snapshots)
 	skill_mode_button.text = "技能：手动" if _manual_skills else "技能：自动"
 	skill_grid.columns = maxi(1, snapshots.size())
@@ -113,6 +116,10 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		status_label.text = "指令生效 · %s 正在释放主动技能" % ready_unit_name if not ready_unit_name.is_empty() else "指令生效 · 主动技能正在释放"
 		status_label.add_theme_color_override("font_color", GREEN)
 		_skill_confirmation_updates -= 1
+	elif _reinforcement_rally_updates > 0 and warnings.is_empty():
+		status_label.text = "援军已就位 · 装甲前排承伤，冲锋快速压制"
+		status_label.add_theme_color_override("font_color", CYAN)
+		_reinforcement_rally_updates -= 1
 	elif (
 		_first_skill_tutorial
 		and not _first_skill_confirmed

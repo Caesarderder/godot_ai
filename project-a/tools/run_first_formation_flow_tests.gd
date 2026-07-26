@@ -13,6 +13,9 @@ func _run() -> void:
 		await process_frame
 	var main := current_scene
 	var game: Node = main.get("game")
+	var audio_director: Node = main.get("audio_director")
+	if audio_director != null:
+		audio_director.call("set_playback_enabled", false)
 	game.reset_game(20260727, 1000)
 	var state: RefCounted = game.current_state()
 	state.onboarding["active_index"] = 3
@@ -44,9 +47,25 @@ func _run() -> void:
 	_check(String(state.formation.slots.get("troop_2", "")) == String(assault.hero_id), "assault assignment persists through the command boundary")
 	var counterattack := main.find_child("FormationCounterattackButton", true, false) as Button
 	_check(counterattack != null and counterattack.text.contains("立即反攻 1-4"), "completed formation exposes the exact hurdle retry")
-	var audio_director: Node = main.get("audio_director")
+	var gman := _hero_for(state, "gman")
+	var proof := String(main.call("_counterattack_proof_copy", {
+		"deployed_unit_ids": [gman.hero_id, armored.hero_id, assault.hero_id],
+		"troop_damage_share_percent": 68,
+		"ally_damage_dealt_by_unit": {
+			gman.hero_id: 100,
+			armored.hero_id: 40,
+			assault.hero_id: 60,
+		},
+	}, "victory", "stage_1_4"))
+	_check(proof.contains("单人首战失败 → 三人反攻成功"), "counterattack result closes the hurdle narrative")
+	_check(proof.contains("68% 承伤") and proof.contains("50% 输出"), "counterattack proof derives both percentages from runtime facts")
 	if audio_director != null:
 		audio_director.call("stop_all")
+	gman = null
+	armored = null
+	assault = null
+	state = null
+	game = null
 	main.queue_free()
 	await _wait_frames(4)
 	if failures.is_empty():
