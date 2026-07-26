@@ -179,6 +179,8 @@ related:
   `capture_ui_review.gd` 已在本机 Compatibility 图形运行生成标题、设置、基地、指挥情报、战区、
   军团、目标、终章、战斗与结算的 844×390 截图。
 - M6 本地部分：Web release export 与 `release_audit.py --artifact-dir build/web` 通过；
+  原创 PWA/application 徽记通过 safe SVG 校验，并由同一 Web preset 导出 144/180/512 与
+  Apple touch PNG；32 像素缩略检查仍能辨认瓷甲盾、工厂核心与突破箭头。
   `run_web_browser_smoke.mjs` 通过本机 HTTP 和真实 Chrome 验证 844×390 WebGL2 Canvas、390×844
   原生竖屏提示、1280×540 超宽横屏、旋转恢复和触控进入基地，
   PWA Service Worker 接管、在线刷新与关闭服务器后的离线重启；运行阶段无控制台/意外网络错误，

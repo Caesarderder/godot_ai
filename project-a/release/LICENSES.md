@@ -22,7 +22,7 @@ This inventory covers the assets currently intended to ship from `project-a/`.
 
 | Item | Source | License / permission | Distribution status |
 |---|---|---|---|
-| `release/web-icon.svg` | Program-generated placeholder release icon | Project-owner controlled | OK as temporary package icon; final art direction may replace it |
+| `release/web-icon.svg` | Program-generated original “porcelain fortress + factory core + breakthrough arrow” mark; created in this repository without third-party artwork | Project-owner controlled | Approved candidate PWA/application icon; safe SVG profile validated at 32/512 px |
 | Runtime 3D primitives, UI panels, generated effects, and export splash/icon derivatives | Program-generated from project code or Godot export | Project-owner controlled / Godot export generated | OK as prototype-generated assets |
 | `assets/3d/porcelain-raider-kit/` | Original low-poly models generated with the project Asset Vault Blender pipeline; no third-party mesh or texture incorporated | Project-owner controlled | OK for internal test and controlled Web export; fan-content premise still requires review |
 
