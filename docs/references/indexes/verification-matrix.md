@@ -235,6 +235,11 @@ related:
 - 结构突破反馈：`run_battle_tests.gd` 锁定摧毁事件的 ID/名称/lane/kind，
   `run_presentation_tests.gd` 锁定普通画质的世界文字+冲击环以及低画质/减少动态的纯文字预算；
   `ui-first-breakthrough-844x390.png` 证明首战“防线突破”与 HUD 下一城市目标同时可读。
+- 首战世界构图：`BattleWorld` 从同一只读 battle snapshot 投影当前阶段第一个存活敌人或结构，
+  以友军前线和目标共同构图，并用可复用金色双环与方向箭头标记目标；远目标预览受限，镜头不会
+  越过军团。`run_presentation_tests.gd` 覆盖敌人优先级、结构回退、远距截断和单一 marker。
+  `capture_first_skill_tutorial.gd` 不再伪造 HUD 前线而保留出生点世界，而是推进真实 1-1 直到
+  首次技能充满后，用同一 snapshot 生成 844×390 教学与实际结果证据；真人两秒识别仍待盲测。
 - 目标卡点内容边界：`ObjectiveHurdleDefinition` 与七个首章 `.tres` 分离稳定 task ID、大小坎、
   失败原因和过坎办法；固定 preload Catalog 校验唯一性与完整性，并向
   `CampaignObjectiveProjection` 返回 detached view。`run_objective_hurdle_definition_tests.gd`

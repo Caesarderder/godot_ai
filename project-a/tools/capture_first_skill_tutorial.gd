@@ -22,11 +22,24 @@ func _capture() -> void:
 		push_error("FIRST SKILL CAPTURE FAIL: battle presentation unavailable")
 		quit(1)
 		return
-	world.set("_camera_progress", 360.0)
-	world.call("_update_camera", 0.16)
+	world.set_process(false)
+	var battle_snapshot: Dictionary = world.call("snapshot")
+	for _tick in range(240):
+		var hero_snapshot := _permanent_hero(battle_snapshot)
+		if int(hero_snapshot.get("energy", 0)) >= 100:
+			break
+		world.call("_process", 0.2)
+		battle_snapshot = world.call("snapshot")
+	if int(_permanent_hero(battle_snapshot).get("energy", 0)) < 100:
+		push_error("FIRST SKILL CAPTURE FAIL: real battle never reached the first ready skill")
+		quit(1)
+		return
+	var camera_focus := float(world.call("_camera_focus_progress", battle_snapshot))
+	world.set("_camera_progress", camera_focus)
+	world.call("_update_camera", 0.0)
 	var hero: Dictionary = {
-		"hero_id": "hero_gman",
-		"display_name": "Gman 先锋",
+		"hero_id": String(_permanent_hero(battle_snapshot).get("unit_id", "hero_gman")),
+		"display_name": String(_permanent_hero(battle_snapshot).get("display_name", "Gman 先锋")),
 		"archetype_id": "gman",
 		"class_id": "commander",
 		"skill_id": "gman_overrun",
@@ -44,38 +57,7 @@ func _capture() -> void:
 	}
 	var heroes: Array[Dictionary] = [hero]
 	hud.call("configure", heroes, true, true)
-	hud.call("apply_snapshot", {
-		"stage_index": 0,
-		"stage_count": 1,
-		"stage_name": "城市外围",
-		"road_progress": 360,
-		"warnings": [],
-		"structures": [{
-			"structure_id": "abandoned_barricade",
-			"display_name": "废弃路障",
-			"kind": "structure",
-			"stage": 0,
-			"hp": 113,
-			"max_hp": 180,
-			"alive": true,
-		}, {
-			"structure_id": "unguarded_city",
-			"display_name": "无防备城市",
-			"kind": "city",
-			"stage": 0,
-			"hp": 760,
-			"max_hp": 760,
-			"alive": true,
-		}],
-		"units": [{
-			"unit_id": "hero_gman",
-			"hp": 200,
-			"max_hp": 200,
-			"energy": 100,
-			"alive": true,
-			"temporary": false,
-		}],
-	})
+	hud.call("apply_snapshot", battle_snapshot)
 	await process_frame
 	var tutorial_output := "res://artifacts/ui-first-skill-tutorial-844x390.png"
 	var tutorial_error := root.get_texture().get_image().save_png(tutorial_output)
@@ -89,38 +71,12 @@ func _capture() -> void:
 		{"type": &"structure_damaged", "source_id": &"hero_gman", "damage": 96, "effective_damage": 96, "is_skill": true},
 	]
 	hud.call("apply_battle_events", skill_events)
-	hud.call("apply_snapshot", {
-		"stage_index": 0,
-		"stage_count": 1,
-		"stage_name": "城市外围",
-		"road_progress": 360,
-		"warnings": [],
-		"structures": [{
-			"structure_id": "abandoned_barricade",
-			"display_name": "废弃路障",
-			"kind": "structure",
-			"stage": 0,
-			"hp": 17,
-			"max_hp": 180,
-			"alive": true,
-		}, {
-			"structure_id": "unguarded_city",
-			"display_name": "无防备城市",
-			"kind": "city",
-			"stage": 0,
-			"hp": 664,
-			"max_hp": 760,
-			"alive": true,
-		}],
-		"units": [{
-			"unit_id": "hero_gman",
-			"hp": 200,
-			"max_hp": 200,
-			"energy": 0,
-			"alive": true,
-			"temporary": false,
-		}],
-	})
+	var result_snapshot := battle_snapshot.duplicate(true)
+	for unit_value in result_snapshot.get("units", []):
+		var unit := unit_value as Dictionary
+		if not bool(unit.get("temporary", false)):
+			unit["energy"] = 0
+	hud.call("apply_snapshot", result_snapshot)
 	await process_frame
 	var result_output := "res://artifacts/ui-first-skill-result-844x390.png"
 	var result_error := root.get_texture().get_image().save_png(result_output)
@@ -131,3 +87,11 @@ func _capture() -> void:
 	print("FIRST SKILL CAPTURE PASS: %s" % ProjectSettings.globalize_path(tutorial_output))
 	print("FIRST SKILL RESULT CAPTURE PASS: %s" % ProjectSettings.globalize_path(result_output))
 	quit(0)
+
+
+func _permanent_hero(battle_snapshot: Dictionary) -> Dictionary:
+	for unit_value in battle_snapshot.get("units", []):
+		var unit := unit_value as Dictionary
+		if bool(unit.get("alive", false)) and not bool(unit.get("temporary", false)):
+			return unit
+	return {}

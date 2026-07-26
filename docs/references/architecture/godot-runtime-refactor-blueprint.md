@@ -341,3 +341,26 @@ App Shell 只投影现有 `SettingsStore` / Web 能力、执行持久化与浏�
 `BattleResultScreen` 在首章引导未完成时优先使用 `OnboardingService.snapshot()` 的下一真实
 行动；1-4 反攻后以“选择工业支援”进入工厂，并隐藏重复的通用工厂按钮，直到设施投产、后勤
 收取和援军升星完成后才把 1-5 暴露为主 CTA。
+
+## 战斗镜头与当前目标投影
+
+`BattleWorld` 是战斗 `Camera3D` 和世界内目标强调的唯一 owner。它每帧只读取一次
+`BattleSession.snapshot()`，从当前阶段第一个存活敌人或结构推导表现目标，再把永久存活友军前线
+与目标共同放入画面；远距离目标必须先截断到有限预览距离，避免镜头越过玩家军团或突然跳向尚未
+交战的远景。镜头使用与帧率无关的指数趋近并限制单帧 delta，震动只叠加在基础机位之后。
+
+目标强调复用一个 `BattleTargetMarker` 节点：落在当前目标脚下的金色双环与朝向箭头共同表达
+“正在攻击这里”，不可只依赖颜色；切换阶段或目标时更新位置，战斗清理时一并释放。标记不写回
+领域状态、不自行选敌、不预测伤害，也不参与物理、导航、命中或胜负。低画质保留轮廓，减少动态
+模式保留静态形状并关闭脉动。首战 844×390 验收必须同时看到至少一个永久友军和当前存活目标，
+二者不得被顶部目标条或底部技能卡遮挡；玩家应能在两秒内说出“我是谁、正在打谁、向哪里推进”。
+
+```text
+BattleSession snapshot (read-only)
+        |
+        +--> BattleWorld target projection --> one reusable world marker
+        |
+        +--> BattleWorld camera framing ----> Camera3D presentation only
+
+BattleSession deterministic target/damage/result <--- no presentation dependency
+```

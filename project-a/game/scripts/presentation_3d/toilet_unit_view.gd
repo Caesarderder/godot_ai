@@ -42,6 +42,7 @@ func setup(unit_snapshot: Dictionary) -> void:
 	team = int(unit_snapshot.get("team", TEAM_ALLY))
 	slot = int(unit_snapshot.get("slot", 0))
 	name = "Unit_%s" % String(unit_id)
+	scale = Vector3.ONE * (1.3 if team == TEAM_ALLY else 1.0)
 	_ensure_shared_resources()
 	_build_model(unit_snapshot)
 	apply_snapshot(unit_snapshot)
@@ -185,10 +186,10 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 
 	_name_label = Label3D.new()
 	_name_label.name = "NameLabel"
-	_name_label.text = String(unit_id)
+	_name_label.text = ("我方 · %s" if team == TEAM_ALLY else "%s") % display_name
 	_name_label.position = Vector3(0.0, 2.17, 0.0)
-	_name_label.font_size = 64
-	_name_label.pixel_size = 0.00235
+	_name_label.font_size = 72 if team == TEAM_ALLY else 64
+	_name_label.pixel_size = 0.00265 if team == TEAM_ALLY else 0.00235
 	_name_label.outline_size = 12
 	_name_label.modulate = Color("#7fd7ff") if team == TEAM_ALLY else Color("#ff8d82")
 	_name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

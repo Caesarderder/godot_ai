@@ -20,6 +20,7 @@ var _vfx_root: Node3D
 var _atmosphere_root: Node3D
 var _audio: AudioDirector
 var _camera: Camera3D
+var _target_marker: Node3D
 var _accumulator: float = 0.0
 var _battle_paused: bool = false
 var _finish_emitted: bool = false
@@ -222,6 +223,8 @@ func _build_world_once() -> void:
 	_vfx_root = Node3D.new()
 	_vfx_root.name = "LightweightVFX"
 	add_child(_vfx_root)
+	_target_marker = _create_target_marker()
+	_vfx_root.add_child(_target_marker)
 
 	_audio = AudioDirectorScript.new()
 	_audio.name = "AudioDirector"
@@ -407,6 +410,68 @@ func _sync_views(battle_snapshot: Dictionary) -> void:
 	for enemy_value in battle_snapshot.get("enemies", []):
 		var enemy := enemy_value as Dictionary
 		_sync_unit_view(enemy)
+	_sync_target_marker(battle_snapshot)
+
+
+func _create_target_marker() -> Node3D:
+	var root := Node3D.new()
+	root.name = "BattleTargetMarker"
+	for ring_index in range(2):
+		var ring_node := MeshInstance3D.new()
+		ring_node.name = "TargetRing%d" % (ring_index + 1)
+		var ring := TorusMesh.new()
+		ring.inner_radius = 2.8 + float(ring_index) * 0.42
+		ring.outer_radius = 2.94 + float(ring_index) * 0.42
+		ring.rings = 18 if _effects_quality != "low" else 12
+		ring.ring_segments = 5 if _effects_quality != "low" else 4
+		ring_node.mesh = ring
+		ring_node.rotation_degrees.x = 90.0
+		ring_node.material_override = _emissive_material(Color("#ffd36a"), Color("#ffb52e"), 1.25, 0.2)
+		root.add_child(ring_node)
+	var arrow := MeshInstance3D.new()
+	arrow.name = "AdvanceArrow"
+	var arrow_mesh := PrismMesh.new()
+	arrow_mesh.size = Vector3(1.15, 0.1, 1.45)
+	arrow.mesh = arrow_mesh
+	arrow.position = Vector3(0.0, 0.08, 3.75)
+	arrow.rotation_degrees.y = 180.0
+	arrow.material_override = _emissive_material(Color("#fff0b0"), Color("#ffb52e"), 1.4, 0.15)
+	root.add_child(arrow)
+	root.visible = false
+	return root
+
+
+func _sync_target_marker(battle_snapshot: Dictionary) -> void:
+	if _target_marker == null:
+		return
+	var target := _presentation_target(battle_snapshot)
+	if target.is_empty():
+		_target_marker.visible = false
+		return
+	_target_marker.visible = true
+	_target_marker.position = _world_position(
+		int(target.get("road_position", 0)),
+		int(target.get("lane", 1))
+	) + Vector3(0.0, 0.08, 0.0)
+	var base_scale := 1.55 if String(target.get("kind", "")) in ["city", "core"] else 1.0
+	if _reduced_motion:
+		_target_marker.scale = Vector3(base_scale, 1.0, base_scale)
+	else:
+		var pulse := base_scale * (1.0 + sin(Time.get_ticks_msec() * 0.006) * 0.08)
+		_target_marker.scale = Vector3(pulse, 1.0, pulse)
+
+
+func _presentation_target(battle_snapshot: Dictionary) -> Dictionary:
+	var stage_index := int(battle_snapshot.get("stage_index", 0))
+	for enemy_value in battle_snapshot.get("enemies", []):
+		var enemy := enemy_value as Dictionary
+		if bool(enemy.get("alive", false)) and int(enemy.get("stage", -1)) == stage_index:
+			return enemy
+	for structure_value in battle_snapshot.get("structures", []):
+		var structure := structure_value as Dictionary
+		if bool(structure.get("alive", false)) and int(structure.get("stage", -1)) == stage_index:
+			return structure
+	return {}
 
 
 func _apply_events(events: Array[Dictionary]) -> void:
@@ -1021,12 +1086,15 @@ func _smoke_column(scale_factor: float) -> Node3D:
 
 
 func _update_camera(delta: float) -> void:
-	var desired_progress := 0.0
+	var battle_snapshot: Dictionary = {}
 	if _session != null:
-		desired_progress = float(_session.snapshot().get("road_progress", 0))
-	_camera_progress = lerpf(_camera_progress, desired_progress, minf(1.0, delta * 2.0))
-	var focus := _world_position(int(_camera_progress + 95.0), 1)
-	var camera_position := focus + Vector3(10.5, 8.5, 11.5)
+		battle_snapshot = _session.snapshot()
+	var desired_progress := _camera_focus_progress(battle_snapshot)
+	var safe_delta := minf(maxf(delta, 0.0), 0.1)
+	var follow_weight := 1.0 - exp(-2.8 * safe_delta)
+	_camera_progress = lerpf(_camera_progress, desired_progress, follow_weight)
+	var focus := _world_position(int(_camera_progress), 1)
+	var camera_position := focus + Vector3(14.0, 12.0, 16.0)
 	if _shake_time > 0.0:
 		_shake_time = maxf(0.0, _shake_time - delta)
 		var amount := _shake_intensity * (_shake_time + 0.05)
@@ -1037,7 +1105,17 @@ func _update_camera(delta: float) -> void:
 		)
 	else:
 		_shake_intensity = 0.0
-	_camera.look_at_from_position(camera_position, focus + Vector3(0.0, 1.0, -3.5))
+	_camera.look_at_from_position(camera_position, focus + Vector3(0.0, -3.0, -0.8))
+
+
+func _camera_focus_progress(battle_snapshot: Dictionary) -> float:
+	var front_progress := float(battle_snapshot.get("road_progress", 0))
+	var target := _presentation_target(battle_snapshot)
+	if target.is_empty():
+		return front_progress + 80.0
+	var target_progress := float(target.get("road_position", int(front_progress)))
+	var framed_target := clampf(target_progress, front_progress + 60.0, front_progress + 480.0)
+	return lerpf(front_progress, framed_target, 0.5)
 
 
 func _world_position(road_position: int, lane: int) -> Vector3:
@@ -1047,6 +1125,9 @@ func _world_position(road_position: int, lane: int) -> Vector3:
 func _clear_runtime_views() -> void:
 	for root in [_units_root, _structures_root, _vfx_root]:
 		for child in root.get_children():
+			if child == _target_marker:
+				_target_marker.visible = false
+				continue
 			root.remove_child(child)
 			child.queue_free()
 	_unit_views.clear()

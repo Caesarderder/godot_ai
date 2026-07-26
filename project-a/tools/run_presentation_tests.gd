@@ -14,6 +14,7 @@ func _run() -> void:
 	await _check_audio_asset_pool()
 	await _check_reduced_motion_low_quality()
 	await _check_high_quality_budget()
+	await _check_target_camera_framing()
 	await _check_snapshot_signal_reuse()
 	await _check_cannon_suppressed_feedback()
 	await _check_cannon_suppressed_low_reduced_budget()
@@ -109,6 +110,52 @@ func _check_high_quality_budget() -> void:
 	world.configure_presentation("invalid", false)
 	_ok(world.get("_effects_quality") == "medium", "invalid quality falls back to medium")
 	_ok(int(world.get("_max_high_vfx")) == 6, "medium quality restores default cap")
+	await _dispose_world(world)
+
+
+func _check_target_camera_framing() -> void:
+	var world := BattleWorldScript.new()
+	root.add_child(world)
+	await process_frame
+	var snapshot := {
+		"stage_index": 0,
+		"road_progress": 100,
+		"units": [{
+			"unit_id": &"camera_hero",
+			"alive": true,
+			"temporary": false,
+			"road_position": 100,
+		}],
+		"enemies": [],
+		"structures": [{
+			"structure_id": &"camera_target",
+			"stage": 0,
+			"alive": true,
+			"road_position": 430,
+			"lane": 2,
+		}],
+	}
+	var target := world.call("_presentation_target", snapshot) as Dictionary
+	_eq(target.get("structure_id", &""), &"camera_target", "camera projection selects the current living target")
+	_ok(absf(float(world.call("_camera_focus_progress", snapshot)) - 265.0) < 0.01, "camera frames the midpoint between ally front and target")
+	snapshot["structures"][0]["road_position"] = 900
+	_ok(absf(float(world.call("_camera_focus_progress", snapshot)) - 340.0) < 0.01, "far target preview is clamped so the squad stays visible")
+	snapshot["enemies"] = [{
+		"unit_id": &"camera_enemy",
+		"stage": 0,
+		"alive": true,
+		"road_position": 250,
+		"lane": 0,
+	}]
+	target = world.call("_presentation_target", snapshot) as Dictionary
+	_eq(target.get("unit_id", &""), &"camera_enemy", "living enemy receives the same presentation priority as deterministic combat")
+	world.call("_sync_target_marker", snapshot)
+	var marker := world.get_node_or_null("LightweightVFX/BattleTargetMarker") as Node3D
+	_ok(marker != null and marker.visible, "one reusable world marker identifies the current target")
+	if marker != null:
+		_ok(marker.get_node_or_null("TargetRing1") != null, "target marker keeps a shape cue independent of color")
+		_ok(marker.get_node_or_null("AdvanceArrow") != null, "target marker shows the army advance direction")
+		_eq(marker.position, world.call("_world_position", 250, 0) + Vector3(0.0, 0.08, 0.0), "target marker follows the projected target")
 	await _dispose_world(world)
 
 
