@@ -1,0 +1,74 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/ui/stage_detail_panel.gd" id="1_script"]
+
+[node name="SelectedStagePanel" type="PanelContainer"]
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="Columns" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Intel" type="VBoxContainer" parent="Margin/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 7
+
+[node name="StageName" type="Label" parent="Margin/Columns/Intel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Status" type="Label" parent="Margin/Columns/Intel"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ThreatSummary" type="Label" parent="Margin/Columns/Intel"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+max_lines_visible = 2
+text_overrun_behavior = 3
+
+[node name="DecisionHint" type="Label" parent="Margin/Columns/Intel"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+max_lines_visible = 2
+text_overrun_behavior = 3
+
+[node name="Stats" type="VBoxContainer" parent="Margin/Columns"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="PowerLine" type="Label" parent="Margin/Columns/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Capability" type="ProgressBar" parent="Margin/Columns/Stats"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+show_percentage = false
+
+[node name="Risk" type="Label" parent="Margin/Columns/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ThreatLevel" type="Label" parent="Margin/Columns/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AttackButton" type="Button" parent="Margin/Columns/Stats"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "立即出击"

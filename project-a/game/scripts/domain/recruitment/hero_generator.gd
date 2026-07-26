@@ -19,7 +19,7 @@ const CLASS_BASE_STATS: Dictionary = {
 	"arcanist": {"vig": 7, "str": 4, "agi": 8, "int": 14},
 }
 const ARCHETYPE_IDS: Array[String] = [
-	"assault", "sonic", "rocket", "bomber", "armored", "saw", "repair", "parasite"
+	"gman", "assault", "sonic", "rocket", "bomber", "armored", "saw", "repair", "parasite"
 ]
 const INITIAL_ARCHETYPES: Array[String] = [
 	"assault", "armored", "assault", "sonic", "repair", "parasite", "armored", "armored"
@@ -30,10 +30,26 @@ const INITIAL_CLASSES: Array[String] = [
 
 
 static func create_initial_roster(run_seed: int) -> Array[RefCounted]:
-	var heroes: Array[RefCounted] = []
-	for index in 8:
-		heroes.append(generate_archetype(run_seed, index, INITIAL_ARCHETYPES[index], INITIAL_CLASSES[index]))
-	return heroes
+	var specs: Array[Dictionary] = [
+		{"archetype": "gman", "class": "guardian", "name": "G-Man 指挥官"},
+	]
+	var roster: Array[RefCounted] = []
+	for index in specs.size():
+		var spec := specs[index]
+		var hero: RefCounted = generate_archetype(
+			run_seed,
+			index,
+			String(spec["archetype"]),
+			String(spec["class"])
+		)
+		hero.display_name = String(spec["name"])
+		hero.aptitude_id = "B"
+		hero.star = 1
+		hero.level = 1
+		hero.xp = 0
+		hero.readiness = 100
+		roster.append(hero)
+	return roster
 
 
 static func generate_hero(run_seed: int, roster_index: int) -> RefCounted:
@@ -83,6 +99,7 @@ static func merged_hero_id(run_seed: int, roster_index: int, consumed_ids: Array
 
 static func archetype_display_name(archetype_id: String) -> String:
 	var names := {
+		"gman": "Gman",
 		"assault": "冲锋马桶人",
 		"sonic": "音波马桶人",
 		"rocket": "火箭飞行马桶人",

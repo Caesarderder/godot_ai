@@ -6,9 +6,12 @@ const EconomyStateScript := preload("res://game/scripts/state/economy_state.gd")
 const FormationStateScript := preload("res://game/scripts/state/formation_state.gd")
 const FactoryStateScript := preload("res://game/scripts/state/factory_state.gd")
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const OnboardingServiceScript := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
+const MetaProgressionStateScript := preload("res://game/scripts/state/meta_progression_state.gd")
 
-var schema_version: int = 4
-var content_version: String = "factory-siege-v4"
+var schema_version: int = 8
+var content_version: String = "toilet-factory-slg-v2"
 var save_id: String = ""
 var run_seed: int = 0
 var revision: int = 0
@@ -19,7 +22,14 @@ var economy: RefCounted = EconomyStateScript.new()
 var factory: RefCounted = FactoryStateScript.new()
 var camp: Dictionary = {"tavern_level": 1, "blacksmith_level": 1, "training_ground_level": 1}
 var quests: Dictionary = {"active": {}, "completed": {}, "claimed": {}}
-var pity: Dictionary = {"qualifying_drops_since_blue": 0, "guaranteed_blue_consumed": false}
+var pity: Dictionary = {
+	"qualifying_drops_since_blue": 0,
+	"guaranteed_blue_consumed": false,
+	"blueprint_draw_count": 0,
+	"s_pity_count": 0,
+	"pool_id": "standard_s",
+	"target_s_recipe_id": "special.parasite",
+}
 var stage_progress: Dictionary = {"highest_unlocked_stage": "stage_1_1", "cleared_stages": []}
 var auto_skill_preferences: Dictionary = {}
 var attempt_counters: Dictionary = {}
@@ -27,18 +37,24 @@ var receipt_ledgers: Dictionary = {"durable": {}, "reversible": {}}
 var command_receipts: Dictionary = {}
 var business_receipts: Dictionary = {}
 var achievements: Dictionary = {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}
+var onboarding: Dictionary = OnboardingServiceScript.default_state()
+var meta_progression: RefCounted = MetaProgressionStateScript.create_starting()
 var saved_at_unix: int = 0
 var last_seen_wall_unix: int = 0
 var last_settled_unix: int = 0
 var offline_anchor_unix: int = 0
 
 
-static func create_new(run_seed_value: int = 20260723, now_unix: int = 0) -> GameState:
+static func create_new(
+	run_seed_value: int = 20260723,
+	now_unix: int = 0,
+	include_built_facilities: bool = true
+) -> GameState:
 	var state := GameState.new()
 	state.save_id = "local-save-v1"
 	state.run_seed = run_seed_value
 	state.economy = EconomyStateScript.create_starting()
-	state.factory = FactoryStateScript.create_starting()
+	state.factory = FactoryStateScript.create_starting(include_built_facilities)
 	state.roster = HeroGenerator.create_initial_roster(run_seed_value)
 	var hero_ids: Array[String] = []
 	for hero in state.roster:
@@ -48,6 +64,7 @@ static func create_new(run_seed_value: int = 20260723, now_unix: int = 0) -> Gam
 	state.last_seen_wall_unix = now_unix
 	state.last_settled_unix = 0
 	state.offline_anchor_unix = now_unix
+	state.factory.logistics_anchor_unix = maxi(0, now_unix - 300)
 	return state
 
 
@@ -74,8 +91,8 @@ func next_hero_index() -> int:
 
 
 func allocate_hero_index() -> int:
-	var index: int = factory.next_hero_sequence - 1
-	factory.next_hero_sequence += 1
+	var index: int = maxi(factory.next_hero_sequence - 1, roster.size())
+	factory.next_hero_sequence = index + 2
 	return index
 
 
@@ -104,6 +121,8 @@ func to_dict() -> Dictionary:
 		"command_receipts": command_receipts.duplicate(true),
 		"business_receipts": business_receipts.duplicate(true),
 		"achievements": achievements.duplicate(true),
+		"onboarding": onboarding.duplicate(true),
+		"meta_progression": meta_progression.to_dict(),
 		"saved_at_unix": saved_at_unix,
 		"last_seen_wall_unix": last_seen_wall_unix,
 		"last_settled_unix": last_settled_unix,
@@ -113,8 +132,9 @@ func to_dict() -> Dictionary:
 
 static func from_dict(data: Dictionary) -> GameState:
 	var state := GameState.new()
-	state.schema_version = int(data.get("schema_version", 4))
-	state.content_version = String(data.get("content_version", "factory-siege-v4"))
+	state.schema_version = int(data.get("schema_version", 8))
+	# 缺少合同版本的存档必须按 legacy 处理，不能因为默认值而伪装成新玩法存档。
+	state.content_version = String(data.get("content_version", "legacy-unknown"))
 	state.save_id = String(data.get("save_id", ""))
 	state.run_seed = int(data.get("run_seed", 0))
 	state.revision = int(data.get("revision", 0))
@@ -135,6 +155,9 @@ static func from_dict(data: Dictionary) -> GameState:
 	state.command_receipts = (data.get("command_receipts", {}) as Dictionary).duplicate(true)
 	state.business_receipts = (data.get("business_receipts", {}) as Dictionary).duplicate(true)
 	state.achievements = (data.get("achievements", {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}) as Dictionary).duplicate(true)
+	state.onboarding = (data.get("onboarding", OnboardingServiceScript.default_state()) as Dictionary).duplicate(true)
+	state.meta_progression = MetaProgressionStateScript.from_dict(data.get("meta_progression", {}))
+	OnboardingServiceScript.normalize(state)
 	state.saved_at_unix = int(data.get("saved_at_unix", 0))
 	state.last_seen_wall_unix = int(data.get("last_seen_wall_unix", 0))
 	state.last_settled_unix = int(data.get("last_settled_unix", 0))
@@ -144,14 +167,12 @@ static func from_dict(data: Dictionary) -> GameState:
 
 func validate() -> Array[String]:
 	var errors: Array[String] = []
-	if schema_version != 4:
+	if schema_version != 8:
 		errors.append("unsupported schema_version")
 	if content_version.is_empty():
 		errors.append("content_version is required")
 	if save_id.is_empty():
 		errors.append("save_id is required")
-	if roster.size() < 6:
-		errors.append("roster requires at least 6 heroes")
 	var seen: Dictionary = {}
 	for hero in roster:
 		errors.append_array(hero.validate())
@@ -159,13 +180,35 @@ func validate() -> Array[String]:
 			errors.append("duplicate hero_id %s" % hero.hero_id)
 		seen[hero.hero_id] = true
 	errors.append_array(formation.validate(roster_ids()))
+	errors.append_array(_validate_formation_model_limits())
 	errors.append_array(economy.validate())
 	errors.append_array(factory.validate())
 	var achievements_error := _validate_achievements()
 	if not achievements_error.is_empty():
 		errors.append(achievements_error)
+	var onboarding_error := OnboardingServiceScript.validate(onboarding)
+	if not onboarding_error.is_empty():
+		errors.append(onboarding_error)
+	errors.append_array(meta_progression.validate())
 	if revision < 0:
 		errors.append("revision must not be negative")
+	return errors
+
+
+func _validate_formation_model_limits() -> Array[String]:
+	var errors: Array[String] = []
+	var s_model_counts: Dictionary = {}
+	for hero_id in formation.hero_ids():
+		var hero: RefCounted = hero_by_id(hero_id)
+		if hero == null:
+			continue
+		var recipe := FactoryCatalogScript.recipe_for_archetype(String(hero.archetype_id))
+		if String(recipe.get("rarity", "")) != "legendary":
+			continue
+		var model_id := String(recipe.get("recipe_id", hero.archetype_id))
+		s_model_counts[model_id] = int(s_model_counts.get(model_id, 0)) + 1
+		if int(s_model_counts[model_id]) > 1:
+			errors.append("S rarity model %s may appear only once in formation" % model_id)
 	return errors
 
 

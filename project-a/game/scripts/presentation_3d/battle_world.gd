@@ -2,6 +2,7 @@ class_name BattleWorld
 extends Node3D
 
 signal battle_finished(result: Dictionary)
+signal battle_snapshot_updated(snapshot: Dictionary)
 
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const ToiletUnitViewScript := preload("res://game/scripts/presentation_3d/toilet_unit_view.gd")
@@ -56,7 +57,9 @@ func start_battle(hero_snapshots: Array, stage_id: String = "", stage_config: Di
 	_finish_emitted = false
 	_camera_progress = 0.0
 	_apply_stage_atmosphere(stage_config)
-	_sync_views(_session.snapshot())
+	var initial_snapshot := _session.call("snapshot") as Dictionary
+	_sync_views(initial_snapshot)
+	battle_snapshot_updated.emit(initial_snapshot)
 	set_process(true)
 
 
@@ -112,6 +115,18 @@ func set_auto_skill(unit_id: StringName, enabled: bool) -> bool:
 	return false if _session == null else _session.set_auto_skill(unit_id, enabled)
 
 
+func request_retreat() -> bool:
+	if _session == null or not _session.retreat():
+		return false
+	var current_snapshot := _session.call("snapshot") as Dictionary
+	_sync_views(current_snapshot)
+	battle_snapshot_updated.emit(current_snapshot)
+	if not _finish_emitted:
+		_finish_emitted = true
+		battle_finished.emit(_session.result.duplicate(true))
+	return true
+
+
 func snapshot() -> Dictionary:
 	return {} if _session == null else _session.snapshot()
 
@@ -137,7 +152,9 @@ func _process(delta: float) -> void:
 		safety_ticks += 1
 		var events: Array[Dictionary] = _session.advance_tick()
 		_apply_events(events)
-		_sync_views(_session.snapshot())
+		var current_snapshot := _session.call("snapshot") as Dictionary
+		_sync_views(current_snapshot)
+		battle_snapshot_updated.emit(current_snapshot)
 		if _session.is_finished:
 			set_process(true)
 			if not _finish_emitted:
@@ -161,7 +178,7 @@ func _build_world_once() -> void:
 	environment.fog_enabled = true
 	environment.fog_light_color = Color("#5b6470")
 	environment.fog_light_energy = 0.26
-	environment.fog_density = 0.018
+	environment.fog_density = 0.01
 	environment_node.environment = environment
 	add_child(environment_node)
 
@@ -445,7 +462,9 @@ func _create_structure_view(data: Dictionary) -> Node3D:
 	var body := MeshInstance3D.new()
 	body.name = "Body"
 	var mesh := BoxMesh.new()
-	if kind == "core":
+	if kind == "city":
+		mesh.size = Vector3(9.0, 5.2, 4.8)
+	elif kind == "core":
 		mesh.size = Vector3(7.0, 4.8, 3.4)
 	elif kind in ["turret", "battery"]:
 		mesh.size = Vector3(2.0, 3.2, 2.0)
@@ -454,10 +473,20 @@ func _create_structure_view(data: Dictionary) -> Node3D:
 	body.mesh = mesh
 	body.position.y = mesh.size.y * 0.5
 	body.material_override = _material(
-		Color("#6f7780") if kind != "core" else Color("#4b5969"),
+		Color("#7b858d") if kind == "city" else (Color("#6f7780") if kind != "core" else Color("#4b5969")),
 		0.78
 	)
 	root.add_child(body)
+	if kind == "city":
+		for tower_index in range(3):
+			var tower := _box_node(
+				"CityTower_%d" % tower_index,
+				Vector3(1.7, 2.4 + float(tower_index) * 0.7, 1.6),
+				Color("#59636d"),
+				0.82
+			)
+			tower.position = Vector3(float(tower_index - 1) * 2.5, mesh.size.y + tower.scale.y, 0.0)
+			root.add_child(tower)
 	if kind in ["turret", "battery", "core"]:
 		var barrel := MeshInstance3D.new()
 		var barrel_mesh := CylinderMesh.new()
@@ -494,9 +523,11 @@ func _create_structure_view(data: Dictionary) -> Node3D:
 	label.name = "Status"
 	label.text = String(data["display_name"])
 	label.position = Vector3(0.0, mesh.size.y + 1.0, 0.0)
-	label.font_size = 28
-	label.outline_size = 7
+	label.font_size = 60
+	label.pixel_size = 0.00235
+	label.outline_size = 12
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
 	root.add_child(label)
 	return root
 

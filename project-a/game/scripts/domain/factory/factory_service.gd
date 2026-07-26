@@ -40,6 +40,50 @@ static func start_production(state: RefCounted, recipe_id: String, now_unix: int
 	}
 
 
+static func start_blueprint_research(state: RefCounted, recipe_id: String, now_unix: int) -> Dictionary:
+	if not FactoryCatalogScript.has_recipe(recipe_id):
+		return {"ok": false, "error": "RECIPE_NOT_FOUND"}
+	if bool(state.factory.blueprints.get(recipe_id, false)):
+		return {"ok": false, "error": "BLUEPRINT_ALREADY_RESEARCHED"}
+	if not bool(state.factory.discovered_blueprints.get(recipe_id, false)):
+		return {"ok": false, "error": "BLUEPRINT_NOT_DISCOVERED"}
+	if not state.factory.blueprint_research.is_empty():
+		return {"ok": false, "error": "BLUEPRINT_RESEARCH_BUSY"}
+	var recipe := FactoryCatalogScript.recipe(recipe_id)
+	var completes_at_unix := now_unix + maxi(5, int(recipe.get("duration_seconds", 5)))
+	state.factory.blueprint_research = {
+		"recipe_id": recipe_id,
+		"started_at_unix": now_unix,
+		"completes_at_unix": completes_at_unix,
+	}
+	return {
+		"ok": true,
+		"event": {
+			"type": "blueprint_research_started",
+			"recipe_id": recipe_id,
+			"completes_at_unix": completes_at_unix,
+		},
+	}
+
+
+static func claim_blueprint_research(state: RefCounted, now_unix: int) -> Dictionary:
+	if state.factory.blueprint_research.is_empty():
+		return {"ok": false, "error": "NO_BLUEPRINT_RESEARCH"}
+	if now_unix < int(state.factory.blueprint_research.get("completes_at_unix", 0)):
+		return {"ok": false, "error": "BLUEPRINT_RESEARCH_NOT_READY"}
+	var recipe_id := String(state.factory.blueprint_research.get("recipe_id", ""))
+	state.factory.blueprints[recipe_id] = true
+	state.factory.discovered_blueprints.erase(recipe_id)
+	state.factory.blueprint_research = {}
+	return {
+		"ok": true,
+		"event": {
+			"type": "blueprint_research_claimed",
+			"recipe_id": recipe_id,
+		},
+	}
+
+
 static func claim_production(state: RefCounted, order_id: String, now_unix: int) -> Dictionary:
 	var order_index := -1
 	for index in state.factory.production_queue.size():
@@ -61,6 +105,9 @@ static func claim_production(state: RefCounted, order_id: String, now_unix: int)
 		String(recipe["archetype_id"]),
 		String(recipe["class_id"])
 	)
+	hero.star = int(state.factory.model_tech_stars.get(recipe_id, 1))
+	hero.level = 1
+	hero.xp = 0
 	state.roster.append(hero)
 	state.factory.production_queue.remove_at(order_index)
 	return {
@@ -70,6 +117,7 @@ static func claim_production(state: RefCounted, order_id: String, now_unix: int)
 			"order_id": order_id,
 			"recipe_id": recipe_id,
 			"hero_id": hero.hero_id,
+			"unit_id": hero.hero_id,
 		},
 	}
 
@@ -121,11 +169,88 @@ static func offline_summary(state: RefCounted, now_unix: int) -> Dictionary:
 
 
 static func apply_battle_unlocks(state: RefCounted, outcome: String, attempt_count: int, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID) -> Array[String]:
-	var unlocked: Array[String] = []
-	if outcome in ["defeat", "timeout"] and attempt_count < 1:
-		return unlocked
-	unlocked.append_array(state.factory.unlock_blueprints(StageCatalogScript.unlocks_for(stage_id, outcome)))
-	return unlocked
+	if stage_id != "stage_1_4" or outcome != "defeat" or attempt_count != 1:
+		return []
+	# 首败只开放建造资格。研究所必须由玩家在基地亲手选址并建造。
+	state.factory.eligible_facilities["research_lab"] = true
+	return ["research_lab"]
+
+
+static func unlock_foundational_blueprint(
+	state: RefCounted,
+	recipe_id: String = FactoryStateScript.FOUNDATIONAL_BLUEPRINT_ID,
+	now_unix: int = 0
+) -> Dictionary:
+	if int(state.factory.facilities.get("research_lab", 0)) <= 0:
+		return {"ok": false, "error": "RESEARCH_LAB_LOCKED"}
+	if not FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS.has(recipe_id):
+		return {"ok": false, "error": "BLUEPRINT_NOT_FOUNDATIONAL"}
+	if not bool(state.factory.discovered_blueprints.get(recipe_id, false)):
+		return {"ok": false, "error": "BLUEPRINT_NOT_DISCOVERED"}
+	if bool(state.factory.blueprints.get(recipe_id, false)):
+		return {"ok": false, "error": "BLUEPRINT_ALREADY_RESEARCHED"}
+	if not state.factory.blueprint_research.is_empty():
+		return {"ok": false, "error": "BLUEPRINT_RESEARCH_BUSY"}
+	var completes_at_unix := now_unix + 45
+	state.factory.blueprint_research = {
+		"recipe_id": recipe_id,
+		"started_at_unix": now_unix,
+		"completes_at_unix": completes_at_unix,
+	}
+	return {"ok": true, "event": {
+		"type": "blueprint_research_started",
+		"recipe_id": recipe_id,
+		"completes_at_unix": completes_at_unix,
+	}}
+
+
+static func claim_foundational_blueprint(state: RefCounted, now_unix: int) -> Dictionary:
+	if state.factory.blueprint_research.is_empty():
+		return {"ok": false, "error": "NO_BLUEPRINT_RESEARCH"}
+	if now_unix < int(state.factory.blueprint_research.get("completes_at_unix", 0)):
+		return {"ok": false, "error": "BLUEPRINT_RESEARCH_NOT_READY"}
+	var recipe_id := String(state.factory.blueprint_research.get("recipe_id", ""))
+	if not FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS.has(recipe_id):
+		return claim_blueprint_research(state, now_unix)
+	state.factory.blueprint_research = {}
+	state.factory.blueprints[recipe_id] = true
+	state.factory.discovered_blueprints.erase(recipe_id)
+	state.factory.model_tech_stars[recipe_id] = 1
+	var recipe := FactoryCatalogScript.recipe(recipe_id)
+	var hero_index: int = state.allocate_hero_index()
+	var hero: RefCounted = HeroGenerator.generate_archetype(
+		state.run_seed,
+		hero_index,
+		String(recipe["archetype_id"]),
+		String(recipe["class_id"])
+	)
+	hero.aptitude_id = "B"
+	hero.display_name = String(recipe["display_name"])
+	state.roster.append(hero)
+	return {"ok": true, "event": {
+		"type": "foundational_blueprint_unlocked",
+		"recipe_id": recipe_id,
+		"hero_id": hero.hero_id,
+		"display_name": hero.display_name,
+	}}
+
+
+static func _first_free_facility_cell(state: RefCounted) -> Array[int]:
+	var occupied: Dictionary = {}
+	for facility_id in state.factory.facility_placements:
+		if int(state.factory.facilities.get(facility_id, 0)) <= 0:
+			continue
+		var placement := state.factory.facility_placements[facility_id] as Array
+		if placement.size() == 2:
+			occupied["%d:%d" % [int(placement[0]), int(placement[1])]] = true
+	if not occupied.has("2:1"):
+		return [2, 1]
+	for z in range(-2, 3):
+		for x in range(-2, 3):
+			var key := "%d:%d" % [x, z]
+			if not occupied.has(key):
+				return [x, z]
+	return []
 
 
 static func blueprint_status(state: RefCounted) -> Array[Dictionary]:
@@ -136,9 +261,40 @@ static func blueprint_status(state: RefCounted) -> Array[Dictionary]:
 			"recipe_id": recipe_id,
 			"display_name": String(recipe["display_name"]),
 			"unlocked": bool(state.factory.blueprints.get(recipe_id, false)),
+			"discovered": bool(state.factory.discovered_blueprints.get(recipe_id, false)),
 			"unlock_hint": _unlock_hint(recipe_id),
 		})
 	return rows
+
+
+static func upgrade_model_tech(state: RefCounted, recipe_id: String) -> Dictionary:
+	if not bool(state.factory.blueprints.get(recipe_id, false)):
+		return {"ok": false, "error": "BLUEPRINT_LOCKED"}
+	var current_star := int(state.factory.model_tech_stars.get(recipe_id, 1))
+	if current_star >= 3:
+		return {"ok": false, "error": "MODEL_TECH_MAX_STAR"}
+	var data_cost := 10 if current_star == 1 else 30
+	var coin_cost := 200 if current_star == 1 else 600
+	if int(state.factory.blueprint_data.get(recipe_id, 0)) < data_cost:
+		return {"ok": false, "error": "NOT_ENOUGH_BLUEPRINT_DATA"}
+	if state.economy.toilet_coins < coin_cost:
+		return {"ok": false, "error": "NOT_ENOUGH_TOILET_COINS"}
+	state.factory.blueprint_data[recipe_id] = int(state.factory.blueprint_data.get(recipe_id, 0)) - data_cost
+	state.economy.toilet_coins -= coin_cost
+	state.factory.model_tech_stars[recipe_id] = current_star + 1
+	for hero in state.roster:
+		if String(hero.archetype_id) == String(FactoryCatalogScript.recipe(recipe_id).get("archetype_id", "")):
+			hero.star = current_star + 1
+	return {
+		"ok": true,
+		"event": {
+			"type": "model_tech_upgraded",
+			"recipe_id": recipe_id,
+			"star": current_star + 1,
+			"blueprint_data_cost": data_cost,
+			"toilet_coin_cost": coin_cost,
+		},
+	}
 
 
 static func merge_heroes(state: RefCounted, hero_ids: Array[String]) -> Dictionary:
@@ -164,20 +320,33 @@ static func merge_heroes(state: RefCounted, hero_ids: Array[String]) -> Dictiona
 	merged.hero_id = HeroGenerator.merged_hero_id(state.run_seed, state.allocate_hero_index(), hero_ids)
 	merged.star += 1
 	merged.display_name = "%s ★%d" % [HeroGenerator.archetype_display_name(merged.archetype_id), merged.star]
-	var formation_replaced := false
+	var vacated_slots: Array[String] = []
 	for slot in state.formation.slots:
 		if hero_ids.has(String(state.formation.slots[slot])):
-			if not formation_replaced:
-				state.formation.slots[slot] = merged.hero_id
-				formation_replaced = true
-			else:
-				return {"ok": false, "error": "MERGE_WOULD_EMPTY_FORMATION_SLOT"}
+			if String(slot) == "commander":
+				return {"ok": false, "error": "MERGE_CANNOT_CONSUME_COMMANDER"}
+			vacated_slots.append(String(slot))
+			state.formation.slots[slot] = ""
 	for hero_id in hero_ids:
 		for index in range(state.roster.size() - 1, -1, -1):
 			if state.roster[index].hero_id == hero_id:
 				state.roster.remove_at(index)
 				break
 	state.roster.append(merged)
+	if not vacated_slots.is_empty():
+		state.formation.slots[vacated_slots.pop_front()] = merged.hero_id
+	var deployed_ids: Array[String] = state.formation.hero_ids()
+	for slot in vacated_slots:
+		var replacement_id := ""
+		for candidate in state.roster:
+			var candidate_id := String(candidate.hero_id)
+			if not deployed_ids.has(candidate_id):
+				replacement_id = candidate_id
+				break
+		if replacement_id.is_empty():
+			return {"ok": false, "error": "MERGE_WOULD_EMPTY_FORMATION_SLOT"}
+		state.formation.slots[slot] = replacement_id
+		deployed_ids.append(replacement_id)
 	var consumed := hero_ids.duplicate()
 	consumed.sort()
 	return {
@@ -195,9 +364,9 @@ static func _unlock_hint(recipe_id: String) -> String:
 	if FactoryStateScript.STARTING_BLUEPRINTS.has(recipe_id):
 		return "初始普通车间"
 	if FactoryStateScript.FIRST_FAILURE_UNLOCKS.has(recipe_id):
-		return "首战失败/超时后解锁，用于反攻"
+		return "第 4 关炮台防线失败后获得图纸，再交给马桶博士研究"
 	if FactoryStateScript.FIRST_VICTORY_UNLOCKS.has(recipe_id):
-		return "首次胜利后解锁高级攻城"
+		return "后续关卡胜利后获得图纸，再交给马桶博士研究"
 	if FactoryStateScript.CORE_CLEAR_UNLOCKS.has(recipe_id):
-		return "摧毁联盟核心后解锁"
+		return "摧毁联盟核心后获得图纸，再交给马桶博士研究"
 	return "未知蓝图"

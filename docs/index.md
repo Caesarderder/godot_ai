@@ -4,11 +4,11 @@ km_type: map
 domain: cross-domain
 status: active
 owner: maintainers
-last_verified: 2026-07-24
+last_verified: 2026-07-26
 source_of_truth:
   - project-a/project.godot
   - project-a/export_presets.cfg
-  - project-a/scripts/main.gd
+  - project-a/scripts/slg_main.gd
   - project-a/game/scripts/state/game_state.gd
   - project-a/game/scripts/domain/factory/factory_catalog.gd
   - project-a/game/scripts/domain/factory/factory_service.gd
@@ -30,7 +30,20 @@ related:
 
 # 项目知识地图
 
-这是人和智能体共用的中文工作环境。当前开发根是 `project-a/` Godot 4.6.3 3D 工程，目标为 Web-first 并主要在手机浏览器运行。当前已具备 Compatibility App Shell、v4 Meta 领域内核、第一幕五章 25 关、任务/成就目标中心、设置/失焦暂停、程序化战争表现、单线程 Web/PWA 导出和本地产物审计；离线战斗、装备、生产 HTTPS 与 Android/iOS 真机证据仍按后续里程碑推进。`taptap/` 仅作为历史可玩原型和产品参考。
+这是人和智能体共用的中文工作环境。当前开发根是 `project-a/` Godot 4.6.3 3D 工程，目标为 Web-first 并主要在手机浏览器运行。产品合同与玩家入口已经切换为“永久角色 + 工厂后勤资源 + 城镇主动攻坚 + 战后完全无损”；兼容 schema 中仍保留战备、维修和旧训练字段，但它们不是当前玩家循环的数值依据，已实现范围以 implementation-status 为准。
+
+项目级接受状态与跨岗位交接以 [项目契约](game-contract.md) 为唯一入口；本轮重构的程序边界见 [KM:reference.toilet-factory-technical-design](references/architecture/toilet-factory-technical-design.md)，执行顺序见 [KM:reference.toilet-factory-refactor-plan](references/plans/toilet-factory-refactor-plan.md)。
+Godot 场景、脚本、Resource、Autoload 与资产治理的增量重构路线见
+[KM:reference.godot-runtime-refactor-blueprint](references/architecture/godot-runtime-refactor-blueprint.md)。
+
+涉及战力、资源价值、可推进关卡、工厂产能、永久成长效率、数值膨胀或商业化价值比较时，先读
+[KM:reference.game-state-measurement-framework](references/product-design/game-state-measurement-framework.md)。
+涉及任务、指挥官等级、战令、招募、成就及奖励预算时，读
+[KM:reference.meta-progression-system](references/product-design/meta-progression-system.md)。
+涉及大中小目标、大小卡点、失败恢复和跨坎奖励时，读
+[KM:reference.objective-hurdle-reward-ladder](references/product-design/objective-hurdle-reward-ladder.md)。
+涉及同类产品、首局结构、渐进披露、产品承诺一致性或上线体验基准时，读
+[KM:reference.competitor-first-session-benchmark](references/product-design/competitor-first-session-benchmark.md)。
 
 ## 先读顺序
 
@@ -63,6 +76,6 @@ related:
 5. ADR 与 memory。
 6. 叙述性说明和规划草稿。
 
-当前代码事实以 [CODE:project-config](../project-a/project.godot)、[CODE:web-export-preset](../project-a/export_presets.cfg)、[CODE:app-shell](../project-a/scripts/main.gd)、[CODE:stage-catalog](../project-a/game/scripts/domain/content/stage_catalog.gd)、[CODE:battle-session](../project-a/game/scripts/domain/battle/battle_session.gd)、[CODE:battle-world](../project-a/game/scripts/presentation_3d/battle_world.gd)、[CODE:settings-store](../project-a/game/scripts/platform/settings_store.gd)、[CODE:web-runtime](../project-a/game/scripts/platform/web_runtime.gd)、[CODE:achievement-catalog](../project-a/game/scripts/domain/achievement/achievement_catalog.gd) 和 [KM:reference.verification-matrix](references/indexes/verification-matrix.md) 为准；它们与实际导出、审计和浏览器证据共同证明第一幕本地发行候选存在，但不证明生产部署、Android/iOS 真机、IP 授权或完整长期 GDD 已完成。
+产品目标以 [KM:reference.skibidi-toilet-idle-siege-gdd](references/product-design/skibidi-toilet-idle-siege-gdd.md) 和 [KM:reference.product-boundaries](references/constraints/product-boundaries.md) 为准。当前代码事实以 [KM:reference.implementation-status](references/constraints/implementation-status.md)、代码、配置与测试为准；旧测试通过不证明新玩法已经实现。
 
-策划案中的核心循环、内容、经济与验收指标继续有效；其中旧的 Godot 4.7.1、2D、Mobile renderer、Android-first 平台文字已由 [KM:decision.project-a-web-3d-root](decisions/ADR-0005-project-a-web-3d-root.md) 取代。遇到冲突时，平台和工程根读 ADR-0005，玩法与数值读 PRD/Test Spec。
+平台和工程根读 ADR-0005；玩法、经济与验收读新 GDD、产品边界和首 30 分钟合同。旧 PRD/Test Spec 只保留实现追溯价值。

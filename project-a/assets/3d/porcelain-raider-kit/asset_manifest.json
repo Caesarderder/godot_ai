@@ -1,0 +1,85 @@
+{
+  "pack_id": "godot.project-a-porcelain-raider-kit.001",
+  "pack_name": "project-a-porcelain-raider-kit",
+  "version": "1.0.0",
+  "target_engine": "Godot 4.6.3",
+  "renderer": "GL Compatibility",
+  "platforms": ["web", "mobile", "desktop"],
+  "entry_strategy": "Instantiate game-owned wrapper scenes below ToiletUnitView.BodyPivot; wrappers own imported GLB transforms and protect gameplay from importer subtree changes",
+  "runtime_wrapper_directory": "res://game/scenes/actors/ally_models",
+  "source_assets": [
+    {
+      "asset_id": "3d-model.modular-kits.project-a-porcelain-raider-kit.001",
+      "asset_path": "AssetVault/assets/3d-models/project-a-porcelain-raider-kit",
+      "license_status": "usable",
+      "attribution_required": false
+    }
+  ],
+  "files": [
+    {
+      "archetype": "assault",
+      "path": "models/porcelain-raider-assault-v001.glb",
+      "sha256": "d8a0efaad6fbc641df3a075316e5d0667c5ede72689b585e8e04ce40edbdc694",
+      "triangles": 1320
+    },
+    {
+      "archetype": "sonic",
+      "path": "models/porcelain-raider-sonic-v001.glb",
+      "sha256": "c742ab9cfefd839bb399c09ce78ec65efab8eeecf84ff72c542f7a9577d019b1",
+      "triangles": 1552
+    },
+    {
+      "archetype": "rocket",
+      "path": "models/porcelain-raider-rocket-v001.glb",
+      "sha256": "203e49ece006738838423384fab72738251e6d24413dfe3ccf97434918ccdf77",
+      "triangles": 1452
+    },
+    {
+      "archetype": "bomber",
+      "path": "models/porcelain-raider-bomber-v001.glb",
+      "sha256": "f5cb75126834ac6b1eccf511a7fe437dd9c4801debdbe79a285f17a1e6e41aab",
+      "triangles": 1584
+    },
+    {
+      "archetype": "armored",
+      "path": "models/porcelain-raider-armored-v001.glb",
+      "sha256": "7f3212a1c5d383d85e1f8e4f53176ae143ae37350e90c2a5f858f45616dc69c9",
+      "triangles": 1296
+    },
+    {
+      "archetype": "saw",
+      "path": "models/porcelain-raider-saw-v001.glb",
+      "sha256": "e19dbc79dca7d8c24016eb7f3d777959d78d2312f4941c2f62ef1ef845e7d7f6",
+      "triangles": 1440
+    },
+    {
+      "archetype": "repair",
+      "path": "models/porcelain-raider-repair-v001.glb",
+      "sha256": "add80dbf0d96c34f777439951ebc5c019987403774ec780a647b8674c3cdcce5",
+      "triangles": 1656
+    },
+    {
+      "archetype": "parasite",
+      "path": "models/porcelain-raider-parasite-v001.glb",
+      "sha256": "c8761313edd111e611e669ee36e4d469abfe5bd2527a024372147c2ce0bff6b2",
+      "triangles": 1648
+    }
+  ],
+  "verification": {
+    "blender_version": "5.2.0 LTS",
+    "blender_reimport": "pass",
+    "godot_version": "4.6.3.stable.official.7d41c59c4",
+    "godot_import": "pass",
+    "project_tests": "pass",
+    "project_test_commands": [
+      "godot --headless --path project-a --script tools/run_asset_3d_tests.gd",
+      "godot --headless --path project-a --script tools/run_presentation_tests.gd",
+      "godot --headless --path project-a --script tools/run_battle_tests.gd",
+      "godot --headless --path project-a --script tools/run_lifecycle_tests.gd",
+      "godot --headless --path project-a --script tools/run_meta_tests.gd",
+      "godot --headless --path project-a --script tools/run_campaign_tests.gd",
+      "godot --headless --path project-a --script tools/run_platform_tests.gd",
+      "godot --headless --path project-a --script tools/run_ui_smoke_tests.gd"
+    ]
+  }
+}

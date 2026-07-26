@@ -15,6 +15,12 @@ const _RECIPES: Array[Dictionary] = [
 ]
 
 const _ARCHETYPES: Dictionary = {
+	"gman": {
+		"display_name": "Gman",
+		"role": "commander",
+		"active_skill": "gman_overrun",
+		"description": "开局唯一指挥官，前三关可以独自碾压城市防线。",
+	},
 	"assault": {
 		"display_name": "冲锋马桶人",
 		"role": "frontline_breaker",
@@ -79,6 +85,13 @@ static func recipe(recipe_id: String) -> Dictionary:
 
 static func has_recipe(recipe_id: String) -> bool:
 	return not recipe(recipe_id).is_empty()
+
+
+static func recipe_for_archetype(archetype_id: String) -> Dictionary:
+	for item in _RECIPES:
+		if String(item["archetype_id"]) == archetype_id:
+			return item.duplicate(true)
+	return {}
 
 
 static func archetypes() -> Dictionary:

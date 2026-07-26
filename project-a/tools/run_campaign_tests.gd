@@ -22,9 +22,23 @@ func _run() -> void:
 		var config := StageCatalogScript.stage(stage_id)
 		_check(not config.is_empty(), "%s has a definition" % stage_id)
 		_check(String(config.get("stage_id", "")) == stage_id, "%s identity is stable" % stage_id)
-		_check((config.get("enemies", []) as Array).size() >= 6, "%s has an enemy composition" % stage_id)
-		_check((config.get("structures", []) as Array).size() >= 5, "%s has a three-phase structure route" % stage_id)
+		if stage_id == "stage_1_1":
+			_check((config.get("enemies", []) as Array).is_empty(), "stage_1_1 has no alliance defenders")
+			_check((config.get("structures", []) as Array).size() == 2, "stage_1_1 teaches obstacle then city destruction")
+			_check(String((config.get("structures", []) as Array)[0].get("kind", "")) == "structure", "stage_1_1 opens with an abandoned barricade")
+			_check(String((config.get("structures", []) as Array)[1].get("kind", "")) == "city", "stage_1_1 ends on the city target")
+		elif stage_id == "stage_1_2":
+			_check((config.get("enemies", []) as Array).size() == 2, "stage_1_2 introduces only two temporary alliance guards")
+			_check((config.get("enemies", []) as Array).all(func(item: Dictionary) -> bool: return String(item.get("class_id", "")) == "ranger"), "stage_1_2 guards introduce remote pressure")
+			_check((config.get("structures", []) as Array).size() == 1, "stage_1_2 still centers on one city")
+		elif stage_id == "stage_1_3":
+			_check((config.get("enemies", []) as Array).size() == 4, "stage_1_3 forms the first organized alliance")
+			_check((config.get("structures", []) as Array).any(func(item: Dictionary) -> bool: return String(item.get("structure_id", "")) == "warning_turret"), "stage_1_3 introduces one weak warning turret")
+		else:
+			_check((config.get("enemies", []) as Array).size() >= 6, "%s has an enemy composition" % stage_id)
+			_check((config.get("structures", []) as Array).size() >= 5, "%s has a three-phase structure route" % stage_id)
 		_check(config.has("unlock_preview"), "%s exposes an unlock preview field" % stage_id)
+		_check(config.has("defense_evolution"), "%s exposes defense evolution metadata" % stage_id)
 		_check(not String(config.get("threat_summary", "")).is_empty(), "%s explains its main threat" % stage_id)
 		_check(not String(config.get("counter_hint", "")).is_empty(), "%s explains a counter hint" % stage_id)
 		_check(not String(config.get("chapter_feedback", "")).is_empty(), "%s explains chapter feedback" % stage_id)
@@ -53,18 +67,26 @@ func _run() -> void:
 		var session: RefCounted = BattleSessionScript.new()
 		session.start(_release_roster(), stage_id, config)
 		var safety := 0
-		while not session.is_finished and safety < int(config.get("max_ticks", 300)) + 2:
+		while not session.is_finished and safety < 5000:
 			session.advance_tick()
 			safety += 1
-		_check(session.is_finished, "%s resolves within its configured time budget" % stage_id)
+		_check(session.is_finished, "%s resolves without relying on an attack countdown" % stage_id)
 		_check(String(session.result.get("stage_id", "")) == stage_id, "%s result preserves stage identity" % stage_id)
-		_check(["victory", "defeat", "timeout"].has(String(session.result.get("outcome", ""))), "%s produces a valid outcome" % stage_id)
+		_check(["victory", "defeat"].has(String(session.result.get("outcome", ""))), "%s produces a valid outcome" % stage_id)
 		_check(String(session.result.get("outcome", "")) == "victory", "%s is clearable by the documented three-star release roster" % stage_id)
 	_check(chapter_feedback_values.size() == 5, "Act I has distinct chapter feedback for five chapters")
 	_check(recommendation_signatures.size() >= 5, "Act I recommendations differ across at least five chapter beats")
 	_check(boss_suppression_targets == [70, 85, 100, 115, 130], "boss cannon suppression targets increase across Act I")
+	_check(StageCatalogScript.breakthrough_reward("stage_1_2", false) == {"hero_shards": 4, "skill_chips": 0}, "first chapter introduces the first two-star breakthrough")
+	for chapter in range(1, 6):
+		var mid_stage := "stage_%d_3" % chapter
+		var boss_stage := "stage_%d_5" % chapter
+		_check(int(StageCatalogScript.breakthrough_reward(mid_stage, false)["hero_shards"]) == 4, "%s grants controlled mid-chapter shards" % mid_stage)
+		_check(StageCatalogScript.breakthrough_reward(boss_stage, false) == {"hero_shards": 8, "skill_chips": 2}, "%s grants a full mastery breakthrough" % boss_stage)
+		_check(StageCatalogScript.breakthrough_reward(boss_stage, true) == {"hero_shards": 0, "skill_chips": 0}, "%s breakthrough reward is first-clear only" % boss_stage)
+	_test_opening_defense_curve()
 	_test_unlock_previews()
-	_check(StageCatalogScript.next_stage_id("stage_5_5").is_empty(), "Act I finale has no phantom next stage")
+	_check(StageCatalogScript.next_stage_id("stage_5_5") == "endless_1", "Act I finale continues into the endless frontier")
 	var undertrained: RefCounted = BattleSessionScript.new()
 	undertrained.start(_undertrained_roster(), "stage_5_5", StageCatalogScript.stage("stage_5_5"))
 	while not undertrained.is_finished:
@@ -86,7 +108,7 @@ func _check_recommendation_fields(stage_id: String, config: Dictionary) -> void:
 	_check(config.has("recommendation_reason"), "%s exposes a recommendation reason" % stage_id)
 	var recommended := _string_array(config.get("recommended_recipe_ids", []))
 	var fallback := _string_array(config.get("fallback_recipe_ids", []))
-	_check(not recommended.is_empty(), "%s has at least one primary recommendation" % stage_id)
+	_check(stage_id in ["stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4"] or not recommended.is_empty(), "%s has an appropriate primary recommendation" % stage_id)
 	_check(not String(config.get("recommendation_reason", "")).is_empty(), "%s has a non-empty recommendation reason" % stage_id)
 	for recipe_id in recommended:
 		_check(FactoryCatalogScript.has_recipe(recipe_id), "%s recommended recipe exists: %s" % [stage_id, recipe_id])
@@ -104,7 +126,7 @@ func _intended_unlocked_before(stage_id: String) -> Array[String]:
 	var values: Array[String] = ["ordinary.assault", "ordinary.sonic"]
 	var stage_index := StageCatalogScript.all_stage_ids().find(stage_id)
 	var unlock_schedule := {
-		"stage_1_3": "heavy.armored",
+		"stage_1_4": "heavy.armored",
 		"stage_1_5": "flying.rocket",
 		"stage_2_3": "flying.bomber",
 		"stage_2_5": "special.repair",
@@ -127,22 +149,37 @@ func _string_array(value: Variant) -> Array[String]:
 
 
 func _test_unlock_previews() -> void:
-	var expected_labels := {
-		"stage_1_1": ["火箭飞行马桶人", "装甲冲城马桶人"],
-		"stage_1_3": ["装甲冲城马桶人"],
-		"stage_1_5": ["火箭飞行马桶人"],
-		"stage_2_3": ["自爆飞行马桶人"],
-		"stage_2_5": ["维修马桶人"],
-		"stage_3_3": ["寄生母体马桶人"],
-		"stage_4_3": ["双锯重装马桶人"],
-	}
-	for stage_id in expected_labels.keys():
-		var preview := String(StageCatalogScript.stage(String(stage_id)).get("unlock_preview", ""))
-		_check(not preview.is_empty(), "%s has a non-empty key blueprint unlock preview" % stage_id)
-		for label in expected_labels[stage_id]:
-			_check(preview.contains(String(label)), "%s unlock preview mentions %s" % [stage_id, label])
-	_check(String(StageCatalogScript.stage("stage_1_2").get("unlock_preview", "")) == "", "Non-unlock stages keep an empty unlock preview")
-	_check(String(StageCatalogScript.stage("stage_5_5").get("unlock_preview", "")) == "", "Act I finale keeps an empty unlock preview")
+	for stage_id in StageCatalogScript.all_stage_ids():
+		var config := StageCatalogScript.stage(stage_id)
+		_check(String(config.get("unlock_preview", "")) == "", "%s does not advertise a stage blueprint drop" % stage_id)
+		_check((config.get("unlock_on_victory", []) as Array).is_empty(), "%s victory does not unlock a blueprint" % stage_id)
+		_check((config.get("unlock_on_defeat", []) as Array).is_empty(), "%s defeat does not unlock a blueprint" % stage_id)
+
+
+func _test_opening_defense_curve() -> void:
+	var expected_tiers: Array[String] = ["unguarded_city", "city_alarm", "alliance_militia", "turret_line"]
+	var opening_power: Array[int] = []
+	for index in expected_tiers.size():
+		var stage_id := "stage_1_%d" % (index + 1)
+		var config := StageCatalogScript.stage(stage_id)
+		var defense := config.get("defense_evolution", {}) as Dictionary
+		_check(String(defense.get("tier", "")) == expected_tiers[index], "%s advances the opening defense tier" % stage_id)
+		_check(not (defense.get("features", []) as Array).is_empty(), "%s names visible defense features" % stage_id)
+		var has_turret := (config.get("structures", []) as Array).any(
+			func(item: Dictionary) -> bool: return String(item.get("kind", "")) in ["turret", "battery"]
+		)
+		if index < 2:
+			_check(not has_turret, "%s does not introduce fixed turret fire early" % stage_id)
+		elif index == 2:
+			_check(has_turret, "stage_1_3 previews turret fire with a weak warning emplacement")
+		else:
+			_check(has_turret, "stage_1_4 visibly upgrades the warning shot into the first turret wall")
+		opening_power.append(int(config.get("power_bp", 0)))
+	_check(opening_power[0] < opening_power[1] and opening_power[1] < opening_power[2], "opening three stages rise gently")
+	_check(opening_power[3] > opening_power[2], "stage 1-4 keeps a higher three-unit combat load than stage 1-3")
+	_check(int(StageCatalogScript.stage("stage_1_4").get("solo_pressure_bp", 10000)) >= 20000, "stage 1-4 creates the intended solo turret power wall")
+	_check(int(StageCatalogScript.stage("stage_1_4").get("factory_production_target", 0)) == 0, "stage 1-4 does not require a legacy nine-unit merge batch")
+	_check((StageCatalogScript.stage("stage_1_4").get("unlock_on_victory", []) as Array).is_empty(), "stage 1-4 does not drop the armored blueprint")
 
 
 func _release_roster() -> Array[Dictionary]:

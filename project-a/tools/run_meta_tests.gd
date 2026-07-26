@@ -13,7 +13,9 @@ const FactoryService := preload("res://game/scripts/domain/factory/factory_servi
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 const SalvageCatalogScript := preload("res://game/scripts/domain/economy/salvage_catalog.gd")
+const GoldShopCatalogScript := preload("res://game/scripts/domain/economy/gold_shop_catalog.gd")
 const QuestCatalogScript := preload("res://game/scripts/domain/quest/quest_catalog.gd")
+const WarMeritTrackScript := preload("res://game/scripts/domain/quest/war_merit_track.gd")
 const AchievementCatalogScript := preload("res://game/scripts/domain/achievement/achievement_catalog.gd")
 const AchievementServiceScript := preload("res://game/scripts/domain/achievement/achievement_service.gd")
 
@@ -27,6 +29,7 @@ class FakeBootstrapSaveManager:
 	var load_result: Dictionary = {"ok": false, "error": "SAVE_NOT_FOUND"}
 	var saved_states: Array[Dictionary] = []
 	var save_result: bool = true
+	var delete_calls: int = 0
 
 	func load_state() -> Dictionary:
 		return load_result
@@ -34,6 +37,10 @@ class FakeBootstrapSaveManager:
 	func save_state(state: RefCounted) -> bool:
 		saved_states.append(state.to_dict())
 		return save_result
+
+	func delete_local_save() -> Dictionary:
+		delete_calls += 1
+		return {"ok": true, "removed": ["fake-primary", "fake-backup"]}
 
 
 func _init() -> void:
@@ -51,27 +58,16 @@ func _init() -> void:
 func _run_all() -> void:
 	_test_new_game_contract()
 	_test_seeded_hero_generation()
-	_test_recruit_four_to_eight_and_ticket_cost()
 	_test_progression_clamp_bulk_equivalence()
-	_test_formation_validation()
-	_test_battle_settlement()
-	_test_stage_specific_battle_settlement()
-	_test_alliance_scrap_first_clear_and_exchange()
-	_test_quest_system_contracts()
-	_test_achievement_system_contracts()
-	_test_auto_skill_preference_command()
-	_test_factory_catalog_and_production()
-	_test_blueprint_unlocks_and_offline_claim()
-	_test_three_to_one_merge()
+	_test_war_merit_reward_track()
 	_test_fingerprint_and_idempotency()
 	_test_no_save_callback_rejects_commands()
 	_test_revision_contract()
-	_test_payload_schema_rejections()
 	_test_save_failure_does_not_swap()
 	_test_save_codec_roundtrip_and_strict_values()
-	_test_strict_v1_to_v2_migration()
-	_test_v2_to_v3_factory_migration_and_strictness()
 	_test_save_manager_atomic_roundtrip()
+	_test_save_export_import_contract()
+	_test_save_manager_deletes_all_local_candidates()
 	_test_save_manager_missing_main_valid_bak()
 	_test_game_bootstrap_contract()
 
@@ -88,17 +84,123 @@ func _eq(actual: Variant, expected: Variant, message: String) -> void:
 
 func _test_new_game_contract() -> void:
 	var state := GameStateScript.create_new(12345, 100)
-	_eq(state.schema_version, 4, "new game uses schema v4")
-	_eq(state.roster.size(), 8, "new game starts with six deployed heroes and two reserves")
-	_eq(state.economy.gold, 250, "new game starts with 250 gold")
+	_eq(state.schema_version, 8, "new game uses the meta-progression schema v8 envelope")
+	_eq(state.content_version, "toilet-factory-slg-v2", "new game uses the revised permanent-legion SLG contract")
+	_eq(state.roster.size(), 1, "new game grants only permanent G-Man")
+	_eq(state.economy.toilet_coins, 250, "new game starts with 250 toilet coins")
+	_eq(state.economy.toilet_gems, 0, "new game starts without premium currency")
 	_eq(state.economy.xp_books, 2, "new game starts with two xp books")
 	_eq(state.economy.forge_stones, 0, "new game starts with zero forge stones")
 	_eq(state.economy.recruit_tickets, 0, "new game has no implicit recruitment tickets")
-	_eq(state.formation.hero_ids().size(), 6, "new game formation has six slots")
-	_eq(state.factory.materials, {"porcelain": 120, "parts": 100, "sludge": 80}, "new game has playable factory materials")
-	_eq(state.factory.blueprints, {"ordinary.assault": true, "ordinary.sonic": true}, "new game starts with basic ordinary-workshop blueprints only")
+	_eq(state.formation.hero_ids(), state.roster_ids(), "new game deploys only permanent G-Man")
+	_eq(state.factory.materials, {"porcelain": 80, "parts": 48, "sludge": 32}, "new game starts with industrial growth and repair materials")
+	_eq(state.factory.discovered_blueprints, {}, "new game starts without discovered blueprints")
+	_eq(state.factory.blueprints.size(), 4, "compatibility data preserves four hidden legacy blueprints")
+	_eq(state.factory.blueprint_research, {}, "new game starts without active Doctor research")
 	_eq(state.achievements, {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}, "new game starts with empty achievement state")
 	_ok(state.validate().is_empty(), "new game invariants pass")
+
+
+func _test_gold_shop_transactions() -> void:
+	_eq(GoldShopCatalogScript.validate_definitions(), [], "gold shop catalog definitions are valid")
+	_eq(GoldShopCatalogScript.all().size(), 5, "gold shop exposes five deterministic offers")
+	var state := GameStateScript.create_new(31001, 0)
+	var executor := CommandExecutorScript.new(state, Callable(self, "_record_save_success"))
+	var gold_before := int(executor.state.economy.gold)
+	var books_before := int(executor.state.economy.xp_books)
+	var first := _exec_ok(
+		executor,
+		"shop-buy-1",
+		"purchase_gold_shop",
+		{"request_id": "shop-request-1", "offer_id": "training_book"},
+		"shop-business-1"
+	)
+	_eq(first["event"]["gold_cost"], 90, "training book shop offer costs ninety gold")
+	_eq(executor.state.economy.gold, gold_before - 90, "shop purchase debits gold once")
+	_eq(executor.state.economy.xp_books, books_before + 1, "shop purchase grants the catalog item")
+	_ok((executor.state.receipt_ledgers["durable"] as Dictionary).has("gold_shop:shop-request-1"), "shop purchase writes durable receipt")
+	_exec_ok(
+		executor,
+		"shop-buy-replay",
+		"purchase_gold_shop",
+		{"request_id": "shop-request-1", "offer_id": "training_book"},
+		"shop-business-replay"
+	)
+	_eq(executor.state.economy.gold, gold_before - 90, "same shop request does not debit twice")
+	_eq(executor.state.economy.xp_books, books_before + 1, "same shop request does not grant twice")
+	var mismatch := executor.execute(_env(
+		"shop-buy-mismatch",
+		"purchase_gold_shop",
+		{"request_id": "shop-request-1", "offer_id": "parts_crate"},
+		"shop-business-mismatch",
+		executor
+	))
+	_eq(mismatch["error"], "SHOP_REQUEST_ID_REUSE_MISMATCH", "shop request id cannot be reused for another offer")
+	executor.state.economy.gold = 0
+	var materials_before: Dictionary = executor.state.factory.materials.duplicate(true)
+	var ledger_before := (executor.state.receipt_ledgers["durable"] as Dictionary).duplicate(true)
+	var insufficient := executor.execute(_env(
+		"shop-buy-poor",
+		"purchase_gold_shop",
+		{"request_id": "shop-request-poor", "offer_id": "mixed_factory_cache"},
+		"shop-business-poor",
+		executor
+	))
+	_eq(insufficient["error"], "NOT_ENOUGH_GOLD", "shop rejects insufficient gold")
+	_eq(executor.state.factory.materials, materials_before, "failed shop purchase grants no materials")
+	_eq(executor.state.receipt_ledgers["durable"], ledger_before, "failed shop purchase writes no durable receipt")
+
+
+func _test_war_merit_reward_track() -> void:
+	var state := GameStateScript.create_new(31002, 0)
+	var executor := CommandExecutorScript.new(state, Callable(self, "_record_save_success"))
+	_eq(WarMeritTrackScript.reached_level(executor.state), 1, "fresh campaign starts at war merit level one")
+	_eq(WarMeritTrackScript.claimable_count(executor.state), 1, "level one starter merit reward is claimable")
+	var coins_before := int(executor.state.economy.toilet_coins)
+	var first := _exec_ok(
+		executor,
+		"merit-claim-1",
+		"claim_war_merit_reward",
+		{"request_id": "merit-request-1", "level": 1},
+		"merit-business-1"
+	)
+	_eq(first["event"]["reward"], WarMeritTrackScript.reward_for_level(1), "war merit claim uses canonical level reward")
+	_eq(executor.state.economy.toilet_coins, coins_before + 10, "level one merit reward grants toilet coins")
+	_eq(WarMeritTrackScript.claimable_count(executor.state), 0, "claimed merit level leaves no duplicate claim")
+	var duplicate := executor.execute(_env(
+		"merit-claim-duplicate",
+		"claim_war_merit_reward",
+		{"request_id": "merit-request-new", "level": 1},
+		"merit-business-duplicate",
+		executor
+	))
+	_eq(duplicate["error"], "MERIT_REWARD_ALREADY_CLAIMED", "same merit level cannot be claimed with a new request")
+	var locked := executor.execute(_env(
+		"merit-claim-locked",
+		"claim_war_merit_reward",
+		{"request_id": "merit-request-5-locked", "level": 5},
+		"merit-business-5-locked",
+		executor
+	))
+	_eq(locked["error"], "MERIT_LEVEL_NOT_REACHED", "future merit level reward stays locked")
+	executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID] = 640
+	_eq(WarMeritTrackScript.reached_level(executor.state), 5, "cumulative merit reaches level five at the canonical threshold")
+	_eq(WarMeritTrackScript.claimable_count(executor.state), 4, "all newly reached unclaimed merit levels become claimable")
+	var gems_before := int(executor.state.economy.toilet_gems)
+	_exec_ok(
+		executor,
+		"merit-claim-5",
+		"claim_war_merit_reward",
+		{"request_id": "merit-request-5", "level": 5},
+		"merit-business-5"
+	)
+	_eq(executor.state.economy.toilet_gems, gems_before + 5, "every fifth merit level grants a small toilet-gem reward")
+	var decoded := SaveCodecScript.decode(SaveCodecScript.encode(executor.state))
+	_ok(bool(decoded.get("ok", false)), "merit reward state survives strict save codec")
+	if bool(decoded.get("ok", false)):
+		var restored: RefCounted = decoded["state"]
+		_ok(WarMeritTrackScript.is_claimed(restored, 1) and WarMeritTrackScript.is_claimed(restored, 5), "save/load preserves claimed merit levels")
+		_ok((restored.receipt_ledgers["durable"] as Dictionary).has("war_merit_reward:merit-request-5"), "save/load preserves merit reward receipt")
 
 
 func _test_seeded_hero_generation() -> void:
@@ -108,13 +210,16 @@ func _test_seeded_hero_generation() -> void:
 	var archetypes: Array[String] = []
 	for hero in state_a.roster:
 		archetypes.append(hero.archetype_id)
-	_eq(archetypes, ["assault", "armored", "assault", "sonic", "repair", "parasite", "armored", "armored"], "starter roster supports battle and immediate merge")
+	_eq(archetypes, ["gman"], "starter roster contains only permanent G-Man")
+	_eq(state_a.roster[0].display_name, "G-Man 指挥官", "starter commander has the canonical display name")
 	_eq(state_a.roster[0].to_dict(), state_b.roster[0].to_dict(), "same run seed is stable and ignores save_id/time")
 	_ok(state_a.roster[0].to_dict() != state_c.roster[0].to_dict(), "different run seed changes generated hero")
 	_ok(HeroGenerator.GIVEN_NAMES.size() * HeroGenerator.FAMILY_NAMES.size() >= 40, "name pool has at least 40 combinations")
 	_eq(HeroGenerator.TRAIT_IDS.size(), 8, "trait pool has eight traits")
 	_eq(HeroGenerator.APTITUDE_WEIGHT_BP, {"C": 4000, "B": 3500, "A": 2000, "S": 500}, "aptitude weights match configured default")
 	for hero in state_a.roster:
+		if String(hero.archetype_id) == "gman":
+			continue
 		for key in HeroStateScript.ATTR_KEYS:
 			var baseline := int(HeroGenerator.CLASS_BASE_STATS[hero.class_id][key])
 			var delta := int(hero.base_stats[key]) - baseline
@@ -186,9 +291,9 @@ func _test_battle_settlement() -> void:
 		{"battle_id": "battle-win-1", "outcome": "victory", "ticks": 77},
 		"battle:battle-win-1"
 	)
-	_eq(victory["event"]["reward"], {"gold": 80, "xp_books": 1, "porcelain": 24, "parts": 16, "sludge": 12}, "victory reward is owned by domain reducer")
+	_eq(victory["event"]["reward"], {"gold": 80, "xp_books": 0, "porcelain": 24, "parts": 16, "sludge": 12}, "opening victory reward is owned by domain reducer")
 	_eq(executor.state.economy.gold, gold_before + 80, "victory grants fixed gold")
-	_eq(executor.state.economy.xp_books, books_before + 1, "victory grants fixed xp book")
+	_eq(executor.state.economy.xp_books, books_before, "opening victory does not accelerate Gman with a training book")
 	_eq(executor.state.attempt_counters["stage_1_1"], 1, "victory records attempt")
 	_ok(executor.state.stage_progress["cleared_stages"].has("stage_1_1"), "victory clears stage 1-1")
 	var replay := executor.execute(_env_with_revision(
@@ -200,21 +305,29 @@ func _test_battle_settlement() -> void:
 	))
 	_eq(replay, victory, "battle settlement is idempotent")
 	_eq(executor.state.economy.gold, gold_before + 80, "idempotent settlement does not duplicate reward")
-	var timeout_executor := CommandExecutorScript.new(GameStateScript.create_new(4452, 0), Callable(self, "_record_save_success"))
-	var timeout_materials: Dictionary = timeout_executor.state.factory.materials.duplicate(true)
-	var timeout := _exec_ok(
-		timeout_executor,
-		"battle-timeout-1",
+	var repeat_victory := _exec_ok(
+		executor,
+		"battle-win-repeat",
 		"settle_battle",
-		{"battle_id": "battle-timeout-1", "outcome": "timeout", "ticks": 300},
-		"battle:battle-timeout-1"
+		{"battle_id": "battle-win-repeat", "outcome": "victory", "ticks": 78},
+		"battle:battle-win-repeat"
 	)
-	_eq(timeout["event"]["reward"], {"gold": 6, "xp_books": 2, "porcelain": 4, "parts": 3, "sludge": 2}, "timeout grants bounded salvage and retry training books")
-	_eq(timeout_executor.state.factory.materials["porcelain"], int(timeout_materials["porcelain"]) + 4, "timeout salvage prevents factory deadlock")
-	_ok((timeout["event"]["unlocked_blueprints"] as Array).has("heavy.armored"), "first timeout unlocks counterplay heavy blueprint")
+	_eq(repeat_victory["event"]["reward_tier"], "repeat_victory", "cleared-stage farming is labeled as repeat victory")
+	_eq(repeat_victory["event"]["reward"], {"gold": 24, "xp_books": 0, "porcelain": 7, "parts": 4, "sludge": 3}, "repeat victory grants only thirty-percent materials and no books")
+	var timeout_rejected := executor.execute(_env(
+		"battle-timeout-rejected",
+		"settle_battle",
+		{"battle_id": "battle-timeout-rejected", "outcome": "timeout", "ticks": 180},
+		"battle:battle-timeout-rejected",
+		executor
+	))
+	_ok(not bool(timeout_rejected.get("ok", false)), "battle settlement rejects the removed timeout outcome")
 	var defeat_executor := CommandExecutorScript.new(GameStateScript.create_new(4453, 0), Callable(self, "_record_save_success"))
 	var defeat := _exec_ok(defeat_executor, "battle-defeat-1", "settle_battle", {"battle_id": "battle-defeat-1", "outcome": "defeat", "ticks": 40}, "battle:battle-defeat-1")
 	_eq(defeat["event"]["reward"]["xp_books"], 2, "defeat grants training books for first retry growth")
+	var repeat_defeat := _exec_ok(defeat_executor, "battle-defeat-2", "settle_battle", {"battle_id": "battle-defeat-2", "outcome": "defeat", "ticks": 41}, "battle:battle-defeat-2")
+	_eq(repeat_defeat["event"]["reward_tier"], "repeat_defeat", "second failure is identified as repeat defeat")
+	_eq(repeat_defeat["event"]["reward"], {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}, "repeat defeat cannot generate infinite resources")
 	var invalid := executor.execute(_env(
 		"battle-invalid",
 		"settle_battle",
@@ -383,11 +496,17 @@ func _test_quest_system_contracts() -> void:
 	for stage_id in StageCatalogScript.all_stage_ids():
 		var quest := QuestCatalogScript.major_quest(stage_id)
 		_eq(String(quest["quest_id"]), "major.%s" % stage_id, "major quest id is stable for %s" % stage_id)
+		_eq(String(quest.get("tier", "")), "major", "campaign first-clear is labeled as a major quest")
 		var reward := quest["reward"] as Dictionary
 		var is_boss := int(StageCatalogScript.stage(stage_id).get("stage_in_chapter", 0)) == 5
-		_eq(reward, {"merit": 160 if is_boss else 60, "gold": 50 if is_boss else 20, "xp_books": 1 if is_boss else 0}, "major quest reward is conservative for %s" % stage_id)
+		_eq(reward, {"merit": 120 if is_boss else 40, "gold": 30 if is_boss else 10, "xp_books": 1 if is_boss else 0}, "major quest reward is conservative for %s" % stage_id)
 		for key in reward.keys():
 			_ok(["merit", "gold", "xp_books"].has(String(key)), "major rewards do not include blueprints or power multipliers")
+	for template in QuestCatalogScript.MINOR_TEMPLATES:
+		var minor_reward := (template as Dictionary).get("reward", {}) as Dictionary
+		_ok(int(minor_reward.get("merit", 0)) <= 20, "minor quest merit stays below the major-quest floor")
+		_ok(int(minor_reward.get("gold", 0)) <= 5, "minor quest gold remains a light feedback reward")
+		_eq(int(minor_reward.get("xp_books", 0)), 0, "minor quests never grant scarce training books")
 	_eq(QuestCatalogScript.validate_reward_definition({"merit": 1, "blueprint": 1}, "bad")[0], "bad reward has unknown key blueprint", "quest reward validator rejects unknown reward keys")
 	_ok(not QuestCatalogScript.validate_reward_definition({"merit": -1}, "bad").is_empty(), "quest reward validator rejects negative reward values")
 	_ok(not QuestCatalogScript.validate_reward_definition({"merit": "1"}, "bad").is_empty(), "quest reward validator rejects non-int reward values")
@@ -423,8 +542,8 @@ func _test_quest_system_contracts() -> void:
 		{"quest_id": "major.stage_1_1", "generation": 0, "request_id": "quest:req:major:1-1"},
 		"quest:req:major:1-1"
 	)
-	_eq(claim_major["event"]["reward"], {"merit": 60, "gold": 20, "xp_books": 0}, "claiming normal major grants quest reward")
-	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 60, "claim writes war merit into inventory items")
+	_eq(claim_major["event"]["reward"], {"merit": 40, "gold": 10, "xp_books": 0}, "claiming normal major grants quest reward")
+	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 40, "claim writes war merit into inventory items")
 	var replay_major := _exec_ok(
 		executor,
 		"quest-claim-major-replay",
@@ -433,7 +552,7 @@ func _test_quest_system_contracts() -> void:
 		"quest:req:major:1-1-replay"
 	)
 	_eq(replay_major["event"]["idempotent"], true, "same quest claim request id replays idempotently")
-	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 60, "quest claim replay does not duplicate merit")
+	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 40, "quest claim replay does not duplicate merit")
 	var request_conflict := executor.execute(_env(
 		"quest-claim-conflict",
 		"claim_quest",
@@ -514,12 +633,17 @@ func _test_achievement_system_contracts() -> void:
 	_eq(AchievementCatalogScript.validate_definitions(), [], "achievement definitions are valid")
 	_eq(AchievementCatalogScript.all().size(), 24, "achievement catalog exposes the audited permanent 24 achievements")
 	for definition in AchievementCatalogScript.all():
+		var tier := String((definition as Dictionary).get("tier", ""))
+		_ok(["major", "minor"].has(tier), "achievement declares major or minor tier")
 		for forbidden in ["daily", "weekly", "season", "starts_at", "ends_at", "expires_at", "reset_at"]:
 			_ok(not (definition as Dictionary).has(forbidden), "achievement definition has no FOMO field %s" % forbidden)
 		var reward := (definition as Dictionary)["reward"] as Dictionary
 		for key in reward.keys():
 			_ok(["merit", "gold", "xp_books"].has(String(key)), "achievement rewards do not include blueprints, power multipliers, scrap, or paid keys")
 			_ok(typeof(reward[key]) == TYPE_INT and int(reward[key]) >= 0, "achievement reward values are non-negative integers")
+		if tier == "minor":
+			_eq(int(reward.get("xp_books", 0)), 0, "small achievements do not grant scarce training books")
+	_ok(int(AchievementCatalogScript.definition("ach.factory.claim_6").get("target", 0)) == 9, "opening factory achievement follows the nine-unit reinforcement contract")
 	_ok(not AchievementCatalogScript.ids().has("ach.campaign.clear_15"), "removed audit item clear_15 is absent")
 	_ok(not AchievementCatalogScript.ids().has("ach.boss.destroy_3"), "removed audit item destroy_3 is absent")
 	_ok(not AchievementCatalogScript.ids().has("factory.claim_18"), "removed audit item factory.claim_18 is absent")
@@ -547,7 +671,7 @@ func _test_achievement_system_contracts() -> void:
 		"ach:req:first-clear"
 	)
 	_eq(claim_first_clear["event"]["reward"], AchievementCatalogScript.reward_for("ach.campaign.clear_1"), "achievement claim uses catalog reward")
-	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 40, "achievement claim grants war merit once")
+	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 30, "achievement claim grants war merit once")
 	var claim_replay := _exec_ok(
 		executor,
 		"ach-claim-first-clear-replay",
@@ -556,7 +680,7 @@ func _test_achievement_system_contracts() -> void:
 		"ach:req:first-clear-replay"
 	)
 	_eq(claim_replay["event"]["idempotent"], true, "same achievement claim request id replays idempotently")
-	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 40, "achievement claim replay does not duplicate merit")
+	_eq(executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID], 30, "achievement claim replay does not duplicate merit")
 	var claim_conflict := executor.execute(_env(
 		"ach-claim-conflict",
 		"claim_achievement",
@@ -941,6 +1065,61 @@ func _test_save_manager_atomic_roundtrip() -> void:
 		DirAccess.remove_absolute(path + ".bak")
 
 
+func _test_save_export_import_contract() -> void:
+	var path := "user://meta_core_import_test.json"
+	for suffix in ["", ".tmp", ".bak"]:
+		if FileAccess.file_exists(path + suffix):
+			DirAccess.remove_absolute(path + suffix)
+	var manager := SaveManagerCore.new(path)
+	var original := GameStateScript.create_new(890, 100)
+	original.revision = 3
+	_ok(manager.save_state(original), "import contract starts from a durable original save")
+	var exported: Dictionary = manager.export_state(original)
+	_ok(bool(exported.get("ok", false)), "save export produces validated JSON")
+	_ok(int(exported.get("byte_count", 0)) > 0, "save export reports a positive byte count")
+	var parsed: Dictionary = manager.parse_import_text(String(exported.get("text", "")))
+	_ok(bool(parsed.get("ok", false)), "exported JSON passes the import validation pipeline")
+	if bool(parsed.get("ok", false)):
+		_eq((parsed["state"] as RefCounted).to_dict(), original.to_dict(), "import preview preserves the complete state")
+	var invalid := manager.parse_import_text("{\"schema_version\":8}")
+	_ok(not bool(invalid.get("ok", false)), "invalid import is rejected before publication")
+	var loaded_after_invalid := manager.load_state()
+	_ok(bool(loaded_after_invalid.get("ok", false)), "invalid import leaves the current durable save readable")
+	if bool(loaded_after_invalid.get("ok", false)):
+		_eq((loaded_after_invalid["state"] as RefCounted).to_dict(), original.to_dict(), "invalid import does not mutate the current save")
+	var oversized := manager.parse_import_text("x".repeat(SaveManagerCore.MAX_SAVE_BYTES + 1))
+	_eq(oversized.get("error"), "SAVE_TOO_LARGE", "oversized import is rejected before JSON parsing")
+
+	var replacement := GameStateScript.create_new(891, 200)
+	replacement.revision = 9
+	replacement.stage_progress["cleared_stages"] = ["stage_1_1"]
+	replacement.stage_progress["highest_unlocked_stage"] = "stage_1_2"
+	var replacement_export := manager.export_state(replacement)
+	var replacement_parse := manager.parse_import_text(String(replacement_export.get("text", "")))
+	_ok(bool(replacement_parse.get("ok", false)), "replacement backup validates")
+	if bool(replacement_parse.get("ok", false)):
+		var published := manager.publish_imported_state(replacement_parse["state"])
+		_ok(bool(published.get("ok", false)), "validated replacement publishes atomically")
+		var restored := manager.load_state()
+		_ok(bool(restored.get("ok", false)), "published replacement reloads")
+		if bool(restored.get("ok", false)):
+			_eq((restored["state"] as RefCounted).to_dict(), replacement.to_dict(), "published replacement becomes the durable authority")
+
+	var game_script := preload("res://game/scripts/autoloads/game.gd")
+	var game_node: Node = game_script.new()
+	_eq(game_node.bootstrap_with_manager(manager, 1, 1), "loaded", "game bootstraps from the imported replacement")
+	var incompatible := replacement.to_dict()
+	incompatible["content_version"] = "legacy-incompatible-content"
+	var incompatible_text := JSON.stringify(incompatible)
+	var rejected_preview: Dictionary = game_node.preview_local_save_import(manager, incompatible_text)
+	_eq(rejected_preview.get("error"), "SAVE_IMPORT_INCOMPATIBLE_CONTENT", "game rejects a schema-valid backup from another content contract")
+	_eq(game_node.current_state().content_version, "toilet-factory-slg-v2", "rejected content import leaves the live state unchanged")
+	game_node.free()
+	for suffix in ["", ".tmp", ".bak"]:
+		if FileAccess.file_exists(path + suffix):
+			DirAccess.remove_absolute(path + suffix)
+
+
 func _test_save_manager_missing_main_valid_bak() -> void:
 	var path := "user://meta_core_missing_main.json"
 	for suffix in ["", ".tmp", ".bak"]:
@@ -957,6 +1136,22 @@ func _test_save_manager_missing_main_valid_bak() -> void:
 		var recovered: RefCounted = loaded["state"]
 		_eq(recovered.to_dict(), state.to_dict(), "valid bak recovery preserves state")
 	DirAccess.remove_absolute(path + ".bak")
+
+
+func _test_save_manager_deletes_all_local_candidates() -> void:
+	var path := "user://meta_core_delete_test.json"
+	for suffix in ["", ".tmp", ".bak"]:
+		var file := FileAccess.open(path + suffix, FileAccess.WRITE)
+		file.store_string("{}")
+		file.close()
+	var manager := SaveManagerCore.new(path)
+	var deleted: Dictionary = manager.delete_local_save()
+	_ok(bool(deleted.get("ok", false)), "save manager deletes local save candidates")
+	_eq((deleted.get("removed", []) as Array).size(), 3, "delete reports primary, backup, and temporary files")
+	for suffix in ["", ".tmp", ".bak"]:
+		_ok(not FileAccess.file_exists(path + suffix), "delete removes save candidate %s" % suffix)
+	var repeated: Dictionary = manager.delete_local_save()
+	_ok(bool(repeated.get("ok", false)), "deleting an already empty slot is idempotent")
 
 
 func _test_game_bootstrap_contract() -> void:
@@ -976,18 +1171,10 @@ func _test_game_bootstrap_contract() -> void:
 
 	var corrupt_manager := FakeBootstrapSaveManager.new()
 	corrupt_manager.load_result = {"ok": false, "error": "unsupported schema_version"}
-	_eq(game_node.bootstrap_with_manager(corrupt_manager, 992, 14), "load_failed:unsupported schema_version", "bootstrap does not overwrite corrupt save")
-	_eq(corrupt_manager.saved_states.size(), 0, "corrupt save is not silently overwritten")
-	var blocked_result: Dictionary = game_node.execute_command({
-		"command_id": "blocked-after-corrupt",
-		"type": "grant_resources",
-		"payload": {"resources": {"gold": 1}},
-		"business_key": "blocked-after-corrupt",
-		"expected_revision": game_node.current_state().revision,
-		"requested_at": 0,
-	})
-	_eq(blocked_result["error"], "SAVE_LOAD_FAILED", "command after corrupt bootstrap is blocked")
-	_eq(corrupt_manager.saved_states.size(), 0, "blocked command after corrupt bootstrap does not save")
+	_eq(game_node.bootstrap_with_manager(corrupt_manager, 992, 14), "created", "bootstrap destructively replaces an obsolete schema")
+	_eq(corrupt_manager.delete_calls, 1, "obsolete schema deletes its local save candidates")
+	_eq(corrupt_manager.saved_states.size(), 1, "obsolete schema writes one fresh Gman save")
+	_eq(game_node.current_state().roster.size(), 1, "obsolete schema replacement starts with only permanent G-Man")
 	game_node.free()
 
 

@@ -4,8 +4,10 @@ km_type: reference
 domain: architecture
 status: draft
 owner: architecture
-last_verified: 2026-07-24
+last_verified: 2026-07-26
 source_of_truth:
+  - docs/references/product-design/skibidi-toilet-idle-siege-gdd.md
+  - docs/references/constraints/implementation-status.md
   - .omx/plans/prd-fantasy-idle-expedition.md
   - .omx/plans/test-spec-fantasy-idle-expedition.md
   - project-a/project.godot
@@ -24,6 +26,7 @@ source_of_truth:
   - project-a/tools/run_meta_tests.gd
   - project-a/tools/run_battle_tests.gd
 validated_by:
+  - manual-design-integrity-review-2026-07-26
   - user-confirmation-2026-07-23
   - godot-4.6.3-headless-smoke
   - godot --headless --path project-a -s tools/run_meta_tests.gd
@@ -43,13 +46,17 @@ related:
 
 # Web-first 3D 技术架构总览
 
+> **迁移警告（2026-07-26）：** 本文主体仍包含 schema v6 消耗单位架构。命令、存档、确定性战斗
+> 和表现分层可复用；业务字段与 UI 应改读
+> [KM:reference.toilet-factory-technical-design](toilet-factory-technical-design.md)。
+
 > 当前状态保持 `draft`，因为生产源持久化、音频手势、装备、离线战斗和手机真机仍未完成。`project-a` 已切换 GL Compatibility，并已实现 v4 Meta、五章 25 关、营地单一“目标”入口、任务/成就分页、设置/失焦暂停、程序化 3D 战争表现、单线程 Web/PWA 导出、本地产物审计与 844×390 浏览器路径。
 
-> 解释规则：PRD/Test Spec 中的核心循环、内容、经济和验收指标仍是事实源；其 Godot 4.7.1、2D、Mobile renderer、Android-first 平台描述已由 ADR-0005 取代。
+> 解释规则：新 GDD、产品边界和首 30 分钟合同是目标玩法事实源；旧 PRD/Test Spec 与现有代码只用于识别可复用实现和迁移差距。
 
 ## 目标
 
-用 Godot 4.6.3 和 GDScript 制作 3D 马桶人工厂攻城；发布为 Web 游戏，主要在手机浏览器横屏运行。系统首先保证工厂生产、永久培育、六人编队、确定性自动攻城、单机存档和目标中心正确，再逐步补齐 Web 平台、离线收益、装备和 3D 表现预算。
+用 Godot 4.6.3 和 GDScript 制作 3D 马桶人工厂攻城；发布为 Web 游戏，主要在手机浏览器横屏运行。系统首先保证永久型号科技、可消耗单位库存、六人编队、确定性自动攻城、生死结算、连续推关、双货币与图纸研发正确，再逐步补齐真实支付、Web 平台、离线边界、装备和 3D 表现预算。
 
 ## 方案选择
 
@@ -81,9 +88,9 @@ flowchart TD
 
 | 层 | 拥有 | 禁止拥有 |
 |---|---|---|
-| Content | 职业、技能、特质、敌人、装备、关卡、任务、成就、设施的只读 `Resource` | 英雄/装备实例、玩家进度 |
-| State | `GameState`、Hero/Item/Formation/Quest/Achievement/Camp 等可序列化实例 | Node、Resource、scene path |
-| Domain | 招募、培养、编队、装备、经济、任务、成就、离线、战斗规则 | UI、动画、物理查询、wall-time Tick |
+| Content | 型号、技能、敌人、关卡、掉落池、图纸奖池、任务、免费战令、设施的只读定义 | 单位实例、钱包、保底、玩家进度 |
+| State | `GameState`、Wallet/ModelTech/Unit/Formation/Quest/Pass 等可序列化状态 | Node、Resource、scene path |
+| Domain | 制造、科技、编队、经济、图纸研发、任务/战令、离线、战斗与结算规则 | UI、动画、物理查询、wall-time Tick |
 | Application | 命令分类、幂等 receipt、事务编排、screen use case | 绕过 executor 直接写状态 |
 | Persistence | JSON schema、迁移、candidate 写入、备份与恢复 | 业务规则 |
 | Presentation 3D | 模型、材质、动画、VFX、相机、插值 | 命中、目标、伤害、掉落、胜负 |
@@ -99,7 +106,8 @@ flowchart TD
 3. `ContentCatalog`：加载并校验只读 `.tres` 定义（未实现）。
 4. `EventBus`：仅广播已经提交的状态变化和界面级事件（未实现）。
 5. `Game`：持有 live `GameState`，暴露 command API（首版已实现）。
-6. `WebRuntime`：已处理浏览器焦点与可见性信号以及战斗失焦暂停；持久性告警和恢复离线结算仍未实现。
+6. `WebRuntime`：已处理浏览器焦点与可见性信号、战斗失焦暂停、持久性提示、文本下载与浏览器
+   文件导入；`LocalPlaytestJournal` 独立持有默认关闭的本地试玩证据，不进入领域真值。
 
 `EventBus` 不能执行命令、发奖励或串联领域副作用。功能内部优先直接调用/直接 signal；跨 screen 的 UI、音频和 3D 投影才消费全局事件。
 
@@ -126,7 +134,10 @@ Immutable BattleResult
 - `REVERSIBLE_META`：编队、装备、筛选和重命名，可 1000ms debounce。
 - `EPHEMERAL`：导航、动画、战斗表现 Tick、详情预览，不进入 `GameState`。
 
-当前存档仍使用 `user://save_v1.json` 文件名，但内部 schema 已为 4，内容版本为 `factory-siege-v4`；实现严格 JSON schema、v1/v2/v3->v4 迁移、主档/备份恢复、新档持久化以及损坏存档 bootstrap gate。v4 顶层 `achievements` 固定包含 `progress/completed/claimed/event_keys/counters` 五桶，旧档只回填可由关卡、Boss、工厂、培育、收集和战功 receipt 可靠证明的证据。设置另存于 `user://settings.cfg`。浏览器端的持久性探测、不可持久告警和导出/导入降级尚未实现；PWA 缓存不能替代玩家存档。
+当前存档仍使用兼容文件名 `user://save_v1.json`，内部 schema 已为 8，内容版本为
+`toilet-factory-slg-v2`；v5/v6/v7 可迁移，损坏存档由主备恢复路径处理。实现严格 JSON、2 MiB
+导入上限、主档/备份恢复、新档持久化、浏览器持久性提示、JSON 下载，以及同一 schema 管线下的
+预览和二次确认恢复。设置另存于 `user://settings.cfg`；PWA 缓存不能替代玩家存档。
 
 浏览器后台会暂停处理，因此后台不运行 `_process()` 或战斗 Tick。恢复时只以 `offline_anchor_unix` 计算最多 8 小时的离线收益，并和 anchor、receipt 同事务提交。
 

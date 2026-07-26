@@ -1,6 +1,8 @@
 class_name StageCatalog
 extends RefCounted
 
+const StageDefinitionCatalogScript := preload("res://game/scripts/content/stage_definition_catalog.gd")
+
 const ACT1_STAGE_IDS: Array[String] = [
 	"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5",
 	"stage_2_1", "stage_2_2", "stage_2_3", "stage_2_4", "stage_2_5",
@@ -10,7 +12,22 @@ const ACT1_STAGE_IDS: Array[String] = [
 ]
 
 const DEFAULT_STAGE_ID: String = "stage_1_1"
+const ENDLESS_PREFIX: String = "endless_"
 const DEFAULT_STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地广场"]
+const RECOMMENDED_POWER: Array[int] = [
+	1950, 2000, 2020, 5700, 6500,
+	15500, 16500, 17500, 18500, 19500,
+	20000, 20500, 21000, 21500, 22000,
+	22500, 23000, 23500, 24000, 24500,
+	25000, 25500, 26000, 26250, 26500,
+]
+const ENEMY_POWER_BP: Array[int] = [
+	6200, 7200, 8400, 9000, 10750,
+	20000, 26000, 27500, 29000, 30000,
+	31500, 32500, 33500, 34250, 35000,
+	35250, 35500, 35750, 36000, 36500,
+	36800, 37100, 37400, 37700, 38000,
+]
 
 
 static func all_stage_ids() -> Array[String]:
@@ -18,31 +35,97 @@ static func all_stage_ids() -> Array[String]:
 
 
 static func has_stage(stage_id: String) -> bool:
-	return ACT1_STAGE_IDS.has(stage_id)
+	return ACT1_STAGE_IDS.has(stage_id) or _endless_index(stage_id) > 0
 
 
 static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 	if not has_stage(stage_id):
 		return {}
+	if _endless_index(stage_id) > 0:
+		return _endless_stage(_endless_index(stage_id))
 	var index := ACT1_STAGE_IDS.find(stage_id)
 	var chapter := int(index / 5) + 1
 	var stage_in_chapter := int(index % 5) + 1
-	var power_bp := 10000 + chapter * 1800 + stage_in_chapter * 650
-	if stage_id == DEFAULT_STAGE_ID:
-		power_bp = 10000
+	var authored_definition: Resource = StageDefinitionCatalogScript.definition(stage_id)
+	var power_bp := int(authored_definition.enemy_power_bp) if authored_definition != null else ENEMY_POWER_BP[index]
 	var config := _base_stage(stage_id, chapter, stage_in_chapter, power_bp)
 	if stage_id == DEFAULT_STAGE_ID:
-		config["enemies"] = _legacy_stage_1_1_enemies()
-		config["structures"] = _legacy_stage_1_1_structures()
-		config["reward_victory"] = {"gold": 80, "xp_books": 1, "porcelain": 24, "parts": 16, "sludge": 12}
+		# 第一关是纯粹的破坏教学：没有联盟守军或炮台，
+		# 先撞开废弃路障，再摧毁唯一城市目标。
+		config["display_name"] = "1-1 无防备城市"
+		config["stage_names"] = ["城市外围"]
+		config["final_structure_id"] = "unguarded_city"
+		config["enemies"] = []
+		config["structures"] = [
+			_structure("abandoned_barricade", "废弃路障", "structure", 0, 430, 1, 180, 1, 0, 0),
+			_structure("unguarded_city", "无防备城市", "city", 0, 620, 1, 760, 4, 0, 0),
+		]
+		config["threat_summary"] = "城市没有组织防守；先撞开废弃路障，再摧毁城市目标。"
+		config["counter_hint"] = "让 Gman 自动推进，能量充满后点击头像快速突破路障。"
+		config["reward_victory"] = {"gold": 80, "xp_books": 0, "porcelain": 24, "parts": 16, "sludge": 12}
 		config["reward_defeat"] = {"gold": 12, "xp_books": 2, "porcelain": 8, "parts": 5, "sludge": 4}
-		config["reward_timeout"] = {"gold": 6, "xp_books": 2, "porcelain": 4, "parts": 3, "sludge": 2}
-		config["unlock_on_defeat"] = ["flying.rocket", "heavy.armored"]
-		config["unlock_on_timeout"] = ["flying.rocket", "heavy.armored"]
-		config["unlock_on_victory"] = ["flying.rocket", "heavy.armored", "flying.bomber", "heavy.saw", "special.repair", "special.parasite"]
-		return config
+		config["unlock_on_defeat"] = []
+		config["unlock_on_victory"] = []
+		config["unlock_preview"] = ""
+		return _apply_authored_definition(config, authored_definition)
+	if stage_id == "stage_1_2":
+		# 第二关只引入城市内的第一批远程联盟成员，还没有固定火力。
+		config["display_name"] = "1-2 城市警报"
+		config["solo_pressure_bp"] = 10000
+		config["stage_names"] = ["警报街区"]
+		config["final_structure_id"] = "alerted_city"
+		config["enemies"] = _scaled_enemies([
+			_enemy("militia_l", "远程摄像警卫", "ranger", 0, 420, 0, 90, 15, 3, 160, 9, false),
+			_enemy("militia_r", "远程摄像警卫", "ranger", 0, 460, 2, 90, 15, 3, 160, 9, false),
+		], power_bp)
+		config["structures"] = _scaled_structures([
+			_structure("alerted_city", "警报中的城市", "city", 0, 720, 1, 820, 5, 0, 0),
+		], power_bp)
+		return _apply_authored_definition(config, authored_definition)
+	if stage_id == "stage_1_3":
+		# 第三关让零散守卫正式组成联盟，并部署一座低压预警炮塔；
+		# Gman 可以残血突破，第 4 关才升级为必败的重炮墙。
+		config["display_name"] = "1-3 联盟集结"
+		config["solo_pressure_bp"] = 13000
+		config["stage_names"] = ["联盟街垒", "城市议事厅"]
+		config["final_structure_id"] = "alliance_hall"
+		config["enemies"] = _scaled_enemies([
+			_enemy("alliance_grunt_l", "联盟摄像兵", "ranger", 0, 280, 0, 105, 18, 4, 120, 9, false),
+			_enemy("alliance_grunt_c", "联盟摄像兵", "ranger", 0, 310, 1, 115, 19, 5, 120, 9, false),
+			_enemy("alliance_grunt_r", "联盟摄像兵", "ranger", 0, 340, 2, 105, 18, 4, 120, 9, false),
+			_enemy("alliance_captain", "联盟临时队长", "guardian", 1, 530, 1, 175, 23, 9, 110, 9, true),
+		], power_bp)
+		config["structures"] = _scaled_structures([
+			_structure("alliance_barricade", "联盟街垒", "structure", 0, 420, 1, 200, 7, 0, 0),
+			_structure("warning_turret", "警戒轻炮塔", "turret", 1, 580, 1, 160, 6, 17, 8),
+			_structure("alliance_hall", "联盟议事厅", "city", 1, 700, 1, 430, 7, 0, 0),
+		], power_bp)
+		return _apply_authored_definition(config, authored_definition)
 	config["enemies"] = _scaled_enemies(_enemy_template_for(chapter, stage_in_chapter), power_bp)
 	config["structures"] = _scaled_structures(_structure_template_for(chapter, stage_in_chapter), power_bp)
+	return _apply_authored_definition(config, authored_definition)
+
+
+static func _apply_authored_definition(config: Dictionary, definition: Resource) -> Dictionary:
+	if definition == null:
+		config["enemy_power_bp"] = int(config.get("enemy_power_bp", 10000))
+		config["structure_hp_bp"] = int(config.get("structure_hp_bp", 10000))
+		return config
+	config["display_name"] = String(definition.display_name)
+	config["recommended_power"] = int(definition.recommended_power)
+	config["minimum_power"] = int(int(definition.recommended_power) * 85 / 100)
+	config["enemy_power_bp"] = int(definition.enemy_power_bp)
+	config["solo_pressure_bp"] = int(definition.solo_pressure_bp)
+	config["structure_hp_bp"] = int(definition.structure_hp_bp)
+	config["threat_summary"] = String(definition.threat_summary)
+	config["counter_hint"] = String(definition.counter_hint)
+	if int(definition.structure_hp_bp) != 10000:
+		for structure in config.get("structures", []):
+			structure["max_hp"] = maxi(
+				1,
+				int(int(structure["max_hp"]) * int(definition.structure_hp_bp) / 10000)
+			)
+			structure["hp"] = int(structure["max_hp"])
 	return config
 
 
@@ -54,9 +137,47 @@ static func reward_for(stage_id: String, outcome: String) -> Dictionary:
 	return (config.get(key, config.get("reward_defeat", {})) as Dictionary).duplicate(true)
 
 
+static func reward_for_context(
+	stage_id: String,
+	outcome: String,
+	prior_attempts: int,
+	already_cleared: bool
+) -> Dictionary:
+	var base := reward_for(stage_id, outcome)
+	if base.is_empty():
+		return {}
+	if outcome == "defeat" and prior_attempts > 0:
+		return {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}
+	if outcome == "victory" and already_cleared:
+		return _scaled_repeat_reward(base)
+	return base
+
+
+static func reward_tier(outcome: String, prior_attempts: int, already_cleared: bool) -> String:
+	if outcome == "defeat" and prior_attempts > 0:
+		return "repeat_defeat"
+	if outcome == "victory" and already_cleared:
+		return "repeat_victory"
+	return "first_victory" if outcome == "victory" else "first_defeat"
+
+
 static func next_stage_id(stage_id: String) -> String:
 	var config := stage(stage_id)
 	return String(config.get("next_stage_id", ""))
+
+
+static func breakthrough_reward(stage_id: String, already_cleared: bool) -> Dictionary:
+	if already_cleared or not ACT1_STAGE_IDS.has(stage_id):
+		return {"hero_shards": 0, "skill_chips": 0}
+	var index := ACT1_STAGE_IDS.find(stage_id)
+	var stage_in_chapter := int(index % 5) + 1
+	if stage_id == "stage_1_2":
+		return {"hero_shards": 4, "skill_chips": 0}
+	if stage_in_chapter == 3:
+		return {"hero_shards": 4, "skill_chips": 0}
+	if stage_in_chapter == 5:
+		return {"hero_shards": 8, "skill_chips": 2}
+	return {"hero_shards": 0, "skill_chips": 0}
 
 
 static func unlocks_for(stage_id: String, outcome: String) -> Array[String]:
@@ -72,6 +193,7 @@ static func unlocks_for(stage_id: String, outcome: String) -> Array[String]:
 
 static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, power_bp: int) -> Dictionary:
 	var index := ACT1_STAGE_IDS.find(stage_id)
+	var recommended_power := RECOMMENDED_POWER[index]
 	var boss_names := {
 		1: "灰镜核心巨炮",
 		2: "共振堡垒",
@@ -86,22 +208,9 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		4: "三军联合防线",
 		5: "伪胜之城",
 	}
-	var next_id := ACT1_STAGE_IDS[index + 1] if index >= 0 and index + 1 < ACT1_STAGE_IDS.size() else ""
+	var next_id := ACT1_STAGE_IDS[index + 1] if index >= 0 and index + 1 < ACT1_STAGE_IDS.size() else "endless_1"
 	var is_boss := stage_in_chapter == 5
-	var reward_scale := chapter * 8 + stage_in_chapter * 3
 	var unlock_victory: Array[String] = []
-	if stage_id == "stage_1_3":
-		unlock_victory.append("heavy.armored")
-	elif stage_id == "stage_1_5":
-		unlock_victory.append("flying.rocket")
-	elif stage_id == "stage_2_3":
-		unlock_victory.append("flying.bomber")
-	elif stage_id == "stage_2_5":
-		unlock_victory.append("special.repair")
-	elif stage_id == "stage_3_3":
-		unlock_victory.append("special.parasite")
-	elif stage_id == "stage_4_3":
-		unlock_victory.append("heavy.saw")
 	var readability := _readability_fields(stage_id, chapter, stage_in_chapter, unlock_victory)
 	var recommendation := _recommendation_fields(stage_id)
 	return {
@@ -111,26 +220,123 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"stage_in_chapter": stage_in_chapter,
 		"display_name": "%d-%d %s" % [chapter, stage_in_chapter, boss_names.get(chapter, "联盟基地") if is_boss else chapter_names.get(chapter, "城市大道")],
 		"stage_names": DEFAULT_STAGE_NAMES.duplicate(),
-		"max_ticks": 360 if is_boss else 300,
 		"final_structure_id": "alliance_core",
 		"suppressible_cannon": is_boss,
 		"cannon_suppression_target": _cannon_suppression_target(chapter) if is_boss else 0,
 		"cannon_warning_ticks": 20 if is_boss else 0,
 		"next_stage_id": next_id,
-		"reward_victory": {"gold": 60 + reward_scale, "xp_books": 1 + int(stage_in_chapter >= 4), "porcelain": 18 + reward_scale, "parts": 12 + reward_scale, "sludge": 8 + reward_scale},
-		"reward_defeat": {"gold": 10 + chapter, "xp_books": 2, "porcelain": 7 + chapter, "parts": 4 + chapter, "sludge": 3 + chapter},
-		"reward_timeout": {"gold": 5 + chapter, "xp_books": 2, "porcelain": 4 + chapter, "parts": 3 + chapter, "sludge": 2 + chapter},
-		"unlock_on_defeat": ["flying.rocket", "heavy.armored"] if stage_id == DEFAULT_STAGE_ID else [],
-		"unlock_on_timeout": ["flying.rocket", "heavy.armored"] if stage_id == DEFAULT_STAGE_ID else [],
+		"reward_victory": {
+			"gold": 35 + chapter * 8 + stage_in_chapter * 3,
+			"xp_books": 1 if is_boss else 0,
+			"porcelain": 14 + chapter * 3 + stage_in_chapter * 2,
+			"parts": 10 + chapter * 3 + stage_in_chapter * 2,
+			"sludge": 8 + chapter * 3 + stage_in_chapter * 2,
+		},
+		"reward_defeat": {
+			"gold": 0,
+			"xp_books": 0,
+			"porcelain": 0,
+			"parts": 0,
+			"sludge": 0,
+		},
+		"unlock_on_defeat": [],
 		"unlock_on_victory": unlock_victory,
-		"unlock_preview": readability["unlock_preview"],
+		"unlock_preview": "",
 		"threat_summary": readability["threat_summary"],
 		"counter_hint": readability["counter_hint"],
 		"chapter_feedback": readability["chapter_feedback"],
 		"recommended_recipe_ids": recommendation["recommended_recipe_ids"],
 		"fallback_recipe_ids": recommendation["fallback_recipe_ids"],
 		"recommendation_reason": recommendation["recommendation_reason"],
+		"factory_production_target": 0,
+		"defense_evolution": _defense_evolution(stage_id, chapter, stage_in_chapter),
 		"power_bp": power_bp,
+		"minimum_power": int(recommended_power * 85 / 100),
+		"recommended_power": recommended_power,
+	}
+
+
+static func _endless_index(stage_id: String) -> int:
+	if not stage_id.begins_with(ENDLESS_PREFIX):
+		return 0
+	var suffix := stage_id.trim_prefix(ENDLESS_PREFIX)
+	if not suffix.is_valid_int():
+		return 0
+	return maxi(0, int(suffix))
+
+
+static func _endless_stage(index: int) -> Dictionary:
+	var power_bp := 38000 + index * 850
+	var config := _base_stage("stage_5_4", 5, 4, power_bp)
+	config["stage_id"] = "%s%d" % [ENDLESS_PREFIX, index]
+	config["act"] = 2
+	config["chapter"] = 6
+	config["stage_in_chapter"] = index
+	config["display_name"] = "无尽前线 %d" % index
+	config["next_stage_id"] = "%s%d" % [ENDLESS_PREFIX, index + 1]
+	config["recommended_power"] = 26500 + index * 700
+	config["minimum_power"] = int(config["recommended_power"] * 85 / 100)
+	config["power_bp"] = power_bp
+	config["reward_victory"] = {
+		"gold": 78 + index * 3,
+		"xp_books": 0,
+		"porcelain": 30 + index,
+		"parts": 27 + index,
+		"sludge": 24 + index,
+	}
+	config["reward_defeat"] = {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}
+	config["unlock_on_defeat"] = []
+	config["unlock_on_victory"] = []
+	config["unlock_preview"] = ""
+	config["threat_summary"] = "无尽前线会逐层提高敌军生命、攻击和推荐战力。"
+	config["counter_hint"] = "根据实际阵亡与材料储备决定继续推进或主动撤退止损。"
+	return config
+
+
+static func _scaled_repeat_reward(base: Dictionary) -> Dictionary:
+	return {
+		"gold": int(int(base.get("gold", 0)) * 30 / 100),
+		"xp_books": 0,
+		"porcelain": int(int(base.get("porcelain", 0)) * 30 / 100),
+		"parts": int(int(base.get("parts", 0)) * 30 / 100),
+		"sludge": int(int(base.get("sludge", 0)) * 30 / 100),
+	}
+
+
+static func _defense_evolution(stage_id: String, chapter: int, stage_in_chapter: int) -> Dictionary:
+	var opening_beats: Dictionary = {
+		"stage_1_1": {
+			"tier": "unguarded_city",
+			"title": "无防备城市",
+			"description": "没有联盟、守军或炮台，Gman 摧毁唯一的城市目标即可。",
+			"features": ["单一城市目标", "零防守"],
+		},
+		"stage_1_2": {
+			"tier": "city_alarm",
+			"title": "城市警戒",
+			"description": "警报响起，路障和临时守卫开始拖慢推进。",
+			"features": ["警戒路障", "临时守卫"],
+		},
+		"stage_1_3": {
+			"tier": "alliance_militia",
+			"title": "联盟成立",
+			"description": "城市守军组成联盟，第一次形成有组织的交叉火力。",
+			"features": ["联盟士兵", "防守据点"],
+		},
+		"stage_1_4": {
+			"tier": "turret_line",
+			"title": "炮台防线",
+			"description": "联盟部署固定炮台和精英守军，单靠 Gman 无法继续碾压。",
+			"features": ["固定炮台", "精英守军", "交叉火力"],
+		},
+	}
+	if opening_beats.has(stage_id):
+		return (opening_beats[stage_id] as Dictionary).duplicate(true)
+	return {
+		"tier": "chapter_%d_beat_%d" % [chapter, stage_in_chapter],
+		"title": "联合防守" if chapter >= 4 else "升级防线",
+		"description": "敌方持续叠加守军、设施和章节机制。",
+		"features": ["联盟守军", "防御设施", "章节机制"],
 	}
 
 
@@ -148,24 +354,24 @@ static func _cannon_suppression_target(chapter: int) -> int:
 static func _recommendation_fields(stage_id: String) -> Dictionary:
 	var recommendations: Dictionary = {
 		"stage_1_1": {
-			"recommended": ["ordinary.assault", "ordinary.sonic"],
+			"recommended": [],
 			"fallback": [],
-			"reason": "初战只依赖初始普通车间：冲锋负责推进，音波负责削弱摄像守军。",
+			"reason": "第一关不需要生产任何小兵，Gman 独自摧毁无防备城市。",
 		},
 		"stage_1_2": {
-			"recommended": ["ordinary.assault", "ordinary.sonic"],
+			"recommended": [],
 			"fallback": ["heavy.armored", "flying.rocket"],
-			"reason": "继续用初始双核处理侧翼压力；若已触发反攻蓝图，可补装甲或火箭。",
+			"reason": "城市只有少量临时联盟守卫，继续由 Gman 独自推进。",
 		},
 		"stage_1_3": {
-			"recommended": ["ordinary.sonic", "ordinary.assault"],
+			"recommended": [],
 			"fallback": ["heavy.armored"],
-			"reason": "中段门槛先用音波压低精英火力，胜利后再把装甲纳入主阵容。",
+			"reason": "联盟刚刚形成，尚未部署炮台；Gman 仍能完成最后一次单人推进。",
 		},
 		"stage_1_4": {
-			"recommended": ["heavy.armored", "ordinary.sonic"],
+			"recommended": [],
 			"fallback": ["ordinary.assault"],
-			"reason": "装甲护盾承接炮塔与精英压力，音波降低前线损耗。",
+			"reason": "炮台防线是设计好的首次失败点；失败后研究图纸、生产九兵并完成第一次三合一。",
 		},
 		"stage_1_5": {
 			"recommended": ["heavy.armored", "ordinary.sonic", "ordinary.assault"],
@@ -309,7 +515,7 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		5: "章节 Boss 关，基地结构分层破坏并持续轰炸全场。",
 	}
 	var beat_counters: Dictionary = {
-		1: "保持六人满编，观察谁先倒下，再回厂补同职责角色。",
+		1: "保持 Gman 与六名小兵满编，观察谁先倒下，再回厂补同职责角色。",
 		2: "调整前后排，让承伤角色吃第一轮火力，后排保留输出。",
 		3: "使用本章新解法或上一章反制单位，不要只看总战力。",
 		4: "失败后优先升星承压或恢复位，而不是只堆最高攻击。",
@@ -325,10 +531,30 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 	var unlock_preview := ""
 	if not unlock_victory.is_empty():
 		unlock_preview = "胜利后预览新蓝图：%s。" % _recipe_labels(unlock_victory)
-	elif stage_id == DEFAULT_STAGE_ID:
-		unlock_preview = "失败或超时后预览反攻蓝图：火箭飞行马桶人、装甲冲城马桶人。"
 	var threat := "%s %s" % [String(chapter_threats[chapter]), String(beat_threats[stage_in_chapter])]
 	var counter := "%s %s" % [String(chapter_counters[chapter]), String(beat_counters[stage_in_chapter])]
+	var opening_readability: Dictionary = {
+		"stage_1_1": {
+			"threat": "城市尚未形成任何有效抵抗，场上只有城市本体。",
+			"counter": "让 Gman 独自推进并熟悉自动攻击与技能。",
+		},
+		"stage_1_2": {
+			"threat": "城市拉响警报，临时路障和警卫开始拖慢 Gman。",
+			"counter": "继续依靠 Gman 的压制力，不需要提前生产小兵。",
+		},
+		"stage_1_3": {
+			"threat": "城市联盟成立，守军第一次组织交叉火力。",
+			"counter": "Gman 仍能独自突破；观察联盟如何为下一关架设防线。",
+		},
+		"stage_1_4": {
+			"threat": "联盟部署固定炮台、精英守军与交叉火力，形成首次必败墙。",
+			"counter": "失败后带回冲锋马桶人设计图，交给博士研究并生产 9 个援军。",
+		},
+	}
+	if opening_readability.has(stage_id):
+		var opening := opening_readability[stage_id] as Dictionary
+		threat = String(opening["threat"])
+		counter = String(opening["counter"])
 	if is_boss:
 		threat = "%s 本关是章节 Boss，最终结构会分段受损并逼玩家与基地比拼输出速度。" % String(chapter_threats[chapter])
 		counter = "%s Boss 战优先处理电池和护甲层，核心暴露后再集中释放攻城技能。" % String(chapter_counters[chapter])

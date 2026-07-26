@@ -2,6 +2,16 @@ class_name ToiletUnitView
 extends Node3D
 
 const TEAM_ALLY: int = 0
+const EXTERNAL_ALLY_MODELS: Dictionary = {
+	"assault": preload("res://game/scenes/actors/ally_models/assault_model.tscn"),
+	"sonic": preload("res://game/scenes/actors/ally_models/sonic_model.tscn"),
+	"rocket": preload("res://game/scenes/actors/ally_models/rocket_model.tscn"),
+	"bomber": preload("res://game/scenes/actors/ally_models/bomber_model.tscn"),
+	"armored": preload("res://game/scenes/actors/ally_models/armored_model.tscn"),
+	"saw": preload("res://game/scenes/actors/ally_models/saw_model.tscn"),
+	"repair": preload("res://game/scenes/actors/ally_models/repair_model.tscn"),
+	"parasite": preload("res://game/scenes/actors/ally_models/parasite_model.tscn"),
+}
 
 static var _shared_meshes: Dictionary = {}
 static var _shared_materials: Dictionary = {}
@@ -13,6 +23,9 @@ var slot: int = 0
 var _body_pivot: Node3D
 var _name_label: Label3D
 var _hp_label: Label3D
+var _hp_bar_root: Node3D
+var _hp_bar_fill: MeshInstance3D
+var _hp_bar_fill_material: StandardMaterial3D
 var _anim_time: float = 0.0
 var _attack_pulse: float = 0.0
 var _hit_pulse: float = 0.0
@@ -20,6 +33,7 @@ var _skill_pulse: float = 0.0
 var _status_tint: Color = Color.WHITE
 var _is_alive: bool = true
 var _target_position: Vector3 = Vector3.ZERO
+var _use_external_model: bool = false
 
 
 func setup(unit_snapshot: Dictionary) -> void:
@@ -38,16 +52,24 @@ func apply_snapshot(unit_snapshot: Dictionary) -> void:
 		return
 	var hp := int(unit_snapshot.get("hp", 0))
 	var max_hp := maxi(1, int(unit_snapshot.get("max_hp", 1)))
-	_hp_label.text = "%d / %d" % [hp, max_hp]
-	_hp_label.modulate = Color("#75e69b") if hp * 2 > max_hp else Color("#ffb15c")
+	var hp_ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
+	if team == TEAM_ALLY:
+		_hp_label.text = ""
+	elif _hp_bar_fill != null:
+		_hp_bar_fill.scale.x = maxf(0.001, hp_ratio)
+		_hp_bar_fill.position.x = -(1.0 - hp_ratio) * 0.58
+		_hp_bar_fill_material.albedo_color = Color("#ffab45") if hp_ratio <= 0.3 else Color("#e24f4b")
 	var lane := int(unit_snapshot.get("lane", slot % 3))
 	var road_position := int(unit_snapshot.get("road_position", 0))
 	_target_position = Vector3((float(lane) - 1.0) * 2.15, 0.0, 12.0 - float(road_position) * 0.03)
 	if position == Vector3.ZERO:
 		position = _target_position
 	var shield := int(unit_snapshot.get("shield", 0))
-	_hp_label.text += "  ◆%d" % shield if shield > 0 else ""
+	if team != TEAM_ALLY:
+		_hp_label.text = "◆%d" % shield if shield > 0 else ""
 	_is_alive = bool(unit_snapshot.get("alive", true))
+	if _hp_bar_root != null:
+		_hp_bar_root.visible = _is_alive and team != TEAM_ALLY
 	if not _is_alive:
 		_body_pivot.rotation_degrees.z = -78.0 if team == TEAM_ALLY else 78.0
 		_body_pivot.position.y = 0.12
@@ -106,6 +128,7 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 	var archetype_id := String(unit_snapshot.get("archetype_id", class_id))
 	var display_name := String(unit_snapshot.get("display_name", ""))
 	var elite := bool(unit_snapshot.get("elite", false))
+	_use_external_model = _add_external_ally_model(archetype_id)
 	var porcelain_key := "ally_porcelain" if team == TEAM_ALLY else "enemy_porcelain"
 	var accent_key := "ally_accent" if team == TEAM_ALLY else "enemy_accent"
 	_add_part("Base", "base", porcelain_key, Vector3(0.0, 0.34, 0.0))
@@ -142,19 +165,78 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 	_name_label.name = "NameLabel"
 	_name_label.text = String(unit_id)
 	_name_label.position = Vector3(0.0, 2.17, 0.0)
-	_name_label.font_size = 30
-	_name_label.outline_size = 7
+	_name_label.font_size = 64
+	_name_label.pixel_size = 0.00235
+	_name_label.outline_size = 12
 	_name_label.modulate = Color("#7fd7ff") if team == TEAM_ALLY else Color("#ff8d82")
 	_name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_name_label.no_depth_test = true
 	_body_pivot.add_child(_name_label)
 
 	_hp_label = Label3D.new()
 	_hp_label.name = "HealthLabel"
 	_hp_label.position = Vector3(0.0, 1.94, 0.0)
-	_hp_label.font_size = 26
-	_hp_label.outline_size = 6
+	_hp_label.font_size = 56
+	_hp_label.pixel_size = 0.0023
+	_hp_label.outline_size = 10
 	_hp_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_hp_label.no_depth_test = true
 	_body_pivot.add_child(_hp_label)
+	if team != TEAM_ALLY:
+		_build_enemy_health_bar()
+
+
+func _build_enemy_health_bar() -> void:
+	_hp_bar_root = Node3D.new()
+	_hp_bar_root.name = "EnemyHealthBar"
+	_hp_bar_root.position = Vector3(0.0, 1.96, 0.0)
+	_body_pivot.add_child(_hp_bar_root)
+
+	var background := MeshInstance3D.new()
+	background.name = "Background"
+	background.mesh = _health_quad(Vector2(1.28, 0.13))
+	background.material_override = _health_bar_material(Color("#140d12e8"))
+	background.position.z = 0.006
+	_hp_bar_root.add_child(background)
+
+	_hp_bar_fill = MeshInstance3D.new()
+	_hp_bar_fill.name = "Fill"
+	_hp_bar_fill.mesh = _health_quad(Vector2(1.16, 0.075))
+	_hp_bar_fill_material = _health_bar_material(Color("#e24f4b"))
+	_hp_bar_fill.material_override = _hp_bar_fill_material
+	_hp_bar_fill.position.z = -0.006
+	_hp_bar_root.add_child(_hp_bar_fill)
+
+
+func _health_quad(quad_size: Vector2) -> QuadMesh:
+	var mesh := QuadMesh.new()
+	mesh.size = quad_size
+	return mesh
+
+
+func _health_bar_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	material.no_depth_test = true
+	material.render_priority = 1
+	return material
+
+
+func _add_external_ally_model(archetype_id: String) -> bool:
+	if team != TEAM_ALLY:
+		return false
+	var packed_scene := EXTERNAL_ALLY_MODELS.get(archetype_id) as PackedScene
+	if packed_scene == null:
+		return false
+	var model := packed_scene.instantiate() as Node3D
+	if model == null:
+		return false
+	model.name = "ExternalModel_%s" % archetype_id
+	_body_pivot.add_child(model)
+	return true
 
 
 func _add_alliance_headgear(display_name: String, class_id: String, material_key: String) -> void:
@@ -197,6 +279,7 @@ func _add_part(
 	part.mesh = _shared_meshes[mesh_key]
 	part.material_override = _shared_materials[material_key]
 	part.position = part_position
+	part.visible = not _use_external_model
 	_body_pivot.add_child(part)
 	return part
 

@@ -1,0 +1,162 @@
+---
+km_id: reference.godot-runtime-refactor-blueprint
+km_type: reference
+domain: architecture
+status: active
+owner: programming
+last_verified: 2026-07-27
+source_of_truth:
+  - project-a/project.godot
+  - project-a/scenes/screens/main.tscn
+  - project-a/scripts/slg_main.gd
+  - project-a/game/scenes/ui/stage_detail_panel.tscn
+  - project-a/game/scripts/ui/stage_detail_panel.gd
+  - project-a/game/scripts/autoloads/game.gd
+  - project-a/game/scripts/autoloads/save_manager.gd
+validated_by:
+  - godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd
+  - godot --headless --path project-a --script res://tools/run_battle_tests.gd
+  - python3 tools/docs_lint.py
+tags:
+  - reference:architecture-blueprint
+  - workflow:incremental-refactor
+related:
+  - reference.architecture-overview
+  - reference.file-ownership
+  - reference.toilet-factory-technical-design
+  - reference.verification-matrix
+---
+
+# Godot 运行时重构蓝图
+
+## 目标与裁决
+
+重构必须缩短玩家决策路径和玩法迭代周期，而非只美化目录。当前保留已经验证的确定性领域内核、
+CommandExecutor 和存档边界；拒绝一次性重写 App Shell、把所有系统变成 Autoload、或把可变运行态
+塞进 `.tres`。第一条已落地的纵向切片是战前关卡面板：从动态节点树拆成可预览场景，并增加战力、
+推荐值、能力比和风险原因。
+
+采用策略：
+
+- `adapt`：沿用现有 `game/scripts/{state,domain,commands,persistence}`，逐屏提取 UI owner；
+- `adapt`：保留 `Game`、`SaveManager` 两个应用生命周期 Autoload，后续收窄 API；
+- `reject`：本里程碑不新增 EventBus、Service Locator、全局 UI 管理器；
+- `adapt`：首章五关已用 typed `StageDefinition` Resource 承载策划高频字段并建立内容校验；
+  后续角色原型、技能与设施沿用该迁移法，不把 schema 存档或战斗 session 改成 Resource。
+
+## 目标文件树
+
+```text
+project-a/
+├── scenes/screens/main.tscn                 # 应用组合根；只保留稳定 host
+├── scripts/slg_main.gd                      # 迁移期 App Shell；路由与 sibling wiring
+└── game/
+    ├── scenes/ui/
+    │   └── stage_detail_panel.tscn          # 已实现：战前判断的 editor-owned subtree
+    ├── scenes/screens/
+    │   └── war_zone_screen.tscn             # 已实现：章节、关卡与战前面板 owner
+    │   └── battle_hud_screen.tscn            # 已实现：战术状态、技能与单位 HUD owner
+    │   └── battle_result_screen.tscn         # 已实现：高光、战果与下一行动 owner
+    │   └── legion_screen.tscn                # 已实现：编队比较、招募与成员成长 owner
+    │   └── factory_screen.tscn               # 已实现：资源、行动、设施与建造 HUD owner
+    │   └── goals_screen.tscn                 # 已实现：目标链、任务、战令与成就 owner
+    ├── scripts/ui/
+    │   └── stage_detail_panel.gd            # 已实现：只读投影 + attack_requested
+    │   └── war_zone_screen.gd               # 已实现：战区导航 + sibling signal
+    │   └── battle_hud_screen.gd              # 已实现：战斗快照只读投影 + 语义操作信号
+    │   └── battle_result_screen.gd           # 已实现：结算投影 + action_requested
+    │   └── legion_screen.gd                  # 已实现：军团只读 view + 领域动作请求
+    │   └── factory_screen.gd                 # 已实现：工厂只读 view + 建造/设施语义请求
+    │   └── goals_screen.gd                   # 已实现：长期目标只读 view + 领取/导航语义请求
+    ├── resources/definitions/               # 只读 `.tres`
+    │   ├── stages/
+    │   │   └── act_1/stage_1_1..5.tres      # 已实现：首30分钟关卡高频策划字段
+    │   ├── archetypes/
+    │   ├── skills/
+    │   └── facilities/
+    └── scripts/content/
+        ├── stage_definition.gd               # 已实现：typed Resource class + 自校验
+        └── stage_definition_catalog.gd       # 已实现：固定 preload、唯一 ID 与完整性校验
+```
+
+下一批 UI 按玩家旅程拆分，而不是按控件类别拆分：`war_zone_screen`、`legion_screen`、
+`battle_hud`、`battle_result_screen`。只有具备独立生命周期、可预览树或独立验证价值时才配对
+`.tscn + .gd`；纯规则继续使用 `.gd`。
+
+## 场景所有权与契约
+
+| Owner | 创建/销毁 | 生命周期 | 公共契约 |
+|---|---|---|---|
+| `Main` / App Shell | 当前 screen、WorldHost、独立 UI scene | 应用会话 | 路由、注入 snapshot、连接 sibling |
+| `WarZoneScreen` | 章节按钮、关卡按钮、StageDetailPanel | 战区 screen | 章节/关卡/出击三类语义请求 |
+| `StageDetailPanel` | 自有 Label、ProgressBar、Button | 战区 screen 一次渲染 | `configure(...)`；`attack_requested(stage_id)` |
+| `BattleHudScreen` | 阶段/炮击预警、单位 HP/能量、技能模式与操作按钮 | 单场战斗 | `configure(...)`、`apply_snapshot(...)`；暂停/技能/撤退信号 |
+| `BattleResultScreen` | 胜负高光、奖励、贡献、复盘与行动按钮 | 单场结算 | `configure(view)`；`action_requested(id, payload)` |
+| `LegionScreen` | 六槽阵型、职责/战力差比较、招募与成员成长 | 军团 screen | `configure(view)`；`tab_selected`、`action_requested` |
+| `FactoryScreen` | 固定资源条、行动/设施/建造互斥 HUD、3D 交互留白 | 基地 screen | `configure(view)`；`panel_selected`、`action_requested` |
+| `GoalsScreen` | 大中小目标、当前卡点、战役进度、任务、战令和成就 | 目标 screen | `configure(view)`；`tab_selected`、`action_requested` |
+| `Game` Autoload | 当前 `GameState`、CommandExecutor | 应用 | 查询快照、执行领域命令 |
+| `SaveManager` Autoload | 存档 adapter | 应用 | 有界加载/发布/备份；不持有 UI Node |
+| `BattleSession` | 确定性战斗运行态 | 单场战斗 | tick、command、snapshot、result |
+
+信号方向：
+
+```text
+StageDetailPanel --attack_requested(stage_id)--> App Shell
+App Shell --direct command--> Game / BattleSession
+Game/BattleSession --snapshot/result--> App Shell --> UI scenes
+```
+
+UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 App Shell 创建并连接一次，
+销毁 scene 即释放连接。
+
+## Resource、运行态与 Autoload
+
+| 数据 | Godot 形式 | 规则 |
+|---|---|---|
+| 关卡/原型/技能/设施定义 | typed `Resource` + `.tres` | 运行时只读；固定 preload 或 allowlist load |
+| Catalog 索引 | typed Resource 或静态只读 catalog | 稳定 ID；启动校验重复 ID、缺失引用和范围 |
+| `GameState` / save candidate | `RefCounted` / 有界 JSON snapshot | 权威可变态；不得写回 `.tres` |
+| `BattleSession` | `RefCounted` | 单场 owner；不得进入 Autoload |
+| UI view model | duplicate-safe Dictionary，后续按压力升级 typed value | 只读投影；不得保存 Node 引用 |
+
+Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` 和 `Game` 先注册，
+最后注册的 `AppBootstrap` 是唯一组合根，显式把保存服务注入 Game 并幂等初始化。`Game._ready()`
+不再查找 sibling，也不依赖 sibling `_ready()` 完成业务初始化。当前不合并成巨型
+`AppServices`；若后续跨场景音频连续性和浏览器解锁证明
+需要应用生命周期，才将 AudioDirector 提升为有持久播放器子树的 Autoload scene。
+当前入口 `slg_main.gd` 只调用 Game 的备份、预览、恢复和重置窄接口，不再查找
+`/root/SaveManager` 或把保存服务对象穿过 UI。
+
+## 资产治理
+
+- 全局字体、共享 UI 主题放 `assets/fonts`、未来 `game/ui/themes`；feature-only 资产随 feature；
+- GLB 通过本地 wrapper scene 进入运行时，业务脚本不依赖导入器生成的内部节点名；
+- 每个外部资产保留来源、作者、许可证、下载日期和修改记录；发布时汇总到 LICENSES；
+- 路径使用 `snake_case`，固定依赖用 `preload`；数据驱动加载只能解析允许的 `res://` 前缀并校验类型；
+- `artifacts/` 是验证证据，不是游戏运行资产，不得进入玩法加载路径；
+- Web 发布分别验证首次 payload、导入产物、峰值内存、音频解锁和离线缓存。
+
+当前八个马桶人 GLB 均由 `game/scenes/actors/ally_models/*_model.tscn` 包装，
+`ToiletUnitView` 只 preload wrapper。`artifacts/` 与 runtime 路径的反向搜索为空。
+
+## 迁移顺序与门禁
+
+1. 每次先用现有 smoke/领域测试固定行为。
+2. 提取一个玩家可见 owner，App Shell 只保留构建参数和连接。
+3. 新 scene 必须可独立实例化，且集成 smoke 覆盖玩家文字/CTA。
+4. 先为一个 catalog 引入 typed definition 和内容校验，再迁移其调用者。
+5. 搜索确认旧构建函数无调用后再删除，不做横跨全部 screen 的大爆炸迁移。
+6. 每刀通过编辑器解析、focused tests、844×390 与窄屏视觉证据；关键流程再跑浏览器。
+
+七块 UI 与首个内容切片完成证据：`StageDetailPanel`、`WarZoneScreen`、`BattleHudScreen`、
+`BattleResultScreen`、`LegionScreen`、`FactoryScreen` 与 `GoalsScreen` 已拥有 authored
+scene tree、延迟 configure 生命周期和单向语义信号；UI smoke、battle tests 与真实 844×390
+截图通过。首章 Boss 首屏可读到战力差、风险及两条已验证路线；结算首屏可读到奖励、高光、
+按永久角色 ID 统计的核心贡献、巨炮表现和下一行动。首章五关的推荐战力、倍率、Boss 耐久和
+战前文案已由五个 typed `.tres` 提供，并通过专用内容校验与 98 场扫描。Autoload 与资产边界
+也已收口。`LegionScreen` 接管旧动态军团树后，headless UI smoke 与 Compatibility capture
+退出时原有的 CanvasItem、字体和纹理泄漏同时消失。`FactoryScreen` 进一步接管固定资源条、
+首章行动、设施详情和三步网格建造，而 App Shell 只保留 3D 世界、镜头/射线、选格和命令路由。
+`GoalsScreen` 已接管大/中/小目标、大小卡点、行动任务、30 级战令与永久成就；App Shell 只投影
+只读 view 并路由领域命令。

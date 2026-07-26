@@ -39,10 +39,12 @@ State labels:
 - [ ] Correct production MIME types, especially `application/wasm`.
 - [ ] Compression/cache/security headers.
 - [ ] Fresh-cache and warm-cache startup timings.
-- [ ] Chrome/Chromium and Firefox desktop smoke.
+- [x] Google Chrome desktop HTTP smoke, including touch input, online reload, server shutdown,
+  offline PWA restart, and IndexedDB save identity (`node tools/run_web_browser_smoke.mjs`).
+- [ ] Firefox desktop smoke.
 - [ ] Chrome Android real-device smoke.
 - [ ] Safari iOS real-device smoke.
-- [ ] Browser reload/restart persistence proof on the final origin.
+- [ ] Browser reload/restart persistence proof on the final production origin (local HTTP proof passes).
 - [ ] Private/blocked storage degraded behavior proof.
 - [ ] Accessibility review: focus visibility, readable/scalable text, non-color cues, reduced motion where needed, critical-audio alternatives.
 - [ ] Final legal review for font notice, fan-content/IP risk, store copy, and every asset license.

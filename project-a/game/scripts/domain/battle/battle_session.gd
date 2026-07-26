@@ -5,7 +5,6 @@ const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 
 const TICKS_PER_SECOND: int = 5
-const MAX_TICKS: int = 300
 const TEAM_ALLY: int = 0
 const TEAM_ENEMY: int = 1
 
@@ -13,6 +12,9 @@ const STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地�
 const ROAD_END: int = 1000
 const SKILL_COST: int = 100
 const CANNON_FUSE_TICKS: int = 7
+const DAMAGE_ENERGY_PER_MAX_HP_PERCENT: int = 1
+const DAMAGE_ENERGY_PER_HIT_CAP: int = 10
+const DAMAGE_ENERGY_PER_SECOND_CAP: int = 20
 
 var tick_index: int = 0
 var is_finished: bool = false
@@ -22,7 +24,6 @@ var _stage_index: int = 0
 var _stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID
 var _stage_config: Dictionary = {}
 var _stage_names: Array[String] = StageCatalogScript.DEFAULT_STAGE_NAMES.duplicate()
-var _max_ticks: int = MAX_TICKS
 var _final_structure_id: StringName = &"alliance_core"
 var _units: Array[Dictionary] = []
 var _structures: Array[Dictionary] = []
@@ -35,6 +36,12 @@ var _cannons_suppressed: int = 0
 var _cannon_impacts: int = 0
 var _summon_serial: int = 0
 var _revived_unit_ids: Dictionary = {}
+var _ally_damage_taken: int = 0
+var _troop_damage_taken: int = 0
+var _ally_damage_dealt_by_unit: Dictionary = {}
+var _assault_cleave_extra_hits: int = 0
+var _started_solo: bool = false
+var _solo_pressure_bp: int = 10000
 
 
 func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID, stage_config: Dictionary = {}) -> void:
@@ -52,11 +59,11 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 		_stage_names.append(String(stage_name))
 	if _stage_names.is_empty():
 		_stage_names = StageCatalogScript.DEFAULT_STAGE_NAMES.duplicate()
-	_max_ticks = int(_stage_config.get("max_ticks", MAX_TICKS))
 	_final_structure_id = StringName(String(_stage_config.get("final_structure_id", "alliance_core")))
 	_suppressible_cannon = bool(_stage_config.get("suppressible_cannon", false))
 	_cannon_suppression_target = maxi(0, int(_stage_config.get("cannon_suppression_target", 0)))
 	_cannon_warning_ticks = int(_stage_config.get("cannon_warning_ticks", CANNON_FUSE_TICKS))
+	_solo_pressure_bp = maxi(10000, int(_stage_config.get("solo_pressure_bp", 10000)))
 	if _cannon_warning_ticks <= 0:
 		_cannon_warning_ticks = CANNON_FUSE_TICKS
 	_units.clear()
@@ -67,13 +74,18 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_cannon_impacts = 0
 	_summon_serial = 0
 	_revived_unit_ids.clear()
+	_ally_damage_taken = 0
+	_troop_damage_taken = 0
+	_ally_damage_dealt_by_unit.clear()
+	_assault_cleave_extra_hits = 0
+	_started_solo = false
 
-	if hero_snapshots.size() != 6:
+	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
 		is_finished = true
 		result = _finish_result(false, "invalid_formation")
 		result["ticks"] = 0
 		return
-	for slot in 6:
+	for slot in hero_snapshots.size():
 		var hero := _as_dictionary(hero_snapshots[slot])
 		if not _is_known_archetype(String(hero.get("archetype_id", ""))):
 			is_finished = true
@@ -82,6 +94,7 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 			_units.clear()
 			return
 		_units.append(_make_ally(hero, slot))
+	_started_solo = hero_snapshots.size() == 1
 	_units.append_array(_make_enemies())
 
 
@@ -97,11 +110,31 @@ func request_skill(unit_id: StringName) -> bool:
 	return true
 
 
+static func damage_energy_gain(damage: int, max_hp: int) -> int:
+	if damage <= 0 or max_hp <= 0:
+		return 0
+	var lost_hp_percent := ceili(float(damage) * 100.0 / float(max_hp))
+	return clampi(
+		lost_hp_percent * DAMAGE_ENERGY_PER_MAX_HP_PERCENT,
+		1,
+		DAMAGE_ENERGY_PER_HIT_CAP
+	)
+
+
 func set_auto_skill(unit_id: StringName, enabled: bool) -> bool:
 	var unit := _unit_by_id(unit_id)
 	if unit.is_empty() or int(unit["team"]) != TEAM_ALLY or bool(unit["temporary"]):
 		return false
 	unit["auto_skill"] = enabled
+	return true
+
+
+func retreat() -> bool:
+	if is_finished:
+		return false
+	is_finished = true
+	result = _finish_result(false, "player_retreat")
+	result["outcome"] = "retreat"
 	return true
 
 
@@ -169,11 +202,11 @@ func snapshot() -> Dictionary:
 		warning_snapshots.append(warning_snapshot)
 	return {
 		"tick": tick_index,
-		"max_ticks": _max_ticks,
 		"finished": is_finished,
 		"stage_id": _stage_id,
 		"stage_index": _stage_index,
-		"stage_name": _stage_names[_stage_index],
+		"stage_count": _stage_names.size(),
+		"stage_name": _stage_names[clampi(_stage_index, 0, _stage_names.size() - 1)],
 		"road_progress": _front_line(),
 		"units": unit_snapshots,
 		"enemies": enemy_snapshots,
@@ -241,6 +274,17 @@ func _run_structure_defenses(events: Array[Dictionary]) -> void:
 		if not bool(structure["alive"]) or int(structure["stage"]) > _stage_index:
 			continue
 		var kind := String(structure["kind"])
+		var attack_period := int(structure["attack_period_ticks"])
+		if String(structure["structure_id"]) == "warning_turret" and (tick_index + 2) % attack_period == 0:
+			events.append({
+				"type": &"artillery_warning",
+				"tick": tick_index,
+				"warning_id": "light_shell_%d" % (tick_index + 2),
+				"lane": int(structure["lane"]),
+				"impact_tick": tick_index + 2,
+				"suppressible": false,
+				"source_structure_id": structure["structure_id"],
+			})
 		if kind in ["turret", "battery"] and tick_index % int(structure["attack_period_ticks"]) == 0:
 			_apply_unit_damage(_select_defense_target(int(structure["lane"])), int(structure["attack"]), structure["structure_id"], false, events)
 		elif kind == "core" and _stage_index == _stage_names.size() - 1:
@@ -329,6 +373,9 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 		push_error("Unknown battle skill: %s" % skill_id)
 		return
 	var star := int(unit["star"])
+	var base_attack := int(unit["attack"])
+	var skill_level := clampi(int(unit.get("skill_level", 1)), 1, 3)
+	unit["attack"] = int(round(float(base_attack) * float(10000 + (skill_level - 1) * 2000) / 10000.0))
 	unit["energy"] = 0
 	unit["cooldown_ticks"] = maxi(int(unit["cooldown_ticks"]), 2)
 	events.append({
@@ -338,14 +385,22 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 		"skill_id": skill_id,
 		"archetype_id": unit["archetype_id"],
 		"skill_tier": _skill_tier(unit),
+		"skill_level": skill_level,
 	})
 	match skill_id:
+		"gman_overrun":
+			for target in _current_stage_targets():
+				_damage_target(target, int(unit["attack"]) * 2, unit["unit_id"], true, events)
+			unit["shield"] = maxi(int(unit.get("shield", 0)), 80)
+			unit["shield_ticks"] = 20
 		"plunger_charge":
 			var target := _first_living_enemy() if not _first_living_enemy().is_empty() else _current_target()
 			if not target.is_empty():
 				_damage_target(target, int(unit["attack"]) * (3 if star >= 3 else 2), unit["unit_id"], true, events)
 			if star >= 2:
+				var cleave_targets := _living_stage_enemies().size()
 				_cleave_stage_enemies(unit, int(unit["attack"]), events)
+				_assault_cleave_extra_hits += maxi(0, cleave_targets - 1)
 			if star >= 3:
 				var stun_target := _first_living_enemy()
 				if not stun_target.is_empty():
@@ -417,10 +472,12 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 			_heal_lowest_allies(unit, star, events)
 		"parasite_swarm":
 			if star >= 3 and _convert_enemy(unit, events):
+				unit["attack"] = base_attack
 				return
 			_summon_parasites(unit, star, events)
 		_:
 			push_error("Unhandled known battle skill: %s" % skill_id)
+	unit["attack"] = base_attack
 
 
 func _damage_target(target: Dictionary, damage: int, source_id: StringName, is_skill: bool, events: Array[Dictionary]) -> void:
@@ -436,9 +493,11 @@ func _damage_structure(structure: Dictionary, damage: int, source_id: StringName
 	var actual := maxi(1, damage)
 	if int(structure.get("armor_break_ticks", 0)) > 0:
 		actual = int(actual * 125 / 100)
+	var effective_damage := mini(int(structure["hp"]), actual)
 	var old_damage_stage := int(structure["damage_stage"])
 	structure["hp"] = maxi(0, int(structure["hp"]) - actual)
 	structure["damage_stage"] = _damage_stage(int(structure["hp"]), int(structure["max_hp"]))
+	_record_ally_damage_dealt(source_id, effective_damage)
 	events.append({"type": &"structure_damaged", "tick": tick_index, "structure_id": structure["structure_id"], "source_id": source_id, "damage": actual, "hp": structure["hp"], "max_hp": structure["max_hp"], "is_skill": is_skill})
 	_record_cannon_suppression_damage(structure, actual, events)
 	if int(structure["damage_stage"]) != old_damage_stage:
@@ -452,15 +511,41 @@ func _damage_structure(structure: Dictionary, damage: int, source_id: StringName
 func _apply_unit_damage(unit: Dictionary, raw_damage: int, source_id: StringName, is_skill: bool, events: Array[Dictionary]) -> void:
 	if unit.is_empty() or not bool(unit["alive"]):
 		return
+	if int(unit["team"]) == TEAM_ALLY and _started_solo:
+		raw_damage = int(raw_damage * _solo_pressure_bp / 10000)
 	var damage := maxi(1, raw_damage - int(unit["defense"]) / 4)
 	var absorbed := mini(int(unit.get("shield", 0)), damage)
 	unit["shield"] = int(unit.get("shield", 0)) - absorbed
 	damage -= absorbed
+	var effective_health_damage := mini(int(unit["hp"]), damage)
 	unit["hp"] = maxi(0, int(unit["hp"]) - damage)
+	var received_energy := 0
 	if int(unit["team"]) == TEAM_ALLY:
-		unit["energy"] = mini(SKILL_COST, int(unit["energy"]) + 8)
-	events.append({"type": &"attack_hit", "tick": tick_index, "unit_id": unit["unit_id"], "source_id": source_id, "damage": damage, "absorbed": absorbed, "hp": unit["hp"], "max_hp": unit["max_hp"], "is_skill": is_skill})
+		if damage > 0 and int(unit["hp"]) > 0:
+			var window_second := int(tick_index / TICKS_PER_SECOND)
+			if int(unit.get("damage_energy_window_second", -1)) != window_second:
+				unit["damage_energy_window_second"] = window_second
+				unit["damage_energy_in_window"] = 0
+			var remaining_window := maxi(
+				0,
+				DAMAGE_ENERGY_PER_SECOND_CAP - int(unit.get("damage_energy_in_window", 0))
+			)
+			received_energy = mini(
+				damage_energy_gain(damage, int(unit["max_hp"])),
+				remaining_window
+			)
+			var old_energy := int(unit["energy"])
+			unit["energy"] = mini(SKILL_COST, old_energy + received_energy)
+			unit["damage_energy_in_window"] = int(unit.get("damage_energy_in_window", 0)) + received_energy
+			if old_energy < SKILL_COST and int(unit["energy"]) == SKILL_COST:
+				events.append({"type": &"skill_ready", "tick": tick_index, "unit_id": unit["unit_id"]})
+		if not bool(unit.get("temporary", false)):
+			_ally_damage_taken += damage
+			if String(unit.get("archetype_id", "")) != "gman":
+				_troop_damage_taken += damage
+	events.append({"type": &"attack_hit", "tick": tick_index, "unit_id": unit["unit_id"], "source_id": source_id, "damage": damage, "absorbed": absorbed, "energy_gain": received_energy, "hp": unit["hp"], "max_hp": unit["max_hp"], "is_skill": is_skill})
 	if int(unit["team"]) == TEAM_ENEMY:
+		_record_ally_damage_dealt(source_id, effective_health_damage)
 		events.append({
 			"type": &"enemy_damaged",
 			"tick": tick_index,
@@ -536,8 +621,6 @@ func _resolve_battle(events: Array[Dictionary]) -> void:
 		victory = true
 	elif main_allies_alive == 0:
 		reason = "main_squad_defeated"
-	elif tick_index >= _max_ticks:
-		reason = "timeout"
 	else:
 		return
 	is_finished = true
@@ -546,8 +629,32 @@ func _resolve_battle(events: Array[Dictionary]) -> void:
 
 
 func _finish_result(victory: bool, reason: String) -> Dictionary:
+	var gman_survived := false
+	var gman_hp := 0
+	var gman_max_hp := 0
+	for unit in _units:
+		if int(unit.get("team", TEAM_ENEMY)) == TEAM_ALLY and String(unit.get("archetype_id", "")) == "gman":
+			gman_survived = bool(unit.get("alive", false))
+			gman_hp = int(unit.get("hp", 0))
+			gman_max_hp = int(unit.get("max_hp", 0))
+			break
+	var troop_damage_share_percent := 0
+	var deployed_unit_ids: Array[String] = []
+	var dead_unit_ids: Array[String] = []
+	var surviving_unit_ids: Array[String] = []
+	for unit in _units:
+		if int(unit.get("team", TEAM_ENEMY)) != TEAM_ALLY or bool(unit.get("temporary", false)):
+			continue
+		var unit_id := String(unit.get("unit_id", ""))
+		deployed_unit_ids.append(unit_id)
+		if bool(unit.get("alive", false)):
+			surviving_unit_ids.append(unit_id)
+		else:
+			dead_unit_ids.append(unit_id)
+	if _ally_damage_taken > 0:
+		troop_damage_share_percent = int(round(float(_troop_damage_taken) * 100.0 / float(_ally_damage_taken)))
 	return {
-		"outcome": "victory" if victory else ("timeout" if reason == "timeout" else "defeat"),
+		"outcome": "victory" if victory else "defeat",
 		"stage_id": _stage_id,
 		"victory": victory,
 		"reason": reason,
@@ -561,7 +668,30 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"cannon_impacts": _cannon_impacts,
 		"cannon_suppressed_count": _cannons_suppressed,
 		"cannon_hit_count": _cannon_impacts,
+		"ally_damage_taken": _ally_damage_taken,
+		"troop_damage_taken": _troop_damage_taken,
+		"troop_damage_share_percent": troop_damage_share_percent,
+		"ally_damage_dealt_by_unit": _ally_damage_dealt_by_unit.duplicate(true),
+		"assault_cleave_extra_hits": _assault_cleave_extra_hits,
+		"gman_survived": gman_survived,
+		"gman_hp": gman_hp,
+		"gman_max_hp": gman_max_hp,
+		"deployed_unit_ids": deployed_unit_ids,
+		"dead_unit_ids": dead_unit_ids,
+		"surviving_unit_ids": surviving_unit_ids,
 	}
+
+
+func _record_ally_damage_dealt(source_id: StringName, damage: int) -> void:
+	if damage <= 0:
+		return
+	var source := _unit_by_id(source_id)
+	if source.is_empty() or int(source.get("team", TEAM_ENEMY)) != TEAM_ALLY:
+		return
+	if bool(source.get("temporary", false)):
+		return
+	var key := String(source_id)
+	_ally_damage_dealt_by_unit[key] = int(_ally_damage_dealt_by_unit.get(key, 0)) + damage
 
 
 func _current_target() -> Dictionary:
@@ -757,6 +887,7 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"class_id": class_id,
 		"star": star,
 		"skill_id": skill_id,
+		"skill_level": clampi(int(hero.get("skill_level", 1)), 1, 3),
 		"team": TEAM_ALLY,
 		"stage": 0,
 		"elite": false,
@@ -773,6 +904,8 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"cooldown_ticks": 1 + slot % 3,
 		"energy": clampi(int(hero.get("starting_energy", 0)), 0, SKILL_COST),
 		"energy_per_attack": 20,
+		"damage_energy_window_second": -1,
+		"damage_energy_in_window": 0,
 		"shield": 0,
 		"shield_ticks": 0,
 		"weakness_ticks": 0,
@@ -926,6 +1059,7 @@ func _is_known_archetype(archetype_id: String) -> bool:
 
 func _known_skill_ids() -> Array[String]:
 	return [
+		"gman_overrun",
 		"plunger_charge",
 		"sonic_disruptor",
 		"rocket_salvo",
@@ -947,7 +1081,7 @@ func _skill_tier(unit: Dictionary) -> int:
 
 
 func _range_for_archetype(archetype_id: String, class_id: String) -> int:
-	if archetype_id in ["rocket", "sonic", "parasite"]:
+	if archetype_id in ["gman", "rocket", "sonic", "parasite"]:
 		return 110
 	if class_id in ["ranger", "arcanist"]:
 		return 86

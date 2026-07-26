@@ -3,24 +3,28 @@ extends SceneTree
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const TEST_SAFETY_TICKS: int = 5000
 
 var failures: Array[String] = []
 
 
 func _init() -> void:
-	_test_requires_exact_six_known_archetypes()
+	_test_requires_one_to_seven_known_archetypes()
 	_test_three_layer_siege_with_enemy_contact()
 	_test_manual_and_auto_skill_contract()
+	_test_damage_energy_normalization()
 	_test_eight_archetype_skill_families()
 	_test_star_tiers_change_skill_output()
+	_test_active_skill_research_scales_skill_output()
 	_test_core_cannon_and_destruction_feedback()
+	_test_opening_warning_turret_teaches_the_signal()
 	_test_boss_cannon_suppression_window()
 	_test_boss_cannon_suppression_high_output()
 	_test_boss_cannon_low_output_impacts()
 	_test_normal_stage_has_no_suppressible_warning()
 	_test_boss_cannon_determinism()
 	_test_same_input_same_result()
-	_test_timeout_contract()
+	_test_battle_has_no_time_limit()
 	_test_act_one_stage_catalog_and_config_start()
 	if failures.is_empty():
 		print("BATTLE TESTS PASS")
@@ -32,26 +36,52 @@ func _init() -> void:
 	quit(1)
 
 
-func _test_requires_exact_six_known_archetypes() -> void:
+func _test_damage_energy_normalization() -> void:
+	_check(BattleSessionScript.damage_energy_gain(0, 200) == 0, "zero health damage grants no energy")
+	_check(BattleSessionScript.damage_energy_gain(1, 200) == 1, "chip damage grants the minimum one energy")
+	_check(BattleSessionScript.damage_energy_gain(10, 200) == 5, "damage energy scales with lost max-health percentage")
+	_check(BattleSessionScript.damage_energy_gain(100, 200) == 10, "one hit cannot exceed the damage-energy cap")
+	var session: RefCounted = BattleSessionScript.new()
+	var config := StageCatalogScript.stage("stage_1_3")
+	session.start(_siege_heroes().slice(0, 1), "stage_1_3", config)
+	var energy_by_second: Dictionary = {}
+	var received_energy := 0
+	while not session.is_finished:
+		for event in session.advance_tick():
+			var gain := int(event.get("energy_gain", 0))
+			if gain <= 0:
+				continue
+			var second := int(event.get("tick", 0)) / BattleSessionScript.TICKS_PER_SECOND
+			energy_by_second[second] = int(energy_by_second.get(second, 0)) + gain
+			received_energy += gain
+	_check(received_energy > 0, "taking health damage contributes deterministic skill energy")
+	for second in energy_by_second:
+		_check(
+			int(energy_by_second[second]) <= BattleSessionScript.DAMAGE_ENERGY_PER_SECOND_CAP,
+			"damage energy respects the per-second anti-multihit cap"
+		)
+
+
+func _test_requires_one_to_seven_known_archetypes() -> void:
 	var empty_session: RefCounted = BattleSessionScript.new()
-	empty_session.start([])
+	_start_standard_battle(empty_session, [])
 	_check(empty_session.is_finished, "empty formation is rejected immediately")
 	_check(String(empty_session.result.get("reason", "")) == "invalid_formation", "empty formation exposes invalid_formation")
 	var short_session: RefCounted = BattleSessionScript.new()
-	short_session.start(_siege_heroes().slice(0, 5))
-	_check(short_session.is_finished, "five-unit formation is rejected instead of receiving hidden fallback units")
-	_check((short_session.snapshot().get("units", []) as Array).is_empty(), "invalid formation contains no fabricated units")
+	_start_standard_battle(short_session, _siege_heroes().slice(0, 5))
+	_check(not short_session.is_finished, "five-unit army is valid during gradual factory growth")
+	_check((short_session.snapshot().get("units", []) as Array).size() == 5, "variable army contains only explicitly deployed units")
 	var unknown_session: RefCounted = BattleSessionScript.new()
 	var bad := _siege_heroes()
 	bad[0]["archetype_id"] = "not_a_toilet"
-	unknown_session.start(bad)
+	_start_standard_battle(unknown_session, bad)
 	_check(unknown_session.is_finished, "unknown archetype is rejected")
 	_check(String(unknown_session.result.get("reason", "")) == "unknown_archetype", "unknown archetype is explicit, not silently mapped to a fallback skill")
 
 
 func _test_three_layer_siege_with_enemy_contact() -> void:
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(_siege_heroes())
+	_start_standard_battle(session, _siege_heroes())
 	for hero in _siege_heroes():
 		session.set_auto_skill(StringName(hero["hero_id"]), true)
 	var stages: Array[int] = [0]
@@ -90,14 +120,25 @@ func _test_three_layer_siege_with_enemy_contact() -> void:
 	_check(destroyed.front() == "outer_barricade", "outer barricade is the first blocking structure")
 	_check(destroyed.back() == "alliance_core", "alliance core is the final target")
 	_check(core_layers_respected, "stage-three AOE cannot damage batteries, core armor, and alliance core out of order")
-	_check(int(session.result.get("ticks", 999)) <= BattleSessionScript.MAX_TICKS, "default battle finishes before timeout")
+	_check(int(session.result.get("ticks", 0)) > 0, "completed battle records its elapsed ticks without using them as a failure condition")
+	_check(int(session.result.get("ally_damage_taken", 0)) > 0, "battle result exposes actual allied health damage")
+	_check(
+		int(session.result.get("troop_damage_taken", 0)) <= int(session.result.get("ally_damage_taken", 0)),
+		"troop damage is a bounded subset of all allied damage"
+	)
+	var contribution := session.result.get("ally_damage_dealt_by_unit", {}) as Dictionary
+	var recorded_damage := 0
+	for unit_damage in contribution.values():
+		recorded_damage += int(unit_damage)
+	_check(recorded_damage > 0, "battle result exposes per-hero contribution for the result screen")
+	_check(contribution.has("hero_0"), "deployed hero ids remain stable contribution keys")
 	_check(int(final_snapshot.get("road_progress", 0)) <= BattleSessionScript.ROAD_END, "road progress remains in integer road bounds")
 	_check((final_snapshot.get("enemies", []) as Array).size() >= 8, "enemy snapshots are separated from six ally HUD units")
 
 
 func _test_manual_and_auto_skill_contract() -> void:
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(_six_of("assault", 1))
+	_start_standard_battle(session, _six_of("assault", 1))
 	_check(not session.request_skill(&"hero_0"), "skill cannot be requested before energy is full")
 	var ready_unit: StringName = &""
 	var skill_used_before_request := false
@@ -117,7 +158,7 @@ func _test_manual_and_auto_skill_contract() -> void:
 	_check(manual_used, "manual skill request releases on the next deterministic tick")
 
 	var auto_session: RefCounted = BattleSessionScript.new()
-	auto_session.start(_siege_heroes())
+	_start_standard_battle(auto_session, _siege_heroes())
 	_check(auto_session.set_auto_skill(&"hero_1", true), "auto skill can be enabled per unit")
 	var auto_used := false
 	while not auto_session.is_finished and not auto_used:
@@ -125,6 +166,30 @@ func _test_manual_and_auto_skill_contract() -> void:
 			if event["type"] == &"skill_used" and event["unit_id"] == &"hero_1":
 				auto_used = true
 	_check(auto_used, "enabled auto skill releases after energy fills")
+
+
+func _test_active_skill_research_scales_skill_output() -> void:
+	var level_one_heroes := _mechanic_heroes("assault", 1)
+	level_one_heroes[0]["skill_level"] = 1
+	var level_three_heroes := _mechanic_heroes("assault", 1)
+	level_three_heroes[0]["skill_level"] = 3
+	var level_one_damage := _first_skill_damage(level_one_heroes)
+	var level_three_damage := _first_skill_damage(level_three_heroes)
+	_check(level_one_damage > 0, "level-one active skill produces measurable combat output")
+	_check(level_three_damage > level_one_damage, "researched active skill level increases deterministic skill output")
+
+
+func _first_skill_damage(heroes: Array[Dictionary]) -> int:
+	var session: RefCounted = BattleSessionScript.new()
+	_start_standard_battle(session, heroes)
+	_check(session.request_skill(&"hero_0"), "full-energy research probe accepts the active skill")
+	var total := 0
+	for event in session.advance_tick():
+		if not bool(event.get("is_skill", false)):
+			continue
+		if event.get("type") in [&"attack_hit", &"structure_damaged"]:
+			total += int(event.get("damage", 0))
+	return total
 
 
 func _test_eight_archetype_skill_families() -> void:
@@ -141,12 +206,12 @@ func _test_eight_archetype_skill_families() -> void:
 	for archetype_id in expected.keys():
 		_check(FactoryCatalogScript.active_skill_for_archetype(archetype_id) == expected[archetype_id], "%s has canonical skill metadata" % archetype_id)
 		var session: RefCounted = BattleSessionScript.new()
-		session.start(_six_of(archetype_id, 2))
+		_start_standard_battle(session, _six_of(archetype_id, 2))
 		for hero in _six_of(archetype_id, 2):
 			session.set_auto_skill(StringName(hero["hero_id"]), true)
 		var used := false
 		var safety := 0
-		while not session.is_finished and not used and safety < BattleSessionScript.MAX_TICKS:
+		while not session.is_finished and not used and safety < TEST_SAFETY_TICKS:
 			safety += 1
 			for event in session.advance_tick():
 				if event["type"] == &"skill_used":
@@ -214,7 +279,7 @@ func _test_star_tiers_change_skill_output() -> void:
 
 func _test_core_cannon_and_destruction_feedback() -> void:
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(_siege_heroes())
+	_start_standard_battle(session, _siege_heroes())
 	for hero in _siege_heroes():
 		session.set_auto_skill(StringName(hero["hero_id"]), true)
 	var warning_seen := false
@@ -233,19 +298,36 @@ func _test_core_cannon_and_destruction_feedback() -> void:
 	_check(structure_damage_seen, "structure damage is exposed as presentation events")
 
 
+func _test_opening_warning_turret_teaches_the_signal() -> void:
+	var session: RefCounted = BattleSessionScript.new()
+	var config := StageCatalogScript.stage("stage_1_3")
+	session.start(_siege_heroes().slice(0, 1), "stage_1_3", config)
+	session._stage_index = 1
+	for structure in session._structures:
+		if String(structure.get("structure_id", "")) == "warning_turret":
+			structure["stage"] = 1
+	session.tick_index = 5
+	var events: Array[Dictionary] = session.advance_tick()
+	var warning := _first_event(events, &"artillery_warning")
+	_check(not warning.is_empty(), "stage 1-3 light turret emits the player's first artillery warning")
+	_check(String(warning.get("source_structure_id", "")) == "warning_turret", "opening warning identifies the weak teaching turret")
+	_check(int(warning.get("impact_tick", 0)) - int(warning.get("tick", 0)) == 2, "opening warning provides a short readable fuse")
+	_check((session.snapshot().get("warnings", []) as Array).is_empty(), "teaching warning does not masquerade as a suppressible boss cannon")
+
+
 func _test_same_input_same_result() -> void:
 	var first := _run_to_result(_siege_heroes())
 	var second := _run_to_result(_siege_heroes())
 	_check(first == second, "same six-unit snapshot produces the same result")
 
 
-func _test_timeout_contract() -> void:
+func _test_battle_has_no_time_limit() -> void:
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(_siege_heroes())
-	session.tick_index = BattleSessionScript.MAX_TICKS - 1
+	_start_standard_battle(session, _siege_heroes())
+	session.tick_index = 100000
 	session.advance_tick()
-	_check(session.is_finished, "maximum tick closes the battle")
-	_check(String(session.result.get("outcome", "")) == "timeout", "living squad at maximum tick times out")
+	_check(not session.is_finished, "elapsed ticks never end a living battle")
+	_check(not session.snapshot().has("max_ticks"), "battle snapshot exposes no attack countdown")
 
 
 func _test_act_one_stage_catalog_and_config_start() -> void:
@@ -253,14 +335,14 @@ func _test_act_one_stage_catalog_and_config_start() -> void:
 	_check(StageCatalogScript.has_stage("stage_5_5"), "act one catalog includes final 5-5")
 	var config := StageCatalogScript.stage("stage_2_5")
 	_check(String(config.get("stage_id", "")) == "stage_2_5", "stage catalog returns requested stage id")
-	_check(int(config.get("max_ticks", 0)) > BattleSessionScript.MAX_TICKS, "boss stages can own longer time limits")
+	_check(not config.has("max_ticks"), "stage definitions do not contain attack time limits")
 	_check((config.get("enemies", []) as Array).size() >= 6, "stage config owns enemy content")
 	_check((config.get("structures", []) as Array).size() >= 5, "stage config owns structure content")
 	var session: RefCounted = BattleSessionScript.new()
 	session.start(_siege_heroes(), "stage_2_5", config)
 	var snapshot: Dictionary = session.snapshot()
 	_check(String(snapshot.get("stage_id", "")) == "stage_2_5", "battle snapshot exposes configured stage id")
-	_check(int(snapshot.get("max_ticks", 0)) == int(config["max_ticks"]), "battle max ticks comes from stage config")
+	_check(not snapshot.has("max_ticks"), "battle snapshot remains free of hidden time limits")
 	_check((snapshot.get("enemies", []) as Array).size() == (config.get("enemies", []) as Array).size(), "battle enemies come from stage config")
 	_check((snapshot.get("structures", []) as Array).size() == (config.get("structures", []) as Array).size(), "battle structures come from stage config")
 
@@ -287,7 +369,7 @@ func _test_boss_cannon_suppression_high_output() -> void:
 	var suppressed := _first_event(events, &"cannon_suppressed")
 	_check(not suppressed.is_empty(), "high structure output can interrupt the boss cannon before impact")
 	_check((session.snapshot().get("warnings", []) as Array).is_empty(), "suppressed boss warning is removed immediately")
-	session.tick_index = int(StageCatalogScript.stage("stage_1_5").get("max_ticks", 360)) - 1
+	_defeat_main_allies(session)
 	session.advance_tick()
 	_check(int(session.result.get("cannons_suppressed", 0)) == 1, "battle result records suppressed boss cannon count")
 	_check(int(session.result.get("cannon_impacts", -1)) == 0, "suppressed boss cannon does not also impact")
@@ -301,7 +383,7 @@ func _test_boss_cannon_low_output_impacts() -> void:
 		for event in session.advance_tick():
 			impact_seen = impact_seen or event["type"] == &"artillery_impact"
 			suppressed_seen = suppressed_seen or event["type"] == &"cannon_suppressed"
-	session.tick_index = int(StageCatalogScript.stage("stage_1_5").get("max_ticks", 360)) - 1
+	_defeat_main_allies(session)
 	session.advance_tick()
 	_check(impact_seen, "low output fails the suppression race and receives cannon impact")
 	_check(not suppressed_seen, "low output does not emit cannon_suppressed")
@@ -309,7 +391,7 @@ func _test_boss_cannon_low_output_impacts() -> void:
 
 
 func _test_normal_stage_has_no_suppressible_warning() -> void:
-	var session := _forced_final_stage_session("stage_1_1", _low_pressure_heroes())
+	var session := _forced_final_stage_session("stage_1_4", _low_pressure_heroes())
 	var events: Array[Dictionary] = session.advance_tick()
 	var warning := _first_event(events, &"artillery_warning")
 	_check(not warning.is_empty(), "normal final-base phase keeps legacy cannon warning")
@@ -342,7 +424,11 @@ func _forced_final_stage_session(stage_id: String, heroes: Array[Dictionary]) ->
 	var config := StageCatalogScript.stage(stage_id)
 	session.start(heroes, stage_id, config)
 	session._stage_index = 2
-	session.tick_index = 29
+	var battery_count := 0
+	for structure in session._structures:
+		if String(structure.get("kind", "")) == "battery":
+			battery_count += 1
+	session.tick_index = (42 - battery_count * 6) - 1
 	for unit in session._units:
 		if int(unit["team"]) == BattleSessionScript.TEAM_ENEMY:
 			unit["alive"] = false
@@ -366,7 +452,7 @@ func _first_event(events: Array[Dictionary], event_type: StringName) -> Dictiona
 
 func _first_skill_event(heroes: Array[Dictionary], unit_id: StringName) -> Dictionary:
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(heroes)
+	_start_standard_battle(session, heroes)
 	session.set_auto_skill(unit_id, true)
 	while not session.is_finished:
 		var events: Array[Dictionary] = session.advance_tick()
@@ -412,7 +498,7 @@ func _first_skill_event(heroes: Array[Dictionary], unit_id: StringName) -> Dicti
 func _repair_restores_actual_hp() -> bool:
 	var heroes := _mechanic_heroes("repair", 2)
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(heroes)
+	_start_standard_battle(session, heroes)
 	var damaged := false
 	while not session.is_finished and not damaged:
 		session.advance_tick()
@@ -435,7 +521,7 @@ func _repair_restores_actual_hp() -> bool:
 func _repair_revives_fallen() -> bool:
 	var heroes := _mechanic_heroes("repair", 3)
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(heroes)
+	_start_standard_battle(session, heroes)
 	session._units[1]["hp"] = 0
 	session._units[1]["alive"] = false
 	session.set_auto_skill(&"hero_0", true)
@@ -447,7 +533,7 @@ func _repair_revives_fallen() -> bool:
 
 func _run_to_result(heroes: Array[Dictionary]) -> Dictionary:
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(heroes)
+	_start_standard_battle(session, heroes)
 	for hero in heroes:
 		session.set_auto_skill(StringName(hero["hero_id"]), true)
 	while not session.is_finished:
@@ -462,6 +548,23 @@ func _snapshot_structure(snapshot: Dictionary, structure_id: String) -> Dictiona
 	return {}
 
 
+func _start_standard_battle(session: RefCounted, heroes: Array) -> void:
+	# Combat-mechanics tests use an explicit mature siege fixture. The real default
+	# stage is intentionally the one-city, zero-defender Gman tutorial.
+	var config := StageCatalogScript.stage("stage_1_5")
+	config["suppressible_cannon"] = false
+	config["cannon_suppression_target"] = 0
+	config["cannon_warning_ticks"] = BattleSessionScript.CANNON_FUSE_TICKS
+	session.start(heroes, "stage_1_5", config)
+
+
+func _defeat_main_allies(session: RefCounted) -> void:
+	for unit in session._units:
+		if int(unit.get("team", BattleSessionScript.TEAM_ENEMY)) == BattleSessionScript.TEAM_ALLY and not bool(unit.get("temporary", false)):
+			unit["hp"] = 0
+			unit["alive"] = false
+
+
 func _siege_heroes() -> Array[Dictionary]:
 	return [
 		_hero(0, "armored", "guardian", 3, 330, 70, 32),
@@ -474,7 +577,7 @@ func _siege_heroes() -> Array[Dictionary]:
 
 
 func _low_pressure_heroes() -> Array[Dictionary]:
-	var values := _six_of("assault", 1)
+	var values := _six_of("assault", 1).slice(0, 1) as Array[Dictionary]
 	for hero in values:
 		hero["attack"] = 1
 		hero["max_hp"] = 500

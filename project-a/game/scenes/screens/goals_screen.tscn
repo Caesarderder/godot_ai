@@ -1,0 +1,58 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/ui/goals_screen.gd" id="1_script"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_goal_tabs"]
+
+[node name="GoalsScreen" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+script = ExtResource("1_script")
+
+[node name="CommanderHost" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MetaGoalsTabs" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MetaGoalsActionTab" type="Button" parent="MetaGoalsTabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ButtonGroup_goal_tabs")
+text = "行动"
+
+[node name="MetaGoalsPassTab" type="Button" parent="MetaGoalsTabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ButtonGroup_goal_tabs")
+text = "战令"
+
+[node name="MetaGoalsAchievementsTab" type="Button" parent="MetaGoalsTabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ButtonGroup_goal_tabs")
+text = "成就"
+
+[node name="GoalsContentScroll" type="ScrollContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="GoalsContentScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10

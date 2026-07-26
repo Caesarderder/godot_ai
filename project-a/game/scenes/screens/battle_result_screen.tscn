@@ -1,0 +1,122 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/ui/battle_result_screen.gd" id="1_script"]
+
+[node name="BattleResultScreen" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+script = ExtResource("1_script")
+
+[node name="OutcomeBanner" type="PanelContainer" parent="."]
+layout_mode = 2
+
+[node name="OutcomeText" type="Label" parent="OutcomeBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Columns" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="ReportPanel" type="PanelContainer" parent="Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ReportMargin" type="MarginContainer" parent="Columns/ReportPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Report" type="VBoxContainer" parent="Columns/ReportPanel/ReportMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ReportTitle" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+layout_mode = 2
+text = "本局高光"
+
+[node name="RewardHeadline" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Materials" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Breakthrough" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="UnlockedHero" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="CombatSummary" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Contribution" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Debrief" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+max_lines_visible = 2
+text_overrun_behavior = 3
+
+[node name="Growth" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="NextPanel" type="PanelContainer" parent="Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NextMargin" type="MarginContainer" parent="Columns/NextPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Next" type="VBoxContainer" parent="Columns/NextPanel/NextMargin"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="NextTitle" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
+layout_mode = 2
+text = "把战果变成下一次胜利"
+
+[node name="Safety" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="Qualification" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PrimaryAction" type="Button" parent="Columns/NextPanel/NextMargin/Next"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+
+[node name="FactoryAction" type="Button" parent="Columns/NextPanel/NextMargin/Next"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "升级工厂"
+
+[node name="BaseAction" type="Button" parent="Columns/NextPanel/NextMargin/Next"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "返回基地"

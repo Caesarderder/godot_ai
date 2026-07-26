@@ -5,9 +5,9 @@ const HeroStateScript := preload("res://game/scripts/state/hero_state.gd")
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
 const XP_PER_BOOK: int = 20
-const GOLD_PER_BOOK: int = 30
 const MAX_XP: int = 320
 const LEVEL_XP: Array[int] = [0, 0, 40, 100, 200, 320]
+const GOLD_PER_BOOK_BY_LEVEL: Array[int] = [0, 20, 35, 55, 80, 0]
 const APTITUDE_BP: Dictionary = {"C": 8500, "B": 10000, "A": 11500, "S": 13000}
 const CLASS_GROWTH_MILLI: Dictionary = {
 	"guardian": {"vig": 2000, "str": 800, "agi": 400, "int": 200},
@@ -18,11 +18,53 @@ const CLASS_GROWTH_MILLI: Dictionary = {
 static func train_with_books(hero: RefCounted, book_count: int) -> void:
 	if book_count <= 0:
 		return
-	var old_level: int = hero.level
-	hero.xp = mini(MAX_XP, hero.xp + book_count * XP_PER_BOOK)
-	hero.level = level_for_xp(hero.xp)
-	for level_value in range(old_level + 1, hero.level + 1):
+	var next_xp := mini(MAX_XP, int(hero.xp) + book_count * XP_PER_BOOK)
+	upgrade_to_level(hero, level_for_xp(next_xp))
+	hero.xp = next_xp
+
+
+static func upgrade_to_level(hero: RefCounted, target_level: int) -> bool:
+	if hero == null:
+		return false
+	var current_level := clampi(int(hero.level), 1, 5)
+	var clamped_target := clampi(target_level, 1, 5)
+	if clamped_target <= current_level:
+		return false
+	for level_value in range(current_level + 1, clamped_target + 1):
 		_apply_level_growth(hero, level_value)
+	hero.level = clamped_target
+	hero.xp = maxi(int(hero.xp), LEVEL_XP[clamped_target])
+	return true
+
+
+static func max_trainable_books(hero: RefCounted) -> int:
+	if hero == null:
+		return 0
+	return int((MAX_XP - int(hero.xp)) / XP_PER_BOOK)
+
+
+static func books_to_next_level(hero: RefCounted) -> int:
+	if hero == null or int(hero.level) >= 5:
+		return 0
+	var next_level := int(hero.level) + 1
+	var missing_xp := maxi(0, LEVEL_XP[next_level] - int(hero.xp))
+	return int((missing_xp + XP_PER_BOOK - 1) / XP_PER_BOOK)
+
+
+static func training_gold_cost(hero: RefCounted, book_count: int) -> int:
+	if hero == null or book_count <= 0 or book_count > max_trainable_books(hero):
+		return 0
+	var total := 0
+	var simulated_xp := int(hero.xp)
+	for _index in book_count:
+		var current_level := level_for_xp(simulated_xp)
+		total += int(GOLD_PER_BOOK_BY_LEVEL[current_level])
+		simulated_xp = mini(MAX_XP, simulated_xp + XP_PER_BOOK)
+	return total
+
+
+static func next_book_gold_cost(hero: RefCounted) -> int:
+	return training_gold_cost(hero, 1)
 
 
 static func level_for_xp(xp: int) -> int:

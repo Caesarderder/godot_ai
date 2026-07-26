@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StageDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/stage_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+stage_id = &"stage_1_3"
+chapter = 1
+stage_in_chapter = 3
+display_name = "1-3 联盟集结"
+recommended_power = 2020
+enemy_power_bp = 8400
+solo_pressure_bp = 13000
+structure_hp_bp = 10000
+threat_summary = "城市联盟第一次形成交叉火力，并用一座轻炮塔掩护议事厅。"
+counter_hint = "Gman 仍可残血突破；观察轻炮塔怎样压低生命，为下一关的火力墙做准备。"

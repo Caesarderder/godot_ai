@@ -202,10 +202,17 @@ static func _grant_reward(state: RefCounted, reward: Dictionary) -> void:
 	_ensure_inventory(state)
 	var items := state.inventory["items"] as Dictionary
 	items[QuestCatalogScript.WAR_MERIT_ITEM_ID] = int(items.get(QuestCatalogScript.WAR_MERIT_ITEM_ID, 0)) + int(reward.get("merit", 0))
-	if int(reward.get("gold", 0)) > 0:
-		state.economy.grant({"gold": int(reward["gold"])})
-	if int(reward.get("xp_books", 0)) > 0:
-		state.economy.grant({"xp_books": int(reward["xp_books"])})
+	state.economy.grant({
+		"toilet_coins": int(reward.get("toilet_coins", 0)),
+		"toilet_gems": int(reward.get("toilet_gems", 0)),
+	})
+	var blueprint_id := String(reward.get("blueprint_id", ""))
+	if not blueprint_id.is_empty():
+		if bool(state.factory.blueprints.get(blueprint_id, false)):
+			state.factory.blueprint_data[blueprint_id] = int(state.factory.blueprint_data.get(blueprint_id, 0)) + 10
+		else:
+			state.factory.blueprints[blueprint_id] = true
+			state.factory.model_tech_stars[blueprint_id] = 1
 
 
 static func _war_merit(state: RefCounted) -> int:
@@ -226,8 +233,12 @@ static func _durable_ledger(state: RefCounted) -> Dictionary:
 
 static func _validate_reward_instance(reward: Dictionary) -> String:
 	for key in reward.keys():
-		if typeof(key) != TYPE_STRING or not ["merit", "gold", "xp_books"].has(String(key)):
+		if typeof(key) != TYPE_STRING or not ["merit", "toilet_coins", "toilet_gems", "blueprint_id"].has(String(key)):
 			return "QUEST_REWARD_UNKNOWN_KEY"
+		if String(key) == "blueprint_id":
+			if typeof(reward[key]) != TYPE_STRING or String(reward[key]).is_empty():
+				return "QUEST_REWARD_BLUEPRINT_ID_INVALID"
+			continue
 		if typeof(reward[key]) != TYPE_INT:
 			return "QUEST_REWARD_AMOUNT_MUST_BE_INT"
 		if int(reward[key]) < 0:

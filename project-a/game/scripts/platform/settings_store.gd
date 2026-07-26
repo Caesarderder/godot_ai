@@ -10,12 +10,14 @@ const DEFAULT_MASTER_VOLUME: int = 80
 const DEFAULT_EFFECTS_QUALITY: String = "medium"
 const DEFAULT_REDUCED_MOTION: bool = false
 const DEFAULT_GLOBAL_AUTO_SKILL: bool = false
+const DEFAULT_LOCAL_PLAYTEST_LOGGING: bool = false
 
 var settings_path: String = SETTINGS_PATH
 var master_volume: int = DEFAULT_MASTER_VOLUME
 var effects_quality: String = DEFAULT_EFFECTS_QUALITY
 var reduced_motion: bool = DEFAULT_REDUCED_MOTION
 var global_auto_skill: bool = DEFAULT_GLOBAL_AUTO_SKILL
+var local_playtest_logging: bool = DEFAULT_LOCAL_PLAYTEST_LOGGING
 
 
 func _init(path: String = SETTINGS_PATH) -> void:
@@ -27,6 +29,7 @@ func reset_to_defaults() -> void:
 	effects_quality = DEFAULT_EFFECTS_QUALITY
 	reduced_motion = DEFAULT_REDUCED_MOTION
 	global_auto_skill = DEFAULT_GLOBAL_AUTO_SKILL
+	local_playtest_logging = DEFAULT_LOCAL_PLAYTEST_LOGGING
 
 
 func to_dictionary() -> Dictionary:
@@ -35,6 +38,7 @@ func to_dictionary() -> Dictionary:
 		"effects_quality": effects_quality,
 		"reduced_motion": reduced_motion,
 		"global_auto_skill": global_auto_skill,
+		"local_playtest_logging": local_playtest_logging,
 	}
 
 
@@ -43,6 +47,7 @@ func apply_values(values: Dictionary) -> void:
 	effects_quality = _normalize_effects_quality(values.get("effects_quality", effects_quality))
 	reduced_motion = _normalize_bool(values.get("reduced_motion", reduced_motion), reduced_motion)
 	global_auto_skill = _normalize_bool(values.get("global_auto_skill", global_auto_skill), global_auto_skill)
+	local_playtest_logging = _normalize_bool(values.get("local_playtest_logging", local_playtest_logging), local_playtest_logging)
 
 
 func load_settings() -> Dictionary:
@@ -79,6 +84,10 @@ func set_global_auto_skill(value: Variant) -> void:
 	global_auto_skill = _normalize_bool(value, global_auto_skill)
 
 
+func set_local_playtest_logging(value: Variant) -> void:
+	local_playtest_logging = _normalize_bool(value, local_playtest_logging)
+
+
 func _apply_config(config: ConfigFile) -> bool:
 	if not config.has_section_key(SECTION_AUDIO, "master_volume"):
 		return false
@@ -94,6 +103,11 @@ func _apply_config(config: ConfigFile) -> bool:
 		"effects_quality": config.get_value(SECTION_VIDEO, "effects_quality"),
 		"reduced_motion": config.get_value(SECTION_VIDEO, "reduced_motion"),
 		"global_auto_skill": config.get_value(SECTION_GAMEPLAY, "global_auto_skill"),
+		"local_playtest_logging": config.get_value(
+			SECTION_GAMEPLAY,
+			"local_playtest_logging",
+			DEFAULT_LOCAL_PLAYTEST_LOGGING
+		),
 	}
 	if not _can_normalize(loaded_values):
 		return false
@@ -106,6 +120,7 @@ func _write_config(config: ConfigFile) -> void:
 	config.set_value(SECTION_VIDEO, "effects_quality", effects_quality)
 	config.set_value(SECTION_VIDEO, "reduced_motion", reduced_motion)
 	config.set_value(SECTION_GAMEPLAY, "global_auto_skill", global_auto_skill)
+	config.set_value(SECTION_GAMEPLAY, "local_playtest_logging", local_playtest_logging)
 
 
 func _save_config_safely(config: ConfigFile) -> bool:
@@ -149,6 +164,7 @@ func _can_normalize(values: Dictionary) -> bool:
 		and _is_string_like(values.get("effects_quality"))
 		and _is_bool_like(values.get("reduced_motion"))
 		and _is_bool_like(values.get("global_auto_skill"))
+		and _is_bool_like(values.get("local_playtest_logging"))
 	)
 
 

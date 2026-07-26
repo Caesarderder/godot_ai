@@ -1,6 +1,7 @@
 extends SceneTree
 
 const BattleWorldScript := preload("res://game/scripts/presentation_3d/battle_world.gd")
+const AudioDirectorScript := preload("res://game/scripts/presentation/audio_director.gd")
 
 var failures: Array[String] = []
 
@@ -10,11 +11,36 @@ func _init() -> void:
 
 
 func _run() -> void:
+	await _check_audio_asset_pool()
 	await _check_reduced_motion_low_quality()
 	await _check_high_quality_budget()
+	await _check_snapshot_signal_reuse()
 	await _check_cannon_suppressed_feedback()
 	await _check_cannon_suppressed_low_reduced_budget()
 	_finish()
+
+
+func _check_audio_asset_pool() -> void:
+	var audio := AudioDirectorScript.new()
+	root.add_child(audio)
+	await process_frame
+	_eq(audio.get_child_count(), 8, "audio feedback uses a bounded eight-voice pool")
+	for cue_id in [
+		&"ui_click", &"build", &"victory", &"defeat",
+		&"warning", &"skill", &"hit", &"explosion", &"cannon_suppressed",
+	]:
+		_ok(audio.has_cue(cue_id), "audio cue is backed by an imported asset: %s" % cue_id)
+	for child in audio.get_children():
+		var player := child as AudioStreamPlayer
+		_ok(player != null and player.name.begins_with("Sfx_"), "audio pool contains only named stream players")
+	audio.play_cue(&"ui_click")
+	_ok((audio.get("_last_played_msec") as Dictionary).has(&"ui_click"), "first UI gesture schedules an audible cue")
+	audio.play_cue(&"missing")
+	_ok(not (audio.get("_last_played_msec") as Dictionary).has(&"missing"), "unknown cues fail silently without allocating voices")
+	audio.stop_all()
+	audio.queue_free()
+	for _frame in range(3):
+		await process_frame
 
 
 func _check_reduced_motion_low_quality() -> void:
@@ -24,6 +50,13 @@ func _check_reduced_motion_low_quality() -> void:
 	await process_frame
 	_ok(world.get("_effects_quality") == "low", "low quality is accepted")
 	_ok(bool(world.get("_reduced_motion")), "reduced motion flag is stored")
+	var environment_node := world.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	_ok(
+		environment_node != null
+			and environment_node.environment != null
+			and environment_node.environment.fog_density <= 0.01,
+		"battle fog keeps silhouettes readable"
+	)
 	_ok(int(world.get("_max_high_vfx")) == 2, "low quality caps high-cost effects")
 	_ok(int(world.get("_fragment_count")) == 3, "low quality reduces explosion fragments")
 	_ok(float(world.get("_shake_scale")) == 0.0, "reduced motion disables shake scale")
@@ -46,6 +79,35 @@ func _check_high_quality_budget() -> void:
 	world.configure_presentation("invalid", false)
 	_ok(world.get("_effects_quality") == "medium", "invalid quality falls back to medium")
 	_ok(int(world.get("_max_high_vfx")) == 6, "medium quality restores default cap")
+	await _dispose_world(world)
+
+
+func _check_snapshot_signal_reuse() -> void:
+	var world := BattleWorldScript.new()
+	root.add_child(world)
+	await process_frame
+	world.set_meta("snapshot_signal_count", 0)
+	world.battle_snapshot_updated.connect(func(snapshot: Dictionary) -> void:
+		world.set_meta("snapshot_signal_count", int(world.get_meta("snapshot_signal_count", 0)) + 1)
+		world.set_meta("last_snapshot_tick", int(snapshot.get("tick", -1)))
+	)
+	world.start_battle([{
+		"hero_id": "presentation_signal_hero",
+		"display_name": "信号测试角色",
+		"archetype_id": "gman",
+		"class_id": "guardian",
+		"star": 1,
+		"max_hp": 200,
+		"attack": 40,
+		"defense": 15,
+		"skill_level": 1,
+		"auto_skill": false,
+	}])
+	_eq(int(world.get_meta("snapshot_signal_count", 0)), 1, "battle start emits the same initial snapshot used by presentation")
+	world.call("_process", 0.2)
+	_ok(int(world.get_meta("snapshot_signal_count", 0)) >= 2, "each deterministic battle tick emits a reusable HUD snapshot")
+	_ok(int(world.get_meta("last_snapshot_tick", -1)) >= 1, "snapshot signal advances with the battle tick")
+	world.set_process(false)
 	await _dispose_world(world)
 
 
@@ -97,6 +159,7 @@ func _dispose_world(world: Node) -> void:
 		world.queue_free()
 	for _frame in range(8):
 		await process_frame
+	await create_timer(0.08).timeout
 
 
 func _finish() -> void:
