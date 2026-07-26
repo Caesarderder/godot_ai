@@ -170,6 +170,7 @@ var orientation_gate: Control
 var orientation_gate_active: bool = false
 var orientation_paused_battle: bool = false
 var active_layout_profile: String = ""
+var last_storage_access_state: String = "checking"
 
 
 func _ready() -> void:
@@ -495,6 +496,9 @@ func _title_progress_snapshot() -> Dictionary:
 		"primary_label": String(title.get("primary_label", "返回指挥室")),
 		"summary": "已夺回 %d 座城镇 · %d 名战士仍在回应" % [cleared_count, hero_count],
 		"objective": String(title.get("objective", "")),
+		"storage_blocked": String(
+			web_runtime.platform_capabilities().get("storage_access_state", "checking")
+		) == "blocked",
 	}
 
 
@@ -515,6 +519,7 @@ func _show_settings(return_screen: Screen = Screen.BASE) -> void:
 func _settings_view() -> Dictionary:
 	var persistence := web_runtime.platform_capabilities() as Dictionary
 	var persistent := bool(persistence.get("userfs_persistent", false))
+	var storage_access := String(persistence.get("storage_access_state", "native"))
 	var journal_summary := playtest_journal.summary() as Dictionary
 	var has_import := not pending_save_import_text.is_empty()
 	var import_copy := ""
@@ -541,9 +546,13 @@ func _settings_view() -> Dictionary:
 		],
 		"storage_persistent": persistent,
 		"persistence_copy": (
-			"浏览器存储当前可持久化；仍建议定期下载备份。"
-			if persistent
-			else "浏览器未确认持久存储，请立即下载备份，避免清理站点数据后丢失进度。"
+			"站点存储被浏览器阻止：本次进度刷新后会丢失。请允许站点存储，或立即导出备份。"
+			if storage_access == "blocked"
+			else (
+				"浏览器存储当前可持久化；仍建议定期下载备份。"
+				if persistent
+				else "浏览器未确认持久存储，请立即下载备份，避免清理站点数据后丢失进度。"
+			)
 		),
 		"has_import_preview": has_import,
 		"import_preview": import_copy,
@@ -2028,6 +2037,13 @@ func _on_runtime_state_changed(state: Dictionary) -> void:
 		music_director.set_runtime_active(bool(state.get("is_interactive", true)))
 	if screen == Screen.BATTLE and not bool(state.get("is_interactive", true)):
 		_set_battle_paused(true)
+	var storage_access := String(state.get("storage_access_state", last_storage_access_state))
+	if storage_access != last_storage_access_state:
+		last_storage_access_state = storage_access
+		if screen == Screen.TITLE:
+			_show_title()
+		elif screen == Screen.SETTINGS:
+			_show_settings(settings_return_screen)
 
 
 func _finish_battle(result: Dictionary) -> void:

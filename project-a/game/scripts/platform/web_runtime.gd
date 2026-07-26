@@ -10,6 +10,14 @@ signal text_file_import_failed(error: String)
 var is_visible: bool = true
 var has_focus: bool = true
 var _text_import_callback: JavaScriptObject
+var _storage_probe_callback: JavaScriptObject
+var storage_access_state: String = "native"
+
+
+func _ready() -> void:
+	if OS.has_feature("web"):
+		storage_access_state = "checking"
+		_probe_web_storage_access()
 
 
 func platform_capabilities() -> Dictionary:
@@ -26,6 +34,7 @@ func platform_capabilities() -> Dictionary:
 			is_web,
 			engine_reports_persistence
 		),
+		"storage_access_state": storage_access_state,
 		"safe_area_supported": DisplayServer.has_method("get_display_safe_area"),
 		"visibility_events": true,
 		"focus_events": true,
@@ -43,6 +52,55 @@ static func resolve_userfs_persistence(is_web_build: bool, engine_reports_persis
 
 func is_web() -> bool:
 	return bool(platform_capabilities()["is_web"])
+
+
+func _probe_web_storage_access() -> void:
+	var window := JavaScriptBridge.get_interface("window")
+	if window == null:
+		set_storage_access_state("blocked")
+		return
+	_storage_probe_callback = JavaScriptBridge.create_callback(_on_storage_probe_completed)
+	window.set("godotStorageProbeCallback", _storage_probe_callback)
+	JavaScriptBridge.eval("""
+		(() => {
+			const finish = (value) => {
+				const callback = window.godotStorageProbeCallback;
+				if (typeof callback === "function") callback(value);
+			};
+			try {
+				if (!globalThis.indexedDB) {
+					finish("blocked");
+					return;
+				}
+				const request = globalThis.indexedDB.open("/userfs");
+				request.onerror = () => finish("blocked");
+				request.onblocked = () => finish("blocked");
+				request.onsuccess = () => {
+					request.result.close();
+					finish("session_available");
+				};
+			} catch (_error) {
+				finish("blocked");
+			}
+		})()
+	""", true)
+
+
+func _on_storage_probe_completed(arguments: Array) -> void:
+	if arguments.is_empty():
+		set_storage_access_state("blocked")
+		return
+	set_storage_access_state(String(arguments[0]))
+
+
+func set_storage_access_state(next_state: String) -> void:
+	if next_state not in ["native", "checking", "session_available", "blocked"]:
+		next_state = "blocked"
+	if storage_access_state == next_state:
+		return
+	storage_access_state = next_state
+	if _can_emit_runtime_state():
+		runtime_state_changed.emit(runtime_state())
 
 
 func download_text_file(filename: String, text: String) -> bool:
@@ -127,6 +185,7 @@ func runtime_state() -> Dictionary:
 		"is_visible": is_visible,
 		"has_focus": has_focus,
 		"is_interactive": is_visible and has_focus,
+		"storage_access_state": storage_access_state,
 	}
 
 

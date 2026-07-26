@@ -289,6 +289,20 @@ App Shell ----------------display fields----------> LegionScreen / BattleHudScre
 - `artifacts/` 是验证证据，不是游戏运行资产，不得进入玩法加载路径；
 - Web 发布分别验证首次 payload、导入产物、峰值内存、音频解锁和离线缓存。
 
+### Web 存储失败关闭合同
+
+浏览器允许加载 WebAssembly 不等于允许 IndexedDB。发布验证必须把三种状态分开：
+
+1. 正常来源存储：`user://` 写入、刷新和重新启动后保持同一存档；
+2. 私密会话存储：同一会话可用但关闭上下文后丢弃，UI 不得宣称长期持久；
+3. 完全阻断存储：在页面脚本运行前拒绝 `indexedDB`，游戏若仍能启动只能作为非持久会话，
+   设置页必须显示备份警告；任何领域命令若保存失败，不得交换 live state，并必须显示可恢复错误。
+
+第三种验证必须使用隔离浏览器 profile，并在文档启动前注入阻断，不能在 Godot 已打开数据库后
+删除对象来冒充失败。若引擎因平台限制无法启动，应把它记录为明确的浏览器兼容门禁，不能用
+headless `FileAccess` 失败测试代替真实 Web 结论。测试工具属于 `tools/`，继续由 Web preset 排除，
+不新增 Autoload、运行时服务或遥测字段。
+
 当前八个马桶人 GLB 均由 `game/scenes/actors/ally_models/*_model.tscn` 包装，
 `ToiletUnitView` 只 preload wrapper。`artifacts/` 与 runtime 路径的反向搜索为空。
 

@@ -266,6 +266,7 @@ func _test_web_runtime_capabilities_and_state() -> void:
 	var capabilities: Dictionary = runtime.platform_capabilities()
 	_check(capabilities.has("is_web"), "capabilities expose is_web")
 	_check(capabilities.has("userfs_persistent"), "capabilities expose userfs persistence")
+	_check(capabilities.has("storage_access_state"), "capabilities expose browser storage access state")
 	_check(
 		not WebRuntimeScript.resolve_userfs_persistence(true, true),
 		"Web persistence stays unconfirmed even when the engine reports session storage"
@@ -280,6 +281,8 @@ func _test_web_runtime_capabilities_and_state() -> void:
 	)
 	_check(bool(capabilities.get("visibility_events", false)), "capabilities expose visibility support")
 	_check(bool(capabilities.get("focus_events", false)), "capabilities expose focus support")
+	runtime.set_storage_access_state("blocked")
+	_eq(String(runtime.runtime_state().get("storage_access_state", "")), "blocked", "blocked storage state is projected")
 	var events: Array[String] = []
 	runtime.focus_changed.connect(func(value: bool) -> void: events.append("focus:%s" % str(value)))
 	runtime.visibility_changed.connect(func(value: bool) -> void: events.append("visible:%s" % str(value)))

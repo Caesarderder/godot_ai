@@ -18,6 +18,7 @@ const GOLD := Color("#e5a84b")
 @onready var transmission: Label = %TitleTransmission
 @onready var progress_summary: Label = %TitleProgressSummary
 @onready var next_objective: Label = %TitleNextObjective
+@onready var storage_warning: Label = %TitleStorageWarning
 @onready var primary_button: Button = %TitlePrimaryButton
 @onready var settings_button: Button = %TitleSettingsButton
 @onready var help_button: Button = %TitleHelpButton
@@ -55,6 +56,7 @@ func _focus_primary_after_layout() -> void:
 func _apply_view() -> void:
 	progress_summary.text = String(_view.get("summary", ""))
 	next_objective.text = String(_view.get("objective", ""))
+	storage_warning.visible = bool(_view.get("storage_blocked", false))
 	primary_button.text = String(_view.get("primary_label", "继续战役"))
 
 
@@ -66,7 +68,7 @@ func _apply_theme() -> void:
 	panel_style.set_corner_radius_all(3)
 	panel.add_theme_stylebox_override("panel", panel_style)
 
-	for label: Label in [heading, transmission, progress_summary, next_objective]:
+	for label: Label in [heading, transmission, progress_summary, next_objective, storage_warning]:
 		label.add_theme_font_override("font", CJK_FONT)
 	heading.add_theme_font_size_override("font_size", 17)
 	heading.add_theme_color_override("font_color", GOLD)
@@ -76,6 +78,8 @@ func _apply_theme() -> void:
 	progress_summary.add_theme_color_override("font_color", CYAN)
 	next_objective.add_theme_font_size_override("font_size", 12)
 	next_objective.add_theme_color_override("font_color", GOLD)
+	storage_warning.add_theme_font_size_override("font_size", 12)
+	storage_warning.add_theme_color_override("font_color", Color("#ff806f"))
 
 	_style_button(primary_button, true)
 	_style_button(settings_button, false)

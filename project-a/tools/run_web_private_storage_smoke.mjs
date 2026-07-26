@@ -15,6 +15,7 @@ const ARTIFACT_DIR = resolve(PROJECT_DIR, "build/web");
 const EVIDENCE_DIR = resolve(PROJECT_DIR, "artifacts");
 const CHROME = process.env.GODOT_WEB_SMOKE_CHROME
 	?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const BLOCK_INDEXEDDB = process.env.GODOT_WEB_SMOKE_BLOCK_INDEXEDDB === "1";
 const MIME = {
 	".html": "text/html; charset=utf-8",
 	".js": "text/javascript; charset=utf-8",
@@ -242,7 +243,7 @@ async function launchChrome(profile) {
 	return { chrome, cdp, stderr: () => stderr };
 }
 
-async function createPrivatePage(browser, url) {
+async function createPrivatePage(browser, url, blockIndexedDb = false) {
 	const context = await browser.cdp.send("Target.createBrowserContext", {
 		disposeOnDetach: false,
 	});
@@ -266,7 +267,23 @@ async function createPrivatePage(browser, url) {
 		}),
 		cdp.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 5 }),
 	]);
+	if (blockIndexedDb) {
+		await cdp.send("Page.addScriptToEvaluateOnNewDocument", {
+			source: `Object.defineProperty(globalThis, "indexedDB", {
+				configurable: false,
+				get() {
+					throw new DOMException("IndexedDB blocked by release smoke", "SecurityError");
+				},
+			});`,
+		});
+	}
 	await cdp.send("Page.navigate", { url });
+	if (blockIndexedDb) {
+		await waitFor("blocked-storage document load", async () => evaluate(cdp,
+			`document.readyState === "complete"`));
+		await new Promise((accept) => setTimeout(accept, 3000));
+		return { cdp, contextId: context.browserContextId };
+	}
 	await waitFor("incognito Godot boot", async () => evaluate(cdp, `(() => {
 		const canvas = document.querySelector("canvas");
 		return !document.getElementById("status")
@@ -322,6 +339,37 @@ async function main() {
 	let second;
 	try {
 		browser = await launchChrome(profile);
+		if (BLOCK_INDEXEDDB) {
+			first = await createPrivatePage(browser, url, true);
+			const state = await evaluate(first.cdp, `(() => {
+				const status = document.getElementById("status");
+				const canvas = document.querySelector("canvas");
+				let indexedDbError = "";
+				try {
+					void indexedDB;
+				} catch (error) {
+					indexedDbError = String(error?.name || error);
+				}
+				return {
+					document_ready: document.readyState,
+					status_present: Boolean(status),
+					status_text: status?.textContent?.trim() ?? "",
+					canvas_width: canvas?.width ?? 0,
+					canvas_height: canvas?.height ?? 0,
+					canvas_visible: Boolean(canvas && getComputedStyle(canvas).display !== "none"),
+					indexeddb_error: indexedDbError,
+				};
+			})()`);
+			await screenshot(first.cdp, "browser-blocked-storage-844x390.png");
+			console.log("WEB_BLOCKED_STORAGE_PROBE_PASS");
+			console.log(JSON.stringify({
+				candidate: candidate.revision,
+				browser: (await browser.cdp.send("Browser.getVersion")).product,
+				state,
+				evidence: ["artifacts/browser-blocked-storage-844x390.png"],
+			}, null, 2));
+			return;
+		}
 		first = await createPrivatePage(browser, url);
 		const persisted = await evaluate(first.cdp,
 			`navigator.storage?.persisted ? navigator.storage.persisted() : Promise.resolve(false)`);

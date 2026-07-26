@@ -15,6 +15,7 @@ func _run() -> void:
 		"primary_label": "唤醒 Gman · 启动反攻",
 		"summary": "已夺回 0 座城镇 · 1 名战士仍在回应",
 		"objective": "当前目标 · 摧毁联盟前哨 1-1",
+		"storage_blocked": true,
 	})
 	root.add_child(title)
 	await process_frame
@@ -25,9 +26,11 @@ func _run() -> void:
 	var help_button := title.get_node("%TitleHelpButton") as Button
 	var progress_summary := title.get_node("%TitleProgressSummary") as Label
 	var next_objective := title.get_node("%TitleNextObjective") as Label
+	var storage_warning := title.get_node("%TitleStorageWarning") as Label
 	_check(primary_button.text.contains("启动反攻"), "new-save primary action is projected")
 	_check(progress_summary.text.contains("1 名战士"), "durable roster summary is projected")
 	_check(next_objective.text.contains("摧毁联盟前哨 1-1"), "next objective is projected")
+	_check(storage_warning.visible and storage_warning.text.contains("刷新后会丢失"), "blocked browser storage is explicit before play")
 	_check(primary_button.has_focus(), "primary action receives initial focus")
 	_check(
 		primary_button.get_theme_stylebox("focus") is StyleBoxFlat,
@@ -47,9 +50,11 @@ func _run() -> void:
 		"primary_label": "返回指挥室",
 		"summary": "已夺回 3 座城镇 · 3 名战士仍在回应",
 		"objective": "前线等待命令 · 灰镜高墙",
+		"storage_blocked": false,
 	})
 	_check(primary_button.text == "返回指挥室", "returning-save primary action updates in place")
 	_check(next_objective.text.contains("灰镜高墙"), "returning-save objective updates in place")
+	_check(not storage_warning.visible, "normal storage does not show a false blocking warning")
 
 	title.call("configure", {
 		"primary_label": "重返前线",

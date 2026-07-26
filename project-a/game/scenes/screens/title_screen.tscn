@@ -55,6 +55,13 @@ layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 2
 
+[node name="TitleStorageWarning" type="Label" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "⚠ 站点存储被阻止：本次进度刷新后会丢失，请允许存储或先导出备份"
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="TitlePrimaryButton" type="Button" parent="PanelCenter/TitleSignalPanel/PanelMargin/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
