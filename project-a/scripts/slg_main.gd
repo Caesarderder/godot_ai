@@ -1900,6 +1900,7 @@ func _show_result() -> void:
 		contribution = _battle_contribution_copy(last_battle_runtime_result)
 	var next_stage_id := String(event.get("next_stage_id", ""))
 	var cleared_stage_id := String(event.get("stage_id", ""))
+	var onboarding := OnboardingService.snapshot(game.current_state())
 	var qualification := ""
 	var primary_label := ""
 	var primary_action := ""
@@ -1911,6 +1912,17 @@ func _show_result() -> void:
 	elif won and cleared_stage_id == "stage_1_5":
 		primary_label = "前往军团突破三星"
 		primary_action = "legion"
+	elif not bool(onboarding.get("finished", false)) and String(onboarding.get("target", "")) == "legion":
+		primary_label = String(onboarding.get("cta_label", "比较成长路线"))
+		primary_action = "legion"
+	elif (
+		not bool(onboarding.get("finished", false))
+		and String(onboarding.get("target", "")) == "expedition"
+		and not String(onboarding.get("stage_id", "")).is_empty()
+	):
+		primary_label = String(onboarding.get("cta_label", "继续进攻"))
+		primary_action = "next_stage"
+		primary_payload = {"stage_id": String(onboarding.get("stage_id", ""))}
 	elif won and not next_stage_id.is_empty():
 		primary_label = "进攻下一城镇"
 		primary_action = "next_stage"
@@ -1930,6 +1942,7 @@ func _show_result() -> void:
 			int(reward.get("parts", 0)),
 			int(reward.get("sludge", 0)),
 		],
+		"mission_progress": _onboarding_settlement_copy(event, onboarding),
 		"breakthrough": breakthrough,
 		"unlocked_hero": unlocked_copy,
 		"combat_summary": combat_summary,
@@ -1944,6 +1957,25 @@ func _show_result() -> void:
 	})
 	result_screen.action_requested.connect(_on_result_action_requested)
 	shell.add_child(result_screen)
+
+
+func _onboarding_settlement_copy(event: Dictionary, next_task: Dictionary) -> String:
+	var settlement := event.get("onboarding_settlement", {}) as Dictionary
+	if settlement.is_empty():
+		return ""
+	var completed := OnboardingCatalog.task_by_id(String(settlement.get("task_id", "")))
+	var completed_title := String(completed.get("title", "当前行动"))
+	var reward := settlement.get("reward", {}) as Dictionary
+	var reward_copy := ""
+	if not reward.is_empty():
+		reward_copy = " · 奖励已自动入账"
+	if bool(next_task.get("finished", false)):
+		return "%s完成%s · 首章训练闭环达成" % [completed_title, reward_copy]
+	return "%s完成%s → 新目标：%s" % [
+		completed_title,
+		reward_copy,
+		String(next_task.get("title", "继续推进")),
+	]
 
 
 func _on_result_action_requested(action_id: String, payload: Dictionary) -> void:

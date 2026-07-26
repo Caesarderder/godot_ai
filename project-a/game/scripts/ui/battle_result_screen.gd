@@ -17,6 +17,7 @@ const GREEN := Color("#78b982")
 @onready var outcome_text: Label = %OutcomeText
 @onready var reward_headline: Label = %RewardHeadline
 @onready var materials: Label = %Materials
+@onready var mission_progress: Label = %MissionProgress
 @onready var breakthrough: Label = %Breakthrough
 @onready var unlocked_hero: Label = %UnlockedHero
 @onready var combat_summary: Label = %CombatSummary
@@ -59,6 +60,7 @@ func _apply_view() -> void:
 	$OutcomeBanner.add_theme_stylebox_override("panel", banner_style)
 	_set_optional(reward_headline, String(_view.get("reward_headline", "")))
 	_set_optional(materials, String(_view.get("materials", "")))
+	_set_optional(mission_progress, String(_view.get("mission_progress", "")))
 	_set_optional(breakthrough, String(_view.get("breakthrough", "")))
 	_set_optional(unlocked_hero, String(_view.get("unlocked_hero", "")))
 	_set_optional(combat_summary, String(_view.get("combat_summary", "")))
@@ -80,7 +82,7 @@ func _apply_theme() -> void:
 		style.set_corner_radius_all(10)
 		panel.add_theme_stylebox_override("panel", style)
 	for label: Label in [
-		outcome_text, reward_headline, materials, breakthrough, unlocked_hero,
+		outcome_text, reward_headline, materials, mission_progress, breakthrough, unlocked_hero,
 		combat_summary, contribution, debrief, growth, safety, qualification,
 		$Columns/ReportPanel/ReportMargin/Report/ReportTitle,
 		$Columns/NextPanel/NextMargin/Next/NextTitle,
@@ -91,6 +93,7 @@ func _apply_theme() -> void:
 	reward_headline.add_theme_color_override("font_color", GOLD)
 	materials.add_theme_font_size_override("font_size", 14)
 	materials.add_theme_color_override("font_color", TEXT)
+	mission_progress.add_theme_color_override("font_color", GREEN)
 	breakthrough.add_theme_color_override("font_color", CYAN)
 	unlocked_hero.add_theme_color_override("font_color", GREEN)
 	combat_summary.add_theme_color_override("font_color", TEXT)

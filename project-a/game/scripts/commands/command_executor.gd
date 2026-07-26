@@ -78,7 +78,12 @@ func execute(envelope: Dictionary) -> Dictionary:
 	if not ["refresh_quests", "claim_quest"].has(command_type):
 		QuestServiceScript.apply_event(candidate, event.get("event", {}) as Dictionary)
 	if command_type != "claim_onboarding_task":
-		OnboardingServiceScript.apply_event(candidate, event.get("event", {}) as Dictionary)
+		var onboarding_settlement := OnboardingServiceScript.apply_event(
+			candidate,
+			event.get("event", {}) as Dictionary
+		)
+		if not onboarding_settlement.is_empty():
+			(event.get("event", {}) as Dictionary)["onboarding_settlement"] = onboarding_settlement
 	if not ["refresh_achievements", "claim_achievement"].has(command_type):
 		AchievementServiceScript.apply_event(
 			candidate,

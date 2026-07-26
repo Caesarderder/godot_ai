@@ -92,22 +92,24 @@ static func snapshot(state: RefCounted) -> Dictionary:
 	}
 
 
-static func apply_event(state: RefCounted, event: Dictionary) -> void:
+static func apply_event(state: RefCounted, event: Dictionary) -> Dictionary:
 	normalize(state)
 	_reconcile_current_task(state)
 	var data := state.onboarding as Dictionary
 	var index := int(data.get("active_index", 0))
 	if index >= OnboardingCatalogScript.count():
-		return
+		return {}
 	var definition := OnboardingCatalogScript.task_at(index)
 	var task_id := String(definition["id"])
 	if (data["completed"] as Dictionary).has(task_id):
-		return
+		if not (data["claimed"] as Dictionary).has(task_id):
+			return _settle_with_catch_up(state, definition, task_id, index)
+		return {}
 	var event_key := _event_key(event)
 	if not event_key.is_empty():
 		var keys := data["event_keys"] as Dictionary
 		if keys.has(event_key):
-			return
+			return {}
 		keys[event_key] = true
 	var progress := data["progress"] as Dictionary
 	var matched := false
@@ -119,7 +121,7 @@ static func apply_event(state: RefCounted, event: Dictionary) -> void:
 		progress[key] = 1
 		matched = true
 	if not matched:
-		return
+		return {}
 	var all_complete := true
 	for objective_value in definition.get("objectives", []):
 		var objective := objective_value as Dictionary
@@ -128,6 +130,8 @@ static func apply_event(state: RefCounted, event: Dictionary) -> void:
 			break
 	if all_complete:
 		(data["completed"] as Dictionary)[task_id] = true
+		return _settle_with_catch_up(state, definition, task_id, index)
+	return {}
 
 
 static func claim_current(state: RefCounted, task_id: String) -> Dictionary:
@@ -142,20 +146,65 @@ static func claim_current(state: RefCounted, task_id: String) -> Dictionary:
 		return {"ok": false, "error": "ONBOARDING_TASK_NOT_COMPLETED"}
 	if (data["claimed"] as Dictionary).has(task_id):
 		return {"ok": false, "error": "ONBOARDING_TASK_ALREADY_CLAIMED"}
-	var reward := (definition.get("reward", {}) as Dictionary).duplicate(true)
-	_grant_reward(state, reward)
-	(data["claimed"] as Dictionary)[task_id] = true
-	data["active_index"] = index + 1
-	_reconcile_current_task(state)
+	var settlement := _settle_with_catch_up(state, definition, task_id, index)
 	return {
 		"ok": true,
 		"event": {
 			"type": "onboarding_task_claimed",
 			"task_id": task_id,
-			"reward": reward,
+			"reward": settlement.get("reward", {}),
 			"next_index": index + 1,
 		},
 	}
+
+
+static func _settle_completed_task(
+	state: RefCounted,
+	definition: Dictionary,
+	task_id: String,
+	index: int
+) -> Dictionary:
+	var data := state.onboarding as Dictionary
+	if (data["claimed"] as Dictionary).has(task_id):
+		return {}
+	var reward := (definition.get("reward", {}) as Dictionary).duplicate(true)
+	_grant_reward(state, reward)
+	(data["claimed"] as Dictionary)[task_id] = true
+	data["active_index"] = index + 1
+	return {
+		"task_id": task_id,
+		"reward": reward,
+		"next_index": index + 1,
+		"auto_settled": true,
+	}
+
+
+static func _settle_with_catch_up(
+	state: RefCounted,
+	definition: Dictionary,
+	task_id: String,
+	index: int
+) -> Dictionary:
+	var primary := _settle_completed_task(state, definition, task_id, index)
+	var catch_up_tasks: Array[String] = []
+	while true:
+		_reconcile_current_task(state)
+		var data := state.onboarding as Dictionary
+		var next_index := int(data.get("active_index", 0))
+		if next_index >= OnboardingCatalogScript.count():
+			break
+		var next_definition := OnboardingCatalogScript.task_at(next_index)
+		var next_task_id := String(next_definition.get("id", ""))
+		if (
+			not (data["completed"] as Dictionary).has(next_task_id)
+			or (data["claimed"] as Dictionary).has(next_task_id)
+		):
+			break
+		_settle_completed_task(state, next_definition, next_task_id, next_index)
+		catch_up_tasks.append(next_task_id)
+	if not catch_up_tasks.is_empty():
+		primary["catch_up_tasks"] = catch_up_tasks
+	return primary
 
 
 static func validate(data: Dictionary) -> String:

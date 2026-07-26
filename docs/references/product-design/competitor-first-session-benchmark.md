@@ -48,6 +48,8 @@ related:
 
 外部公开来源：
 
+- [Apple Onboarding for Games](https://developer.apple.com/app-store/onboarding-for-games/)
+- [Apple Human Interface Guidelines: Onboarding](https://developer.apple.com/design/human-interface-guidelines/onboarding)
 - [Last War: Survival 官方 App Store 页面](https://apps.apple.com/us/app/last-war-survival/id6448786147)
 - [Whiteout Survival 官方 App Store 页面](https://apps.apple.com/us/app/whiteout-survival/id6443575749)
 - [State of Survival 官方 App Store 页面](https://apps.apple.com/us/app/state-of-survival-zombie-war/id1452474937)
@@ -71,6 +73,10 @@ related:
 
 ### 2. 渐进披露
 
+Apple 的当前游戏引导指南要求用实际操作教授核心循环、每次只增加一个目标、早期提供更多引导并
+逐渐让玩家独立证明掌握；上下文提示应靠近被解释的动作，非必要设置、活动和购买应在玩家体验
+正常玩法后再出现。本项目据此把七行动视为七次真实行为验证，而不是七张需要手动领取的任务卡。
+
 每个行动只新增一个主要判断：
 
 1. 自动推进与一次技能；
@@ -82,6 +88,7 @@ related:
 7. Boss 检验成长选择。
 
 任务、成就可以后台记录，但招募、战令、周常和红点不得在核心闭环结束前竞争注意力。
+首章行动奖励随完成事件自动入账并在战果页回显；不得要求第二次“领取”才能看见下一行动。
 
 ### 3. 首局数值信任
 

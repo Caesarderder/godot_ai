@@ -42,21 +42,22 @@ func _run_contract() -> void:
 	_expect(int(executor.state.hero_by_id(hero_id).readiness) == 100, "battle leaves every permanent hero fully ready")
 	_expect((first_battle["event"]["damage_manifest"] as Dictionary).is_empty(), "battle settlement has no persistent damage manifest")
 	_expect(int(executor.state.economy.industrial_tech) >= 4, "town victory grants expansion technology")
-	_expect_task("operation.lone_vanguard", true, 1)
-	_claim_current_task()
+	_expect(
+		String((first_battle["event"]["onboarding_settlement"] as Dictionary).get("task_id", "")) == "operation.lone_vanguard",
+		"first action reward settles inside the authoritative battle command"
+	)
+	_expect_task("operation.keep_advancing", false, 0)
 
 	_expect_ok(_settle("stage_1_2", "victory", permanent_ids), "second town settles")
 	_expect_task("operation.keep_advancing", false, 1)
 	_expect_ok(_settle("stage_1_3", "victory", permanent_ids), "third town settles")
-	_expect_task("operation.keep_advancing", true, 2)
-	_claim_current_task()
+	_expect_task("operation.high_wall", false, 0)
 
 	var high_wall_defeat := _settle("stage_1_4", "defeat", permanent_ids)
 	_expect_ok(high_wall_defeat, "Gman first high-wall attempt settles as defeat")
-	_expect_task("operation.high_wall", true, 1)
+	_expect_task("operation.research_reinforcements", false, 0)
 	_expect(int(executor.state.factory.facilities["research_lab"]) == 0, "high-wall defeat does not auto-build the research lab")
 	_expect(bool(executor.state.factory.eligible_facilities.get("research_lab", false)), "high-wall defeat grants research-lab eligibility")
-	_claim_current_task()
 
 	var construct_lab := _command("construct_facility", {
 		"facility_id": "research_lab",
@@ -71,8 +72,7 @@ func _run_contract() -> void:
 	var breakthrough := _command("claim_research_breakthrough", {})
 	_expect_ok(breakthrough, "research breakthrough ten-pull grants both foundational heroes")
 	_expect(int(((breakthrough.get("event", {}) as Dictionary).get("results", []) as Array).size()) == 10, "research breakthrough reveals ten results")
-	_expect_task("operation.research_reinforcements", true, 1)
-	_claim_current_task()
+	_expect_task("operation.counterattack", false, 0)
 
 	var assault_id := ""
 	var armored_id := ""
@@ -86,17 +86,11 @@ func _run_contract() -> void:
 	_expect_ok(_command("assign_formation_slot", {"slot": "troop_2", "hero_id": armored_id}), "armored toilet joins the formation")
 	_expect(executor.state.formation.hero_ids().size() == 3, "Gman and both researched toilets form the counterattack squad")
 	_expect_ok(_settle("stage_1_4", "victory", executor.state.formation.hero_ids()), "reinforced squad captures the high wall")
-	_expect_task("operation.counterattack", true, 1)
-	_claim_current_task()
-
 	_expect_task("operation.choose_growth", false, 0)
 	_expect_ok(_command("upgrade_hero_star", {"hero_id": armored_id}), "player chooses one visible combat growth before the boss")
-	_expect_task("operation.choose_growth", true, 1)
-	_claim_current_task()
+	_expect_task("operation.chapter_boss", false, 0)
 
 	_expect_ok(_settle("stage_1_5", "victory", executor.state.formation.hero_ids()), "chapter boss settles with breakthrough rewards")
-	_expect_task("operation.chapter_boss", true, 1)
-	_claim_current_task()
 	var snapshot := OnboardingService.snapshot(executor.state)
 	_expect(bool(snapshot.get("finished", false)), "seven-operation first chapter guidance completes")
 	var chapter_two_boss := _settle("stage_2_5", "victory", executor.state.formation.hero_ids())
@@ -139,7 +133,10 @@ func _verify_late_onboarding_objective_reconciliation() -> void:
 		"requested_at": 1000,
 	})
 	_expect_ok(late_claim, "late-completed task reward can be claimed immediately")
-	_expect(int(probe.state.economy.toilet_coins) == coins_before, "material-only late task keeps unrelated coin balance")
+	_expect(
+		int(probe.state.economy.toilet_coins) == coins_before + 70,
+		"late catch-up atomically settles the already-proven high-wall reward exactly once"
+	)
 	var replay := probe.execute({
 		"command_id": "late-onboarding-claim-replay",
 		"type": "claim_onboarding_task",
@@ -151,8 +148,11 @@ func _verify_late_onboarding_objective_reconciliation() -> void:
 	_expect_ok(replay, "late task reward claim replays idempotently")
 
 	var passed_wall := OnboardingService.snapshot(probe.state)
-	_expect(String(passed_wall.get("task_id", "")) == "operation.high_wall", "claim advances to high-wall task")
-	_expect(bool(passed_wall.get("completed", false)), "a durable stage clear satisfies an earlier defeat tutorial objective")
+	_expect(
+		String(passed_wall.get("task_id", "")) == "operation.research_reinforcements",
+		"catch-up skips completed bureaucracy and exposes the next unfinished action"
+	)
+	_expect(not bool(passed_wall.get("completed", true)), "research remains a real unfinished player action")
 
 	probe.state.onboarding["active_index"] = 3
 	(probe.state.onboarding["claimed"] as Dictionary)["reward.research_breakthrough_ten"] = true
@@ -300,21 +300,25 @@ func _verify_objective_event_guards() -> void:
 	})
 	var untouched := OnboardingService.snapshot(probe)
 	_expect(int(untouched.get("progress", -1)) == 0, "future operation events cannot skip the active operation")
+	var opening_settlement := OnboardingService.apply_event(probe, {
+		"type": "battle_settled",
+		"battle_id": "opening-win",
+		"stage_id": "stage_1_1",
+		"outcome": "victory",
+	})
+	_expect(
+		String(opening_settlement.get("task_id", "")) == "operation.lone_vanguard",
+		"the opening attack completes and settles the first operation"
+	)
+	var advanced := OnboardingService.snapshot(probe)
+	_expect(String(advanced.get("task_id", "")) == "operation.keep_advancing", "auto-settlement immediately exposes the next real action")
 	OnboardingService.apply_event(probe, {
 		"type": "battle_settled",
 		"battle_id": "opening-win",
 		"stage_id": "stage_1_1",
 		"outcome": "victory",
 	})
-	var completed := OnboardingService.snapshot(probe)
-	_expect(bool(completed.get("completed", false)), "the opening attack completes the first operation")
-	OnboardingService.apply_event(probe, {
-		"type": "battle_settled",
-		"battle_id": "opening-win",
-		"stage_id": "stage_1_1",
-		"outcome": "victory",
-	})
-	_expect(int(OnboardingService.snapshot(probe).get("progress", -1)) == 1, "duplicate events cannot overcount objectives")
+	_expect(int(OnboardingService.snapshot(probe).get("progress", -1)) == 0, "duplicate prior-task events cannot advance the next objective")
 	probe.onboarding["active_index"] = 5
 	OnboardingService.apply_event(probe, {
 		"type": "hero_star_upgraded",
@@ -323,13 +327,16 @@ func _verify_objective_event_guards() -> void:
 		"star": 2,
 	})
 	_expect(int(OnboardingService.snapshot(probe).get("progress", -1)) == 0, "Gman star-up cannot satisfy the two verified reinforcement routes")
-	OnboardingService.apply_event(probe, {
+	var growth_settlement := OnboardingService.apply_event(probe, {
 		"type": "hero_star_upgraded",
 		"hero_id": "assault-probe",
 		"archetype_id": "assault",
 		"star": 2,
 	})
-	_expect(bool(OnboardingService.snapshot(probe).get("completed", false)), "assault star-up satisfies the verified growth choice")
+	_expect(
+		String(growth_settlement.get("task_id", "")) == "operation.choose_growth",
+		"assault star-up satisfies and settles the verified growth choice"
+	)
 
 
 func _verify_legacy_save_migration() -> void:
@@ -359,11 +366,6 @@ func _settle(stage_id: String, outcome: String, deployed: Array[String]) -> Dict
 		"deployed_unit_ids": deployed,
 		"dead_unit_ids": [],
 	})
-
-
-func _claim_current_task() -> void:
-	var snapshot := OnboardingService.snapshot(executor.state)
-	_expect_ok(_command("claim_onboarding_task", {"task_id": String(snapshot.get("task_id", ""))}), "completed task reward claims")
 
 
 func _expect_task(task_id: String, completed: bool, progress: int) -> void:

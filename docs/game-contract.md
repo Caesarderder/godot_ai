@@ -211,6 +211,8 @@ related:
 - handoff_request: 每轮实现先说明它创造哪种玩家感受和哪项有意义选择，再用真人行为判断保留、重做或删除
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated,last_verified
 - handoff_blocking: true
-- deviation: 当前自动证据已证明首章规则台阶和两条 Boss 成长路线，但尚无目标玩家盲测，因此不能宣称首 30 分钟好玩或达到上线质量。
+- deviation: 当前自动证据已证明首章规则台阶和两条 Boss 成长路线；首章行动已改为随领域结果
+  exact-once 自动结算奖励并直接暴露下一真实行动，删除七次无意义领奖门禁。尚无目标玩家盲测，
+  因此不能宣称首 30 分钟好玩或达到上线质量。
 - last_updated: 2026-07-27
 - last_verified: —

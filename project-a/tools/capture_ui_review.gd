@@ -220,6 +220,51 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-boss-result-844x390.png"):
 		quit(1)
 		return
+	capture_state.onboarding["active_index"] = 5
+	(capture_state.onboarding["completed"] as Dictionary)["operation.counterattack"] = true
+	(capture_state.onboarding["claimed"] as Dictionary)["operation.counterattack"] = true
+	for hero in capture_state.roster:
+		if String(hero.archetype_id) in ["assault", "armored"]:
+			hero.star = 1
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_1_4",
+			"reward": {"gold": 54, "porcelain": 22, "parts": 18, "sludge": 16},
+			"industrial_tech": 4,
+			"hero_shards": 4,
+			"skill_chips": 1,
+			"next_stage_id": "stage_1_5",
+			"onboarding_settlement": {
+				"task_id": "operation.counterattack",
+				"reward": {
+					"toilet_coins": 80,
+					"hero_shards": 4,
+					"skill_chips": 1,
+					"porcelain": 18,
+					"parts": 10,
+					"sludge": 8,
+				},
+				"next_index": 5,
+				"auto_settled": true,
+			},
+		},
+	})
+	main.set("last_battle_runtime_result", {
+		"ticks": 325,
+		"structures_destroyed": 5,
+		"enemies_defeated": 6,
+		"stage_reached": 2,
+		"cannon_hit_count": 0,
+		"cannon_suppressed_count": 1,
+	})
+	main.call("_show_result")
+	for _frame in 6:
+		await process_frame
+	if not _save_viewport("res://artifacts/ui-action-auto-settlement-844x390.png"):
+		quit(1)
+		return
 	capture_state.stage_progress["cleared_stages"] = [
 		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4",
 	]

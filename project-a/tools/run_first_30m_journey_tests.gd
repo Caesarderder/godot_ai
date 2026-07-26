@@ -46,23 +46,17 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	clock += int(opening.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(opening.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_1", opening, "victory")
-	_claim_current_task(executor, clock)
-	clock += INTERACTION_SECONDS
 
 	for stage_id in ["stage_1_2", "stage_1_3"]:
 		var result := _battle_and_settle(executor, stage_id, clock)
 		clock += int(result.get("seconds", 0)) + INTERACTION_SECONDS
 		battle_seconds += int(result.get("seconds", 0))
 		_expect_outcome(run_seed, stage_id, result, "victory")
-	_claim_current_task(executor, clock)
-	clock += INTERACTION_SECONDS
 
 	var wall := _battle_and_settle(executor, "stage_1_4", clock)
 	clock += int(wall.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(wall.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_4 first attempt", wall, "defeat")
-	_claim_current_task(executor, clock)
-	clock += INTERACTION_SECONDS
 
 	var construction := _command(executor, "construct_facility", {
 		"facility_id": "research_lab",
@@ -87,8 +81,6 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 		if not recipe_id.is_empty():
 			researched_hero_ids[recipe_id] = String(item.get("hero_id", ""))
 	clock += INTERACTION_SECONDS
-	_claim_current_task(executor, clock)
-	clock += INTERACTION_SECONDS
 
 	_expect_ok(run_seed, _command(executor, "assign_formation_slot", {
 		"slot": "troop_1",
@@ -105,21 +97,16 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	clock += int(revenge.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(revenge.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_4 revenge", revenge, "victory")
-	_claim_current_task(executor, clock)
-	clock += INTERACTION_SECONDS
 
 	var growth_hero_id := String(researched_hero_ids.get(growth_route, ""))
 	var star_upgrade := _command(executor, "upgrade_hero_star", {"hero_id": growth_hero_id}, clock)
 	_expect_ok(run_seed, star_upgrade, "%s two-star route is affordable from the real ledger" % growth_route)
-	clock += INTERACTION_SECONDS
-	_claim_current_task(executor, clock)
 	clock += INTERACTION_SECONDS
 
 	var boss := _battle_and_settle(executor, "stage_1_5", clock)
 	clock += int(boss.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(boss.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_5 %s route" % growth_route, boss, "victory")
-	_claim_current_task(executor, clock)
 
 	var snapshot := OnboardingServiceScript.snapshot(executor.state)
 	_check(run_seed, bool(snapshot.get("finished", false)), "seven-action onboarding reaches its durable finished state")
@@ -193,15 +180,6 @@ func _snapshots(state: RefCounted) -> Array[Dictionary]:
 			"auto_skill": true,
 		})
 	return values
-
-
-func _claim_current_task(executor: RefCounted, now_unix: int) -> void:
-	var snapshot := OnboardingServiceScript.snapshot(executor.state)
-	_expect_ok(
-		int(executor.state.run_seed),
-		_command(executor, "claim_onboarding_task", {"task_id": String(snapshot.get("task_id", ""))}, now_unix),
-		"current onboarding reward claims exactly once"
-	)
 
 
 func _command(executor: RefCounted, type: String, payload: Dictionary, now_unix: int) -> Dictionary:
