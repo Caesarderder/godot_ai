@@ -223,6 +223,9 @@ func _capture() -> void:
 	capture_state.onboarding["active_index"] = 5
 	(capture_state.onboarding["completed"] as Dictionary)["operation.counterattack"] = true
 	(capture_state.onboarding["claimed"] as Dictionary)["operation.counterattack"] = true
+	for facility_id in ["porcelain_plant", "parts_workshop", "energy_station"]:
+		capture_state.factory.facilities[facility_id] = 0
+		capture_state.factory.facility_placements.erase(facility_id)
 	for hero in capture_state.roster:
 		if String(hero.archetype_id) in ["assault", "armored"]:
 			hero.star = 1

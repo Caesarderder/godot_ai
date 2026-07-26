@@ -460,7 +460,9 @@ static func claim_facility_work(state: RefCounted, now_unix: int) -> Dictionary:
 				FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS
 			)
 		if RESOURCE_BY_FACILITY.has(facility_id):
-			state.factory.facility_output_anchors[facility_id] = now_unix
+			# A newly commissioned producer exposes one real minute of output immediately.
+			# This teaches the collect loop without turning the first session into a wait gate.
+			state.factory.facility_output_anchors[facility_id] = now_unix - 60
 	state.factory.facility_work = {}
 	state.factory.refresh_capacities()
 	return {"ok": true, "event": {

@@ -1918,6 +1918,9 @@ func _show_result() -> void:
 	elif not bool(onboarding.get("finished", false)) and String(onboarding.get("target", "")) == "legion":
 		primary_label = String(onboarding.get("cta_label", "比较成长路线"))
 		primary_action = "legion"
+	elif not bool(onboarding.get("finished", false)) and String(onboarding.get("target", "")) == "factory":
+		primary_label = String(onboarding.get("cta_label", "前往工厂"))
+		primary_action = "factory"
 	elif (
 		not bool(onboarding.get("finished", false))
 		and String(onboarding.get("target", "")) == "expedition"

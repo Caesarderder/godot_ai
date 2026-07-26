@@ -71,6 +71,7 @@ func _apply_view() -> void:
 	_set_optional(qualification, String(_view.get("qualification", "")))
 	primary_action.text = String(_view.get("primary_label", "继续"))
 	primary_action.visible = not primary_action.text.is_empty()
+	factory_action.visible = String(_view.get("primary_action", "")) != "factory"
 
 
 func _apply_theme() -> void:

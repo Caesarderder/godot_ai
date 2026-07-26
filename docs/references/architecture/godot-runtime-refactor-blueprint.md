@@ -195,3 +195,6 @@ App Shell 只投影现有 `SettingsStore` / Web 能力、执行持久化与浏�
 `EpilogueScreen` 接管第一幕完成后的叙事兑现、25 城占领、永久角色与军团养成总结，并把
 “挑战无尽前线、刷新军团极限”设为新的大目标；App Shell 只计算战果投影并路由无尽、里程碑
 和基地三个延续行动。
+`BattleResultScreen` 在首章引导未完成时优先使用 `OnboardingService.snapshot()` 的下一真实
+行动；1-4 反攻后以“选择工业支援”进入工厂，并隐藏重复的通用工厂按钮，直到设施投产、后勤
+收取和援军升星完成后才把 1-5 暴露为主 CTA。

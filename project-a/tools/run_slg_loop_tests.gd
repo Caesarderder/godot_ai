@@ -87,6 +87,20 @@ func _run_contract() -> void:
 	_expect(executor.state.formation.hero_ids().size() == 3, "Gman and both researched toilets form the counterattack squad")
 	_expect_ok(_settle("stage_1_4", "victory", executor.state.formation.hero_ids()), "reinforced squad captures the high wall")
 	_expect_task("operation.choose_growth", false, 0)
+	var construct_support := _command("construct_facility", {
+		"facility_id": "porcelain_plant",
+		"now_unix": 1090,
+		"grid_x": -2,
+		"grid_z": 1,
+	})
+	_expect_ok(construct_support, "player chooses a real industrial support facility before the boss")
+	_expect_ok(_command("claim_facility_work", {"now_unix": 1120}), "support facility completes its commissioning run")
+	_expect_task("operation.choose_growth", false, 1)
+	_expect_ok(_command("claim_facility_output", {
+		"facility_id": "porcelain_plant",
+		"now_unix": 1120,
+	}), "player collects the first real factory output")
+	_expect_task("operation.choose_growth", false, 2)
 	_expect_ok(_command("upgrade_hero_star", {"hero_id": armored_id}), "player chooses one visible combat growth before the boss")
 	_expect_task("operation.chapter_boss", false, 0)
 
@@ -320,13 +334,27 @@ func _verify_objective_event_guards() -> void:
 	})
 	_expect(int(OnboardingService.snapshot(probe).get("progress", -1)) == 0, "duplicate prior-task events cannot advance the next objective")
 	probe.onboarding["active_index"] = 5
+	probe.factory.facilities["porcelain_plant"] = 1
+	OnboardingService.apply_event(probe, {
+		"type": "facility_constructed",
+		"facility_id": "porcelain_plant",
+		"request_id": "support-built",
+	})
+	OnboardingService.apply_event(probe, {
+		"type": "factory_output_claimed",
+		"facility_id": "porcelain_plant",
+		"request_id": "support-collected",
+	})
 	OnboardingService.apply_event(probe, {
 		"type": "hero_star_upgraded",
 		"hero_id": "gman-probe",
 		"archetype_id": "gman",
 		"star": 2,
 	})
-	_expect(int(OnboardingService.snapshot(probe).get("progress", -1)) == 0, "Gman star-up cannot satisfy the two verified reinforcement routes")
+	_expect(
+		int(OnboardingService.snapshot(probe).get("progress", -1)) == 2,
+		"Gman star-up cannot satisfy the verified reinforcement choice after industrial setup"
+	)
 	var growth_settlement := OnboardingService.apply_event(probe, {
 		"type": "hero_star_upgraded",
 		"hero_id": "assault-probe",

@@ -26,6 +26,14 @@ func _initialize() -> void:
 	_expect(bool(completed.get("ok", false)), "construction can be claimed at its completion time")
 	_expect(int(state.factory.facilities["porcelain_plant"]) == 1, "claiming completed work activates level one")
 	_expect(state.factory.facility_placements.get("porcelain_plant", []) == [-1, 0], "completed placement is authoritative state")
+	var commissioning := LogisticsServiceScript.facility_output_preview(state, "porcelain_plant", 1030)
+	_expect(int(commissioning.get("amount", 0)) == 6, "new producer exposes one minute of commissioning output without a wait gate")
+	var collected := LogisticsServiceScript.claim_facility_output(state, "porcelain_plant", 1030)
+	_expect(bool(collected.get("ok", false)), "commissioning output can be collected immediately")
+	_expect(
+		int(((collected.get("event", {}) as Dictionary).get("materials", {}) as Dictionary).get("porcelain", 0)) == 6,
+		"commissioning collection grants the authoritative L1 porcelain rate"
+	)
 	var decoded := SaveCodecScript.decode(state.to_dict())
 	_expect(bool(decoded.get("ok", false)), "placement survives strict save decoding")
 	if bool(decoded.get("ok", false)):

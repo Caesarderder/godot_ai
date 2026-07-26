@@ -127,8 +127,8 @@ related:
 ## GC-006: 首个重构切片与 UX
 - owner: producer
 - status: accepted
-- accepted_intent: 第一切片用“Gman 单人连胜—1-4 撞墙—研究所—免费突破十连—永久援军编队—反攻—自主升星—1-5 Boss”证明工厂能把战争需求转化为永久军团成长。
-- acceptance_criteria: 新档只有 Gman；单人稳定通过 1-1 至 1-3、首次 1-4 稳定失败；之后主动建研究所并固定获得冲锋与装甲，三人稳定攻克 1-4；玩家在至少两条经济可达成长路线中选择其一并稳定攻克 1-5；模型时间不超过 30 分钟，844×390 下目标、门禁、阵位、炮击机制和恢复路径可读。
+- accepted_intent: 第一切片用“Gman 单人连胜—1-4 撞墙—研究所—免费突破十连—永久援军编队—反攻—资源设施投产—自主升星—1-5 Boss”证明战争需求驱动工厂、工厂产出供养永久军团、军团再回到战场。
+- acceptance_criteria: 新档只有 Gman；单人稳定通过 1-1 至 1-3、首次 1-4 稳定失败；之后主动建研究所并固定获得冲锋与装甲，三人稳定攻克 1-4；玩家再选择并建成一种资源设施、收取首批真实后勤，在至少两条经济可达成长路线中选择其一并稳定攻克 1-5；不得用强制挂机等待首批产出；模型时间不超过 30 分钟，844×390 下目标、门禁、阵位、炮击机制和恢复路径可读。
 - implementation_reference: project-a/scripts/slg_main.gd
 - verification_evidence: project-a/tools/run_first_chapter_balance_scan.gd, project-a/tools/run_first_30m_journey_tests.gd, project-a/tools/run_research_breakthrough_tests.gd, project-a/tools/run_ui_smoke_tests.gd
 - conflict_references: project-a/scripts/main.gd, project-a/scenes/screens/main.tscn
@@ -138,7 +138,7 @@ related:
 - handoff_request: 维护新档状态机、首败分支、免费突破、三人反攻、自主成长、Boss 决战和 Web 验证
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 7-seed 战斗扫描和 14 条干净新档旅程已证明规则、经济可达性与存档恢复；尚缺 5 名目标玩家
+- deviation: 7-seed 战斗扫描和 14 条干净新档旅程已证明规则、工厂首批后勤、经济可达性与存档恢复；尚缺 5 名目标玩家
   盲测，不能由自动证据宣称节奏、Boss 可读性或继续游玩意愿达标。
 - last_updated: 2026-07-27
 - last_verified: —
@@ -212,7 +212,8 @@ related:
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated,last_verified
 - handoff_blocking: true
 - deviation: 当前自动证据已证明首章规则台阶和两条 Boss 成长路线；首章行动已改为随领域结果
-  exact-once 自动结算奖励并直接暴露下一真实行动，删除七次无意义领奖门禁。尚无目标玩家盲测，
+  exact-once 自动结算奖励并直接暴露下一真实行动，删除七次无意义领奖门禁；行动六加入资源设施
+  投产与首批后勤收取，使工厂产出在 Boss 前真正进入军团成长闭环。尚无目标玩家盲测，
   因此不能宣称首 30 分钟好玩或达到上线质量。
 - last_updated: 2026-07-27
 - last_verified: —

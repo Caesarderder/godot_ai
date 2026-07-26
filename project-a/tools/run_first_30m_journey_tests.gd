@@ -98,6 +98,36 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	battle_seconds += int(revenge.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_4 revenge", revenge, "victory")
 
+	var support_facility := "porcelain_plant" if growth_route == "ordinary.assault" else "energy_station"
+	var support_construction := _command(executor, "construct_facility", {
+		"facility_id": support_facility,
+		"now_unix": clock,
+		"grid_x": -2,
+		"grid_z": 1,
+	}, clock)
+	_expect_ok(run_seed, support_construction, "%s construction starts as the industrial growth choice" % support_facility)
+	clock = int((support_construction.get("event", {}) as Dictionary).get("completes_at_unix", clock))
+	_expect_ok(
+		run_seed,
+		_command(executor, "claim_facility_work", {"now_unix": clock}, clock),
+		"%s commissioning completes" % support_facility
+	)
+	clock += INTERACTION_SECONDS
+	var commissioning_output := _command(executor, "claim_facility_output", {
+		"facility_id": support_facility,
+		"now_unix": clock,
+	}, clock)
+	_expect_ok(run_seed, commissioning_output, "%s commissioning output is immediately collectible" % support_facility)
+	var collected_materials := (
+		(commissioning_output.get("event", {}) as Dictionary).get("materials", {}) as Dictionary
+	)
+	_check(
+		run_seed,
+		collected_materials.values().any(func(value: Variant) -> bool: return int(value) > 0),
+		"industrial growth choice produces a visible material gain"
+	)
+	clock += INTERACTION_SECONDS
+
 	var growth_hero_id := String(researched_hero_ids.get(growth_route, ""))
 	var star_upgrade := _command(executor, "upgrade_hero_star", {"hero_id": growth_hero_id}, clock)
 	_expect_ok(run_seed, star_upgrade, "%s two-star route is affordable from the real ledger" % growth_route)

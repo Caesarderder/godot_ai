@@ -112,10 +112,25 @@ const TASKS: Array[Dictionary] = [
 	},
 	{
 		"id": "operation.choose_growth",
-		"title": "行动六：选择成长",
-		"lesson": "比较冲锋与装甲的职责差异，选择一名升到二星；两条路线都能改变 Boss 战结果。",
+		"title": "行动六：工业备战",
+		"lesson": "先让一座资源设施投产并收取首批后勤，再比较冲锋与装甲，选择一名升到二星。",
 		"reward": {},
 		"objectives": [
+			{
+				"id": "commission_resource_facility",
+				"label": "选择并建成一座资源设施",
+				"event_type": "facility_constructed",
+				"facility_ids": ["porcelain_plant", "parts_workshop", "energy_station"],
+				"target": "factory",
+				"cta_label": "选择工业支援",
+			},
+			{
+				"id": "claim_commissioning_output",
+				"label": "收取投产验收物资",
+				"event_type": "factory_output_claimed",
+				"target": "factory",
+				"cta_label": "收取首批后勤",
+			},
 			{
 				"id": "complete_combat_growth",
 				"label": "选择冲锋或装甲马桶人升到二星",
@@ -175,9 +190,9 @@ const HURDLES: Dictionary = {
 		"recovery": "将冲锋、装甲放入前排，再反攻 1-4。",
 	},
 	"operation.choose_growth": {
-		"scale": "中坎", "title": "1-5 巨炮前的成长选择",
-		"reason": "基础三人编队无法稳定跨过 Boss 巨炮。",
-		"recovery": "冲锋二星或装甲二星都是已验证路线，按喜欢的职责选择。",
+		"scale": "中坎", "title": "让工厂支援 1-5 备战",
+		"reason": "基础三人编队无法稳定跨过 Boss 巨炮，军团成长需要真实后勤来源。",
+		"recovery": "任选一座资源设施投产并收取验收批次，再按喜欢的职责选择冲锋或装甲二星。",
 	},
 	"operation.chapter_boss": {
 		"scale": "大坎", "title": "灰镜核心巨炮",

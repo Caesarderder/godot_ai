@@ -272,6 +272,11 @@ static func _objective_satisfied_by_state(state: RefCounted, objective: Dictiona
 			# A durable clear is stronger evidence than an earlier challenge outcome.
 			# This lets late-appearing victory and defeat/tutorial objectives catch up.
 			return cleared.has(stage_id)
+		"facility_constructed":
+			for facility_id_value in objective.get("facility_ids", []):
+				if int(state.factory.facilities.get(String(facility_id_value), 0)) > 0:
+					return true
+			return false
 		"foundational_blueprint_unlocked":
 			var recipe_id := String(objective.get("recipe_id", ""))
 			return not recipe_id.is_empty() and bool(state.factory.blueprints.get(recipe_id, false))
