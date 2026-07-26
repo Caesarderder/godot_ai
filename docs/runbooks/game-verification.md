@@ -61,6 +61,8 @@ godot --headless --path project-a -s tools/run_asset_3d_tests.gd
 godot --headless --path project-a -s tools/run_font_coverage_tests.gd
 godot --headless --path project-a -s tools/run_ui_focus_tests.gd
 python3 project-a/tools/build_runtime_font_subset.py --inspect
+# 获得安装授权后，在仓库外隔离 venv 安装官方 fonttools，再输出到新文件；
+# 不得覆盖上游 NotoSansCJKsc-Regular.otf，切换引用前先跑字体覆盖和视觉回归。
 python3 project-a/tools/build_web_candidate.py
 cd project-a && node tools/run_web_browser_smoke.mjs
 cd project-a && node tools/run_web_first_battle_smoke.mjs

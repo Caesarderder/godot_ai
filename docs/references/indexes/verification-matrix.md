@@ -192,10 +192,11 @@ related:
   `browser-first-battle-844x390.png` 与 `browser-first-battle-result-844x390.png` 分别保留
   战斗目标 HUD 和“城镇已占领”结算证据；重复触控本身不冒充真人主动技能理解证据。
   候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
-  legacy `scripts/main.gd` 并加入正式品牌启动图后，当前 PCK 约 `15.63 MB`，gzip 初始
-  payload 约 `27.60 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB 目标高约 `7.60 MiB`。新增两条
-  OGG 音乐约占 3.88 MiB 原始体积；当前约
-  14 MiB 的完整 Noto CJK fontdata 是下一项主因，不能用系统字体替代 Web 中文覆盖。
+  legacy `scripts/main.gd` 并加入正式品牌启动图后，revision `127323a` 的当前 PCK 为
+  `18.92 MiB`，gzip-9 初始 payload 为 `27.62 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB
+  目标高 `7.62 MiB`。新增两条 OGG 音乐约占 3.88 MiB 原始体积；16.06 MiB 的完整 Noto CJK
+  源字体是下一项主因，不能用系统字体替代 Web 中文覆盖。运行字符清单当前为 981 个，
+  `run_font_coverage_tests.gd` 必须在任何裁剪后重新证明全部覆盖。
 - M8 本地试玩证据工具：`run_platform_tests.gd` 覆盖显式 opt-in、事件白名单/去重、256 条上限、
   版本/样本量/时间窗、续接、导出和关闭删除；同一报告从白名单事件派生 12 个首章里程碑、相邻
   节点耗时、下一缺失节点、首个有效输入、关卡尝试、失败命令、纯导航连跳和排除战斗区间后的
