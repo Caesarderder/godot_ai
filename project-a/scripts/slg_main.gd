@@ -22,6 +22,7 @@ const FactoryScreenScene := preload("res://game/scenes/screens/factory_screen.ts
 const GoalsScreenScene := preload("res://game/scenes/screens/goals_screen.tscn")
 const TitleScreenScene := preload("res://game/scenes/screens/title_screen.tscn")
 const SettingsScreenScene := preload("res://game/scenes/screens/settings_screen.tscn")
+const HelpScreenScene := preload("res://game/scenes/screens/help_screen.tscn")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const OnboardingCatalog := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
@@ -590,73 +591,15 @@ func _show_help(return_screen: Screen = Screen.TITLE) -> void:
 	screen = Screen.HELP
 	_clear()
 	var shell := _shell("玩法说明", "快速了解工厂、攻城、操作与本地数据")
-	shell.name = "HelpScreen"
-	var columns := HBoxContainer.new()
-	columns.name = "HelpLandscapeColumns"
-	columns.add_theme_constant_override("separation", 12)
-	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(columns)
+	shell.name = "HelpShell"
+	var help_screen := HelpScreenScene.instantiate() as Control
+	help_screen.call("configure", {
+		"version": String(ProjectSettings.get_setting("application/config/version", "dev")),
+	})
+	help_screen.connect("back_requested", _return_from_help)
+	shell.add_child(help_screen)
+	return
 
-	var play_scroll := ScrollContainer.new()
-	play_scroll.name = "HelpGameplayScroll"
-	play_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	play_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	play_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	columns.add_child(play_scroll)
-	var play := _panel_vbox("30 秒上手", 7)
-	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	play_scroll.add_child(play)
-	play.add_child(_help_section(
-		"核心循环",
-		"1. 建造工厂并收取陶瓷、零件和能源\n2. 培养永久军团并调整六人阵位\n3. 主动攻打城镇获得金币、经验与技术\n4. 用战果继续扩建、研究并挑战下一城"
-	))
-	play.add_child(_help_section(
-		"网格建造",
-		"先在右侧比较设施用途与费用，选择建筑后点击左侧亮起的地格；只有按下“确认建造”才会扣除金币。"
-	))
-	play.add_child(_help_section(
-		"战斗操作",
-		"军团会自动移动和普通攻击。可切换自动/手动技能；手动时能量达到 100% 后点角色按钮释放。危险时可暂停或主动撤退结算。"
-	))
-
-	var info_scroll := ScrollContainer.new()
-	info_scroll.name = "HelpInfoScroll"
-	info_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	info_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	columns.add_child(info_scroll)
-	var info := _panel_vbox("设备、数据与制作", 7)
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_scroll.add_child(info)
-	info.add_child(_help_section(
-		"手机与操作",
-		"推荐横屏游玩。主要按钮支持触控、鼠标和键盘焦点；Escape 或 Android 返回键可开关战斗暂停菜单。竖屏时游戏会保护当前进度并提示旋转。"
-	))
-	info.add_child(_help_section(
-		"本地存档与隐私",
-		"进度保存在当前浏览器来源中，不使用分析 SDK、遥测接口或 Cookie。可在设置中下载 JSON 备份；试玩报告默认关闭且不会联网。"
-	))
-	var version := String(ProjectSettings.get_setting("application/config/version", "dev"))
-	info.add_child(_help_section(
-		"版本与制作信息",
-		"版本 %s\nGodot 4.6.3 · Compatibility / WebGL2\nNoto Sans CJK SC · SIL OFL 1.1\n非官方粉丝创作；商业发布仍需完成 IP 与地区合规审查。" % version
-	))
-	var back := _button("返回", _return_from_help, true)
-	back.name = "HelpBackButton"
-	shell.add_child(back)
-	back.grab_focus()
-
-
-func _help_section(title_text: String, body_text: String) -> Control:
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", _box(Color(PANEL_2, 0.76), 9, LINE))
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 3)
-	card.add_child(content)
-	content.add_child(_label(title_text, 16, CYAN))
-	content.add_child(_label(body_text, 12, TEXT))
-	return card
 
 
 func _return_from_help() -> void:

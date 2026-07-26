@@ -657,6 +657,13 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(help_columns != null and help_columns.get_child_count() == 2, "help uses two balanced landscape columns")
 	_ok(help_gameplay_scroll != null and help_info_scroll != null, "both help columns scroll independently on short screens")
 	_ok(_tree_has_text(instance, "选择建筑") and _tree_has_text(instance, "100%"), "help explains construction and manual battle skills")
+	_ok(
+		_tree_has_text(instance, "免费突破十连")
+			and _tree_has_text(instance, "冲锋二星")
+			and _tree_has_text(instance, "装甲二星")
+			and _tree_has_text(instance, "完全恢复"),
+		"help explains the first hurdle, both recovery routes, and lossless failure"
+	)
 	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.11.0-audio-feedback.1"), "help exposes local-data privacy and the running product version")
 	_ok(help_back != null and help_back.custom_minimum_size.y >= 48.0, "help exposes a touch-sized return path")
 	if help_back != null:

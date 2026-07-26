@@ -1,0 +1,205 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/ui/help_screen.gd" id="1_script"]
+
+[node name="HelpScreen" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+script = ExtResource("1_script")
+
+[node name="HelpLandscapeColumns" type="HBoxContainer" parent="."]
+custom_minimum_size = Vector2(0, 170)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="HelpGameplayScroll" type="ScrollContainer" parent="HelpLandscapeColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="GameplayCards" type="VBoxContainer" parent="HelpLandscapeColumns/HelpGameplayScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="LoopCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/LoopCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/LoopCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="LoopHeading" type="Label" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/LoopCard/Margin/Content"]
+layout_mode = 2
+text = "核心循环"
+
+[node name="LoopBody" type="Label" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/LoopCard/Margin/Content"]
+layout_mode = 2
+text = "收取三种工厂资源 → 培养永久军团 → 调整 2×3 阵位 → 主动攻城 → 用战果扩建并挑战下一城。"
+autowrap_mode = 2
+
+[node name="HurdleCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/HurdleCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/HurdleCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="HurdleHeading" type="Label" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/HurdleCard/Margin/Content"]
+layout_mode = 2
+text = "卡关不是惩罚"
+
+[node name="HurdleBody" type="Label" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/HurdleCard/Margin/Content"]
+layout_mode = 2
+text = "1-4 的首次失败会解锁研究所资格。建成研究所后领取一次免费突破十连，固定获得冲锋与装甲永久援军；失败后角色完全恢复，不会阵亡或等待维修。"
+autowrap_mode = 2
+
+[node name="GrowthCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/GrowthCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/GrowthCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="GrowthHeading" type="Label" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/GrowthCard/Margin/Content"]
+layout_mode = 2
+text = "两条过坎路线"
+
+[node name="GrowthBody" type="Label" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/GrowthCard/Margin/Content"]
+layout_mode = 2
+text = "冲锋二星偏向更快突破前线，装甲二星偏向稳定承伤。比较战力变化、敌方威胁和阵位职责，再决定把资源投给谁。"
+autowrap_mode = 2
+
+[node name="HelpInfoScroll" type="ScrollContainer" parent="HelpLandscapeColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="InfoCards" type="VBoxContainer" parent="HelpLandscapeColumns/HelpInfoScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="ControlsCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/ControlsCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/ControlsCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="ControlsHeading" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/ControlsCard/Margin/Content"]
+layout_mode = 2
+text = "战斗与建造操作"
+
+[node name="ControlsBody" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/ControlsCard/Margin/Content"]
+layout_mode = 2
+text = "军团自动移动和普攻；能量达到 100% 后可手动释放技能，也可开启自动技能。建造时先选择建筑、再点亮起的地格，只有确认后才扣资源。"
+autowrap_mode = 2
+
+[node name="GoalsCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/GoalsCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/GoalsCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="GoalsHeading" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/GoalsCard/Margin/Content"]
+layout_mode = 2
+text = "不知道做什么时"
+
+[node name="GoalsBody" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/GoalsCard/Margin/Content"]
+layout_mode = 2
+text = "进入“行动”查看大目标、中目标、小目标、当前坎和唯一推荐行动。它只给方向，不会替你自动推图。"
+autowrap_mode = 2
+
+[node name="DataCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/DataCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/DataCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="DataHeading" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/DataCard/Margin/Content"]
+layout_mode = 2
+text = "本地存档与隐私"
+
+[node name="DataBody" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/DataCard/Margin/Content"]
+layout_mode = 2
+text = "进度保存在当前浏览器来源中，不使用分析 SDK、遥测接口或 Cookie。请在设置中定期下载 JSON 备份；试玩报告默认关闭且不会联网。"
+autowrap_mode = 2
+
+[node name="VersionCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/VersionCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 9
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 7
+
+[node name="Content" type="VBoxContainer" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/VersionCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="VersionHeading" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/VersionCard/Margin/Content"]
+layout_mode = 2
+text = "版本与制作信息"
+
+[node name="HelpVersionCopy" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/InfoCards/VersionCard/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="HelpBackButton" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "返回"
