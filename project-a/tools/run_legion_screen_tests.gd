@@ -16,6 +16,13 @@ func _run() -> void:
 	legion.configure({
 		"tab": "formation",
 		"formation_edit_slot": "troop_1",
+		"first_formation": {
+			"active": true,
+			"deployed": 0,
+			"target": 2,
+			"instruction": "先让装甲进入前排承伤",
+		},
+		"counterattack": {"visible": false},
 		"team_power": 5700,
 		"target_stage_name": "1-5 灰镜核心巨炮",
 		"recommended_power": 6500,
@@ -31,6 +38,7 @@ func _run() -> void:
 				"power": 1900,
 				"power_delta": 0,
 				"current": true,
+				"recommended": false,
 			},
 			{
 				"hero_id": "hero_armored",
@@ -39,25 +47,52 @@ func _run() -> void:
 				"power": 2050,
 				"power_delta": 150,
 				"current": false,
+				"recommended": true,
 			},
 		],
 		"roster": [],
 	})
 	await process_frame
-	_check(_tree_has_text(legion, "军团战力 5700"), "formation projects current team power")
-	_check(_tree_has_text(legion, "战力差 +800"), "formation explains the next-stage gap")
+	_check(not _tree_has_text(legion, "战力差 +800"), "focused first formation defers generalized power analysis")
 	_check(_tree_has_text(legion, "重装 · 承伤保护"), "candidate comparison exposes gameplay role")
 	_check(_tree_has_text(legion, "军团变化 +150"), "candidate comparison exposes formation impact")
+	_check(_tree_has_text(legion, "高墙反攻编队 0/2"), "first formation exposes visible two-reinforcement progress")
+	_check(_tree_has_text(legion, "先让装甲进入前排承伤"), "first formation explains the recommended responsibility")
+	_check(_tree_has_text(legion, "推荐下一步"), "recommended candidate is explicit without disabling alternatives")
+	_check(not (legion.get_node("TaskTabs") as HBoxContainer).visible, "first formation hides unrelated recruit and roster tabs")
 	var candidate := legion.find_child("FormationCandidate_hero_armored", true, false) as Button
 	_check(candidate != null and not candidate.disabled, "a replacement candidate is actionable")
-	var request := {"action": "", "hero_id": ""}
+	var request := {"action": "", "hero_id": "", "stage_id": ""}
 	legion.action_requested.connect(func(action_id: String, payload: Dictionary) -> void:
 		request["action"] = action_id
 		request["hero_id"] = String(payload.get("hero_id", ""))
+		request["stage_id"] = String(payload.get("stage_id", ""))
 	)
 	if candidate != null:
 		candidate.pressed.emit()
 	_check(request["action"] == "assign_slot" and request["hero_id"] == "hero_armored", "screen emits a semantic assignment request")
+	legion.configure({
+		"tab": "formation",
+		"formation_edit_slot": "troop_2",
+		"first_formation": {"active": false},
+		"counterattack": {
+			"visible": true,
+			"stage_id": "stage_1_4",
+			"label": "编队完成 · 立即反攻 1-4",
+		},
+		"team_power": 5700,
+		"target_stage_name": "1-4 高墙防线",
+		"recommended_power": 5700,
+		"formation": [],
+		"candidates": [],
+		"roster": [],
+	})
+	await process_frame
+	var counterattack := legion.find_child("FormationCounterattackButton", true, false) as Button
+	_check(counterattack != null, "completed first formation exposes one direct counterattack action")
+	if counterattack != null:
+		counterattack.pressed.emit()
+	_check(request["action"] == "counterattack" and request["stage_id"] == "stage_1_4", "counterattack action routes to the exact hurdle")
 	legion.configure({
 		"tab": "recruit",
 		"recruitment_unlocked": false,

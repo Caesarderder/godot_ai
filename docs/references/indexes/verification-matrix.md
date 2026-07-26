@@ -109,6 +109,9 @@ related:
   `run_legion_screen_tests.gd` 对独立 `LegionScreen` 验证下一关战力差、候选职责、换人后的军团
   战力变化和语义部署请求；新 844×390 军团截图显示首屏即可比较阵位，而旧动态军团树移除后
   UI smoke 与 Compatibility capture 均不再产生退出资源泄漏。
+  `run_first_formation_flow_tests.gd` 进一步使用真实 App Shell 与命令执行器，验证十连后默认
+  空前排、装甲/冲锋依次推荐、两次上阵持久化、下一空位推进和精确 1-4 反攻 CTA；
+  `ui-first-formation-844x390.png` 证明首次候选与职责说明在基准横屏首屏内可见。
   `run_factory_screen_tests.gd` 对独立 `FactoryScreen` 验证固定库存、互斥 HUD、研究所资格解释、
   三步网格建造和“确认后才扣资源”的交易边界；新 844×390 截图证明库存文案不换行挤压，
   右侧建造决策与左侧 3D 选址同时可见。

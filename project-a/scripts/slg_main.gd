@@ -1069,6 +1069,7 @@ func _show_legion() -> void:
 
 func _legion_view() -> Dictionary:
 	var state: RefCounted = game.current_state()
+	var onboarding := OnboardingService.snapshot(state)
 	var unlock_state := MetaCatalog.unlocks(state)
 	var stage_id := String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
 	var target_stage := StageCatalog.stage(stage_id)
@@ -1085,6 +1086,22 @@ func _legion_view() -> Dictionary:
 	var deployed_id := String(state.formation.slots.get(formation_edit_slot, ""))
 	var deployed_hero: RefCounted = state.hero_by_id(deployed_id)
 	var deployed_power := CombatPower.hero_power(deployed_hero) if deployed_hero != null else 0
+	var deployed_archetypes: Array[String] = []
+	for deployed_hero_id in state.formation.hero_ids():
+		var formation_hero: RefCounted = state.hero_by_id(String(deployed_hero_id))
+		if formation_hero != null:
+			deployed_archetypes.append(String(formation_hero.archetype_id))
+	var first_formation_active := (
+		not bool(onboarding.get("finished", false))
+		and String(onboarding.get("task_id", "")) == "operation.counterattack"
+		and (
+			not deployed_archetypes.has("assault")
+			or not deployed_archetypes.has("armored")
+		)
+	)
+	var recommended_archetype := ""
+	if first_formation_active:
+		recommended_archetype = "armored" if not deployed_archetypes.has("armored") else "assault"
 	var candidates: Array[Dictionary] = []
 	var roster: Array[Dictionary] = []
 	for hero in state.roster:
@@ -1099,11 +1116,13 @@ func _legion_view() -> Dictionary:
 			next_growth = "研究主动技能"
 		candidates.append({
 			"hero_id": String(hero.hero_id),
+			"archetype_id": String(hero.archetype_id),
 			"display_name": String(hero.display_name),
 			"role": _legion_role(String(hero.archetype_id)),
 			"power": power,
 			"power_delta": power - deployed_power,
 			"current": deployed_id == String(hero.hero_id),
+			"recommended": String(hero.archetype_id) == recommended_archetype,
 		})
 		roster.append({
 			"hero_id": String(hero.hero_id),
@@ -1142,6 +1161,26 @@ func _legion_view() -> Dictionary:
 	return {
 		"tab": legion_tab,
 		"formation_edit_slot": formation_edit_slot,
+		"first_formation": {
+			"active": first_formation_active,
+			"deployed": int(deployed_archetypes.has("assault")) + int(deployed_archetypes.has("armored")),
+			"target": 2,
+			"instruction": (
+				"先让装甲进入前排承伤"
+				if recommended_archetype == "armored"
+				else "再让冲锋加入队伍快速压制"
+			),
+		},
+		"counterattack": {
+			"visible": (
+				not bool(onboarding.get("finished", false))
+				and String(onboarding.get("task_id", "")) == "operation.counterattack"
+				and deployed_archetypes.has("assault")
+				and deployed_archetypes.has("armored")
+			),
+			"stage_id": "stage_1_4",
+			"label": "编队完成 · 立即反攻 1-4",
+		},
 		"formation": formation,
 		"candidates": candidates,
 		"roster": roster,
@@ -1182,6 +1221,8 @@ func _on_legion_action_requested(action_id: String, payload: Dictionary) -> void
 			_select_formation_slot(String(payload.get("slot", "")))
 		"assign_slot":
 			_assign_formation_slot(String(payload.get("slot", "")), String(payload.get("hero_id", "")))
+		"counterattack":
+			_start_stage_battle(String(payload.get("stage_id", "stage_1_4")))
 		"recruit":
 			_signal_recruit(int(payload.get("count", 1)))
 		"upgrade":
@@ -1334,7 +1375,7 @@ func _on_blueprint_action_requested(action_id: String, payload: Dictionary) -> v
 		"claim_breakthrough":
 			_claim_research_breakthrough()
 		"open_legion":
-			_show_legion()
+			_open_breakthrough_formation()
 		"start_research":
 			_unlock_foundational_blueprint(String(payload.get("recipe_id", "")))
 		"claim_research":
@@ -2315,10 +2356,40 @@ func _select_formation_slot(slot: String) -> void:
 
 
 func _assign_formation_slot(slot: String, hero_id: String) -> void:
-	_after_action(_command("assign_formation_slot", {
+	var result := _command("assign_formation_slot", {
 		"slot": slot,
 		"hero_id": hero_id,
-	}), _show_legion)
+	})
+	if bool(result.get("ok", false)):
+		var onboarding := OnboardingService.snapshot(game.current_state())
+		var deployed_archetypes: Array[String] = []
+		for deployed_hero_id in game.current_state().formation.hero_ids():
+			var deployed_hero: RefCounted = game.current_state().hero_by_id(String(deployed_hero_id))
+			if deployed_hero != null:
+				deployed_archetypes.append(String(deployed_hero.archetype_id))
+		if (
+			String(onboarding.get("task_id", "")) == "operation.counterattack"
+			and (
+				not deployed_archetypes.has("assault")
+				or not deployed_archetypes.has("armored")
+			)
+		):
+			formation_edit_slot = _first_empty_troop_slot()
+	_after_action(result, _show_legion)
+
+
+func _open_breakthrough_formation() -> void:
+	legion_tab = "formation"
+	formation_edit_slot = _first_empty_troop_slot()
+	_show_legion()
+
+
+func _first_empty_troop_slot() -> String:
+	var slots := game.current_state().formation.slots as Dictionary
+	for slot_id in ["troop_1", "troop_2", "troop_3", "troop_4", "troop_5"]:
+		if String(slots.get(slot_id, "")).is_empty():
+			return slot_id
+	return "troop_1"
 
 
 func _signal_recruit(count: int) -> void:

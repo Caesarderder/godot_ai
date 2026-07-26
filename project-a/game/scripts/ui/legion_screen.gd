@@ -25,6 +25,7 @@ const SLOT_NAMES := {
 }
 @onready var content: VBoxContainer = %Content
 @onready var scroll: ScrollContainer = %LegionContentScroll
+@onready var task_tabs: HBoxContainer = $TaskTabs
 @onready var formation_tab: Button = %LegionFormationTab
 @onready var recruit_tab: Button = %LegionRecruitTab
 @onready var roster_tab: Button = %LegionRosterTab
@@ -51,6 +52,8 @@ func configure(view: Dictionary) -> void:
 
 func _rebuild() -> void:
 	var active_tab := String(_view.get("tab", "formation"))
+	var first_formation := _view.get("first_formation", {}) as Dictionary
+	task_tabs.visible = not bool(first_formation.get("active", false))
 	scroll.name = "LegionContentScroll_%s" % active_tab
 	_style_tab(formation_tab, active_tab == "formation")
 	_style_tab(recruit_tab, active_tab == "recruit")
@@ -67,24 +70,44 @@ func _rebuild() -> void:
 
 
 func _formation_panel() -> Control:
-	var panel := _panel("出击阵型")
-	panel.add_child(_label(
-		"军团战力 %d · 下一目标 %s 推荐 %d" % [
-			int(_view.get("team_power", 0)),
-			String(_view.get("target_stage_name", "未知战区")),
-			int(_view.get("recommended_power", 0)),
-		],
-		15,
-		GOLD
-	))
-	var gap := int(_view.get("recommended_power", 0)) - int(_view.get("team_power", 0))
-	panel.add_child(_label(
-		"战力差 %s · 先选职责，再比较战力；前排承伤，后排保住关键输出。" % (
-			"+%d" % gap if gap > 0 else "已达推荐线"
-		),
-		12,
-		RED if gap > 0 else GREEN
-	))
+	var first_formation := _view.get("first_formation", {}) as Dictionary
+	var onboarding_active := bool(first_formation.get("active", false))
+	var panel := _panel("" if onboarding_active else "出击阵型")
+	if onboarding_active:
+		var guide := _panel("高墙反攻编队 %d/%d · %s" % [
+			int(first_formation.get("deployed", 0)),
+			int(first_formation.get("target", 2)),
+			String(first_formation.get("instruction", "")),
+		])
+		guide.name = "FirstFormationGuide"
+		panel.add_child(guide)
+	var counterattack := _view.get("counterattack", {}) as Dictionary
+	if bool(counterattack.get("visible", false)):
+		var action := _button(String(counterattack.get("label", "立即反攻")), true)
+		action.name = "FormationCounterattackButton"
+		action.custom_minimum_size.y = 48
+		action.pressed.connect(action_requested.emit.bind("counterattack", {
+			"stage_id": String(counterattack.get("stage_id", "stage_1_4")),
+		}))
+		panel.add_child(action)
+	if not onboarding_active:
+		panel.add_child(_label(
+			"军团战力 %d · 下一目标 %s 推荐 %d" % [
+				int(_view.get("team_power", 0)),
+				String(_view.get("target_stage_name", "未知战区")),
+				int(_view.get("recommended_power", 0)),
+			],
+			15,
+			GOLD
+		))
+		var gap := int(_view.get("recommended_power", 0)) - int(_view.get("team_power", 0))
+		panel.add_child(_label(
+			"战力差 %s · 先选职责，再比较战力；前排承伤，后排保住关键输出。" % (
+				"+%d" % gap if gap > 0 else "已达推荐线"
+			),
+			12,
+			RED if gap > 0 else GREEN
+		))
 	var grid := GridContainer.new()
 	grid.name = "FormationSlotGrid"
 	grid.columns = 3
@@ -93,6 +116,8 @@ func _formation_panel() -> Control:
 	for slot_value in _view.get("formation", []):
 		var slot := slot_value as Dictionary
 		var slot_id := String(slot.get("slot_id", ""))
+		if bool(first_formation.get("active", false)) and not slot_id in ["commander", "troop_1", "troop_2"]:
+			continue
 		var selected := slot_id == String(_view.get("formation_edit_slot", ""))
 		var button := _button(
 			"%s\n%s\n%s" % [
@@ -103,7 +128,7 @@ func _formation_panel() -> Control:
 			selected
 		)
 		button.name = "FormationSlot_%s" % slot_id
-		button.custom_minimum_size = Vector2(220, 70)
+		button.custom_minimum_size = Vector2(220, 54 if onboarding_active else 70)
 		button.pressed.connect(action_requested.emit.bind("select_slot", {"slot": slot_id}))
 		grid.add_child(button)
 	panel.add_child(grid)
@@ -126,18 +151,20 @@ func _candidate_panel(slot_id: String) -> Control:
 		var candidate := candidate_value as Dictionary
 		var delta := int(candidate.get("power_delta", 0))
 		var current := bool(candidate.get("current", false))
+		var recommended := bool(candidate.get("recommended", false))
 		var action := _button(
-			"%s%s\n%s · 战力 %d\n军团变化 %s" % [
+			"%s%s%s\n%s · 战力 %d\n军团变化 %s" % [
 				String(candidate.get("display_name", "")),
 				" ✓" if current else "",
+				" · 推荐下一步" if recommended else "",
 				String(candidate.get("role", "")),
 				int(candidate.get("power", 0)),
 				("%+d" % delta) if delta != 0 else "不变",
 			],
-			not current
+			recommended and not current
 		)
 		action.name = "FormationCandidate_%s" % String(candidate.get("hero_id", ""))
-		action.custom_minimum_size = Vector2(220, 72)
+		action.custom_minimum_size = Vector2(220, 66 if bool((_view.get("first_formation", {}) as Dictionary).get("active", false)) else 72)
 		action.disabled = current
 		action.pressed.connect(action_requested.emit.bind("assign_slot", {
 			"slot": slot_id,
@@ -145,7 +172,8 @@ func _candidate_panel(slot_id: String) -> Control:
 		}))
 		candidates.add_child(action)
 	panel.add_child(candidates)
-	panel.add_child(_label("已在其他阵位的角色会与当前成员互换，不会丢失永久角色。", 11, MUTED))
+	if not bool((_view.get("first_formation", {}) as Dictionary).get("active", false)):
+		panel.add_child(_label("已在其他阵位的角色会与当前成员互换，不会丢失永久角色。", 11, MUTED))
 	return panel
 
 

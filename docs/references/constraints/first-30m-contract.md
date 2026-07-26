@@ -117,6 +117,12 @@ Compatibility 证据为 `artifacts/ui-first-skill-tutorial-844x390.png`；真人
 反攻职责；正常模式使用短揭晓 Tween 与胜利音效，减少动态模式无动画直接显示。真实 844×390
 Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 
+从十连进入军团时，首次编队使用两步专注流程而不自动替玩家决策：默认选中第一个空前排，
+以“高墙反攻编队 0/2”显示进度并推荐装甲承伤；成功命令后自动选中下一个空位，推荐冲锋压制。
+所有候选仍可选择，推荐不是强制。两名援军都在真实编队后，页面显示唯一“编队完成 · 立即反攻
+1-4”CTA。`run_first_formation_flow_tests.gd` 覆盖十连到两次 `assign_formation_slot` 命令和
+精确反攻出口，`artifacts/ui-first-formation-844x390.png` 证明第一次候选无需滚动即可操作。
+
 ### 首个战斗成长选择
 
 | 成长 | 成本 | TFA | FL | 当前证据 |
