@@ -66,9 +66,18 @@ func _run() -> void:
 		"branch_title": "重装枝",
 		"core_status": "首败信号已解析",
 		"breakthrough": {"claimable": false, "copy": "研究突破十连已完成 · 冲锋与装甲永久入列"},
+		"results_summary": "2 名永久援军 + 8 份研究物资 · 高墙反攻条件已经凑齐",
+		"reduced_motion": true,
 		"results": [
-			{"rarity": "A", "copy": "A\n装甲马桶人\n永久援军"},
-			{"rarity": "R", "copy": "R\n陶瓷\n+80"},
+			{
+				"id": "armored",
+				"rarity": "A",
+				"kind": "hero",
+				"title": "A · 装甲马桶人",
+				"subtitle": "重装 · 承伤保护",
+				"impact": "反攻：承伤保护队伍",
+			},
+			{"id": "porcelain_0", "rarity": "R", "kind": "porcelain", "title": "R · 陶瓷", "subtitle": "+80"},
 		],
 		"nodes": [
 			{"recipe_id": "heavy.armored", "display_name": "装甲蓝图", "status_id": "unlocked", "status_copy": "已解锁 · 永久角色已入列", "action_id": ""},
@@ -78,6 +87,13 @@ func _run() -> void:
 	_check(not (screen.get_node("%ClaimResearchBreakthroughTen") as Button).visible, "claimed breakthrough cannot repeat")
 	_check((screen.get_node("%ResearchBreakthroughResults") as PanelContainer).visible, "ten-pull results are projected")
 	_check(_collect_text(screen).contains("装甲马桶人"), "permanent reinforcement reveal is readable")
+	_check(_collect_text(screen).contains("承伤保护队伍"), "reinforcement reveal explains its immediate counterplay value")
+	_check(_collect_text(screen).contains("高墙反攻条件已经凑齐"), "celebration connects rewards to the overcome hurdle")
+	_check(not (screen.get_node("%BlueprintTabs") as HBoxContainer).visible, "result focus mode hides unrelated research branches")
+	await process_frame
+	await process_frame
+	await process_frame
+	_check((screen.get_node("%BlueprintResultsLegionButton") as Button).has_focus(), "result focus moves to the immediate counterattack action")
 	var claim := screen.find_child("ClaimFoundationalBlueprint", true, false) as Button
 	claim.pressed.emit()
 	_check(requested["id"] == "claim_research", "completed research emits claim action")

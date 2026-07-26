@@ -118,7 +118,10 @@ related:
   三人六槽上阵以及后续失败不重复触发。
   `run_research_breakthrough_tests.gd` 进一步覆盖研究所落成后的一次性免费十连：正好十张、
   冲锋与装甲确定性永久入列、长期招募 A 保底不变、二次领取拒绝、原 receipt 安全回放和
-  save roundtrip。目标页 UI smoke 覆盖“大目标—中目标—小目标—当前坎—过坎办法—唯一 CTA”。
+  save roundtrip。`run_blueprint_screen_tests.gd` 另覆盖十连结果专注态、援军职责说明、无关
+  分支退场、减少动态降级和“立即编入反攻队”焦点；`ui-research-breakthrough-844x390.png`
+  记录真实 Compatibility 画面中的两名关键援军、八份次级资源与单一反攻出口。目标页 UI
+  smoke 覆盖“大目标—中目标—小目标—当前坎—过坎办法—唯一 CTA”。
   `run_goals_screen_tests.gd` 独立实例化 authored `GoalsScreen`，覆盖三层目标、大小卡点、恢复
   文案、精确关卡 CTA、三页签语义信号、30 级战令轨和指挥官长期进度。
   `run_battle_result_screen_tests.gd` 验证 1-4 反攻后“选择工业支援”成为唯一高优先 CTA，

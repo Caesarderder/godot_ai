@@ -98,7 +98,13 @@ theme_override_constants/separation = 5
 
 [node name="Heading" type="Label" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
 layout_mode = 2
-text = "十连解析结果"
+text = "突破成功 · 高墙解法已到位"
+
+[node name="BlueprintResultsSummary" type="Label" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "两名永久援军响应召唤 · 现在把他们编入反攻队"
+autowrap_mode = 2
 
 [node name="BlueprintResultsGrid" type="GridContainer" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
 unique_name_in_owner = true

@@ -1247,19 +1247,34 @@ func _blueprint_view() -> Dictionary:
 	for item_value in last_research_breakthrough_results:
 		var item := item_value as Dictionary
 		var kind := String(item.get("kind", ""))
-		var result_copy := ""
+		var result_view := {
+			"id": "%s_%d" % [kind, result_views.size()],
+			"rarity": String(item.get("rarity", "R")),
+			"kind": kind,
+			"title": "",
+			"subtitle": "",
+			"impact": "",
+		}
 		if kind == "hero":
-			result_copy = "%s\n%s\n永久援军" % [
+			var archetype_id := String(item.get("archetype_id", ""))
+			result_view["id"] = archetype_id
+			result_view["title"] = "%s · %s" % [
 				String(item.get("rarity", "A")),
-				HeroGenerator.archetype_display_name(String(item.get("archetype_id", ""))),
+				HeroGenerator.archetype_display_name(archetype_id),
 			]
+			result_view["subtitle"] = _legion_role(archetype_id)
+			result_view["impact"] = (
+				"反攻：快速突破前线"
+				if archetype_id == "assault"
+				else "反攻：承伤保护队伍"
+			)
 		else:
-			result_copy = "%s\n%s\n+%d" % [
+			result_view["title"] = "%s · %s" % [
 				String(item.get("rarity", "R")),
 				String(resource_names.get(kind, "研究资源")),
-				int(item.get("amount", 0)),
 			]
-		result_views.append({"rarity": String(item.get("rarity", "R")), "copy": result_copy})
+			result_view["subtitle"] = "+%d" % int(item.get("amount", 0))
+		result_views.append(result_view)
 	var nodes: Array[Dictionary] = []
 	var active_research := state.factory.blueprint_research as Dictionary
 	var now := int(Time.get_unix_time_from_system())
@@ -1307,6 +1322,8 @@ func _blueprint_view() -> Dictionary:
 		"core_status": "首败信号已解析 · 选择两条基础树枝",
 		"breakthrough": breakthrough,
 		"results": result_views,
+		"results_summary": "2 名永久援军 + 8 份研究物资 · 高墙反攻条件已经凑齐",
+		"reduced_motion": bool(settings_store.reduced_motion),
 		"nodes": nodes,
 	}
 
@@ -1378,6 +1395,7 @@ func _claim_research_breakthrough() -> void:
 	last_research_breakthrough_results.clear()
 	for item in (result.get("event", {}) as Dictionary).get("results", []):
 		last_research_breakthrough_results.append((item as Dictionary).duplicate(true))
+	audio_director.play_cue(&"victory", -10.0)
 	_notify("研究突破完成：冲锋与装甲两名永久援军已入列")
 	_show_blueprints()
 

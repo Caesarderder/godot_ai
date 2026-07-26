@@ -28,6 +28,7 @@ const BRANCHES := [
 @onready var breakthrough_copy: Label = %BlueprintBreakthroughCopy
 @onready var breakthrough_button: Button = %ClaimResearchBreakthroughTen
 @onready var results_panel: PanelContainer = %ResearchBreakthroughResults
+@onready var results_summary: Label = %BlueprintResultsSummary
 @onready var results_grid: GridContainer = %BlueprintResultsGrid
 @onready var branch_row: HBoxContainer = %BlueprintBranchRow
 @onready var branch_panel: PanelContainer = %BlueprintBranchPanel
@@ -36,6 +37,7 @@ const BRANCHES := [
 @onready var back_button: Button = %BlueprintBackButton
 
 var _view: Dictionary = {}
+var _reveal_tween: Tween
 
 
 func _ready() -> void:
@@ -56,6 +58,7 @@ func configure(view: Dictionary) -> void:
 	_view = view.duplicate(true)
 	if is_node_ready():
 		_apply_view()
+		_focus_primary_after_layout()
 
 
 func _apply_view() -> void:
@@ -70,19 +73,21 @@ func _apply_view() -> void:
 	breakthrough_copy.visible = not breakthrough_copy.text.is_empty()
 	breakthrough_button.visible = bool(breakthrough.get("claimable", false))
 	var results := _view.get("results", []) as Array
-	results_panel.visible = not results.is_empty()
+	var showing_results := not results.is_empty()
+	results_panel.visible = showing_results
+	tabs.visible = not showing_results
+	core_panel.visible = not showing_results
+	branch_row.visible = not showing_results
+	results_summary.text = String(_view.get(
+		"results_summary",
+		"两名永久援军响应召唤 · 现在把他们编入反攻队"
+	))
 	_clear_children(results_grid)
 	for result_value in results:
 		var result := result_value as Dictionary
-		var label := Label.new()
-		label.custom_minimum_size = Vector2(118, 62)
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.text = String(result.get("copy", ""))
-		label.add_theme_font_override("font", CJK_FONT)
-		label.add_theme_font_size_override("font_size", 12)
-		label.add_theme_color_override("font_color", GOLD if String(result.get("rarity", "R")) == "A" else TEXT)
-		results_grid.add_child(label)
+		results_grid.add_child(_build_result_card(result))
+	if showing_results:
+		call_deferred("_animate_results")
 	branch_row.name = "BlueprintBranchRow_%s" % selected
 	branch_heading.text = String(_view.get("branch_title", "研究分支"))
 	_clear_children(node_row)
@@ -98,6 +103,72 @@ func _apply_view() -> void:
 			arrow.add_theme_color_override("font_color", MUTED)
 			node_row.add_child(arrow)
 		node_row.add_child(_build_node(nodes[node_index] as Dictionary))
+
+
+func _build_result_card(view: Dictionary) -> PanelContainer:
+	var is_hero := String(view.get("kind", "")) == "hero"
+	var card := PanelContainer.new()
+	card.name = "BreakthroughResult_%s" % String(view.get("id", "resource"))
+	card.custom_minimum_size = Vector2(118, 64 if is_hero else 54)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style := _panel_style(Color("#242015") if is_hero else PANEL_2)
+	style.border_color = GOLD if is_hero else Color(LINE, 0.8)
+	style.set_border_width_all(2 if is_hero else 1)
+	card.add_theme_stylebox_override("panel", style)
+	var content := VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 1)
+	card.add_child(content)
+	var title := Label.new()
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = String(view.get("title", "研究资源"))
+	title.add_theme_font_override("font", CJK_FONT)
+	title.add_theme_font_size_override("font_size", 13 if is_hero else 11)
+	title.add_theme_color_override("font_color", GOLD if is_hero else TEXT)
+	content.add_child(title)
+	var subtitle := Label.new()
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.text = String(view.get("subtitle", ""))
+	subtitle.add_theme_font_override("font", CJK_FONT)
+	subtitle.add_theme_font_size_override("font_size", 10)
+	subtitle.add_theme_color_override("font_color", CYAN if is_hero else MUTED)
+	content.add_child(subtitle)
+	if is_hero:
+		var impact := Label.new()
+		impact.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		impact.text = String(view.get("impact", "永久援军"))
+		impact.add_theme_font_override("font", CJK_FONT)
+		impact.add_theme_font_size_override("font_size", 10)
+		impact.add_theme_color_override("font_color", GREEN)
+		content.add_child(impact)
+	return card
+
+
+func _animate_results() -> void:
+	if not is_inside_tree():
+		return
+	if _reveal_tween != null and _reveal_tween.is_valid():
+		_reveal_tween.kill()
+	var cards := results_grid.get_children()
+	var reduced_motion := bool(_view.get("reduced_motion", false))
+	for card_value in cards:
+		var card := card_value as Control
+		card.modulate = Color.WHITE
+		card.scale = Vector2.ONE
+	if reduced_motion or cards.is_empty():
+		return
+	_reveal_tween = create_tween()
+	_reveal_tween.set_parallel(true)
+	_reveal_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_reveal_tween.set_ignore_time_scale(true)
+	for index in cards.size():
+		var card := cards[index] as Control
+		card.pivot_offset = card.size * 0.5
+		card.modulate.a = 0.0
+		card.scale = Vector2(0.92, 0.92)
+		var delay := minf(0.24, float(index) * 0.03)
+		_reveal_tween.tween_property(card, "modulate:a", 1.0, 0.16).set_delay(delay)
+		_reveal_tween.tween_property(card, "scale", Vector2.ONE, 0.22).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _build_node(view: Dictionary) -> PanelContainer:
@@ -162,6 +233,9 @@ func _focus_primary_after_layout() -> void:
 	if breakthrough_button.visible:
 		breakthrough_button.grab_focus()
 		return
+	if results_panel.visible:
+		%BlueprintResultsLegionButton.grab_focus()
+		return
 	back_button.grab_focus()
 
 
@@ -174,6 +248,7 @@ func _apply_theme() -> void:
 		label.add_theme_color_override("font_color", TEXT)
 	core_status.add_theme_color_override("font_color", GOLD)
 	breakthrough_copy.add_theme_color_override("font_color", CYAN)
+	results_summary.add_theme_color_override("font_color", CYAN)
 	branch_heading.add_theme_font_size_override("font_size", 16)
 	branch_heading.add_theme_color_override("font_color", CYAN)
 	for button_node in find_children("*", "Button", true, false):
