@@ -75,7 +75,7 @@ func _apply_theme() -> void:
 	progress_summary.add_theme_font_size_override("font_size", 12)
 	progress_summary.add_theme_color_override("font_color", CYAN)
 	next_objective.add_theme_font_size_override("font_size", 12)
-	next_objective.add_theme_color_override("font_color", MUTED)
+	next_objective.add_theme_color_override("font_color", GOLD)
 
 	_style_button(primary_button, true)
 	_style_button(settings_button, false)

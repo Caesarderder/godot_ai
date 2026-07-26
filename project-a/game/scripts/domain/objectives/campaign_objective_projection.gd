@@ -82,8 +82,8 @@ static func _title_view(
 ) -> Dictionary:
 	if no_clears:
 		return {
-			"primary_label": "唤醒 Gman",
-			"objective": "联盟尚未发现这座工厂",
+			"primary_label": "唤醒 Gman · 启动反攻",
+			"objective": "当前目标 · 摧毁联盟前哨 1-1",
 		}
 	if campaign_complete:
 		return {

@@ -12,9 +12,9 @@ func _init() -> void:
 func _run() -> void:
 	var title := TITLE_SCENE.instantiate() as Control
 	title.call("configure", {
-		"primary_label": "唤醒 Gman",
+		"primary_label": "唤醒 Gman · 启动反攻",
 		"summary": "已夺回 0 座城镇 · 1 名战士仍在回应",
-		"objective": "联盟尚未发现这座工厂",
+		"objective": "当前目标 · 摧毁联盟前哨 1-1",
 	})
 	root.add_child(title)
 	await process_frame
@@ -25,9 +25,9 @@ func _run() -> void:
 	var help_button := title.get_node("%TitleHelpButton") as Button
 	var progress_summary := title.get_node("%TitleProgressSummary") as Label
 	var next_objective := title.get_node("%TitleNextObjective") as Label
-	_check(primary_button.text == "唤醒 Gman", "new-save primary action is projected")
+	_check(primary_button.text.contains("启动反攻"), "new-save primary action is projected")
 	_check(progress_summary.text.contains("1 名战士"), "durable roster summary is projected")
-	_check(next_objective.text.contains("尚未发现"), "next objective is projected")
+	_check(next_objective.text.contains("摧毁联盟前哨 1-1"), "next objective is projected")
 	_check(primary_button.has_focus(), "primary action receives initial focus")
 	_check(
 		primary_button.get_theme_stylebox("focus") is StyleBoxFlat,

@@ -636,9 +636,9 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	var fresh_primary := instance.find_child("TitlePrimaryButton", true, false) as Button
 	var title_summary := instance.find_child("TitleProgressSummary", true, false) as Label
 	var title_objective := instance.find_child("TitleNextObjective", true, false) as Label
-	_ok(fresh_primary != null and fresh_primary.text == "唤醒 Gman", "fresh save opens with an in-world story action")
+	_ok(fresh_primary != null and fresh_primary.text.contains("启动反攻"), "fresh save opens with an in-world counterattack action")
 	_ok(title_summary != null and title_summary.text.contains("已夺回 0 座城镇"), "title summarizes durable progress in player-facing language")
-	_ok(title_objective != null and title_objective.text.contains("联盟尚未发现"), "fresh title establishes the opening situation without system instructions")
+	_ok(title_objective != null and title_objective.text.contains("摧毁联盟前哨 1-1"), "fresh title states the first concrete battle objective")
 	var title_state: RefCounted = game_autoload.current_state()
 	var original_cleared: Array = (title_state.stage_progress.get("cleared_stages", []) as Array).duplicate()
 	var original_highest := String(title_state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))

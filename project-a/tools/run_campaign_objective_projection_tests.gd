@@ -44,7 +44,8 @@ func _test_first_chapter_projection() -> void:
 	var projection := CampaignObjectiveProjectionScript.derive(state, onboarding)
 	var title := projection.get("title", {}) as Dictionary
 	var hierarchy := projection.get("hierarchy", {}) as Dictionary
-	_check(String(title.get("primary_label", "")) == "唤醒 Gman", "new save title exposes the first executable promise")
+	_check(String(title.get("primary_label", "")).contains("启动反攻"), "new save title exposes the first executable promise")
+	_check(String(title.get("objective", "")).contains("摧毁联盟前哨 1-1"), "new save title names the first concrete battle objective")
 	_check(String(hierarchy.get("macro", "")).contains("摧毁灰镜核心"), "first chapter retains one macro goal")
 	_check(String(hierarchy.get("small", "")).contains("完成 1-1"), "first chapter retains the current executable objective")
 	_check((projection.get("factory_task", {}) as Dictionary) == onboarding, "unfinished onboarding remains the factory task source")
