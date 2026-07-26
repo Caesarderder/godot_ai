@@ -50,6 +50,10 @@ related:
 
 - [Apple Onboarding for Games](https://developer.apple.com/app-store/onboarding-for-games/)
 - [Apple Human Interface Guidelines: Onboarding](https://developer.apple.com/design/human-interface-guidelines/onboarding)
+- [Apple Human Interface Guidelines: Feedback](https://developer.apple.com/design/human-interface-guidelines/feedback)
+- [Apple Human Interface Guidelines: Playing haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics)
+- [Google Play: Functionality, Content, and User Experience](https://support.google.com/googleplay/android-developer/answer/9898783)
+- [Google Play: Android vitals slow sessions](https://support.google.com/googleplay/android-developer/answer/9844486)
 - [Last War: Survival 官方 App Store 页面](https://apps.apple.com/us/app/last-war-survival/id6448786147)
 - [Whiteout Survival 官方 App Store 页面](https://apps.apple.com/us/app/whiteout-survival/id6443575749)
 - [State of Survival 官方 App Store 页面](https://apps.apple.com/us/app/state-of-survival-zombie-war/id1452474937)
@@ -140,6 +144,8 @@ Apple 的上下文教学原则同样约束十连后的编队：只在玩家需�
 - 反攻结算必须引用本局真实贡献数据，把编队选择与结果连成因果，不用固定胜利话术冒充反馈；
 - 1-5 的核心巨炮是首章唯一视觉高潮，前几关不提前透支同级特效；
 - 减少动态模式保留信息层级、预警和命中确认，不只简单关闭全部反馈。
+- 离散重要事件使用短、因果明确且强度匹配的反馈；浏览器震动即使后续加入也必须可关闭，且不能成为
+  理解技能命中、十连奖励或失败原因的唯一通道。
 
 ### 7. 商业化与合规
 
@@ -179,6 +185,7 @@ Apple 的上下文教学原则同样约束十连后的编队：只在玩家需�
 
 - 自动：首章固定 seed、经济守恒、幂等、存档、UI、Web export 全绿；
 - 设备：Android Chrome、iOS Safari、桌面 Chrome/Firefox；
+- 性能：Android 真机按设备验证 30 FPS 慢会话门槛；桌面 Compatibility capture 不替代移动帧时间；
 - 真人：首 30 秒理解目标、1-4 失败归因、成长比较、1-5 失败归因、30 分钟下一目标；
 - 商业：IP/素材授权、隐私与商店材料审查。
 
