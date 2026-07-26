@@ -1640,7 +1640,12 @@ func _start_battle() -> void:
 	battle_hud_screen.skill_requested.connect(func(_unit_id: String) -> void: _play_ui_click())
 	battle_hud_screen.skill_requested.connect(_request_battle_skill)
 	shell.add_child(battle_hud_screen)
-	battle_hud_screen.configure(snapshots, battle_manual_skills)
+	var state: RefCounted = game.current_state()
+	var first_skill_tutorial := (
+		selected_stage_id == StageCatalog.DEFAULT_STAGE_ID
+		and not (state.stage_progress.get("cleared_stages", []) as Array).has(StageCatalog.DEFAULT_STAGE_ID)
+	)
+	battle_hud_screen.configure(snapshots, battle_manual_skills, first_skill_tutorial)
 	battle_pause_button = battle_hud_screen.pause_button
 	battle_status_label = battle_hud_screen.status_label
 	battle_auto_button = battle_hud_screen.skill_mode_button
@@ -1678,6 +1683,8 @@ func _request_battle_skill(unit_id: String) -> void:
 	if battle_world == null or not is_instance_valid(battle_world):
 		return
 	if battle_world.request_skill(StringName(unit_id)):
+		if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
+			battle_hud_screen.confirm_skill_requested()
 		_notify("已下达技能指令")
 	else:
 		_notify("技能尚未就绪")

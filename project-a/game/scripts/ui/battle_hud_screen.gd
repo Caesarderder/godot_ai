@@ -25,6 +25,9 @@ const GREEN := Color("#78b982")
 
 var _manual_skills := false
 var _warning_tactic := "点亮技能集中爆发"
+var _first_skill_tutorial := false
+var _first_skill_confirmed := false
+var _skill_confirmation_updates := 0
 var _unit_hud: Dictionary = {}
 var _skill_buttons: Dictionary = {}
 
@@ -36,8 +39,15 @@ func _ready() -> void:
 	retreat_button.pressed.connect(retreat_requested.emit)
 
 
-func configure(snapshots: Array[Dictionary], manual_skills: bool) -> void:
+func configure(
+	snapshots: Array[Dictionary],
+	manual_skills: bool,
+	first_skill_tutorial: bool = false
+) -> void:
 	_manual_skills = manual_skills
+	_first_skill_tutorial = first_skill_tutorial
+	_first_skill_confirmed = false
+	_skill_confirmation_updates = 0
 	_warning_tactic = _warning_tactic_for(snapshots)
 	skill_mode_button.text = "技能：手动" if _manual_skills else "技能：自动"
 	skill_grid.columns = maxi(1, snapshots.size())
@@ -55,6 +65,13 @@ func set_manual_skills(enabled: bool) -> void:
 	skill_mode_button.text = "技能：手动" if enabled else "技能：自动"
 
 
+func confirm_skill_requested() -> void:
+	if not _first_skill_tutorial or _first_skill_confirmed:
+		return
+	_first_skill_confirmed = true
+	_skill_confirmation_updates = 5
+
+
 func skill_buttons() -> Dictionary:
 	return _skill_buttons.duplicate()
 
@@ -70,19 +87,41 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 			float(warning.get("remaining_ticks", 0)) / 5.0,
 			_warning_tactic,
 		]
-	status_label.text = "阶段 %d/%d · %s · 战线 %d%%%s" % [
+	var battle_status := "阶段 %d/%d · %s · 战线 %d%%%s" % [
 		int(snapshot.get("stage_index", 0)) + 1,
 		int(snapshot.get("stage_count", 3)),
 		String(snapshot.get("stage_name", "推进中")),
 		clampi(int(snapshot.get("road_progress", 0)) / 10, 0, 100),
 		warning_copy,
 	]
-	status_label.add_theme_color_override("font_color", RED if not warnings.is_empty() else GOLD)
+	var ready_unit_name := ""
 	for unit_value in snapshot.get("units", []):
 		var unit := unit_value as Dictionary
 		if bool(unit.get("temporary", false)):
 			continue
 		_apply_unit_snapshot(unit)
+		if (
+			_manual_skills
+			and bool(unit.get("alive", false))
+			and int(unit.get("energy", 0)) >= 100
+			and ready_unit_name.is_empty()
+		):
+			ready_unit_name = _unit_display_name(String(unit.get("unit_id", "")))
+	status_label.text = battle_status
+	status_label.add_theme_color_override("font_color", RED if not warnings.is_empty() else GOLD)
+	if _skill_confirmation_updates > 0:
+		status_label.text = "指令生效 · %s 正在释放主动技能" % ready_unit_name if not ready_unit_name.is_empty() else "指令生效 · 主动技能正在释放"
+		status_label.add_theme_color_override("font_color", GREEN)
+		_skill_confirmation_updates -= 1
+	elif (
+		_first_skill_tutorial
+		and not _first_skill_confirmed
+		and _manual_skills
+		and not ready_unit_name.is_empty()
+		and warnings.is_empty()
+	):
+		status_label.text = "技能已充满 · 点击下方发光的 %s 卡释放" % ready_unit_name
+		status_label.add_theme_color_override("font_color", GOLD)
 
 
 func _warning_tactic_for(snapshots: Array[Dictionary]) -> String:
@@ -111,6 +150,8 @@ func _apply_unit_snapshot(unit: Dictionary) -> void:
 	var hp_label := hud.get("hp_label") as Label
 	var energy_label := hud.get("energy_label") as Label
 	var state_label := hud.get("state_label") as Label
+	var root := hud.get("root") as PanelContainer
+	root.add_theme_stylebox_override("panel", _unit_card_style(false))
 	hp_bar.max_value = max_hp
 	hp_bar.value = hp
 	_set_progress_fill(hp_bar, GREEN if hp * 3 > max_hp else RED)
@@ -122,8 +163,11 @@ func _apply_unit_snapshot(unit: Dictionary) -> void:
 		state_label.text = "阵亡"
 		state_label.add_theme_color_override("font_color", RED)
 	elif energy >= 100:
-		state_label.text = "技能就绪" if _manual_skills else "自动释放"
+		var tutorial_ready := _first_skill_tutorial and not _first_skill_confirmed and _manual_skills
+		state_label.text = "点击整张卡" if tutorial_ready else ("技能就绪" if _manual_skills else "自动释放")
 		state_label.add_theme_color_override("font_color", GOLD)
+		if tutorial_ready:
+			root.add_theme_stylebox_override("panel", _unit_card_style(true))
 	else:
 		state_label.text = "充能中"
 		state_label.add_theme_color_override("font_color", MUTED)
@@ -135,7 +179,7 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	root.name = "BattleUnitCard_%s" % unit_id
 	root.custom_minimum_size = Vector2(116, 72)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.add_theme_stylebox_override("panel", _box(PANEL_2, 6, Color("#3b4a54")))
+	root.add_theme_stylebox_override("panel", _unit_card_style(false))
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 2)
 	root.add_child(stack)
@@ -170,12 +214,25 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	return {
 		"root": root,
 		"button": skill,
+		"display_name": String(snapshot.get("display_name", unit_id)),
 		"hp_bar": hp["bar"],
 		"energy_bar": energy["bar"],
 		"hp_label": hp["value"],
 		"energy_label": energy["value"],
 		"state_label": state_label,
 	}
+
+
+func _unit_display_name(unit_id: String) -> String:
+	var hud := _unit_hud.get(unit_id, {}) as Dictionary
+	return String(hud.get("display_name", unit_id))
+
+
+func _unit_card_style(highlighted: bool) -> StyleBoxFlat:
+	var style := _box(PANEL_2, 6, GOLD if highlighted else Color("#3b4a54"))
+	if highlighted:
+		style.set_border_width_all(2)
+	return style
 
 
 func _meter_row(tag_text: String, color: Color, value: int, maximum: int) -> Dictionary:

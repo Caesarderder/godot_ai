@@ -19,7 +19,7 @@ func _run() -> void:
 		"max_hp": 200,
 		"skill_id": "siege_shield",
 		"star": 2,
-	}], true)
+	}], true, true)
 	await process_frame
 	_check(hud.find_child("BattleWorldViewportArea", true, false) != null, "HUD reserves the world view area")
 	_check(hud.find_child("BattlePauseButton", true, false) != null, "HUD owns a pause action")
@@ -45,6 +45,41 @@ func _run() -> void:
 	_check(hud.status_label.text.contains("炮击 2.0秒"), "HUD exposes the boss warning countdown")
 	_check(hud.status_label.text.contains("点装甲护盾扛炮"), "HUD explains the roster-specific cannon response")
 	_check(skill_button != null and not skill_button.disabled, "manual skill becomes actionable at full energy")
+	hud.apply_snapshot({
+		"stage_index": 0,
+		"stage_count": 3,
+		"stage_name": "外围接敌",
+		"road_progress": 300,
+		"warnings": [],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 100,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(hud.status_label.text.contains("点击下方发光的 测试先锋 卡"), "first battle teaches the full-card skill action in context")
+	var state_label := hud.find_child("BattleUnitStateLabel", true, false) as Label
+	_check(state_label != null and state_label.text == "点击整张卡", "ready card labels the complete touch target")
+	hud.confirm_skill_requested()
+	hud.apply_snapshot({
+		"stage_index": 0,
+		"stage_count": 3,
+		"stage_name": "外围接敌",
+		"road_progress": 300,
+		"warnings": [],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 0,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(hud.status_label.text.contains("指令生效"), "accepted first skill receives immediate HUD confirmation")
 	hud.set_manual_skills(false)
 	hud.apply_snapshot({
 		"units": [{
@@ -57,7 +92,6 @@ func _run() -> void:
 		}],
 	})
 	_check(skill_button != null and skill_button.disabled, "automatic or defeated units cannot receive manual skill orders")
-	var state_label := hud.find_child("BattleUnitStateLabel", true, false) as Label
 	_check(state_label != null and state_label.text == "阵亡", "HUD explains disabled skill state with text")
 	hud.queue_free()
 	await process_frame
