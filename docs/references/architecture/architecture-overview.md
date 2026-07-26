@@ -4,7 +4,7 @@ km_type: reference
 domain: architecture
 status: draft
 owner: architecture
-last_verified: 2026-07-26
+last_verified: 2026-07-27
 source_of_truth:
   - docs/references/product-design/skibidi-toilet-idle-siege-gdd.md
   - docs/references/constraints/implementation-status.md
@@ -46,17 +46,20 @@ related:
 
 # Web-first 3D 技术架构总览
 
-> **迁移警告（2026-07-26）：** 本文主体仍包含 schema v6 消耗单位架构。命令、存档、确定性战斗
-> 和表现分层可复用；业务字段与 UI 应改读
-> [KM:reference.toilet-factory-technical-design](toilet-factory-technical-design.md)。
+> 本文已按 schema v8 永久军团架构回填。`FactoryState` 中仍存在的图纸、生产队列和维修字段只用于
+> v5/v6/v7 存档读取与迁移兼容，不是运行时业务权威，也不得重新接回玩家入口。
 
-> 当前状态保持 `draft`，因为生产源持久化、音频手势、装备、离线战斗和手机真机仍未完成。`project-a` 已切换 GL Compatibility，并已实现 v4 Meta、五章 25 关、营地单一“目标”入口、任务/成就分页、设置/失焦暂停、程序化 3D 战争表现、单线程 Web/PWA 导出、本地产物审计与 844×390 浏览器路径。
+> 当前状态保持 `draft`，因为生产源持久化、移动真机、真人首 30 分钟、最终 IP/商店审查和监控回滚
+> 仍未完成。`project-a` 已实现 GL Compatibility、五章 25 关、四入口 App Shell、单线程 Web/PWA、
+> 本地产物审计、844×390 Chrome 路径和 schema v8 本地存档。
 
 > 解释规则：新 GDD、产品边界和首 30 分钟合同是目标玩法事实源；旧 PRD/Test Spec 与现有代码只用于识别可复用实现和迁移差距。
 
 ## 目标
 
-用 Godot 4.6.3 和 GDScript 制作 3D 马桶人工厂攻城；发布为 Web 游戏，主要在手机浏览器横屏运行。系统首先保证永久型号科技、可消耗单位库存、六人编队、确定性自动攻城、生死结算、连续推关、双货币与图纸研发正确，再逐步补齐真实支付、Web 平台、离线边界、装备和 3D 表现预算。
+用 Godot 4.6.3 和 GDScript 制作 3D 马桶人工厂攻城；发布为 Web 游戏，主要在手机浏览器横屏运行。
+系统首先保证永久角色、六槽编队、三种后勤资源、设施建造/升级、确定性自动攻城、无损结算、
+长期目标与本地持久化正确，再以真实玩家和目标设备证据校准玩法、性能与发布边界。
 
 ## 方案选择
 
@@ -78,8 +81,8 @@ flowchart TD
     Domain --> Candidate["Candidate GameState"]
     Candidate --> Save["SaveManager / user:// JSON"]
     Save -->|durable success| Live["Live GameState swap"]
-    Live --> Events["Committed EventBus signals"]
-    Events --> UI
+    Live --> Signals["Committed direct signals / screen refresh"]
+    Signals --> UI
     Domain --> Battle["5 Hz BattleSimulator"]
     Battle --> Queue["Presentation Event Queue"]
     Queue --> View3D["Node3D / Animation / VFX projection"]
@@ -88,9 +91,9 @@ flowchart TD
 
 | 层 | 拥有 | 禁止拥有 |
 |---|---|---|
-| Content | 型号、技能、敌人、关卡、掉落池、图纸奖池、任务、免费战令、设施的只读定义 | 单位实例、钱包、保底、玩家进度 |
-| State | `GameState`、Wallet/ModelTech/Unit/Formation/Quest/Pass 等可序列化状态 | Node、Resource、scene path |
-| Domain | 制造、科技、编队、经济、图纸研发、任务/战令、离线、战斗与结算规则 | UI、动画、物理查询、wall-time Tick |
+| Content | 角色、技能、敌人、关卡、任务、战令、成就与设施的只读 `.tres`/目录定义 | 角色实例、钱包、玩家进度 |
+| State | `GameState`、Hero/Economy/Factory/Formation/Onboarding/Meta 等可序列化状态 | Node、scene path、表现对象 |
+| Domain | 永久成长、编队、经济、研究突破、任务/战令、离线产出、战斗与无损结算规则 | UI、动画、物理查询、表现帧 Tick |
 | Application | 命令分类、幂等 receipt、事务编排、screen use case | 绕过 executor 直接写状态 |
 | Persistence | JSON schema、迁移、candidate 写入、备份与恢复 | 业务规则 |
 | Presentation 3D | 模型、材质、动画、VFX、相机、插值 | 命中、目标、伤害、掉落、胜负 |
@@ -99,17 +102,14 @@ flowchart TD
 
 ## Autoload 边界
 
-目标架构按以下顺序注册：
+当前只注册三个有明确全局生命周期的 Autoload，并保持声明顺序：
 
-1. `SystemClock`：提供可替换 wall clock；测试可注入（未实现）。
-2. `SaveManager`：唯一存档 writer（首版已实现）。
-3. `ContentCatalog`：加载并校验只读 `.tres` 定义（未实现）。
-4. `EventBus`：仅广播已经提交的状态变化和界面级事件（未实现）。
-5. `Game`：持有 live `GameState`，暴露 command API（首版已实现）。
-6. `WebRuntime`：已处理浏览器焦点与可见性信号、战斗失焦暂停、持久性提示、文本下载与浏览器
-   文件导入；`LocalPlaytestJournal` 独立持有默认关闭的本地试玩证据，不进入领域真值。
+1. `SaveManager`：唯一存档 writer，封装 tmp 校验、主备替换、导入导出与恢复。
+2. `Game`：持有 live `GameState` 和 `CommandExecutor`，只在耐久写入成功后交换候选状态。
+3. `AppBootstrap`：显式取得前两项服务，幂等启动并暴露失败状态。
 
-`EventBus` 不能执行命令、发奖励或串联领域副作用。功能内部优先直接调用/直接 signal；跨 screen 的 UI、音频和 3D 投影才消费全局事件。
+`WebRuntime`、音频、表现与本地试玩日志由 App Shell 或功能场景拥有，不升级为全局服务。当前没有
+为了“解耦”而建立万能 EventBus；同一功能内优先直接调用/typed signal，跨场景事件也不得执行命令或发奖励。
 
 ## 状态、命令和持久化
 
@@ -129,9 +129,9 @@ Immutable BattleResult
 └── battle_id / outcome / ticks / reward / result fields
 ```
 
-- `DURABLE_VALUE`：招募、训练、开始生产、领取生产、3 合 1 合成、强化、设施升级、领奖、战斗与离线结算。执行顺序是 candidate clone → reducer → invariants → receipt → JSON durable save → live swap → success。
-- `INTERNAL_DURABLE`：前后台 anchor 与 resume settlement，仅 `WebLifecycle` 通过 internal capability 发起。
-- `REVERSIBLE_META`：编队、装备、筛选和重命名，可 1000ms debounce。
+- `DURABLE_VALUE`：角色升级/升星、研究突破、资源领取、设施建造/升级、编队、任务/战令/成就领奖、招募和战斗结算。执行顺序是 candidate clone → reducer → invariants → receipt → JSON durable save → live swap → success。
+- `INTERNAL_DURABLE`：离线产出锚和周期刷新等内部耐久更新；仍走同一 candidate-save-commit 边界。
+- `REVERSIBLE_META`：当前没有独立降级写入通道；编队也立即耐久提交，筛选和纯页面状态保持 ephemeral。
 - `EPHEMERAL`：导航、动画、战斗表现 Tick、详情预览，不进入 `GameState`。
 
 当前存档仍使用兼容文件名 `user://save_v1.json`，内部 schema 已为 8，内容版本为
@@ -152,10 +152,9 @@ BattleScreen (Node)
 │   ├── DirectionalLight3D
 │   ├── BattleCamera (Camera3D)
 │   ├── StageVisual (Node3D)
-│   ├── AllyViews (6 main + temporary summons)
-│   ├── StructureViews (7 siege structures)
-│   ├── Units (Node3D)
-│   └── VfxPool (Node3D)
+│   ├── AttackingArmy (0–6 permanent hero views)
+│   ├── AllianceBaseModules
+│   └── LightweightVFX
 └── Hud (CanvasLayer)
     └── SafeAreaRoot (MarginContainer)
 ```
@@ -190,29 +189,32 @@ BattleScreen (Node)
 | 内存 | 30 分钟运行无持续增长；峰值预算在真机 profiling 后冻结 |
 | Battle | 5Hz 逻辑与 30/60/120 渲染帧得到相同 digest |
 
-## 目标目录
+## 当前目录边界
 
 ```text
 project-a/
 ├── project.godot
 ├── export_presets.cfg
 ├── game/
-│   ├── resources/definitions/{classes,skills,traits,enemies,equipment,affixes,stages,quests,achievements,facilities}/
+│   ├── resources/definitions/stages/
 │   ├── scripts/
 │   │   ├── autoloads/
 │   │   ├── commands/
 │   │   ├── state/
-│   │   ├── domain/{recruitment,formation,factory,battle,loot,progression,quest,achievement,idle}/
+│   │   ├── domain/{recruitment,formation,factory,battle,progression,quest,achievement,onboarding,meta}/
 │   │   ├── persistence/
-│   │   ├── platform/web/
+│   │   ├── platform/
 │   │   ├── presentation_3d/
 │   │   └── ui/
-│   └── scenes/{app,battle_3d,characters,screens,dialogs,ui}/
-├── tests/{unit,integration,fixtures,web}/
+│   └── scenes/
+├── scenes/screens/
+├── scripts/slg_main.gd
+├── assets/
+├── release/
 └── tools/
 ```
 
-这些路径是 planned ownership；存在前不得用 `CODE:*` 标为实现事实。
+继续拆分时按 feature ownership 增量迁移；不得为了目录整齐创建空树，也不得把领域规则塞回 App Shell。
 
 ## 验证与里程碑
 
@@ -220,7 +222,7 @@ project-a/
 |---|---|---|
 | M0 Web shell | Compatibility、Web preset、PWA、audio gate、persistence probe | Chrome Android + Safari iOS 启动；不可持久时明确告警 |
 | M1 Durable kernel | GameState、commands、receipt、JSON writer、offline anchor | headless unit、重复 resume、crash/replay、migration |
-| M2 Hero/factory/formation | 8 英雄、L1-L5、三材料八配方、3 队列、3 合 1、六槽编队 | 固定 seed；8 英雄；无悬挂 ID；生产/领取/合成幂等 |
+| M2 Hero/factory/formation | 永久英雄、等级/星级、三材料、设施和六槽编队 | 固定 seed；无悬挂 ID；成长/领取/建造幂等 |
 | M3 Battle 1-3 | 5Hz 三阶段 siege、六人、技能、核心炮、3D projector | 跨帧率 digest；禁用 3D 仍同结果；paired +30pp |
 | M4 Meta | 目标中心、任务、成就、pity 已落地；装备、设施、离线继续补齐 | 奖励 once、任务/成就不硬锁、首 30 分钟经济 |
 | M5 Web production | 1-5 Boss、30 分钟切片、资源优化 | 真机浏览器性能、PWA 更新、5 人观察 |
@@ -229,15 +231,17 @@ project-a/
 
 ## 入口或路径
 
-当前可运行入口：[CODE:project-config](../../../project-a/project.godot)、[CODE:main-scene](../../../project-a/scenes/screens/main.tscn)、[CODE:app-shell](../../../project-a/scripts/main.gd)、[CODE:meta-tests](../../../project-a/tools/run_meta_tests.gd)、[CODE:battle-tests](../../../project-a/tools/run_battle_tests.gd)。
+当前可运行入口：[CODE:project-config](../../../project-a/project.godot)、[CODE:main-scene](../../../project-a/scenes/screens/main.tscn)、[CODE:app-shell](../../../project-a/scripts/slg_main.gd)、[CODE:meta-tests](../../../project-a/tools/run_meta_tests.gd)、[CODE:battle-tests](../../../project-a/tools/run_battle_tests.gd)。
 
 计划状态/命令契约：[KM:reference.state-command-lifecycle](state-command-lifecycle.md)。
 
 ## 验证
 
-- 当前已验证：Godot 4.6.3、Compatibility、v4 Meta、25 关、营地目标中心、25 个任务、24 个永久一次性成就、章节结算、设置/失焦暂停、低中高表现降级、七套 headless suite。
-- 已验证：单线程 Web/PWA release export、artifact audit，以及 844×390 本地 HTTP 的标题、设置、营地、地图和 3D 战斗，控制台无 warning/error。
-- 尚未验证：生产源持久性探测、音频解锁、离线结算、装备、Chrome Android/Safari iOS 真机性能、跨帧率 digest 和 paired balance。
+- 当前已验证：Godot 4.6.3、Compatibility、schema v8、25 关骨架、首章 7-seed 扫描、14 条新档旅程、
+  长期目标、暂停/失焦、表现降级、字体覆盖、焦点可见和完整 headless suite。
+- 已验证：单线程 Web/PWA 可复现导出、artifact audit，以及本机 Chrome 的触控、导入导出、刷新、
+  离线启动和 IndexedDB 身份。
+- 尚未验证：生产源持久性、Firefox、Chrome Android、Safari iOS、目标手机性能、真人盲测和最终商业审查。
 
 ## 相关节点
 
