@@ -43,11 +43,28 @@ func _capture() -> void:
 	var heroes: Array[Dictionary] = [hero]
 	hud.call("configure", heroes, true, true)
 	hud.call("apply_snapshot", {
-		"stage_index": 1,
-		"stage_count": 3,
-		"stage_name": "街区推进",
+		"stage_index": 0,
+		"stage_count": 1,
+		"stage_name": "城市外围",
 		"road_progress": 360,
 		"warnings": [],
+		"structures": [{
+			"structure_id": "abandoned_barricade",
+			"display_name": "废弃路障",
+			"kind": "structure",
+			"stage": 0,
+			"hp": 113,
+			"max_hp": 180,
+			"alive": true,
+		}, {
+			"structure_id": "unguarded_city",
+			"display_name": "无防备城市",
+			"kind": "city",
+			"stage": 0,
+			"hp": 760,
+			"max_hp": 760,
+			"alive": true,
+		}],
 		"units": [{
 			"unit_id": "hero_gman",
 			"hp": 200,

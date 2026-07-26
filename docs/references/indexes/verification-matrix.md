@@ -214,6 +214,10 @@ related:
   中断淡化后只有一个 Stream voice、后台暂停/恢复和清理；Platform/Settings 测试覆盖默认值、
   旧配置回退、持久化、归一化与语义 UI 事件，UI smoke 锁定 App Shell 的标题、基地和普通战斗
   路由。真实 Web 首次手势、循环接缝和移动端 Stream 仍是浏览器/设备门禁。
+- 首战目标反馈：`run_battle_hud_screen_tests.gd` 验证 HUD 从当前阶段第一个存活结构投影
+  “突破/摧毁 + 名称 + 耐久”，并在路障死亡后切换到城市；表现、UI 与 battle 回归证明它没有
+  改变领域结果。`ui-first-skill-tutorial-844x390.png` 使用真实 1-1 单阶段配置证明目标前缀与
+  技能教学、三个战斗操作按钮在基准横屏内共存。
 - 仍缺：Firefox 桌面、Android Chrome、iOS Safari、生产 HTTPS、真人首 20–30 分钟及最终 IP/商店审查。
 
 ## 必测不变量

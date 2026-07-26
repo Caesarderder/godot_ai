@@ -82,6 +82,7 @@ func skill_buttons() -> Dictionary:
 func apply_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.is_empty():
 		return
+	var objective_copy := _objective_copy(snapshot)
 	var warnings := snapshot.get("warnings", []) as Array
 	var warning_copy := ""
 	if not warnings.is_empty():
@@ -93,7 +94,7 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	var battle_status := "阶段 %d/%d · %s · 战线 %d%%%s" % [
 		int(snapshot.get("stage_index", 0)) + 1,
 		int(snapshot.get("stage_count", 3)),
-		String(snapshot.get("stage_name", "推进中")),
+		objective_copy if not objective_copy.is_empty() else String(snapshot.get("stage_name", "推进中")),
 		clampi(int(snapshot.get("road_progress", 0)) / 10, 0, 100),
 		warning_copy,
 	]
@@ -127,8 +128,32 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		and not ready_unit_name.is_empty()
 		and warnings.is_empty()
 	):
-		status_label.text = "技能已充满 · 点击下方发光的 %s 卡释放" % ready_unit_name
+		status_label.text = "%s · 技能已充满 · 点击下方发光的 %s 卡释放" % [
+			objective_copy if not objective_copy.is_empty() else "继续推进",
+			ready_unit_name,
+		]
 		status_label.add_theme_color_override("font_color", GOLD)
+
+
+func _objective_copy(snapshot: Dictionary) -> String:
+	var stage_index := int(snapshot.get("stage_index", 0))
+	for structure_value in snapshot.get("structures", []):
+		var structure := structure_value as Dictionary
+		if int(structure.get("stage", -1)) != stage_index or not bool(structure.get("alive", false)):
+			continue
+		var max_hp := maxi(1, int(structure.get("max_hp", 1)))
+		var durability := clampi(
+			ceili(float(maxi(0, int(structure.get("hp", 0)))) * 100.0 / float(max_hp)),
+			0,
+			100
+		)
+		var verb := "摧毁" if String(structure.get("kind", "")) in ["city", "core"] else "突破"
+		return "%s%s · 耐久 %d%%" % [
+			verb,
+			String(structure.get("display_name", "防御结构")),
+			durability,
+		]
+	return ""
 
 
 func _warning_tactic_for(snapshots: Array[Dictionary]) -> String:

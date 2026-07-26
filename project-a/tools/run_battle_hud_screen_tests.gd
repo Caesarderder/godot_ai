@@ -51,6 +51,23 @@ func _run() -> void:
 		"stage_name": "外围接敌",
 		"road_progress": 300,
 		"warnings": [],
+		"structures": [{
+			"structure_id": "opening_barricade",
+			"display_name": "废弃路障",
+			"kind": "structure",
+			"stage": 0,
+			"hp": 113,
+			"max_hp": 180,
+			"alive": true,
+		}, {
+			"structure_id": "opening_city",
+			"display_name": "无防备城市",
+			"kind": "city",
+			"stage": 0,
+			"hp": 760,
+			"max_hp": 760,
+			"alive": true,
+		}],
 		"units": [{
 			"unit_id": "hero_test",
 			"hp": 200,
@@ -60,7 +77,29 @@ func _run() -> void:
 			"temporary": false,
 		}],
 	})
+	_check(hud.status_label.text.contains("突破废弃路障 · 耐久 63%"), "first battle names the current destructible objective and remaining durability")
 	_check(hud.status_label.text.contains("点击下方发光的 测试先锋 卡"), "first battle teaches the full-card skill action in context")
+	_check(
+		String(hud.call("_objective_copy", {
+			"stage_index": 0,
+			"structures": [{
+				"display_name": "废弃路障",
+				"kind": "structure",
+				"stage": 0,
+				"hp": 0,
+				"max_hp": 180,
+				"alive": false,
+			}, {
+				"display_name": "无防备城市",
+				"kind": "city",
+				"stage": 0,
+				"hp": 380,
+				"max_hp": 760,
+				"alive": true,
+			}],
+		})).contains("摧毁无防备城市 · 耐久 50%"),
+		"HUD advances from a destroyed roadblock to the live city objective"
+	)
 	var state_label := hud.find_child("BattleUnitStateLabel", true, false) as Label
 	_check(state_label != null and state_label.text == "点击整张卡", "ready card labels the complete touch target")
 	hud.confirm_skill_requested()
