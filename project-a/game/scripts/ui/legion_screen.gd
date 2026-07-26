@@ -53,12 +53,19 @@ func configure(view: Dictionary) -> void:
 func _rebuild() -> void:
 	var active_tab := String(_view.get("tab", "formation"))
 	var first_formation := _view.get("first_formation", {}) as Dictionary
-	task_tabs.visible = not bool(first_formation.get("active", false))
+	var first_growth := _view.get("first_growth_choice", {}) as Dictionary
+	task_tabs.visible = (
+		not bool(first_formation.get("active", false))
+		and not bool(first_growth.get("active", false))
+	)
 	scroll.name = "LegionContentScroll_%s" % active_tab
 	_style_tab(formation_tab, active_tab == "formation")
 	_style_tab(recruit_tab, active_tab == "recruit")
 	_style_tab(roster_tab, active_tab == "roster")
 	_clear_content()
+	if bool(first_growth.get("active", false)):
+		content.add_child(_growth_choice_panel(first_growth))
+		return
 	match active_tab:
 		"recruit":
 			content.add_child(_recruit_panel())
@@ -67,6 +74,67 @@ func _rebuild() -> void:
 				content.add_child(_hero_card(hero_value as Dictionary))
 		_:
 			content.add_child(_formation_panel())
+
+
+func _growth_choice_panel(first_growth: Dictionary) -> Control:
+	var panel := _panel("首次战斗成长 · 二选一挑战 %s" % String(first_growth.get("target_stage", "章节 Boss")))
+	panel.name = "FirstGrowthChoice"
+	var choices := first_growth.get("choices", []) as Array
+	var grid := GridContainer.new()
+	grid.name = "FirstGrowthChoiceGrid"
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 8)
+	panel.add_child(grid)
+	for choice_value in choices:
+		var choice := choice_value as Dictionary
+		var frame := PanelContainer.new()
+		frame.name = "GrowthRoute_%s" % String(choice.get("archetype_id", ""))
+		frame.custom_minimum_size.x = 360
+		frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		frame.add_theme_stylebox_override("panel", _box(PANEL_2, LINE))
+		var margin := MarginContainer.new()
+		margin.add_theme_constant_override("margin_left", 10)
+		margin.add_theme_constant_override("margin_top", 8)
+		margin.add_theme_constant_override("margin_right", 10)
+		margin.add_theme_constant_override("margin_bottom", 8)
+		frame.add_child(margin)
+		var card := _panel("")
+		margin.add_child(card)
+		var archetype_id := String(choice.get("archetype_id", ""))
+		card.add_child(_label(
+			"%s · %s" % [
+				String(choice.get("display_name", "")),
+				"快攻" if archetype_id == "assault" else "守势",
+			],
+			16,
+			TEXT
+		))
+		card.add_child(_label(String(choice.get("route", "")), 12, CYAN))
+		card.add_child(_label(String(choice.get("verified", "")), 12, GREEN))
+		card.add_child(_label(
+			"战力 %d → %d（+%d）" % [
+				int(choice.get("power_before", 0)),
+				int(choice.get("power_after", 0)),
+				int(choice.get("power_gain", 0)),
+			],
+			13,
+			GOLD
+		))
+		card.add_child(_label("消耗 · %s" % String(choice.get("cost", "")), 11, TEXT))
+		var upgraded := bool(choice.get("already_upgraded", false))
+		var action := _button("已完成二星成长" if upgraded else "选择此路线并升至 2★", true)
+		action.name = "ChooseGrowth_%s" % String(choice.get("archetype_id", ""))
+		action.custom_minimum_size.y = 38
+		action.disabled = upgraded or not bool(choice.get("affordable", false))
+		action.pressed.connect(action_requested.emit.bind("star", {
+			"hero_id": String(choice.get("hero_id", "")),
+		}))
+		card.add_child(action)
+		if not upgraded and not bool(choice.get("affordable", false)):
+			card.add_child(_label("资源不足 · 返回工厂收取后勤", 11, RED))
+		grid.add_child(frame)
+	return panel
 
 
 func _formation_panel() -> Control:

@@ -134,6 +134,10 @@ related:
   `run_first_formation_flow_tests.gd` 与 `run_battle_result_screen_tests.gd` 验证结算从真实出战、
   逐角色伤害和承伤统计生成过坎证据；`ui-counterattack-proof-844x390.png` 证明 844×390 下
   因果复盘与下一行动同时可读。
+  `run_first_growth_flow_tests.gd` 覆盖反攻结算 CTA 直接进入资源设施选择、非资源设施延后、
+  建成后定位投产收取、收取后并列两条 Boss 成长路线、真实 CP/成本预览、两按钮可选以及
+  `upgrade_hero_star` 命令后立即进入行动七；`ui-first-industrial-choice-844x390.png` 与
+  `ui-first-growth-choice-844x390.png` 证明三个设施和两条成长路线分别在基准横屏首屏可操作。
   网格建造回归覆盖用途卡、费用可读性、三步引导、空格选择、确认前不扣款、坐标持久化以及
   `ui-construction-placement-844x390.png` 放置态证据。
   帮助中心回归覆盖标题/设置双入口、双栏滚动、建造与技能说明、隐私与运行版本、48 像素返回

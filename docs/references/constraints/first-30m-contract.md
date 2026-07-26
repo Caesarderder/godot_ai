@@ -143,6 +143,14 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 18/10/8 工业材料与一枚技能芯片。14 条真实新档旅程已验证两条路线均无需注入资源且全程账本非负；
 其他早期入口仍不得抢占这笔受控资源形成软锁。
 
+行动六已改为连续的上下文流程，而不是让同名任务按钮刷新当前页面：反攻结算的“选择工业支援”
+直接打开只含三座资源设施的建造选择，并在每项上对照当前库存与二星需求；建成后 CTA 定位到
+该设施的验收物资；收取后直接进入首次成长专注态。专注态在 844×390 首屏并列展示冲锋快攻与
+装甲守势，包含战术结果、7-seed 验证、真实 `CombatPower` 前后值和同一领域成本，两个升星
+按钮均可操作，不显示招募、派驻等无关分支。证据为 `run_first_growth_flow_tests.gd`、
+`artifacts/ui-first-industrial-choice-844x390.png` 与
+`artifacts/ui-first-growth-choice-844x390.png`。
+
 ## 关卡合同
 
 数值区间是首轮 `target`；玩家感受是 `playtest hypothesis`。

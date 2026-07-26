@@ -778,6 +778,11 @@ func _show_base() -> void:
 
 func _factory_view() -> Dictionary:
 	var state: RefCounted = game.current_state()
+	var onboarding := OnboardingService.snapshot(state)
+	var growth_facility_choice := (
+		String(onboarding.get("task_id", "")) == "operation.choose_growth"
+		and _onboarding_objective_id(onboarding) == "commission_resource_facility"
+	)
 	var now_unix := int(Time.get_unix_time_from_system())
 	var resources: Array[Dictionary] = []
 	for resource in [
@@ -802,13 +807,24 @@ func _factory_view() -> Dictionary:
 	for facility_id in FACILITY_NAMES:
 		if facility_id == "command_center" or int(state.factory.facilities.get(facility_id, 0)) > 0:
 			continue
+		if growth_facility_choice and not FACTORY_RESOURCE_NAMES.has(facility_id):
+			continue
 		var cost := int(LogisticsService.FACILITY_BUILD_COSTS.get(facility_id, 0))
 		var eligible: bool = facility_id != "research_lab" or bool(state.factory.eligible_facilities.get("research_lab", false))
+		var resource_id := String(LogisticsService.RESOURCE_BY_FACILITY.get(facility_id, ""))
+		var star_need := int((LogisticsService.STAR_COSTS[2]["materials"] as Dictionary).get(resource_id, 0))
 		construction_options.append({
 			"facility_id": facility_id,
 			"name": String(FACILITY_NAMES[facility_id]),
 			"cost": cost,
 			"copy": String(FACILITY_COPY[facility_id]) if eligible else "先挑战 1-4，让首败战报定位研究所方案。",
+			"growth_copy": (
+				"当前 %d · 二星升星需要 %d" % [
+					int(state.factory.materials.get(resource_id, 0)),
+					star_need,
+				]
+				if growth_facility_choice else ""
+			),
 			"disabled": int(state.economy.toilet_coins) < cost or not state.factory.facility_work.is_empty() or not eligible,
 		})
 	var cell_selected := construction_cell.x != 999
@@ -820,9 +836,10 @@ func _factory_view() -> Dictionary:
 		"coins": int(state.economy.toilet_coins),
 		"tech": int(state.economy.industrial_tech),
 		"resources": resources,
-		"task": OnboardingService.snapshot(state),
+		"task": onboarding,
 		"facility": facility,
 		"construction": {
+			"focused_growth": growth_facility_choice,
 			"options": construction_options,
 			"active_id": construction_facility_id,
 			"active_name": String(FACILITY_NAMES.get(construction_facility_id, "")),
@@ -1102,8 +1119,14 @@ func _legion_view() -> Dictionary:
 	var recommended_archetype := ""
 	if first_formation_active:
 		recommended_archetype = "armored" if not deployed_archetypes.has("armored") else "assault"
+	var first_growth_active := (
+		not bool(onboarding.get("finished", false))
+		and String(onboarding.get("task_id", "")) == "operation.choose_growth"
+		and _onboarding_objective_id(onboarding) == "complete_combat_growth"
+	)
 	var candidates: Array[Dictionary] = []
 	var roster: Array[Dictionary] = []
+	var growth_choices: Array[Dictionary] = []
 	for hero in state.roster:
 		var power := CombatPower.hero_power(hero)
 		var specialty_id := String(LogisticsService.SPECIALTY_FACILITY.get(String(hero.archetype_id), "energy_station"))
@@ -1143,6 +1166,51 @@ func _legion_view() -> Dictionary:
 			"specialty_assigned": String(hero.assigned_facility_id) == specialty_id,
 			"auto_skill": bool(hero.auto_skill_enabled),
 		})
+		if first_growth_active and String(hero.archetype_id) in ["assault", "armored"]:
+			var target_power := CombatPower.projected_hero_power_for_star(hero, 2)
+			var star_cost := LogisticsService.STAR_COSTS[2] as Dictionary
+			var material_cost := star_cost["materials"] as Dictionary
+			var owned_data := int(state.meta_progression.hero_data.get(String(hero.archetype_id), 0))
+			var data_cost := mini(int(star_cost["hero_shards"]), owned_data)
+			var universal_cost := int(star_cost["hero_shards"]) - data_cost
+			var affordable := (
+				int(hero.star) >= 2
+				or (
+					int(state.economy.hero_shards) >= universal_cost
+					and int(state.factory.materials.get("porcelain", 0)) >= int(material_cost["porcelain"])
+					and int(state.factory.materials.get("parts", 0)) >= int(material_cost["parts"])
+					and int(state.factory.materials.get("sludge", 0)) >= int(material_cost["sludge"])
+				)
+			)
+			growth_choices.append({
+				"hero_id": String(hero.hero_id),
+				"archetype_id": String(hero.archetype_id),
+				"display_name": String(hero.display_name),
+				"route": (
+					"二星强袭 · 快速压制核心巨炮"
+					if String(hero.archetype_id) == "assault"
+					else "二星护盾 · 格挡并反震炮击"
+				),
+				"verified": (
+					"实测 7/7 通关 · 决战更快"
+					if String(hero.archetype_id) == "assault"
+					else "实测 7/7 通关 · 全队容错更强"
+				),
+				"power_before": power,
+				"power_after": target_power,
+				"power_gain": target_power - power,
+				"cost": "%s · 陶瓷 %d · 零件 %d · 能源 %d" % [
+					(
+						"专属数据 %d + 通用碎片 %d" % [data_cost, universal_cost]
+						if data_cost > 0 else "通用碎片 %d" % universal_cost
+					),
+					int(material_cost["porcelain"]),
+					int(material_cost["parts"]),
+					int(material_cost["sludge"]),
+				],
+				"already_upgraded": int(hero.star) >= 2,
+				"affordable": affordable,
+			})
 	var data_parts: Array[String] = []
 	for archetype_id in state.meta_progression.hero_data:
 		data_parts.append("%s×%d" % [
@@ -1170,6 +1238,11 @@ func _legion_view() -> Dictionary:
 				if recommended_archetype == "armored"
 				else "再让冲锋加入队伍快速压制"
 			),
+		},
+		"first_growth_choice": {
+			"active": first_growth_active,
+			"choices": growth_choices,
+			"target_stage": "1-5 灰镜核心巨炮",
 		},
 		"counterattack": {
 			"visible": (
@@ -2078,7 +2151,7 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 		"next_stage":
 			_start_stage_battle(String(payload.get("stage_id", "")))
 		"factory", "base":
-			_show_base()
+			_open_factory_task_context() if action_id == "factory" else _show_base()
 
 
 func _battle_contribution_copy(runtime_result: Dictionary) -> String:
@@ -2460,7 +2533,7 @@ func _signal_recruit(count: int) -> void:
 func _follow_task(target: String, stage_id: String = "") -> void:
 	match target:
 		"factory", "repair":
-			_show_base() if target == "factory" else _show_legion()
+			_open_factory_task_context() if target == "factory" else _show_legion()
 		"legion", "formation":
 			_show_legion()
 		"research":
@@ -2473,6 +2546,37 @@ func _follow_task(target: String, stage_id: String = "") -> void:
 				_show_map()
 		_:
 			_show_map()
+
+
+func _open_factory_task_context() -> void:
+	var state: RefCounted = game.current_state()
+	var onboarding := OnboardingService.snapshot(state)
+	var objective_id := _onboarding_objective_id(onboarding)
+	if (
+		String(onboarding.get("task_id", "")) == "operation.choose_growth"
+		and objective_id == "commission_resource_facility"
+	):
+		factory_hud_panel = "build"
+	elif (
+		String(onboarding.get("task_id", "")) == "operation.choose_growth"
+		and objective_id == "claim_commissioning_output"
+	):
+		for facility_id in ["porcelain_plant", "parts_workshop", "energy_station"]:
+			if int(state.factory.facilities.get(facility_id, 0)) > 0:
+				selected_facility_id = facility_id
+				break
+		factory_hud_panel = "facility"
+	else:
+		factory_hud_panel = "mission"
+	_show_base()
+
+
+func _onboarding_objective_id(onboarding: Dictionary) -> String:
+	for objective_value in onboarding.get("objectives", []):
+		var objective := objective_value as Dictionary
+		if not bool(objective.get("completed", false)):
+			return String(objective.get("id", ""))
+	return ""
 
 
 func _reward_text(reward: Dictionary) -> String:

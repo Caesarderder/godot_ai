@@ -32,6 +32,14 @@ static func hero_power(hero: RefCounted) -> int:
 	)
 
 
+static func projected_hero_power_for_star(hero: RefCounted, target_star: int) -> int:
+	if hero == null:
+		return 0
+	var projected: RefCounted = hero.deep_clone()
+	projected.star = clampi(target_star, int(hero.star), 3)
+	return hero_power(projected)
+
+
 static func snapshot_power(snapshot: Dictionary) -> int:
 	return stats_power(
 		int(snapshot.get("max_hp", 0)),

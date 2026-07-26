@@ -75,8 +75,11 @@ func _test_power_contract() -> void:
 	_check(max_level_power < level_one_power * 2, "L1-L5 training cannot double Gman power")
 	var two_star := HeroGeneratorScript.generate_archetype(20260726, 1, "assault", "fighter")
 	var one_star_power := CombatPowerScript.hero_power(two_star)
+	var projected_two_star_power := CombatPowerScript.projected_hero_power_for_star(two_star, 2)
+	_eq(int(two_star.star), 1, "star projection never mutates permanent hero state")
 	two_star.star = 2
 	_check(CombatPowerScript.hero_power(two_star) > one_star_power, "star promotion increases displayed combat power")
+	_eq(projected_two_star_power, CombatPowerScript.hero_power(two_star), "star choice preview uses the canonical post-upgrade combat power")
 	_eq(CombatPowerScript.STAR_SKILL_BP[3], CombatPowerScript.STAR_SKILL_BP[5], "skill power multiplier caps when skill tier caps at three stars")
 
 

@@ -179,7 +179,8 @@ func _mission_panel() -> Control:
 
 func _construction_panel() -> Control:
 	var construction := _view.get("construction", {}) as Dictionary
-	var panel := _panel("网格建造")
+	var focused_growth := bool(construction.get("focused_growth", false))
+	var panel := _panel("选择首座资源设施" if focused_growth else "网格建造")
 	panel.name = "ConstructionPanel"
 	var active_id := String(construction.get("active_id", ""))
 	var guide := _label("① 选建筑  →  ② 点地图格子  →  ③ 确认", 11, MUTED if active_id.is_empty() else CYAN)
@@ -192,12 +193,18 @@ func _construction_panel() -> Control:
 		for option_value in construction.get("options", []):
 			var option := option_value as Dictionary
 			var choose := _button(
-				"%s · %d金币" % [String(option.get("name", "")), int(option.get("cost", 0))],
+				"%s · %d金币%s" % [
+					String(option.get("name", "")),
+					int(option.get("cost", 0)),
+					"\n%s" % String(option.get("growth_copy", "")) if focused_growth else "",
+				],
 				false
 			)
 			choose.name = "ChooseFacility_%s" % String(option.get("facility_id", ""))
 			choose.disabled = bool(option.get("disabled", false))
 			choose.tooltip_text = String(option.get("copy", ""))
+			if focused_growth:
+				choose.custom_minimum_size.y = 54
 			choose.pressed.connect(action_requested.emit.bind("begin_construction", {
 				"facility_id": String(option.get("facility_id", "")),
 			}))
