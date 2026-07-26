@@ -1,5 +1,5 @@
 ---
-contract_version: 6
+contract_version: 7
 project_id: toilet-factory-siege
 last_updated: 2026-07-27
 km_id: reference.game-contract
@@ -32,20 +32,20 @@ related:
 ## GC-001: 玩家承诺与核心循环
 - owner: producer
 - status: accepted
-- accepted_intent: 玩家从唯一英雄 Gman 开始，通过攻城暴露军队需求，再用战果依次解锁科技图纸、生产建筑、基础马桶兵与编队阵位，把一座封锁中的工厂逐步经营成战争机器。
-- acceptance_criteria: 首局连续完成 Gman 单人前三关、1-4 首败、基础图纸解锁、兵工厂修复、首批小兵生产、三前排编队和 1-4 反攻；核心英雄不得永久删除，关键路径不得因资源或失败死锁。
+- accepted_intent: 玩家从唯一永久英雄 Gman 开始，通过主动攻城暴露职责缺口，再把战果转化为研究所、确定性永久援军、编队调整和自主成长，逐步把地下工厂经营成支撑永久军团的战争机器。
+- acceptance_criteria: 首局连续完成 Gman 单人前三关、1-4 首败、研究所建造、免费研究突破十连、冲锋与装甲永久入列、三人编队和 1-4 反攻，再自主选择一条成长路线攻克 1-5；角色不得永久删除，关键路径不得因资源、失败或抽卡死锁。
 - implementation_reference: project-a/scripts/slg_main.gd, project-a/game/scripts/commands/command_executor.gd
 - verification_evidence: project-a/tools/run_slg_loop_tests.gd
 - conflict_references: docs/game-contract.md@contract_version-1, project-a/game/scripts/state/game_state.gd
 - handoffs: GC-002, GC-003, GC-004, GC-005, GC-006
 - handoff_from: producer
 - handoff_to: programming
-- handoff_request: 先完成 v3 技术设计，再把英雄、可生产兵、图纸、建筑三态和渐进阵位迁移为运行时权威
+- handoff_request: 以永久角色、工厂后勤资源、设施三态、六槽编队和主动攻城为运行时权威；不得恢复量产兵或图纸抽取旧循环
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 新档已收口为仅拥有并部署 Gman，后续永久英雄通过战役 Boss 与招募进度解锁；新确认的图纸、生产兵、三前排和渐进建筑尚未实现。
-  浏览器存档已支持状态提示、JSON 下载、严格校验、进度预览和二次确认恢复。
-- last_updated: 2026-07-26
+- deviation: 运行时与首章合同已切换到永久援军路线；量产兵、图纸抽取和三前排旧方向已明确取消，
+  不再作为缺失功能。浏览器存档已支持状态提示、JSON 下载、严格校验、进度预览和二次确认恢复。
+- last_updated: 2026-07-27
 - last_verified: —
 
 ## GC-002: 永久角色、等级与星级
@@ -70,21 +70,21 @@ related:
 ## GC-003: 工厂后勤与设施
 - owner: game-design
 - status: accepted
-- accepted_intent: 工厂以进度事件逐步取得建筑资格；科技树解锁可生产兵种，兵工厂把图纸转化为可部署单位，后勤建筑随后支持持续生产、培养与维修。
-- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；未满足进度时资源不能提前建造；首次 1-4 失败后只开放研究所建造资格，玩家主动建成后开放一次免费研究突破十连，固定获得冲锋与装甲两名永久援军，且不消耗招募券、不推进长期保底、不可重复领取；生产订单和领取 exact-once，刷新不丢失。
+- accepted_intent: 工厂以进度事件逐步取得建筑资格，持续生产陶瓷、零件和能源等后勤资源；研究所把关键战果转化为确定性永久援军和角色研究，不生产或消耗库存单位。
+- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；未满足进度时资源不能提前建造；首次 1-4 失败后只开放研究所建造资格，玩家主动建成后开放一次免费研究突破十连，固定获得冲锋与装甲两名永久援军，且不消耗招募券、不推进长期保底、不可重复领取；资源生产、建造、升级和领取 exact-once，刷新不丢失。
 - implementation_reference: project-a/game/scripts/domain/factory/logistics_service.gd, project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd, project-a/scripts/slg_main.gd
 - verification_evidence: project-a/tools/run_slg_loop_tests.gd, project-a/tools/run_research_breakthrough_tests.gd
 - conflict_references: project-a/game/scripts/domain/factory/factory_service.gd, project-a/game/scripts/state/factory_state.gd
 - handoffs: GC-004, GC-005
 - handoff_from: game-design
 - handoff_to: programming
-- handoff_request: 在保留命令幂等边界的前提下恢复兵种图纸与单位生产，并与后勤资源生产明确分层
+- handoff_request: 保留命令幂等边界，以后勤资源生产支持永久成长；研究只解锁或强化永久角色
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 新入口已实现六座可点击 3D 建筑和后勤服务；研究所已接通 locked、eligible、built 三态，
+- deviation: 新入口已实现六座可点击 3D 建筑、5×5 有界放置和后勤服务；研究所已接通 locked、eligible、built 三态，
   1-4 首败只开放资格，玩家主动建成后可领取一次免费研究突破十连，冲锋与装甲确定性永久入列，
-  十连不触碰长期招募保底。基础兵工厂和玩家可见生产闭环尚未实现。
-- last_updated: 2026-07-26
+  十连不触碰长期招募保底。量产兵和兵工厂单位订单属于已取消旧方向，不是待实现项。
+- last_updated: 2026-07-27
 - last_verified: —
 
 ## GC-004: 城镇攻坚与无损结算
@@ -127,25 +127,26 @@ related:
 ## GC-006: 首个重构切片与 UX
 - owner: producer
 - status: accepted
-- accepted_intent: 第一切片用“Gman 单人连胜—1-4 撞墙—图纸—兵工厂—生产—三前排—反攻”证明工厂能把战争需求转化为新军队。
-- acceptance_criteria: 新档只有 Gman；单人稳定通过 1-1 至 1-3、首次 1-4 稳定失败；之后按序开放基础图纸、兵工厂、生产和三个前排；三名前排加入后稳定攻克 1-4；约 30 分钟内完成且 844×390 下目标、门禁和阵位可读。
+- accepted_intent: 第一切片用“Gman 单人连胜—1-4 撞墙—研究所—免费突破十连—永久援军编队—反攻—自主升星—1-5 Boss”证明工厂能把战争需求转化为永久军团成长。
+- acceptance_criteria: 新档只有 Gman；单人稳定通过 1-1 至 1-3、首次 1-4 稳定失败；之后主动建研究所并固定获得冲锋与装甲，三人稳定攻克 1-4；玩家在至少两条经济可达成长路线中选择其一并稳定攻克 1-5；模型时间不超过 30 分钟，844×390 下目标、门禁、阵位、炮击机制和恢复路径可读。
 - implementation_reference: project-a/scripts/slg_main.gd
-- verification_evidence: project-a/tools/run_slg_loop_tests.gd
+- verification_evidence: project-a/tools/run_first_chapter_balance_scan.gd, project-a/tools/run_first_30m_journey_tests.gd, project-a/tools/run_research_breakthrough_tests.gd, project-a/tools/run_ui_smoke_tests.gd
 - conflict_references: project-a/scripts/main.gd, project-a/scenes/screens/main.tscn
 - handoffs: GC-001, GC-002, GC-003, GC-004, GC-005
 - handoff_from: producer
 - handoff_to: programming
-- handoff_request: 先产出 v3 技术设计与迁移方案，再实现新档状态机、首败分支、生产闭环、渐进编队和 Web 验证
+- handoff_request: 维护新档状态机、首败分支、免费突破、三人反攻、自主成长、Boss 决战和 Web 验证
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 新档仅 Gman 与后续英雄解锁已实现；单人前三关、1-4 首败、生产基础兵和渐进阵位仍缺少完整运行时与真人证据。
-- last_updated: 2026-07-26
+- deviation: 7-seed 战斗扫描和 14 条干净新档旅程已证明规则、经济可达性与存档恢复；尚缺 5 名目标玩家
+  盲测，不能由自动证据宣称节奏、Boss 可读性或继续游玩意愿达标。
+- last_updated: 2026-07-27
 - last_verified: —
 
 ## GC-007: 范围与发布门槛
 - owner: producer
 - status: accepted
-- accepted_intent: 当前只做确定性图纸驱动的基础兵生产，不做随机图纸抽取；继续不做自动扫荡、自由摆放建筑、PvP、公会、多队大地图和真实支付。已确认的游戏内永久英雄招募不等于商业支付授权，商业部署仍受 IP、素材、支付、隐私和目标地区合规约束。
+- accepted_intent: 当前只做永久角色、后勤资源、研究解锁、六槽编队和主动攻城；保留现有 5×5 有界设施选址，但不扩展道路、工人或复杂物流；继续不做量产单位、图纸抽取、自动扫荡、PvP、公会、多队大地图和真实支付。游戏内永久英雄招募不等于商业支付授权，商业部署仍受 IP、素材、支付、隐私和目标地区合规约束。
 - acceptance_criteria: 任何被延期系统进入制作前必须证明它强化当前核心循环且不替代主动攻城；真实商业发布必须具备书面授权、素材来源、支付权益账本、未成年人保护、隐私与退款证据。
 - implementation_reference: —
 - verification_evidence: —
@@ -157,7 +158,7 @@ related:
 - handoff_allowed_fields: —
 - handoff_blocking: —
 - deviation: 等待核心循环真人验证与商业前置条件。
-- last_updated: 2026-07-26
+- last_updated: 2026-07-27
 - last_verified: —
 
 ## GC-008: 数值可解释性与商业化前置度量
@@ -206,7 +207,7 @@ related:
 - conflict_references: 任何只以 headless 通过、截图齐全、功能数量或 30 分钟时长宣称完成的结论
 - handoffs: GC-004, GC-006, GC-008
 - handoff_from: producer
-- handoff_to: game-design, art, programming, qa-release
+- handoff_to: game-design
 - handoff_request: 每轮实现先说明它创造哪种玩家感受和哪项有意义选择，再用真人行为判断保留、重做或删除
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated,last_verified
 - handoff_blocking: true
