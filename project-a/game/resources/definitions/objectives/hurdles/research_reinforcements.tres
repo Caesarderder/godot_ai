@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectiveHurdleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/objective_hurdle_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.research_reinforcements"
+scale = "中坎"
+title = "把失败战报转成援军"
+reason = "研究所已经定位两种关键职责，但需要玩家主动启动突破。"
+recovery = "免费十连固定获得冲锋与装甲，不消耗招募券或长期保底。"

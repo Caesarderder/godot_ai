@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectiveHurdleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/objective_hurdle_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.chapter_boss"
+scale = "大坎"
+title = "灰镜核心巨炮"
+reason = "Boss 会检验刚才选择的成长与炮击应对。"
+recovery = "读取炮击倒计时，用二星援军压制核心；失败后资产完全保留。"

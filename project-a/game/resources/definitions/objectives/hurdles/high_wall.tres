@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectiveHurdleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/objective_hurdle_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.high_wall"
+scale = "大坎"
+title = "1-4 灰镜高墙"
+reason = "单人 Gman 缺少承伤与快速压制职责；首战预期会失败。"
+recovery = "完成首战后用保障币建研究所，启动免费突破十连。"

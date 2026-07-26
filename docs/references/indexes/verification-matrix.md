@@ -226,6 +226,11 @@ related:
 - 结构突破反馈：`run_battle_tests.gd` 锁定摧毁事件的 ID/名称/lane/kind，
   `run_presentation_tests.gd` 锁定普通画质的世界文字+冲击环以及低画质/减少动态的纯文字预算；
   `ui-first-breakthrough-844x390.png` 证明首战“防线突破”与 HUD 下一城市目标同时可读。
+- 目标卡点内容边界：`ObjectiveHurdleDefinition` 与七个首章 `.tres` 分离稳定 task ID、大小坎、
+  失败原因和过坎办法；固定 preload Catalog 校验唯一性与完整性，并向
+  `CampaignObjectiveProjection` 返回 detached view。`run_objective_hurdle_definition_tests.gd`
+  覆盖七段引导一一对应、1-4 大坎与免费十连恢复、未知 ID fail-closed 和共享 Resource 不可被
+  view 调用方篡改；投影、研究引导、UI smoke 与 14 条新档旅程回归通过。
 - 仍缺：Firefox 桌面、Android Chrome、iOS Safari、生产 HTTPS、真人首 20–30 分钟及最终 IP/商店审查。
 
 ## 必测不变量

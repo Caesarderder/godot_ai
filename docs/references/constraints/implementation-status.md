@@ -167,6 +167,12 @@ related:
 - 战斗 HUD 不再只显示抽象阶段和战线百分比；它按 snapshot 当前阶段显示第一个存活结构的动作、
   名称与剩余耐久，并在路障摧毁后切换到城市/核心。1-1 首次技能教学保留该目标前缀，让技能操作
   不会暂时抹掉攻城语境；该投影只读表现数据，不反向参与确定性目标选择或伤害。
+- 首章七段“小坎/中坎/大坎”已从 `OnboardingCatalog` 无类型 Dictionary 迁移为
+  `ObjectiveHurdleDefinition` typed Resource 与独立 `.tres`。固定 preload Catalog 校验
+  operation 命名空间、唯一 ID、合法尺度、原因和恢复路径；`CampaignObjectiveProjection`
+  只读取 detached Dictionary view。玩家完成进度、奖励和 command receipt 仍由
+  `OnboardingService`、`GameState` 与 `CommandExecutor` 权威持有，没有新增 Autoload 或把
+  可变存档写入 Resource。
 - 结构摧毁事件提供表现所需的语义字段，`BattleWorld` 生成短时“防线突破/城市攻陷/核心摧毁”
   世界文字；中高画质增加一个轻量冲击环，低画质/减少动态只保留文字。效果节点在一秒内释放，
   不增加灯光、阴影、Shader 或常驻粒子，也不反向推进战斗阶段。

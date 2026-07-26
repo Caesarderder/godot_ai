@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectiveHurdleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/objective_hurdle_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.keep_advancing"
+scale = "小坎"
+title = "远程与轻炮施压"
+reason = "敌人开始从安全距离持续消耗 Gman。"
+recovery = "观察炮击预警，在满能量时释放技能。"

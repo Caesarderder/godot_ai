@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectiveHurdleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/objective_hurdle_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.lone_vanguard"
+scale = "小坎"
+title = "第一次出征"
+reason = "还不熟悉自动推进与主动技能。"
+recovery = "直接进攻 1-1；失败无永久损失，可立即重试。"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ObjectiveHurdleDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/objective_hurdle_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+task_id = &"operation.counterattack"
+scale = "中坎"
+title = "把援军变成战力"
+reason = "新角色未上阵就不会改变战斗结果。"
+recovery = "将冲锋、装甲放入前排，再反攻 1-4。"

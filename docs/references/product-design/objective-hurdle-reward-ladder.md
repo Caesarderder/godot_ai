@@ -8,6 +8,8 @@ last_verified: 2026-07-27
 source_of_truth:
   - docs/game-contract.md
   - docs/references/constraints/first-30m-contract.md
+  - project-a/game/scripts/content/objective_hurdle_catalog.gd
+  - project-a/game/resources/definitions/objectives/hurdles
   - project-a/game/scripts/domain/onboarding/onboarding_catalog.gd
   - project-a/game/scripts/domain/onboarding/onboarding_service.gd
   - project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd

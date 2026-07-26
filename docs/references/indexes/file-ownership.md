@@ -62,6 +62,7 @@ related:
 | `project-a/game/scripts/domain/formation/**` | domain-kernel | 固定六槽 2×3 编队校验 | present / Meta headless tests |
 | `project-a/game/scripts/domain/battle/**` | domain-kernel | 5Hz 三阶段攻城、六人推进、技能、核心巨炮与胜负 | present / battle headless tests |
 | `project-a/game/scripts/domain/quest/**` | domain-kernel | 25 大战役任务、3 槽循环小任务、战功等级、任务领取 | present / Meta + UI smoke |
+| `project-a/game/scripts/content/objective_hurdle_*.gd`、`project-a/game/resources/definitions/objectives/hurdles/**` | authored-content | 首章大小卡点 typed 定义、固定索引与内容校验；不持有运行进度 | present / definition + projection tests |
 | `project-a/game/scripts/domain/achievement/**` | domain-kernel | 24 个永久一次性成就、可靠回填、event key 去重、成就领取 | present / Meta + UI smoke |
 | `project-a/game/scripts/domain/{equipment,idle}/**` | domain-kernel | 装备、离线规则 | absent / deferred |
 | `project-a/game/scripts/persistence/**` | persistence | 严格 JSON schema、2 MiB 上限、candidate writer、主档/备份与导入恢复 | present / Meta headless tests |

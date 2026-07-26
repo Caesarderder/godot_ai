@@ -9,6 +9,7 @@ source_of_truth:
   - project-a/project.godot
   - project-a/scenes/screens/main.tscn
   - project-a/scripts/slg_main.gd
+  - project-a/game/scripts/content/objective_hurdle_catalog.gd
   - project-a/game/scripts/domain/objectives/campaign_objective_projection.gd
   - project-a/game/scenes/ui/stage_detail_panel.tscn
   - project-a/game/scripts/ui/stage_detail_panel.gd
@@ -83,12 +84,16 @@ project-a/
     │   └── blueprint_screen.gd               # 已实现：研究只读 view + 分支/行动语义信号
     │   └── epilogue_screen.gd                # 已实现：战果只读 view + 延续行动语义信号
     ├── resources/definitions/               # 只读 `.tres`
+    │   ├── objectives/
+    │   │   └── hurdles/*.tres               # 当前里程碑：首章七段卡点定义
     │   ├── stages/
     │   │   └── act_1/stage_1_1..5.tres      # 已实现：首30分钟关卡高频策划字段
     │   ├── archetypes/
     │   ├── skills/
     │   └── facilities/
     └── scripts/content/
+        ├── objective_hurdle_definition.gd    # 当前里程碑：typed 卡点 Resource + 自校验
+        ├── objective_hurdle_catalog.gd       # 当前里程碑：固定 preload、唯一 task ID 与只读 view
         ├── stage_definition.gd               # 已实现：typed Resource class + 自校验
         └── stage_definition_catalog.gd       # 已实现：固定 preload、唯一 ID 与完整性校验
 ```
@@ -139,6 +144,7 @@ UI 不直接修改 `GameState`；领域层不查找 UI。重建 screen 时由 Ap
 | `GameState` / save candidate | `RefCounted` / 有界 JSON snapshot | 权威可变态；不得写回 `.tres` |
 | `BattleSession` | `RefCounted` | 单场 owner；不得进入 Autoload |
 | `CampaignObjectiveProjection` | `RefCounted` 静态只读投影 | 从持久状态、引导 snapshot 与 `WarReadinessReport` 生成跨页面一致的大/中/小目标；不得成为 Autoload |
+| 首章卡点定义 | `ObjectiveHurdleDefinition` typed Resource + 七个 `.tres` | 运行时共享只读；只承载稳定 task ID、大小坎、原因和过坎办法 |
 | UI view model | duplicate-safe Dictionary，后续按压力升级 typed value | 只读投影；不得保存 Node 引用 |
 
 Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` 和 `Game` 先注册，
@@ -149,6 +155,20 @@ Autoload DAG 当前为 `SaveManager → AppBootstrap ← Game`：`SaveManager` �
 只有未来出现脱离 App Shell 的真实跨主场景生命周期需求时才重新评估。
 当前入口 `slg_main.gd` 只调用 Game 的备份、预览、恢复和重置窄接口，不再查找
 `/root/SaveManager` 或把保存服务对象穿过 UI。
+
+当前卡点 Resource 迁移的所有权脊柱为：
+
+```text
+ObjectiveHurdleDefinition .tres
+  --fixed preload/validate--> ObjectiveHurdleCatalog
+  --duplicate-safe view-----> CampaignObjectiveProjection
+  --same hierarchy view-----> GoalsScreen / FactoryScreen / TitleScreen
+```
+
+此路径没有运行时信号：定义是只读查询，玩家事件仍由 `OnboardingService` 消费并写入
+`GameState.onboarding`，完成/奖励仍由 `CommandExecutor` 幂等提交。Resource 不保存进度、不引用
+Node，Catalog 不注册 Autoload；App Shell 重建页面时重新推导 view，因此不存在重复连接或陈旧引用。
+本里程碑先证明一个端到端卡点定义边界，再评估是否值得把任务目标条件迁为独立 typed Resource。
 
 ## 资产治理
 

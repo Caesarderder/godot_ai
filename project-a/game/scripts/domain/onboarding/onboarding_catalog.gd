@@ -163,45 +163,6 @@ const TASKS: Array[Dictionary] = [
 		],
 	},
 ]
-const HURDLES: Dictionary = {
-	"operation.lone_vanguard": {
-		"scale": "小坎", "title": "第一次出征",
-		"reason": "还不熟悉自动推进与主动技能。",
-		"recovery": "直接进攻 1-1；失败无永久损失，可立即重试。",
-	},
-	"operation.keep_advancing": {
-		"scale": "小坎", "title": "远程与轻炮施压",
-		"reason": "敌人开始从安全距离持续消耗 Gman。",
-		"recovery": "观察炮击预警，在满能量时释放技能。",
-	},
-	"operation.high_wall": {
-		"scale": "大坎", "title": "1-4 灰镜高墙",
-		"reason": "单人 Gman 缺少承伤与快速压制职责；首战预期会失败。",
-		"recovery": "完成首战后用保障币建研究所，启动免费突破十连。",
-	},
-	"operation.research_reinforcements": {
-		"scale": "中坎", "title": "把失败战报转成援军",
-		"reason": "研究所已经定位两种关键职责，但需要玩家主动启动突破。",
-		"recovery": "免费十连固定获得冲锋与装甲，不消耗招募券或长期保底。",
-	},
-	"operation.counterattack": {
-		"scale": "中坎", "title": "把援军变成战力",
-		"reason": "新角色未上阵就不会改变战斗结果。",
-		"recovery": "将冲锋、装甲放入前排，再反攻 1-4。",
-	},
-	"operation.choose_growth": {
-		"scale": "中坎", "title": "让工厂支援 1-5 备战",
-		"reason": "基础三人编队无法稳定跨过 Boss 巨炮，军团成长需要真实后勤来源。",
-		"recovery": "任选一座资源设施投产并收取验收批次，再按喜欢的职责选择冲锋或装甲二星。",
-	},
-	"operation.chapter_boss": {
-		"scale": "大坎", "title": "灰镜核心巨炮",
-		"reason": "Boss 会检验刚才选择的成长与炮击应对。",
-		"recovery": "读取炮击倒计时，用二星援军压制核心；失败后资产完全保留。",
-	},
-}
-
-
 static func count() -> int:
 	return TASKS.size()
 
@@ -217,7 +178,3 @@ static func task_by_id(task_id: String) -> Dictionary:
 		if String(definition.get("id", "")) == task_id:
 			return (definition as Dictionary).duplicate(true)
 	return {}
-
-
-static func hurdle_for_task(task_id: String) -> Dictionary:
-	return (HURDLES.get(task_id, {}) as Dictionary).duplicate(true)

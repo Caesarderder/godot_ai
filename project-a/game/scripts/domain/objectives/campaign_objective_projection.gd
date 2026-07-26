@@ -1,7 +1,7 @@
 class_name CampaignObjectiveProjection
 extends RefCounted
 
-const OnboardingCatalogScript := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
+const ObjectiveHurdleCatalogScript := preload("res://game/scripts/content/objective_hurdle_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 const WarReadinessReportScript := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
 
@@ -126,7 +126,7 @@ static func _onboarding_hierarchy(onboarding: Dictionary, cleared: Array) -> Dic
 			if finished
 			else String(first_incomplete.get("label", onboarding.get("cta_label", "继续推进")))
 		),
-		"hurdle": OnboardingCatalogScript.hurdle_for_task(String(onboarding.get("task_id", ""))),
+		"hurdle": ObjectiveHurdleCatalogScript.hurdle_view(String(onboarding.get("task_id", ""))),
 		"finished": finished,
 		"actionable": not finished,
 		"cta_label": String(onboarding.get("cta_label", "继续")),
