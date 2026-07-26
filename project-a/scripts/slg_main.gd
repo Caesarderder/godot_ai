@@ -25,6 +25,7 @@ const SettingsScreenScene := preload("res://game/scenes/screens/settings_screen.
 const HelpScreenScene := preload("res://game/scenes/screens/help_screen.tscn")
 const IntelligenceScreenScene := preload("res://game/scenes/screens/intelligence_screen.tscn")
 const BlueprintScreenScene := preload("res://game/scenes/screens/blueprint_screen.tscn")
+const EpilogueScreenScene := preload("res://game/scenes/screens/epilogue_screen.tscn")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const OnboardingCatalog := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
@@ -2012,33 +2013,7 @@ func _show_epilogue(event: Dictionary = {}) -> void:
 	screen = Screen.EPILOGUE
 	_clear()
 	var shell := _shell("第一幕完成 · 中央基地陷落", "五章战役终结，但无尽前线仍在呼叫")
-	shell.name = "CampaignEpilogueScreen"
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 18)
-	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(columns)
-	var story := _panel_vbox("尾声", 10)
-	story.name = "CampaignEpilogueStory"
-	story.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	story.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	story.add_child(_label("审判之门在炮火中倒塌，联盟中央基地停止广播。", 18, TEXT))
-	story.add_child(_label(
-		"G-Man 与永久军团守住了工厂，也为被围困的马桶人打开了地表通道。",
-		15,
-		MUTED
-	))
-	story.add_child(_label(
-		"战争并未消失：城市边界之外，新的联盟防线正在重组。",
-		15,
-		GOLD
-	))
-	story.add_child(_label("主战役已永久记录，可随时重玩五章关卡。", 13, GREEN))
-	columns.add_child(story)
 	var state: RefCounted = game.current_state()
-	var summary := _panel_vbox("第一幕战果", 9)
-	summary.name = "CampaignEpilogueSummary"
-	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	summary.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var cleared_count := 0
 	for stage_id in state.stage_progress.get("cleared_stages", []):
 		if StageCatalog.ACT1_STAGE_IDS.has(String(stage_id)):
@@ -2048,18 +2023,16 @@ func _show_epilogue(event: Dictionary = {}) -> void:
 	for hero in state.roster:
 		total_stars += int(hero.star)
 		total_skill_levels += int(hero.active_skill_level)
-	summary.add_child(_label("城镇占领  %d/25" % cleared_count, 18, GOLD))
-	summary.add_child(_label("永久角色  %d 名" % state.roster.size(), 16, TEXT))
-	summary.add_child(_label("军团星级  %d★ · 技能等级合计 %d" % [total_stars, total_skill_levels], 15, TEXT))
-	summary.add_child(_label("最终战耗时  %d 秒" % int(ceil(float(event.get("ticks", 0)) / 5.0)), 14, MUTED))
-	var endless := _button("进入无尽前线", _enter_endless_frontier, true)
-	endless.name = "CampaignEnterEndlessButton"
-	summary.add_child(endless)
-	var goals := _button("领取终章里程碑", _show_goals, false)
-	goals.name = "CampaignEndingGoalsButton"
-	summary.add_child(goals)
-	summary.add_child(_button("返回工厂基地", _show_base, false))
-	columns.add_child(summary)
+	var epilogue := EpilogueScreenScene.instantiate() as Control
+	epilogue.call("configure", {
+		"cleared_count": cleared_count,
+		"roster_count": state.roster.size(),
+		"total_stars": total_stars,
+		"total_skill_levels": total_skill_levels,
+		"battle_seconds": int(ceil(float(event.get("ticks", 0)) / 5.0)),
+	})
+	epilogue.connect("action_requested", _on_epilogue_action_requested)
+	shell.add_child(epilogue)
 	var credits := _label(
 		"《马桶人工厂攻城》第一幕 · Godot 4.6 Web 版\n设计、程序与原创低模资产：本项目制作组",
 		11,
@@ -2068,6 +2041,17 @@ func _show_epilogue(event: Dictionary = {}) -> void:
 	credits.name = "CampaignCreditsLabel"
 	credits.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.add_child(credits)
+
+
+func _on_epilogue_action_requested(action_id: String) -> void:
+	_play_ui_click()
+	match action_id:
+		"endless":
+			_enter_endless_frontier()
+		"goals":
+			_show_goals()
+		"base":
+			_show_base()
 
 
 func _enter_endless_frontier() -> void:

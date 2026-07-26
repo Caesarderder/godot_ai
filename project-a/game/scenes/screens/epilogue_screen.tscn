@@ -1,0 +1,114 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/ui/epilogue_screen.gd" id="1_script"]
+
+[node name="CampaignEpilogueScreen" type="HBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+script = ExtResource("1_script")
+
+[node name="CampaignEpilogueStory" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="CampaignEpilogueStory"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 9
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 9
+
+[node name="Content" type="VBoxContainer" parent="CampaignEpilogueStory/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CampaignEpilogueHeading" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "尾声 · 第一幕完成"
+
+[node name="Victory" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
+layout_mode = 2
+text = "审判之门在炮火中倒塌，联盟中央基地停止广播。"
+autowrap_mode = 2
+
+[node name="Rescue" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
+layout_mode = 2
+text = "G-Man 与永久军团守住了工厂，也为被围困的马桶人打开了地表通道。"
+autowrap_mode = 2
+
+[node name="CampaignEpilogueFuture" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "战争并未消失：城市边界之外，新的联盟防线正在重组。"
+autowrap_mode = 2
+
+[node name="CampaignReplayPromise" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "主战役已永久记录，可随时重玩五章关卡。"
+autowrap_mode = 2
+
+[node name="CampaignEpilogueSummary" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="CampaignEpilogueSummary"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 9
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 9
+
+[node name="Content" type="VBoxContainer" parent="CampaignEpilogueSummary/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Heading" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
+layout_mode = 2
+text = "第一幕战果"
+
+[node name="CampaignOccupiedCount" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "城镇占领  0/25"
+
+[node name="CampaignRosterCount" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "永久角色  0 名"
+
+[node name="CampaignMasterySummary" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "军团星级  0★ · 技能等级合计 0"
+
+[node name="CampaignFinalBattleTime" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "最终战耗时  0 秒"
+
+[node name="CampaignContinuationPromise" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "新目标 · 挑战无尽前线，刷新军团极限"
+
+[node name="CampaignEnterEndlessButton" type="Button" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "进入无尽前线"
+
+[node name="CampaignEndingGoalsButton" type="Button" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "领取终章里程碑"
+
+[node name="CampaignReturnBaseButton" type="Button" parent="CampaignEpilogueSummary/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "返回工厂基地"
