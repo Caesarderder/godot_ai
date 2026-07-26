@@ -78,6 +78,9 @@ related:
   启动 smoke 与 lifecycle suite 验证真实 Autoload 顺序。`run_asset_3d_tests.gd` 验证八个
   game-owned wrapper scene 均含可渲染网格，`run_presentation_tests.gd` 验证其战斗投影；
   新 Web 包随后通过 artifact audit 与完整 Chrome/PWA smoke。
+  `run_font_coverage_tests.gd` 扫描实际运行时脚本、场景、Resource 与项目配置，并通过导入后的
+  `FontFile.has_char()` 阻断中文、ASCII 或界面符号漏字；tools、截图证据与零入口 legacy Shell
+  不计入玩家字符集。
 - M4：`run_ui_smoke_tests.gd` 已迁移到新四入口 App Shell；目标页刷新并呈现新合同里程碑；
   标题、设置、全局自动技能、主动暂停和失焦暂停已接入实际入口；第五章胜利进入独立尾声并可继续
   无尽前线；指挥情报页已展示当前编队 `CombatPower`、能力比、风险、紧缺资源和行动建议；

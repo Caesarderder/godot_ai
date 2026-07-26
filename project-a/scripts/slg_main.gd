@@ -3259,7 +3259,7 @@ func _build_orientation_gate() -> void:
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
 	content.add_theme_constant_override("separation", 12)
 	card.add_child(content)
-	var icon := _label("↻", 58, CYAN)
+	var icon := _label("旋", 48, CYAN)
 	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(icon)
 	var title := _label("请旋转至横屏", 26, TEXT)
@@ -3409,7 +3409,7 @@ func _set_web_orientation_overlay(visible: bool) -> void:
 				gate.setAttribute("role", "status");
 				gate.setAttribute("aria-live", "polite");
 				gate.innerHTML = `
-					<div style="font-size:48px;line-height:1;color:#32d3c2">↻</div>
+					<div style="font-size:42px;line-height:1;color:#32d3c2">旋</div>
 					<strong style="font-size:26px;color:#eef7f8">请旋转至横屏</strong>
 					<span style="font-size:16px;color:#91a9b4">本游戏专为手机横屏设计</span>
 					<small style="font-size:14px;color:#76d889">旋转后自动继续 · 进度已保留</small>`;

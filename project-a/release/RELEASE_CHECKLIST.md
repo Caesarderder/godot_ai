@@ -13,6 +13,7 @@ State labels:
 - [ ] `project-a/project.godot` has no conflict markers and uses Godot 4.6.3 Compatibility/Web-safe settings.
 - [ ] `project-a/export_presets.cfg` has Web preset, single-thread export, release material include filter, PWA metadata, and no GDExtension support.
 - [ ] `project-a/release/LICENSES.md` reflects every shipped asset.
+- [ ] `run_font_coverage_tests.gd` proves every runtime ASCII/CJK/symbol codepoint exists in the shipped font.
 - [ ] `project-a/release/PRIVACY.md` reflects actual runtime data behavior.
 - [ ] `project-a/release/FAN-CONTENT-NOTICE.md` is reviewed for store/legal risk.
 - [ ] Headless tests pass:
