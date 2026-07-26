@@ -54,9 +54,11 @@ func _rebuild() -> void:
 	var active_tab := String(_view.get("tab", "formation"))
 	var first_formation := _view.get("first_formation", {}) as Dictionary
 	var first_growth := _view.get("first_growth_choice", {}) as Dictionary
+	var boss_ready := _view.get("boss_ready", {}) as Dictionary
 	task_tabs.visible = (
 		not bool(first_formation.get("active", false))
 		and not bool(first_growth.get("active", false))
+		and not bool(boss_ready.get("active", false))
 	)
 	scroll.name = "LegionContentScroll_%s" % active_tab
 	_style_tab(formation_tab, active_tab == "formation")
@@ -66,6 +68,9 @@ func _rebuild() -> void:
 	if bool(first_growth.get("active", false)):
 		content.add_child(_growth_choice_panel(first_growth))
 		return
+	if bool(boss_ready.get("active", false)):
+		content.add_child(_boss_ready_panel(boss_ready))
+		return
 	match active_tab:
 		"recruit":
 			content.add_child(_recruit_panel())
@@ -74,6 +79,44 @@ func _rebuild() -> void:
 				content.add_child(_hero_card(hero_value as Dictionary))
 		_:
 			content.add_child(_formation_panel())
+
+
+func _boss_ready_panel(boss_ready: Dictionary) -> Control:
+	var panel := _panel("成长已生效 · 立即验证你的选择")
+	panel.name = "BossReadyPanel"
+	panel.add_child(_label(
+		"%s · %s" % [
+			String(boss_ready.get("hero_name", "")),
+			String(boss_ready.get("route", "")),
+		],
+		18,
+		GOLD
+	))
+	panel.add_child(_label(String(boss_ready.get("tactic", "")), 14, CYAN))
+	var team_power := int(boss_ready.get("team_power", 0))
+	var recommended_power := int(boss_ready.get("recommended_power", 0))
+	panel.add_child(_label(
+		"军团战力 %d / 推荐 %d · %s" % [
+			team_power,
+			recommended_power,
+			"已达验证线" if team_power >= recommended_power else "机制操作可弥补部分战力差",
+		],
+		14,
+		GREEN if team_power >= recommended_power else GOLD
+	))
+	panel.add_child(_label(
+		"失败不会损失角色或资源；结算会区分成长、巨炮时机和阵容问题。",
+		12,
+		GREEN
+	))
+	var action := _button("验证成长 · 进攻 1-5 灰镜核心巨炮", true)
+	action.name = "BossReadyAttackButton"
+	action.custom_minimum_size.y = 52
+	action.pressed.connect(action_requested.emit.bind("boss", {
+		"stage_id": String(boss_ready.get("stage_id", "stage_1_5")),
+	}))
+	panel.add_child(action)
+	return panel
 
 
 func _growth_choice_panel(first_growth: Dictionary) -> Control:

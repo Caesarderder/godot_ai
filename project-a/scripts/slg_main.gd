@@ -1124,9 +1124,15 @@ func _legion_view() -> Dictionary:
 		and String(onboarding.get("task_id", "")) == "operation.choose_growth"
 		and _onboarding_objective_id(onboarding) == "complete_combat_growth"
 	)
+	var boss_ready_active := (
+		not bool(onboarding.get("finished", false))
+		and String(onboarding.get("task_id", "")) == "operation.chapter_boss"
+		and not (state.stage_progress.get("cleared_stages", []) as Array).has("stage_1_5")
+	)
 	var candidates: Array[Dictionary] = []
 	var roster: Array[Dictionary] = []
 	var growth_choices: Array[Dictionary] = []
+	var boss_route: Dictionary = {}
 	for hero in state.roster:
 		var power := CombatPower.hero_power(hero)
 		var specialty_id := String(LogisticsService.SPECIALTY_FACILITY.get(String(hero.archetype_id), "energy_station"))
@@ -1211,6 +1217,22 @@ func _legion_view() -> Dictionary:
 				"already_upgraded": int(hero.star) >= 2,
 				"affordable": affordable,
 			})
+		if (
+			boss_ready_active
+			and boss_route.is_empty()
+			and int(hero.star) >= 2
+			and String(hero.archetype_id) in ["assault", "armored"]
+		):
+			boss_route = {
+				"hero_name": String(hero.display_name),
+				"archetype_id": String(hero.archetype_id),
+				"route": "快攻路线" if String(hero.archetype_id) == "assault" else "守势路线",
+				"tactic": (
+					"保留强袭技能，在巨炮 5 秒预警内释放以快速压制"
+					if String(hero.archetype_id) == "assault"
+					else "保留护盾技能，在巨炮 5 秒预警内释放以格挡反震"
+				),
+			}
 	var data_parts: Array[String] = []
 	for archetype_id in state.meta_progression.hero_data:
 		data_parts.append("%s×%d" % [
@@ -1243,6 +1265,15 @@ func _legion_view() -> Dictionary:
 			"active": first_growth_active,
 			"choices": growth_choices,
 			"target_stage": "1-5 灰镜核心巨炮",
+		},
+		"boss_ready": {
+			"active": boss_ready_active and not boss_route.is_empty(),
+			"hero_name": String(boss_route.get("hero_name", "")),
+			"route": String(boss_route.get("route", "")),
+			"tactic": String(boss_route.get("tactic", "")),
+			"team_power": CombatPower.formation_power(state),
+			"recommended_power": int(StageCatalog.stage("stage_1_5").get("recommended_power", 0)),
+			"stage_id": "stage_1_5",
 		},
 		"counterattack": {
 			"visible": (
@@ -1296,6 +1327,8 @@ func _on_legion_action_requested(action_id: String, payload: Dictionary) -> void
 			_assign_formation_slot(String(payload.get("slot", "")), String(payload.get("hero_id", "")))
 		"counterattack":
 			_start_stage_battle(String(payload.get("stage_id", "stage_1_4")))
+		"boss":
+			_start_stage_battle(String(payload.get("stage_id", "stage_1_5")))
 		"recruit":
 			_signal_recruit(int(payload.get("count", 1)))
 		"upgrade":
@@ -2051,7 +2084,11 @@ func _show_result() -> void:
 			int(last_battle_runtime_result.get("structures_destroyed", 0)),
 			int(last_battle_runtime_result.get("enemies_defeated", 0)),
 		]
-		debrief = _battle_debrief_copy(last_battle_runtime_result, outcome)
+		debrief = _battle_debrief_copy(
+			last_battle_runtime_result,
+			outcome,
+			String(event.get("stage_id", ""))
+		)
 		contribution = _battle_contribution_copy(last_battle_runtime_result)
 		hurdle_proof = _counterattack_proof_copy(
 			last_battle_runtime_result,
@@ -2072,6 +2109,11 @@ func _show_result() -> void:
 	elif won and cleared_stage_id == "stage_1_5":
 		primary_label = "前往军团突破三星"
 		primary_action = "legion"
+	elif not won and cleared_stage_id == "stage_1_5":
+		var recovery := _boss_failure_recovery(last_battle_runtime_result)
+		primary_label = String(recovery.get("label", "调整后再战"))
+		primary_action = String(recovery.get("action", "legion"))
+		primary_payload = recovery.get("payload", {}) as Dictionary
 	elif not bool(onboarding.get("finished", false)) and String(onboarding.get("target", "")) == "legion":
 		primary_label = String(onboarding.get("cta_label", "比较成长路线"))
 		primary_action = "legion"
@@ -2118,6 +2160,11 @@ func _show_result() -> void:
 		"primary_label": primary_label,
 		"primary_action": primary_action,
 		"primary_payload": primary_payload,
+		"show_factory_action": not (
+			not won
+			and cleared_stage_id == "stage_1_5"
+			and primary_action == "next_stage"
+		),
 	})
 	result_screen.action_requested.connect(_on_result_action_requested)
 	shell.add_child(result_screen)
@@ -2208,22 +2255,54 @@ func _open_research_lab() -> void:
 	_show_base()
 
 
-func _battle_debrief_copy(runtime_result: Dictionary, outcome: String) -> String:
+func _battle_debrief_copy(
+	runtime_result: Dictionary,
+	outcome: String,
+	stage_id: String = ""
+) -> String:
 	var guarded_count := int(runtime_result.get("cannon_guarded_count", 0))
 	if guarded_count > 0:
+		if outcome != "victory" and stage_id == "stage_1_5":
+			return "失败归因 · 阵容/战力：已格挡巨炮 %d 次但仍未突破；回军团检查编队与成长。" % guarded_count
 		return "装甲护盾格挡巨炮 %d 次并反震 %d 伤害：预警开盾成功把防守转成了推进。" % [
 			guarded_count,
 			int(runtime_result.get("cannon_guard_counter_damage", guarded_count * 60)),
 		]
+	if outcome != "victory" and stage_id == "stage_1_5" and _boss_growth_route_id().is_empty():
+		return "失败归因 · 成长未完成：冲锋或装甲尚未升到二星；先完成一条已验证路线。"
 	if int(runtime_result.get("cannon_hit_count", 0)) > 0:
+		if outcome != "victory" and stage_id == "stage_1_5":
+			return "失败归因 · 巨炮机制/技能时机：巨炮命中 %d 次；下次在倒计时内释放二星技能。" % int(runtime_result["cannon_hit_count"])
 		return "巨炮命中 %d 次：下次切换手动技能，在炮击倒计时内集中爆发。" % int(runtime_result["cannon_hit_count"])
 	if int(runtime_result.get("cannon_suppressed_count", 0)) > 0:
+		if outcome != "victory" and stage_id == "stage_1_5":
+			return "失败归因 · 阵容/战力：已压制巨炮 %d 次但仍未突破；回军团检查编队与成长。" % int(runtime_result["cannon_suppressed_count"])
 		return "成功压制巨炮 %d 次：技能时机有效改善了本局生存与推进效率。" % int(runtime_result["cannon_suppressed_count"])
 	if outcome == "retreat":
 		return "全员安全撤退；调整阵位、技能或成长投资后即可再次挑战。"
 	if outcome != "victory":
 		return "攻势终止于第 %d 阶段；强化角色或工厂后可无损再战。" % (int(runtime_result.get("stage_reached", 0)) + 1)
 	return "军团完成占领并无损返回；可连战，也可立即投入战果进行成长。"
+
+
+func _boss_failure_recovery(runtime_result: Dictionary) -> Dictionary:
+	if _boss_growth_route_id().is_empty():
+		return {"label": "完成二星成长", "action": "legion", "payload": {}}
+	if int(runtime_result.get("cannon_hit_count", 0)) > 0:
+		return {
+			"label": "掌握巨炮时机 · 再战 1-5",
+			"action": "next_stage",
+			"payload": {"stage_id": "stage_1_5"},
+		}
+	return {"label": "检查阵容与战力", "action": "legion", "payload": {}}
+
+
+func _boss_growth_route_id() -> String:
+	var state: RefCounted = game.current_state()
+	for hero in state.roster:
+		if int(hero.star) >= 2 and String(hero.archetype_id) in ["assault", "armored"]:
+			return String(hero.archetype_id)
+	return ""
 
 
 func _growth_opportunity_copy(event: Dictionary) -> String:

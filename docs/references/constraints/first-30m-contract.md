@@ -151,6 +151,14 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 `artifacts/ui-first-industrial-choice-844x390.png` 与
 `artifacts/ui-first-growth-choice-844x390.png`。
 
+升星命令成功后不恢复成完整成员管理页，而进入“成长已生效”验证态：显示玩家所选英雄与路线、
+真实军团/推荐战力、对应的 5 秒巨炮技能时机和唯一“验证成长 · 进攻 1-5”按钮。1-5 失败结算
+先检查是否存在冲锋/装甲二星，再读取真实巨炮命中和压制统计：未完成成长返回二选一；巨炮命中
+归因为“巨炮机制/技能时机”并直接再战；已处理巨炮但仍失败则返回军团检查阵容/战力。时机失败
+不再显示无关“升级工厂”按钮。`run_first_growth_flow_tests.gd` 覆盖三类诊断与真实 Boss 入口，
+`artifacts/ui-boss-ready-844x390.png` 和
+`artifacts/ui-boss-timing-recovery-844x390.png` 提供基准横屏证据。
+
 ## 关卡合同
 
 数值区间是首轮 `target`；玩家感受是 `playtest hypothesis`。

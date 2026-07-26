@@ -36,6 +36,15 @@ func _run() -> void:
 	if primary != null:
 		primary.pressed.emit()
 	_check(requested["id"] == "factory", "industrial onboarding CTA routes to the factory")
+	result_screen.configure({
+		"outcome_banner": "失败 · 可立即调整后再战",
+		"primary_label": "掌握巨炮时机 · 再战 1-5",
+		"primary_action": "next_stage",
+		"primary_payload": {"stage_id": "stage_1_5"},
+		"show_factory_action": false,
+	})
+	await process_frame
+	_check(not result_screen.factory_action.visible, "timing recovery hides the unrelated factory branch")
 	result_screen.queue_free()
 	await process_frame
 	if failures.is_empty():
