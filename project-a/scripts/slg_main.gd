@@ -1050,6 +1050,7 @@ func _show_map() -> void:
 	war_zone.chapter_selected.connect(_select_chapter)
 	war_zone.stage_selected.connect(_select_stage_card)
 	war_zone.attack_requested.connect(_start_stage_battle)
+	war_zone.growth_requested.connect(_show_legion)
 	shell.add_child(war_zone)
 	_add_nav(shell, Screen.MAP)
 
@@ -1571,6 +1572,7 @@ func _goals_view(state: RefCounted) -> Dictionary:
 		if not bool(objective.get("completed", false)):
 			first_incomplete = objective
 			break
+	var onboarding_finished := bool(task.get("finished", false))
 	var hierarchy := {
 		"macro": (
 			"推进第二章，扩大战争工厂"
@@ -1584,11 +1586,42 @@ func _goals_view(state: RefCounted) -> Dictionary:
 			else String(first_incomplete.get("label", task.get("cta_label", "继续推进")))
 		),
 		"hurdle": OnboardingCatalog.hurdle_for_task(String(task.get("task_id", ""))),
-		"finished": bool(task.get("finished", false)),
+		"finished": onboarding_finished,
+		"actionable": not onboarding_finished,
 		"cta_label": String(task.get("cta_label", "继续")),
 		"target": String(task.get("target", "expedition")),
 		"stage_id": String(task.get("stage_id", "")),
 	}
+	if onboarding_finished:
+		var next_stage_id := String(state.stage_progress.get("highest_unlocked_stage", "stage_2_1"))
+		var next_config := StageCatalog.stage(next_stage_id)
+		var next_report := WarReadinessReport.derive(state, next_config)
+		var next_action := next_report.get("next_action", {}) as Dictionary
+		var needs_growth := String(next_action.get("id", "attack")) == "upgrade"
+		var challenge_gap := maxi(
+			0,
+			int(next_report.get("minimum_power", 0)) - int(next_report.get("cp_ready", 0))
+		)
+		hierarchy["medium"] = "第二章：突破震荡封锁线"
+		hierarchy["small"] = (
+			"将军团提升至挑战线（还差 %d 战力）" % challenge_gap
+			if needs_growth
+			else "侦察并准备进攻 %s" % String(next_config.get("display_name", next_stage_id))
+		)
+		hierarchy["hurdle"] = {
+			"scale": "中坎",
+			"title": "第二章声波防线",
+			"reason": "首章队伍已证明基础职责，但第二章要求更高的永久成长与后勤供给。",
+			"recovery": (
+				"先培养现有军团；所有首章资产保留，不需要付费解锁路线。"
+				if needs_growth
+				else "先侦察敌方声波结构，再决定阵容和技能时机。"
+			),
+		}
+		hierarchy["actionable"] = true
+		hierarchy["cta_label"] = "先培养军团" if needs_growth else "侦察 %s" % String(next_config.get("display_name", next_stage_id))
+		hierarchy["target"] = "legion" if needs_growth else "map"
+		hierarchy["stage_id"] = next_stage_id
 	var chapter_parts: Array[String] = []
 	for chapter in range(1, 6):
 		var chapter_clear := 0
@@ -2667,6 +2700,11 @@ func _follow_task(target: String, stage_id: String = "") -> void:
 				_start_stage_battle(stage_id)
 			else:
 				_show_map()
+		"map":
+			if not stage_id.is_empty():
+				selected_stage_id = stage_id
+				selected_chapter = int(StageCatalog.stage(stage_id).get("chapter", selected_chapter))
+			_show_map()
 		_:
 			_show_map()
 

@@ -73,7 +73,31 @@ func _run() -> void:
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_2_1", "next-chapter action selects the exact unlocked stage")
 	_check(_tree_has_text(main, "2-1 震荡封锁线"), "next-chapter action opens reconnaissance instead of forcing another battle")
+	_check(_tree_has_text(main, "下一步 · 培养军团并扩建后勤"), "second-chapter reconnaissance converts the power cliff into a named next action")
+	_check(_tree_has_button(main, "先培养军团"), "extreme-risk reconnaissance prioritizes a safe growth route")
+	_check(_tree_has_button(main, "仍要试探"), "extreme-risk reconnaissance preserves the player's option to test the wall")
+	var grow_first := _button_with_text(main, "先培养军团")
+	_check(grow_first != null and grow_first.custom_minimum_size.y >= 48.0, "chapter handoff primary action remains touch-sized")
+	if grow_first != null:
+		grow_first.pressed.emit()
+		await _wait_frames(4)
+	_check(main.find_child("LegionFormationTab", true, false) != null, "reconnaissance growth action routes to the legion without starting a battle")
 
+	main.call("_show_goals")
+	await _wait_frames(4)
+	_check(_tree_has_text(main, "第二章：突破震荡封锁线"), "post-onboarding goals replace the completed training label with the next chapter")
+	_check(_tree_has_text(main, "还差") and _tree_has_text(main, "战力"), "post-onboarding goals quantify the next challenge-line gap")
+	_check(_tree_has_text(main, "第二章声波防线"), "post-onboarding goals name the new medium hurdle")
+	_check(_tree_has_button(main, "先培养军团"), "post-onboarding goals retain one executable primary action")
+	var goal_growth := _button_with_text(main, "先培养军团")
+	if goal_growth != null:
+		goal_growth.pressed.emit()
+		await _wait_frames(4)
+	_check(main.find_child("LegionFormationTab", true, false) != null, "post-onboarding goal action opens the executable growth screen")
+
+	state = game.current_state()
+	assault = _hero_for(state, "assault")
+	armored = _hero_for(state, "armored")
 	assault.star = 1
 	armored.star = 2
 	var armored_proof := String(main.call("_boss_mastery_proof_copy", {
@@ -115,6 +139,10 @@ func _button_with_text(node: Node, fragment: String) -> Button:
 		if match != null:
 			return match
 	return null
+
+
+func _tree_has_button(node: Node, fragment: String) -> bool:
+	return _button_with_text(node, fragment) != null
 
 
 func _tree_has_text(node: Node, fragment: String) -> bool:

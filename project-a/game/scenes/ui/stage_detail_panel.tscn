@@ -9,9 +9,9 @@ script = ExtResource("1_script")
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 2
 theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 10
+theme_override_constants/margin_top = 7
 theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_bottom = 7
 
 [node name="Columns" type="HBoxContainer" parent="Margin"]
 layout_mode = 2
@@ -47,7 +47,7 @@ text_overrun_behavior = 3
 [node name="Stats" type="VBoxContainer" parent="Margin/Columns"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
-theme_override_constants/separation = 7
+theme_override_constants/separation = 4
 
 [node name="PowerLine" type="Label" parent="Margin/Columns/Stats"]
 unique_name_in_owner = true
@@ -67,8 +67,27 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="AttackButton" type="Button" parent="Margin/Columns/Stats"]
+[node name="NextAction" type="Label" parent="Margin/Columns/Stats"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
+autowrap_mode = 2
+max_lines_visible = 2
+text_overrun_behavior = 3
+
+[node name="ActionRow" type="HBoxContainer" parent="Margin/Columns/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GrowthButton" type="Button" parent="Margin/Columns/Stats/ActionRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "先培养军团"
+
+[node name="AttackButton" type="Button" parent="Margin/Columns/Stats/ActionRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
 text = "立即出击"

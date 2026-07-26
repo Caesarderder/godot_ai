@@ -2,6 +2,7 @@ class_name StageDetailPanel
 extends PanelContainer
 
 signal attack_requested(stage_id: String)
+signal growth_requested()
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const PANEL := Color("#12171c")
@@ -21,6 +22,8 @@ const GREEN := Color("#78b982")
 @onready var capability: ProgressBar = %Capability
 @onready var risk_label: Label = %Risk
 @onready var threat_level: Label = %ThreatLevel
+@onready var next_action: Label = %NextAction
+@onready var growth_button: Button = %GrowthButton
 @onready var attack_button: Button = %AttackButton
 
 var _stage_id := ""
@@ -34,6 +37,7 @@ var _estimated_threat := "未知"
 func _ready() -> void:
 	_apply_theme()
 	attack_button.pressed.connect(_on_attack_pressed)
+	growth_button.pressed.connect(growth_requested.emit)
 	if not _config.is_empty():
 		_apply_configuration()
 
@@ -75,12 +79,26 @@ func _apply_configuration() -> void:
 	]
 	capability.value = mini(ratio_percent, 100)
 	capability.add_theme_color_override("font_color", risk_color)
-	risk_label.text = "能力比 %d%% · %s" % [ratio_percent, String(_report.get("risk_label", "未知"))]
+	risk_label.text = "能力比 %d%% · %s · 威胁等级 · %s" % [
+		ratio_percent,
+		String(_report.get("risk_label", "未知")),
+		_estimated_threat,
+	]
 	risk_label.add_theme_color_override("font_color", risk_color)
 	threat_level.text = "威胁等级 · %s" % _estimated_threat
 	threat_level.add_theme_color_override("font_color", RED if _estimated_threat == "高" else GOLD)
+	threat_level.visible = false
+	var action := _report.get("next_action", {}) as Dictionary
+	var needs_growth := String(action.get("id", "attack")) == "upgrade" and _unlocked and not _cleared
+	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
+	next_action.visible = needs_growth
+	growth_button.visible = needs_growth
 	attack_button.disabled = not _unlocked
-	attack_button.text = "再次夺取" if _cleared else ("立即出击" if _unlocked else "尚未侦测")
+	attack_button.text = (
+		"再次夺取"
+		if _cleared
+		else ("仍要试探" if needs_growth else ("立即出击" if _unlocked else "尚未侦测"))
+	)
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = PANEL
 	panel_style.border_color = CYAN if _unlocked else LINE
@@ -90,7 +108,7 @@ func _apply_configuration() -> void:
 
 
 func _apply_theme() -> void:
-	for label: Label in [stage_name, status_label, threat_summary, decision_hint, power_line, risk_label, threat_level]:
+	for label: Label in [stage_name, status_label, threat_summary, decision_hint, power_line, risk_label, threat_level, next_action]:
 		label.add_theme_font_override("font", CJK_FONT)
 	stage_name.add_theme_font_size_override("font_size", 23)
 	status_label.add_theme_font_size_override("font_size", 12)
@@ -102,15 +120,34 @@ func _apply_theme() -> void:
 	power_line.add_theme_color_override("font_color", CYAN)
 	risk_label.add_theme_font_size_override("font_size", 15)
 	threat_level.add_theme_font_size_override("font_size", 14)
-	attack_button.add_theme_font_override("font", CJK_FONT)
-	attack_button.add_theme_font_size_override("font_size", 16)
-	attack_button.focus_mode = Control.FOCUS_ALL
+	next_action.add_theme_font_size_override("font_size", 13)
+	next_action.add_theme_color_override("font_color", GREEN)
+	for button: Button in [growth_button, attack_button]:
+		button.add_theme_font_override("font", CJK_FONT)
+		button.add_theme_font_size_override("font_size", 16)
+		button.focus_mode = Control.FOCUS_ALL
 	var focus := StyleBoxFlat.new()
 	focus.bg_color = Color("#5b421e")
 	focus.border_color = Color.WHITE
 	focus.set_border_width_all(2)
 	focus.set_corner_radius_all(8)
 	attack_button.add_theme_stylebox_override("focus", focus)
+	growth_button.add_theme_stylebox_override("focus", focus)
+	var growth_normal := StyleBoxFlat.new()
+	growth_normal.bg_color = GOLD
+	growth_normal.border_color = GOLD
+	growth_normal.set_border_width_all(1)
+	growth_normal.set_corner_radius_all(8)
+	var growth_hover := growth_normal.duplicate() as StyleBoxFlat
+	growth_hover.bg_color = GOLD.lightened(0.12)
+	var growth_pressed := growth_normal.duplicate() as StyleBoxFlat
+	growth_pressed.bg_color = GOLD.darkened(0.18)
+	growth_button.add_theme_stylebox_override("normal", growth_normal)
+	growth_button.add_theme_stylebox_override("hover", growth_hover)
+	growth_button.add_theme_stylebox_override("pressed", growth_pressed)
+	growth_button.add_theme_color_override("font_color", PANEL)
+	growth_button.add_theme_color_override("font_hover_color", PANEL)
+	growth_button.add_theme_color_override("font_pressed_color", PANEL)
 
 
 func _risk_color(risk_id: String) -> Color:

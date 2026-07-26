@@ -99,7 +99,7 @@ func _goal_hierarchy(view: Dictionary) -> Control:
 		hurdle_copy.name = "CurrentHurdlePanel"
 		hurdle_copy.tooltip_text = String(hurdle.get("reason", ""))
 		panel.add_child(hurdle_copy)
-	if not bool(view.get("finished", false)):
+	if bool(view.get("actionable", not bool(view.get("finished", false)))):
 		var cta := _button(String(view.get("cta_label", "继续")), true)
 		cta.name = "GoalHierarchyPrimaryCTA"
 		cta.pressed.connect(action_requested.emit.bind("follow_task", {

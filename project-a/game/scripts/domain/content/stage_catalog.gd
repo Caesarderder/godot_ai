@@ -515,7 +515,7 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		5: "章节 Boss 关，基地结构分层破坏并持续轰炸全场。",
 	}
 	var beat_counters: Dictionary = {
-		1: "保持 Gman 与六名小兵满编，观察谁先倒下，再回厂补同职责角色。",
+		1: "使用现有永久军团观察敌方机制；若战力不足，先培养角色或调整前后排。",
 		2: "调整前后排，让承伤角色吃第一轮火力，后排保留输出。",
 		3: "使用本章新解法或上一章反制单位，不要只看总战力。",
 		4: "失败后优先升星承压或恢复位，而不是只堆最高攻击。",

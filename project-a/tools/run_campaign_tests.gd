@@ -81,6 +81,9 @@ func _run() -> void:
 	_check(chapter_feedback_values.size() == 5, "Act I has distinct chapter feedback for five chapters")
 	_check(recommendation_signatures.size() >= 5, "Act I recommendations differ across at least five chapter beats")
 	_check(boss_suppression_targets == [70, 85, 100, 115, 130], "boss cannon suppression targets increase across Act I")
+	var chapter_two_counter := String(StageCatalogScript.stage("stage_2_1").get("counter_hint", ""))
+	_check(chapter_two_counter.contains("永久军团"), "chapter two handoff preserves the permanent-hero formation model")
+	_check(not chapter_two_counter.contains("六名小兵") and not chapter_two_counter.contains("回厂补"), "chapter two handoff removes the retired disposable-unit formation copy")
 	_check(StageCatalogScript.breakthrough_reward("stage_1_2", false) == {"hero_shards": 4, "skill_chips": 0}, "first chapter introduces the first two-star breakthrough")
 	for chapter in range(1, 6):
 		var mid_stage := "stage_%d_3" % chapter

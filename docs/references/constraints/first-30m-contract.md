@@ -171,6 +171,14 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 `run_campaign_tests.gd` 锁定领域配置，`run_ui_smoke_tests.gd` 锁定玩家可见文案，视觉证据为
 `artifacts/ui-first-wall-reconnaissance-844x390.png`。
 
+首章完成后的 2-1 侦察允许形成新的中期战力坎，但不能成为导航死路。当前首章完成阵容约
+6400–6600，而 2-1 推荐 15500、挑战线约 13175，因此战区以“先培养军团”为高优先行动，并在
+同一行保留“仍要试探”的玩家自主权；两个触控目标均不低于 48 基准像素。目标中心在七行动结束
+后改为“第二章：突破震荡封锁线”，显示距离挑战线的真实战力缺口、无付费恢复承诺和同一军团
+培养入口，不再停留在“新兵训练完成”。该承接只组织下一阶段目标，不把 2-1 冒充首 30 分钟内
+必须完成的内容。证据为 `run_chapter_one_completion_tests.gd`、
+`artifacts/ui-chapter-two-handoff-844x390.png` 与 `artifacts/ui-chapter-two-goal-844x390.png`。
+
 ## 关卡合同
 
 数值区间是首轮 `target`；玩家感受是 `playtest hypothesis`。

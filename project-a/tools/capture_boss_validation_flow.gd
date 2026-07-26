@@ -112,6 +112,22 @@ func _capture() -> void:
 		return
 	if not _save("res://artifacts/ui-chapter-one-complete-844x390.png"):
 		return
+	chapter_two.pressed.emit()
+	for _frame in 10:
+		await process_frame
+	if not _tree_has_text(main, "下一步 · 培养军团并扩建后勤"):
+		_fail("chapter two growth handoff unavailable")
+		return
+	if not _save("res://artifacts/ui-chapter-two-handoff-844x390.png"):
+		return
+	main.call("_show_goals")
+	for _frame in 10:
+		await process_frame
+	if not _tree_has_text(main, "第二章：突破震荡封锁线"):
+		_fail("post-onboarding chapter goal unavailable")
+		return
+	if not _save("res://artifacts/ui-chapter-two-goal-844x390.png"):
+		return
 	main.queue_free()
 	await process_frame
 	print("BOSS VALIDATION FLOW CAPTURE PASS")

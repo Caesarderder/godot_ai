@@ -1002,7 +1002,10 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_set_goals_tab", "action")
 	instance.call("_show_map")
 	await _wait_frames(3)
-	_ok(_tree_has_button(instance, "立即出击"), "war zone exposes a direct attack CTA")
+	_ok(
+		_tree_has_button(instance, "立即出击") or _tree_has_button(instance, "仍要试探"),
+		"war zone preserves a direct attack option at every risk level"
+	)
 	game_autoload.current_state().economy.recruit_tickets = 10
 	instance.call("_show_legion")
 	await _wait_frames(3)
