@@ -55,6 +55,7 @@ godot --headless --path project-a -s tools/run_platform_tests.gd
 godot --headless --path project-a -s tools/run_presentation_tests.gd
 godot --headless --path project-a -s tools/run_asset_3d_tests.gd
 godot --headless --path project-a -s tools/run_font_coverage_tests.gd
+godot --headless --path project-a -s tools/run_ui_focus_tests.gd
 python3 project-a/tools/build_web_candidate.py
 cd project-a && node tools/run_web_browser_smoke.mjs
 ```

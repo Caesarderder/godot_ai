@@ -103,6 +103,7 @@ func _rebuild() -> void:
 func _button(value: String, selected: bool) -> Button:
 	var button := Button.new()
 	button.text = value
+	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_color_override("font_color", TEXT)
@@ -120,7 +121,10 @@ func _button(value: String, selected: bool) -> Button:
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
-	button.add_theme_stylebox_override("focus", pressed)
+	var focus := pressed.duplicate() as StyleBoxFlat
+	focus.border_color = Color.WHITE
+	focus.set_border_width_all(2)
+	button.add_theme_stylebox_override("focus", focus)
 	button.add_theme_stylebox_override("disabled", normal)
 	return button
 

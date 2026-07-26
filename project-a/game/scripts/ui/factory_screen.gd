@@ -30,6 +30,7 @@ func _ready() -> void:
 	mission_tab.pressed.connect(panel_selected.emit.bind("mission"))
 	facility_tab.pressed.connect(panel_selected.emit.bind("facility"))
 	build_tab.pressed.connect(panel_selected.emit.bind("build"))
+	_apply_shell_style()
 	if not _view.is_empty():
 		_rebuild()
 
@@ -323,11 +324,13 @@ func _button(value: String, primary: bool) -> Button:
 
 
 func _style_button(button: Button, primary: bool) -> void:
+	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 13)
 	button.add_theme_stylebox_override("normal", _box(Color("#244546") if primary else PANEL_2, CYAN if primary else LINE, 7))
 	button.add_theme_stylebox_override("hover", _box(Color("#315a5b"), CYAN, 7))
 	button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), CYAN, 7))
+	button.add_theme_stylebox_override("focus", _box(Color("#17383a"), Color.WHITE, 7))
 
 
 func _label(value: String, size: int, color: Color) -> Label:

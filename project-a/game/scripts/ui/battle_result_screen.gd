@@ -106,6 +106,7 @@ func _apply_theme() -> void:
 
 
 func _style_button(button: Button, primary: bool) -> void:
+	button.focus_mode = Control.FOCUS_ALL
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color("#244546") if primary else PANEL_2
 	normal.border_color = CYAN if primary else LINE
@@ -116,7 +117,10 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("normal", normal)
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", hover)
-	button.add_theme_stylebox_override("focus", hover)
+	var focus := hover.duplicate() as StyleBoxFlat
+	focus.border_color = Color.WHITE
+	focus.set_border_width_all(2)
+	button.add_theme_stylebox_override("focus", focus)
 
 
 func _set_optional(label: Label, value: String) -> void:

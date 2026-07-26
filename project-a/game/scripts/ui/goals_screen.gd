@@ -36,6 +36,9 @@ func _ready() -> void:
 	action_tab.pressed.connect(tab_selected.emit.bind("action"))
 	pass_tab.pressed.connect(tab_selected.emit.bind("pass"))
 	achievements_tab.pressed.connect(tab_selected.emit.bind("achievements"))
+	_style_tab(action_tab, true)
+	_style_tab(pass_tab, false)
+	_style_tab(achievements_tab, false)
 	if not _view.is_empty():
 		_rebuild()
 
@@ -307,6 +310,7 @@ func _button(copy: String, primary: bool) -> Button:
 	var button := Button.new()
 	button.text = copy
 	button.custom_minimum_size.y = 48
+	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_stylebox_override(
@@ -316,6 +320,10 @@ func _button(copy: String, primary: bool) -> Button:
 	button.add_theme_stylebox_override(
 		"hover",
 		_box(Color("#e5aa4c") if primary else Color("#263139"), 6, GOLD)
+	)
+	button.add_theme_stylebox_override(
+		"focus",
+		_box(Color("#5b421e") if primary else Color("#263139"), 6, Color.WHITE)
 	)
 	button.add_theme_color_override("font_color", Color("#14110c") if primary else TEXT)
 	return button
@@ -343,11 +351,16 @@ func _progress(value: float, maximum: float, color: Color) -> ProgressBar:
 
 
 func _style_tab(button: Button, active: bool) -> void:
+	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 15)
 	button.add_theme_stylebox_override(
 		"normal",
 		_box(Color("#c5903d") if active else Color("#1a2228"), 6, GOLD if active else LINE)
+	)
+	button.add_theme_stylebox_override(
+		"focus",
+		_box(Color("#5b421e") if active else Color("#263139"), 6, Color.WHITE)
 	)
 	button.add_theme_color_override("font_color", Color("#181109") if active else TEXT)
 

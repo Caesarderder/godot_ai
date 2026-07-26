@@ -104,6 +104,13 @@ func _apply_theme() -> void:
 	threat_level.add_theme_font_size_override("font_size", 14)
 	attack_button.add_theme_font_override("font", CJK_FONT)
 	attack_button.add_theme_font_size_override("font_size", 16)
+	attack_button.focus_mode = Control.FOCUS_ALL
+	var focus := StyleBoxFlat.new()
+	focus.bg_color = Color("#5b421e")
+	focus.border_color = Color.WHITE
+	focus.set_border_width_all(2)
+	focus.set_corner_radius_all(8)
+	attack_button.add_theme_stylebox_override("focus", focus)
 
 
 func _risk_color(risk_id: String) -> Color:

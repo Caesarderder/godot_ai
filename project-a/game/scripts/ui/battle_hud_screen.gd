@@ -142,11 +142,13 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	var skill := Button.new()
 	skill.name = "BattleSkillButton_%s" % unit_id
 	skill.flat = true
+	skill.focus_mode = Control.FOCUS_ALL
 	skill.custom_minimum_size.y = 72
 	skill.tooltip_text = "能量达到 100% 后释放主动技能"
 	var empty_style := StyleBoxEmpty.new()
-	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+	for state in ["normal", "hover", "pressed", "disabled"]:
 		skill.add_theme_stylebox_override(state, empty_style)
+	skill.add_theme_stylebox_override("focus", _box(Color(0, 0, 0, 0), 6, Color.WHITE))
 	skill.pressed.connect(skill_requested.emit.bind(unit_id))
 	root.add_child(skill)
 	skill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -186,11 +188,13 @@ func _apply_theme() -> void:
 	for label: Label in [status_label]:
 		label.add_theme_font_override("font", CJK_FONT)
 	for button: Button in [pause_button, skill_mode_button, retreat_button]:
+		button.focus_mode = Control.FOCUS_ALL
 		button.add_theme_font_override("font", CJK_FONT)
 		button.add_theme_font_size_override("font_size", 14)
 		button.add_theme_stylebox_override("normal", _box(Color("#1a2228"), 7, LINE))
 		button.add_theme_stylebox_override("hover", _box(Color("#24333a"), 7, CYAN))
 		button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), 7, CYAN))
+		button.add_theme_stylebox_override("focus", _box(Color("#17383a"), 7, Color.WHITE))
 
 
 func _label(value: String, size: int, color: Color) -> Label:

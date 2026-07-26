@@ -54,5 +54,6 @@ State labels:
 - [ ] Browser reload/restart persistence proof on the final production origin (local HTTP proof passes).
 - [ ] Private/blocked storage degraded behavior proof.
 - [ ] Accessibility review: focus visibility, readable/scalable text, non-color cues, reduced motion where needed, critical-audio alternatives.
+- [ ] `run_ui_focus_tests.gd` proves every authored and dynamic screen action is focusable and has a non-empty visible focus style.
 - [ ] Final legal review for font notice, fan-content/IP risk, store copy, and every asset license.
 - [ ] Monitoring, incident owner, rollback artifact, rollback trigger, and rollback rehearsal.

@@ -36,6 +36,9 @@ func _ready() -> void:
 	formation_tab.pressed.connect(tab_selected.emit.bind("formation"))
 	recruit_tab.pressed.connect(tab_selected.emit.bind("recruit"))
 	roster_tab.pressed.connect(tab_selected.emit.bind("roster"))
+	_style_tab(formation_tab, true)
+	_style_tab(recruit_tab, false)
+	_style_tab(roster_tab, false)
 	if not _view.is_empty():
 		_rebuild()
 
@@ -285,22 +288,26 @@ func _add_action(parent: Control, text: String, action_id: String, hero: Diction
 
 
 func _style_tab(button: Button, active: bool) -> void:
+	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_stylebox_override("normal", _box(Color("#244546") if active else PANEL_2, CYAN if active else LINE))
 	button.add_theme_stylebox_override("hover", _box(Color("#315a5b"), CYAN))
 	button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), CYAN))
+	button.add_theme_stylebox_override("focus", _box(Color("#17383a"), Color.WHITE))
 
 
 func _button(value: String, primary: bool) -> Button:
 	var button := Button.new()
 	button.text = value
 	button.custom_minimum_size.y = 44
+	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 13)
 	button.add_theme_stylebox_override("normal", _box(Color("#244546") if primary else PANEL_2, CYAN if primary else LINE))
 	button.add_theme_stylebox_override("hover", _box(Color("#315a5b"), CYAN))
 	button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), CYAN))
+	button.add_theme_stylebox_override("focus", _box(Color("#17383a"), Color.WHITE))
 	return button
 
 
