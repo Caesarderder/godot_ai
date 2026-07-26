@@ -106,7 +106,10 @@ related:
   首次技能的整卡点击提示与成功确认；Compatibility 844×390 截图和 Web Chrome smoke 均已
   覆盖集成后的真实战斗画面。`ui-first-skill-tutorial-844x390.png` 另记录提示位置、触控目标、
   中文技能名和战场留白；`ui-first-skill-result-844x390.png` 记录 accepted 事件驱动的实际伤害
-  确认。两者都不替代目标玩家首次理解盲测。
+  确认。结果截图现由真实技能卡 `pressed` 信号经 App Shell、`BattleWorld.request_skill()` 和
+  一个 5Hz tick 产生；工具监听并断言动态角色 ID、`skill_used`、正数 `effective_damage`、
+  施法后能量与世界 VFX，不再直接调用 HUD 或手工写两条 96 伤害。当前新档权威结果为
+  “G-Man 指挥官 · 统帅碾压：造成 36 伤害”。两者都不替代目标玩家首次理解盲测。
   `run_presentation_tests.gd` 进一步验证 accepted 装甲格挡事件在中画质产生文字、防御环、核心
   闪击、受控镜头震动与独立音效，在低画质/减少动态下保留文字和形状但移除次级闪击与震动；
   `ui-battle-guard-counter-844x390.png` 证明关键反馈位于基地轮廓上方且不遮挡技能卡。

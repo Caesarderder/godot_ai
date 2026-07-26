@@ -66,17 +66,31 @@ func _capture() -> void:
 		push_error("FIRST SKILL CAPTURE FAIL: %s" % error_string(tutorial_error))
 		quit(1)
 		return
-	var skill_events: Array[Dictionary] = [
-		{"type": &"skill_used", "unit_id": &"hero_gman", "skill_id": "gman_overrun"},
-		{"type": &"structure_damaged", "source_id": &"hero_gman", "damage": 96, "effective_damage": 96, "is_skill": true},
-		{"type": &"structure_damaged", "source_id": &"hero_gman", "damage": 96, "effective_damage": 96, "is_skill": true},
-	]
-	hud.call("apply_battle_events", skill_events)
-	var result_snapshot := battle_snapshot.duplicate(true)
-	for unit_value in result_snapshot.get("units", []):
-		var unit := unit_value as Dictionary
-		if not bool(unit.get("temporary", false)):
-			unit["energy"] = 0
+	var event_holder := {"events": []}
+	world.battle_events_applied.connect(func(events: Array[Dictionary]) -> void:
+		event_holder["events"] = events
+	)
+	var unit_id := String(_permanent_hero(battle_snapshot).get("unit_id", ""))
+	var skill_buttons := hud.call("skill_buttons") as Dictionary
+	var skill_button := skill_buttons.get(unit_id) as Button
+	if skill_button == null:
+		push_error("FIRST SKILL RESULT CAPTURE FAIL: real skill button is unavailable")
+		quit(1)
+		return
+	skill_button.pressed.emit()
+	world.call("_process", 0.2)
+	_step_unit_views(world, 0.2)
+	var accepted_events := event_holder.get("events", []) as Array
+	if not _has_real_skill_result(accepted_events, unit_id):
+		push_error("FIRST SKILL RESULT CAPTURE FAIL: no accepted skill damage event")
+		quit(1)
+		return
+	var vfx_root := world.get_node_or_null("LightweightVFX")
+	if vfx_root == null or vfx_root.get_child_count() <= 1:
+		push_error("FIRST SKILL RESULT CAPTURE FAIL: accepted skill produced no world VFX")
+		quit(1)
+		return
+	var result_snapshot := world.call("snapshot") as Dictionary
 	hud.call("apply_snapshot", result_snapshot)
 	await process_frame
 	var result_output := "res://artifacts/ui-first-skill-result-844x390.png"
@@ -105,3 +119,18 @@ func _step_unit_views(world: Node, delta: float) -> void:
 	for child in units_root.get_children():
 		if child.has_method("_process"):
 			child.call("_process", delta)
+
+
+func _has_real_skill_result(events: Array, unit_id: String) -> bool:
+	var has_skill_used := false
+	var effective_damage := 0
+	for event_value in events:
+		var event := event_value as Dictionary
+		if StringName(event.get("type", &"")) == &"skill_used" and String(event.get("unit_id", "")) == unit_id:
+			has_skill_used = true
+		if (
+			StringName(event.get("type", &"")) in [&"structure_damaged", &"enemy_damaged"]
+			and String(event.get("source_id", "")) == unit_id
+		):
+			effective_damage += int(event.get("effective_damage", 0))
+	return has_skill_used and effective_damage > 0

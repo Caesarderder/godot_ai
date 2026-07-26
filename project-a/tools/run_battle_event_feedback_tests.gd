@@ -46,6 +46,7 @@ func _run() -> void:
 	_check(int(holder["emissions"]) == 1, "ordinary 5Hz combat ticks do not emit HUD skill facts")
 	world.queue_free()
 	await process_frame
+	await _check_real_skill_request_pipeline()
 	if failures.is_empty():
 		print("BATTLE_EVENT_FEEDBACK_TESTS_OK")
 		quit(0)
@@ -53,6 +54,48 @@ func _run() -> void:
 	for failure in failures:
 		push_error(failure)
 	quit(1)
+
+
+func _check_real_skill_request_pipeline() -> void:
+	var world := BattleWorldScript.new()
+	root.add_child(world)
+	await process_frame
+	var holder := {"events": []}
+	world.battle_events_applied.connect(func(events: Array[Dictionary]) -> void:
+		holder["events"] = events
+	)
+	world.start_battle([{
+		"hero_id": "real_skill_hero",
+		"display_name": "真实技能测试",
+		"archetype_id": "gman",
+		"class_id": "commander",
+		"skill_id": "gman_overrun",
+		"starting_energy": 100,
+		"attack": 24,
+		"auto_skill": false,
+	}])
+	world.set_process(false)
+	_check(world.request_skill(&"real_skill_hero"), "full-energy skill request is accepted through BattleWorld public API")
+	world.call("_process", 0.2)
+	var events := holder.get("events", []) as Array
+	var has_skill_used := false
+	var effective_damage := 0
+	for event_value in events:
+		var event := event_value as Dictionary
+		if StringName(event.get("type", &"")) == &"skill_used" and event.get("unit_id", &"") == &"real_skill_hero":
+			has_skill_used = true
+		if (
+			StringName(event.get("type", &"")) in [&"structure_damaged", &"enemy_damaged"]
+			and event.get("source_id", &"") == &"real_skill_hero"
+		):
+			effective_damage += int(event.get("effective_damage", 0))
+	_check(has_skill_used, "accepted request emits the real deterministic skill_used fact")
+	_check(effective_damage > 0, "accepted request emits positive effective damage from deterministic combat")
+	var snapshot := world.snapshot()
+	var hero := (snapshot.get("units", []) as Array)[0] as Dictionary
+	_check(int(hero.get("energy", -1)) == 0, "accepted skill consumes authoritative energy in the post-skill snapshot")
+	world.queue_free()
+	await process_frame
 
 
 func _check(condition: bool, message: String) -> void:
