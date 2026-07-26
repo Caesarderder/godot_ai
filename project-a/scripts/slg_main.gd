@@ -2058,7 +2058,13 @@ func _show_result() -> void:
 		&"victory" if won else (&"retreat" if outcome == "retreat" else &"defeat"),
 		-7.0
 	)
-	var result_title := "城镇已占领" if won else ("已主动撤退" if outcome == "retreat" else "攻势受阻")
+	var cleared_stage_id := String(event.get("stage_id", ""))
+	var chapter_one_complete := won and cleared_stage_id == "stage_1_5"
+	var result_title := (
+		"第一章完成 · 灰镜核心已摧毁"
+		if chapter_one_complete
+		else ("城镇已占领" if won else ("已主动撤退" if outcome == "retreat" else "攻势受阻"))
+	)
 	var shell := _shell(result_title, "战果已结算，全员无损返回")
 	var reward := event.get("reward", {}) as Dictionary
 	var breakthrough := ""
@@ -2095,8 +2101,9 @@ func _show_result() -> void:
 			outcome,
 			String(event.get("stage_id", ""))
 		)
+		if chapter_one_complete:
+			hurdle_proof = _boss_mastery_proof_copy(last_battle_runtime_result)
 	var next_stage_id := String(event.get("next_stage_id", ""))
-	var cleared_stage_id := String(event.get("stage_id", ""))
 	var onboarding := OnboardingService.snapshot(game.current_state())
 	var qualification := ""
 	var primary_label := ""
@@ -2106,9 +2113,11 @@ func _show_result() -> void:
 		qualification = "已取得研究所建造资格"
 		primary_label = "返回基地建造研究所"
 		primary_action = "research_lab"
-	elif won and cleared_stage_id == "stage_1_5":
-		primary_label = "前往军团突破三星"
-		primary_action = "legion"
+	elif chapter_one_complete:
+		qualification = _chapter_one_unlock_copy(next_stage_id)
+		primary_label = "开启第2章 · 侦察 2-1"
+		primary_action = "map_stage"
+		primary_payload = {"stage_id": next_stage_id if not next_stage_id.is_empty() else "stage_2_1"}
 	elif not won and cleared_stage_id == "stage_1_5":
 		var recovery := _boss_failure_recovery(last_battle_runtime_result)
 		primary_label = String(recovery.get("label", "调整后再战"))
@@ -2137,7 +2146,11 @@ func _show_result() -> void:
 		primary_action = "legion"
 	var result_screen := BattleResultScreenScene.instantiate()
 	result_screen.configure({
-		"outcome_banner": "胜利 · 工厂与军团获得成长" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"),
+		"outcome_banner": (
+			"首章胜利 · 你的成长选择通过实战验证"
+			if chapter_one_complete
+			else ("胜利 · 工厂与军团获得成长" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
+		),
 		"outcome_color": "green" if won else ("gold" if outcome == "retreat" else "red"),
 		"reward_headline": "金币 +%d    工业技术 +%d" % [
 			int(reward.get("gold", 0)), int(event.get("industrial_tech", 0))
@@ -2197,6 +2210,11 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 			_show_legion()
 		"next_stage":
 			_start_stage_battle(String(payload.get("stage_id", "")))
+		"map_stage":
+			var stage_id := String(payload.get("stage_id", "stage_2_1"))
+			selected_stage_id = stage_id
+			selected_chapter = 2
+			_show_map()
 		"factory", "base":
 			_open_factory_task_context() if action_id == "factory" else _show_base()
 
@@ -2247,6 +2265,32 @@ func _counterattack_proof_copy(
 		clampi(int(runtime_result.get("troop_damage_share_percent", 0)), 0, 100),
 		clampi(output_share, 0, 100),
 	]
+
+
+func _boss_mastery_proof_copy(runtime_result: Dictionary) -> String:
+	var route_id := _boss_growth_route_id()
+	if route_id == "assault":
+		return "路线验证 · 冲锋压炮 %d 次，二星成长兑现" % int(
+			runtime_result.get("cannon_suppressed_count", 0)
+		)
+	if route_id == "armored":
+		return "路线验证 · 装甲格挡 %d 次，反震 %d" % [
+			int(runtime_result.get("cannon_guarded_count", 0)),
+			int(runtime_result.get("cannon_guard_counter_damage", 0)),
+		]
+	return "路线验证 · 二星成长帮助军团摧毁了首章核心巨炮"
+
+
+func _chapter_one_unlock_copy(next_stage_id: String) -> String:
+	var unlocks := MetaCatalog.unlocks(game.current_state())
+	var unlocked: Array[String] = []
+	if not next_stage_id.is_empty():
+		unlocked.append("第2章战线")
+	if bool(unlocks.get("recruitment", false)):
+		unlocked.append("信号招募")
+	if bool(unlocks.get("pass", false)):
+		unlocked.append("免费战役战令")
+	return "首章解锁 · %s" % (" · ".join(unlocked) if not unlocked.is_empty() else "第2章战线")
 
 
 func _open_research_lab() -> void:

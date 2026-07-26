@@ -159,6 +159,12 @@ Compatibility 证据为 `artifacts/ui-research-breakthrough-844x390.png`。
 `artifacts/ui-boss-ready-844x390.png` 和
 `artifacts/ui-boss-timing-recovery-844x390.png` 提供基准横屏证据。
 
+1-5 胜利不再复用普通“城镇已占领”或把玩家错误送去三星培养。首章完成结算用所选二星路线和
+`BattleSession` 的巨炮压制/格挡事实生成路线验证，显示七行动闭环完成、实际开放的第 2 章/
+信号招募/免费战役战令，并以“开启第2章 · 侦察 2-1”为唯一主 CTA；该 CTA 进入 2-1 战前侦察，
+不会强制连续开战。`run_chapter_one_completion_tests.gd` 同时覆盖冲锋和装甲证明、真实解锁摘要
+与精确地图出口，`artifacts/ui-chapter-one-complete-844x390.png` 提供高潮首屏证据。
+
 ## 关卡合同
 
 数值区间是首轮 `target`；玩家感受是 `playtest hypothesis`。
