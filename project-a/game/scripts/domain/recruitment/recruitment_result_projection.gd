@@ -18,6 +18,17 @@ static func latest_results(state: RefCounted) -> Array[Dictionary]:
 
 
 static func latest_event(state: RefCounted) -> Dictionary:
+	return _latest_event(state, RECRUIT_COMMANDS)
+
+
+static func latest_event_for_command(state: RefCounted, command_type: String) -> Dictionary:
+	if command_type.is_empty():
+		return {}
+	var command_types: Array[String] = [command_type]
+	return _latest_event(state, command_types)
+
+
+static func _latest_event(state: RefCounted, command_types: Array[String]) -> Dictionary:
 	var latest_revision := -1
 	var latest: Dictionary = {}
 	if state == null:
@@ -26,7 +37,7 @@ static func latest_event(state: RefCounted) -> Dictionary:
 		if typeof(receipt_value) != TYPE_DICTIONARY:
 			continue
 		var receipt := receipt_value as Dictionary
-		if not RECRUIT_COMMANDS.has(String(receipt.get("type", ""))):
+		if not command_types.has(String(receipt.get("type", ""))):
 			continue
 		var result := receipt.get("result", {}) as Dictionary
 		if not bool(result.get("ok", false)):

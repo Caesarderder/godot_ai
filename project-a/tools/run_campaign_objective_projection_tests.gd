@@ -4,6 +4,8 @@ const CampaignObjectiveProjectionScript := preload(
 	"res://game/scripts/domain/objectives/campaign_objective_projection.gd"
 )
 const GameStateScript := preload("res://game/scripts/state/game_state.gd")
+const CommandExecutorScript := preload("res://game/scripts/commands/command_executor.gd")
+const HeroGeneratorScript := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const ResearchBreakthroughServiceScript := preload(
 	"res://game/scripts/domain/recruitment/research_breakthrough_service.gd"
 )
@@ -17,6 +19,7 @@ func _init() -> void:
 
 func _run() -> void:
 	_test_first_chapter_projection()
+	_test_faction_journey_projection()
 	_test_second_chapter_growth_projection()
 	_test_second_chapter_reconnaissance_projection()
 	if failures.is_empty():
@@ -67,6 +70,95 @@ func _test_second_chapter_growth_projection() -> void:
 	_check(String(hierarchy.get("cta_label", "")) == "先培养军团", "goal center routes the growth state to the legion")
 	_check(String(task.get("cta_label", "")) == "先培养军团", "factory task uses the same semantic action")
 	_check(String(hierarchy.get("small", "")) == String((task.get("objectives", []) as Array)[0]["label"]), "goal center and factory share the exact small goal")
+
+
+func _test_faction_journey_projection() -> void:
+	var state := _chapter_two_state()
+	var claimed := state.onboarding.get("claimed", {}) as Dictionary
+	claimed.erase(ResearchBreakthroughServiceScript.FACTION_CLAIM_KEY)
+	state.onboarding["claimed"] = claimed
+	state.meta_progression.commander_xp = 450
+	var executor := CommandExecutorScript.new(
+		state,
+		func(_state: RefCounted) -> bool: return true
+	)
+	var claim := executor.execute({
+		"type": "claim_faction_signal",
+		"command_id": "objective-faction-claim",
+		"business_key": "objective-faction-claim",
+		"expected_revision": state.revision,
+		"payload": {},
+	})
+	_check(bool(claim.get("ok", false)), "faction objective fixture receives the durable free ten")
+	if not bool(claim.get("ok", false)):
+		return
+	state = executor.state
+	var archetype_id := String(
+		(claim.get("event", {}) as Dictionary).get("guaranteed_duplicate_archetype", "")
+	)
+	state.economy.recruit_tickets = 1
+	var later_recruit := executor.execute({
+		"type": "signal_recruit",
+		"command_id": "objective-later-standard-recruit",
+		"business_key": "objective-later-standard-recruit",
+		"expected_revision": state.revision,
+		"payload": {"count": 1, "target_archetype": "parasite"},
+	})
+	_check(bool(later_recruit.get("ok", false)), "later standard recruit fixture succeeds")
+	state = executor.state
+	var projection := CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	var hierarchy := projection.get("hierarchy", {}) as Dictionary
+	var task := projection.get("factory_task", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "research", "post-ten goal persists the selected core's research step")
+	_check(String(hierarchy.get("medium", "")).contains(archetype_id) == false, "player-facing faction goal uses names rather than internal archetype ids")
+	_check(String(hierarchy.get("small", "")).contains("研发为永久角色"), "research step explains that a blueprint is not yet a hero")
+	_check(String(task.get("small", "")) == "", "factory task stays a compact action projection")
+	_check(
+		String((task.get("objectives", []) as Array)[0]["label"])
+			== String(hierarchy.get("small", "")),
+		"base and goal center share the exact faction research objective"
+	)
+
+	var hero: RefCounted = HeroGeneratorScript.generate_archetype(
+		20260728,
+		9,
+		archetype_id,
+		"fighter"
+	)
+	state.roster.append(hero)
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "formation", "researched faction core routes to formation")
+	_check(String(hierarchy.get("hero_id", "")) == String(hero.hero_id), "formation step keeps the exact faction hero identity")
+
+	state.formation.slots["troop_3"] = hero.hero_id
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "map", "deployed one-star core routes to its battlefield proof")
+	_check(String(hierarchy.get("small", "")).contains("实战证明 0/3"), "one-star proof exposes an observable three-battle target")
+
+	state.stage_progress["cleared_stages"] = (
+		state.stage_progress.get("cleared_stages", []) as Array
+	) + ["stage_2_1", "stage_2_2", "stage_2_3"]
+	state.stage_progress["highest_unlocked_stage"] = "stage_2_4"
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "legion", "three battlefield proofs route to the selected core's star growth")
+	_check(String(hierarchy.get("hero_id", "")) == String(hero.hero_id), "star step preserves the exact hero for roster focus")
+	_check(String(hierarchy.get("small", "")).contains("专属碎片"), "star step explains the duplicate-to-specific-character causality")
+
+	hero.star = 2
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "map", "two-star transformation routes back to battle validation")
+	_check(String(hierarchy.get("small", "")).contains("击毁2-5核心"), "final faction step names the chapter boss proof")
+
+	state.stage_progress["cleared_stages"].append("stage_2_4")
+	state.stage_progress["cleared_stages"].append("stage_2_5")
+	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(not String(hierarchy.get("medium", "")).contains("阵营核心"), "completed second chapter releases the player into the next campaign goal")
 
 
 func _test_second_chapter_reconnaissance_projection() -> void:

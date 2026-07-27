@@ -203,6 +203,7 @@ func _goal_hierarchy(view: Dictionary) -> Control:
 		cta.pressed.connect(action_requested.emit.bind("follow_task", {
 			"target": String(view.get("target", "expedition")),
 			"stage_id": String(view.get("stage_id", "")),
+			"hero_id": String(view.get("hero_id", "")),
 		}))
 		panel.add_child(cta)
 	return panel

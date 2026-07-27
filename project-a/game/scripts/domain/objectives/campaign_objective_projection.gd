@@ -4,6 +4,11 @@ extends RefCounted
 const ObjectiveHurdleCatalogScript := preload("res://game/scripts/content/objective_hurdle_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 const WarReadinessReportScript := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const FactionCatalogScript := preload("res://game/scripts/domain/content/faction_catalog.gd")
+const RecruitmentResultProjectionScript := preload(
+	"res://game/scripts/domain/recruitment/recruitment_result_projection.gd"
+)
 const ResearchBreakthroughServiceScript := preload(
 	"res://game/scripts/domain/recruitment/research_breakthrough_service.gd"
 )
@@ -38,11 +43,15 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 		and cleared.has("stage_1_5")
 		and not ResearchBreakthroughServiceScript.is_faction_claimed(state)
 	)
+	var faction_journey := _faction_journey(state, cleared)
+	var faction_journey_active := bool(faction_journey.get("active", false))
 	var hierarchy := _onboarding_hierarchy(onboarding, cleared)
 	if onboarding_finished:
 		hierarchy = (
 			_faction_recruit_hierarchy()
 			if faction_recruit_pending
+			else (faction_journey.get("hierarchy", {}) as Dictionary)
+			if faction_journey_active
 			else _next_chapter_hierarchy(
 				stage_id,
 				stage_config,
@@ -66,6 +75,8 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 				"objective": "下一行动 · 领取阵营起手十连",
 			}
 			if faction_recruit_pending
+			else (faction_journey.get("title", {}) as Dictionary)
+			if faction_journey_active
 			else _title_view(
 			cleared.is_empty(),
 			campaign_cleared >= StageCatalogScript.ACT1_STAGE_IDS.size(),
@@ -80,6 +91,8 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 		"factory_task": (
 			_faction_recruit_factory_task()
 			if faction_recruit_pending
+			else (faction_journey.get("factory_task", {}) as Dictionary)
+			if faction_journey_active
 			else _next_chapter_factory_task(
 				stage_id,
 				stage_config,
@@ -90,6 +103,153 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 			else onboarding
 		),
 	}
+
+
+static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
+	if not ResearchBreakthroughServiceScript.is_faction_claimed(state):
+		return {"active": false}
+	var event := RecruitmentResultProjectionScript.latest_event_for_command(
+		state,
+		"claim_faction_signal"
+	)
+	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	if archetype_id.is_empty():
+		return {"active": false}
+	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
+	var role_name := String(recipe.get("display_name", archetype_id))
+	var faction_name := FactionCatalogScript.faction_for(archetype_id)
+	var hero: RefCounted = null
+	for roster_hero in state.roster:
+		if String(roster_hero.archetype_id) == archetype_id:
+			hero = roster_hero
+			break
+	var phase := ""
+	var small := ""
+	var cta_label := ""
+	var target := ""
+	var stage_id := String(
+		state.stage_progress.get("highest_unlocked_stage", "stage_2_1")
+	)
+	var hurdle_title := ""
+	var hurdle_reason := ""
+	var recovery := ""
+	var hero_id := ""
+	if hero == null:
+		phase = "research"
+		small = "把%s图纸研发为永久角色" % role_name
+		cta_label = "研发%s" % role_name
+		target = "research"
+		hurdle_title = "图纸还不是角色"
+		hurdle_reason = "抽取获得的是永久设计资格，需要在研究所完成实体化。"
+		recovery = "研究所已建成；启动并领取5秒研发，不消耗抽卡资源。"
+	else:
+		hero_id = String(hero.hero_id)
+		var deployed: bool = state.formation.hero_ids().has(hero_id)
+		var chapter_two_clears := _count_cleared(cleared, [
+			"stage_2_1", "stage_2_2", "stage_2_3",
+		])
+		if not deployed:
+			phase = "formation"
+			small = "把%s编入六槽队伍，建立%s起手式" % [role_name, faction_name]
+			cta_label = "编入%s" % role_name
+			target = "formation"
+			hurdle_title = "新角色仍在待命"
+			hurdle_reason = "永久角色不会自动替玩家改变编队。"
+			recovery = "进入编队，选择一个阵位并亲自确认替换。"
+		elif chapter_two_clears < 3:
+			phase = "prove_one_star"
+			small = "用%d★%s推进第二章（实战证明 %d/3）" % [
+				int(hero.star),
+				role_name,
+				chapter_two_clears,
+			]
+			cta_label = "验证%s · %s" % [
+				role_name,
+				String(StageCatalogScript.stage(stage_id).get("display_name", stage_id)),
+			]
+			target = "map"
+			hurdle_title = "阵营打法尚未经过实战"
+			hurdle_reason = "战力数字不能替代玩家亲自看见新职责改变战局。"
+			recovery = "连续推进三座城，观察新角色的技能时机与战报贡献。"
+		elif int(hero.star) < 2:
+			phase = "star"
+			small = "使用%s专属碎片升至2★，兑现阵营质变" % role_name
+			cta_label = "将%s升至2★" % role_name
+			target = "legion"
+			hurdle_title = "第二章后段成长墙"
+			hurdle_reason = "1★已经证明角色定位，后段要求一次可感知的职责质变。"
+			recovery = "免费十连已保证同型号重复；碎片只用于这个角色。"
+		elif not cleared.has("stage_2_5"):
+			phase = "breakthrough"
+			small = "用2★%s突破第二章后段，击毁2-5核心" % role_name
+			cta_label = "检验2★质变 · %s" % String(
+				StageCatalogScript.stage(stage_id).get("display_name", stage_id)
+			)
+			target = "map"
+			hurdle_title = "阵营核心最终验证"
+			hurdle_reason = "升星只有在战斗行为和过关方式改变时才有意义。"
+			recovery = "保留新被动的技能窗口；失败不损失角色、碎片或保底。"
+		else:
+			return {"active": false}
+	var hierarchy := {
+		"macro": "用自己的角色池形成%s阵营" % faction_name,
+		"medium": "阵营核心：%s · %s" % [role_name, _faction_phase_title(phase)],
+		"small": small,
+		"hurdle": {
+			"scale": "阵营成长",
+			"title": hurdle_title,
+			"reason": hurdle_reason,
+			"recovery": recovery,
+		},
+		"finished": false,
+		"actionable": true,
+		"cta_label": cta_label,
+		"target": target,
+		"stage_id": stage_id,
+		"hero_id": hero_id,
+	}
+	return {
+		"active": true,
+		"phase": phase,
+		"title": {
+			"primary_label": cta_label,
+			"objective": "阵营成形 · %s" % small,
+		},
+		"hierarchy": hierarchy,
+		"factory_task": {
+			"finished": false,
+			"onboarding_finished": true,
+			"title": "阵营成形：%s" % _faction_phase_title(phase),
+			"lesson": "%s属于你的%s路线；每一步都由当前存档事实恢复。" % [
+				role_name,
+				faction_name,
+			],
+			"cta_label": cta_label,
+			"target": target,
+			"stage_id": stage_id,
+			"hero_id": hero_id,
+			"progress": 0,
+			"target_value": 1,
+			"completed": false,
+			"claimed": true,
+			"objectives": [{
+				"id": "form_faction_%s" % phase,
+				"label": small,
+				"completed": false,
+			}],
+		},
+	}
+
+
+static func _faction_phase_title(phase: String) -> String:
+	var titles := {
+		"research": "研发新角色",
+		"formation": "建立阵营编队",
+		"prove_one_star": "证明核心打法",
+		"star": "解锁2★质变",
+		"breakthrough": "突破第二章",
+	}
+	return String(titles.get(phase, "形成阵营"))
 
 
 static func _title_view(

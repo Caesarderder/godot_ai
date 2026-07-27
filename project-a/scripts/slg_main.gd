@@ -1006,7 +1006,11 @@ func _on_factory_action_requested(action_id: String, payload: Dictionary) -> voi
 		"claim_task":
 			_claim_task()
 		"follow_task":
-			_follow_task(String(payload.get("target", "map")), String(payload.get("stage_id", "")))
+			_follow_task(
+				String(payload.get("target", "map")),
+				String(payload.get("stage_id", "")),
+				String(payload.get("hero_id", ""))
+			)
 		"intelligence":
 			_show_intelligence()
 		"begin_construction":
@@ -2144,7 +2148,11 @@ func _goals_lock_view(
 func _on_goals_action_requested(action_id: String, payload: Dictionary) -> void:
 	match action_id:
 		"follow_task":
-			_follow_task(String(payload.get("target", "expedition")), String(payload.get("stage_id", "")))
+			_follow_task(
+				String(payload.get("target", "expedition")),
+				String(payload.get("stage_id", "")),
+				String(payload.get("hero_id", ""))
+			)
 		"open_map":
 			_show_map()
 		"claim_mission":
@@ -3179,7 +3187,7 @@ func _signal_recruit(count: int) -> void:
 		_notify(_error_copy(String(result.get("error", "招募失败"))))
 
 
-func _follow_task(target: String, stage_id: String = "") -> void:
+func _follow_task(target: String, stage_id: String = "", hero_id: String = "") -> void:
 	match target:
 		"factory", "repair":
 			_open_factory_task_context() if target == "factory" else _show_legion()
@@ -3187,6 +3195,11 @@ func _follow_task(target: String, stage_id: String = "") -> void:
 			var onboarding := OnboardingService.snapshot(game.current_state())
 			if _onboarding_objective_id(onboarding) == "resolve_foundational_signal":
 				legion_tab = "recruit"
+			elif target == "formation":
+				legion_tab = "formation"
+			elif not hero_id.is_empty():
+				legion_selected_hero_id = hero_id
+				legion_tab = "roster"
 			_show_legion()
 		"research":
 			_open_research_lab()

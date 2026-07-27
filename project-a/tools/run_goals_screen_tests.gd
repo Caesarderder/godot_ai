@@ -21,16 +21,35 @@ func _run() -> void:
 	_check(_tree_has_text(goals, "小目标 · 完成 1-4 首次挑战"), "small executable goal remains visible")
 	_check(_tree_has_text(goals, "大坎 · 1-4 灰镜高墙"), "hurdle scale and identity are explicit")
 	_check(_tree_has_text(goals, "过坎：完成首战后用保障币建研究所"), "recovery path is explicit")
-	var action_request := {"id": "", "stage_id": ""}
+	var action_request := {"id": "", "stage_id": "", "hero_id": ""}
 	goals.connect("action_requested", func(action_id: String, payload: Dictionary) -> void:
 		action_request["id"] = action_id
 		action_request["stage_id"] = String(payload.get("stage_id", ""))
+		action_request["hero_id"] = String(payload.get("hero_id", ""))
 	)
 	var cta := goals.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
 	if cta != null:
 		cta.pressed.emit()
 	_check(action_request["id"] == "follow_task", "primary CTA emits a semantic follow request")
 	_check(action_request["stage_id"] == "stage_1_4", "primary CTA preserves the exact stage target")
+	var faction_view := _action_view()
+	(faction_view["hierarchy"] as Dictionary).merge({
+		"macro": "形成远程轰炸阵营",
+		"medium": "阵营核心：火箭马桶人",
+		"small": "把火箭马桶人升至2★",
+		"cta_label": "将火箭马桶人升至2★",
+		"target": "legion",
+		"stage_id": "stage_2_4",
+		"hero_id": "hero_faction_rocket",
+	}, true)
+	goals.call("configure", faction_view)
+	await process_frame
+	var faction_cta := goals.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	if faction_cta != null:
+		faction_cta.pressed.emit()
+	_check(action_request["hero_id"] == "hero_faction_rocket", "faction CTA preserves the exact hero for roster focus")
+	goals.call("configure", _action_view())
+	await process_frame
 	var rookie_gift := goals.find_child("StarterGift_rookie_departure_v1", true, false) as Button
 	_check(rookie_gift != null and not rookie_gift.disabled, "completed research lab gift is visibly claimable")
 	if rookie_gift != null:

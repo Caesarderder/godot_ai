@@ -157,6 +157,7 @@ func _mission_panel() -> Control:
 		primary.pressed.connect(action_requested.emit.bind("follow_task", {
 			"target": String(task.get("target", "map")),
 			"stage_id": String(task.get("stage_id", "")),
+			"hero_id": String(task.get("hero_id", "")),
 		}))
 	actions.add_child(primary)
 	var intelligence := _button("战况", false)

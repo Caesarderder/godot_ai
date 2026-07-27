@@ -9,9 +9,12 @@ source_of_truth:
   - docs/references/product-design/post-30m-faction-progression.md
   - project-a/game/scripts/state/meta_progression_state.gd
   - project-a/game/scripts/domain/recruitment/signal_recruit_service.gd
+  - project-a/game/scripts/domain/objectives/campaign_objective_projection.gd
   - project-a/game/scripts/domain/factory/logistics_service.gd
 validated_by:
-  - headless-and-browser-journey-required
+  - godot --headless --path project-a --script tools/run_campaign_objective_projection_tests.gd
+  - godot --headless --path project-a --script tools/run_post_30m_faction_tests.gd
+  - project-a/artifacts/ui-faction-journey-research-844x390.png
 tags:
   - reference:technical-design
   - workflow:post-30m
@@ -41,6 +44,8 @@ Compatibility、单线程 Web、844×390 横屏。
 - `MetaProgressionState`：抽数、保底和专属碎片持久状态。
 - `CommandExecutor`：唯一写入口、clone、persist-before-success 与 business receipt。
 - `LegionScreen`：抽取、图鉴、角色卡、编队与成长投影。
+- `CampaignObjectiveProjection`：仅从 durable receipt、角色、编队、星级和关卡首通事实重建
+  当前阵营阶段，不增加另一套进度状态。
 
 ## 可玩序列
 
@@ -55,6 +60,7 @@ Compatibility、单线程 Web、844×390 横屏。
 → upgrade transaction 原子扣专属碎片、写 star/skill_id
 → BattleSession 从 snapshot 读取 star 并执行质变
 → 第二章结算继续提供可追踪成长
+→ CampaignObjectiveProjection 在刷新与跨屏后恢复唯一下一行动
 ```
 
 ## 所有权与数据
@@ -68,6 +74,7 @@ Compatibility、单线程 Web、844×390 横屏。
 | `LogisticsService` | 角色星级 | hero_id、waive flag | star event | 型号碎片不足不扣除 |
 | `CommandExecutor` | 整个 GameState | durable envelope | persisted event | 保存失败回滚 clone |
 | `LegionScreen` | 仅投影 | action signal | 可读状态 | 禁用操作并解释缺口 |
+| `CampaignObjectiveProjection` | 无长期状态 | 当前完整 GameState | 研发/编队/实战/升星/Boss 单一目标 | 缺失阵营 receipt 时安全退回通用战役目标 |
 
 ## 数据合同
 
@@ -87,6 +94,8 @@ S 级一星强度由 `HeroProgression.derived_battle_stats()` 的评级基础倍
 - 两秒答案：结果卡明确显示“新图纸”或“某型号专属碎片 +N”，顶部固定显示本次保证重复的
   阵营核心、阵营标签、2★质变和当前研发/培养状态。
 - 主行动：有新图纸时为“前往研究所研发”；已有可升星角色时为“查看并升星”。
+- 跨屏目标：领取后持续按“研发 → 编队 → 三场证明 → 2★ → 2-5”推进；目标中心与基地任务共享
+  完全相同的小目标、CTA、stage_id 和 hero_id，后续普通招募不得覆盖阵营起手 receipt。
 - 次行动：单抽/十抽；查看保底与定向。
 - 角色卡显示 `当前碎片/下一星需求` 和下一星质变文案。
 - 844×390 下十连结果允许纵向滚动，按钮不小于 48 基准像素，不横向依赖溢出。
