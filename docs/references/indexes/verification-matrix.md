@@ -219,7 +219,16 @@ related:
   `7/7` 路线并把冲锋永久升至 2★；完整旅程用时 395.3 秒，仍为 0 异常、0 非预期 console
   error、0 网络失败。七张 `browser-first-industrial-*` / `browser-first-growth-*` 证据覆盖
   设施选择、网格交易边界、施工、首批收取、二选一和 Boss 验证入口。收取后零库存按钮现禁用
-  并显示“暂无可收取”，不再广告必然失败的假行动。1-5 Boss 连续路径仍待扩展。
+  并显示“暂无可收取”，不再广告必然失败的假行动。候选 `ec1ff8558a67` 又把相同隔离新档
+  连续推进到 1-5：Chrome 150 / 844×390 在 474.3 秒内完成 Boss 一次胜利并解锁 2-1，
+  `cleared_stages` 精确包含 1-1 至 1-5，2-1 尝试数保持 0，710 次技能卡触控期间为 0
+  runtime exception、0 非预期 console error、0 failed request。章节结算记录冲锋角色
+  3389 伤害、75% 占比与压炮 4 次，并将唯一主行动交给第二章侦察；侦察页呈现
+  6476/15500、42% 极高风险和培养/试探选择而不自动开战。
+  `browser-first-boss-started-844x390.png`、`browser-first-boss-cannon-window-844x390.png`、
+  `browser-chapter-one-complete-844x390.png` 与
+  `browser-chapter-two-reconnaissance-844x390.png` 保存真实 Web 状态。中段截图只能证明
+  战斗内技能反馈；炮击预警的五秒可理解性仍必须由真人盲测回答，不能由高频自动触控替代。
   候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
   legacy `scripts/main.gd` 并加入正式品牌启动图后，revision `127323a` 的当前 PCK 为
   `18.92 MiB`，gzip-9 初始 payload 为 `27.62 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB

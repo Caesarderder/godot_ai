@@ -56,8 +56,10 @@ State labels:
   authored 1-4 defeat, place/wait/claim the research lab, resolve the free ten-pull, and assign both guaranteed
   reinforcements, then clicks the rendered counterattack CTA and operates all three hero cards until the second
   1-4 attempt wins. The same journey chooses and commissions a resource facility, claims its first real output,
-  compares both verified growth routes, and commits an assault two-star choice; IndexedDB proves each durable
-  fact with no runtime, console, or network failures
+  compares both verified growth routes, commits an assault two-star choice, defeats 1-5, records the role and
+  cannon-suppression contribution, and opens chapter-two reconnaissance without auto-starting 2-1; IndexedDB
+  proves every chapter-one clear, one boss attempt, the 2-1 unlock, and zero 2-1 attempts with no runtime,
+  console, or network failures
   (`node tools/run_web_first_battle_smoke.mjs`).
 - [ ] Firefox desktop smoke.
 - [ ] Chrome Android real-device smoke.
