@@ -200,10 +200,12 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 						facilities: parsed.factory?.facilities,
 						facilityPlacements: parsed.factory?.facility_placements,
 						facilityWork: parsed.factory?.facility_work,
+						materials: parsed.factory?.materials,
 						formation: parsed.formation,
 						roster: (parsed.roster ?? []).map((hero) => ({
 							heroId: hero.hero_id,
 							archetypeId: hero.archetype_id,
+							star: hero.star,
 						})),
 						onboardingClaimed: parsed.onboarding?.claimed,
 					});
@@ -522,6 +524,88 @@ async function main() {
 			const timeoutSave = await evaluate(cdp, READ_SAVE_EXPRESSION);
 			throw new Error(`${error.message}; final save=${JSON.stringify(timeoutSave)}`);
 		}
+		await touch(cdp, 650, 210);
+		await new Promise((accept) => setTimeout(accept, 1000));
+		await screenshot(cdp, "browser-first-industrial-choice-844x390.png");
+		await touch(cdp, 545, 304);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await touch(cdp, 350, 270);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await screenshot(cdp, "browser-first-industrial-placement-844x390.png");
+		await touch(cdp, 630, 362);
+		const industrialConstruction = await waitFor(
+			"porcelain plant construction persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.facilityWork?.facility_id === "porcelain_plant"
+					&& save?.facilityWork?.work_type === "construction"
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		const industrialCompletesAt = Number(industrialConstruction.facilityWork?.completes_at_unix ?? 0);
+		const industrialWaitMs = Math.max(0, industrialCompletesAt * 1000 - Date.now() + 1200);
+		if (industrialCompletesAt <= 0 || industrialWaitMs > 45000) {
+			throw new Error(`porcelain construction wait is invalid: ${industrialWaitMs}ms`);
+		}
+		await new Promise((accept) => setTimeout(accept, industrialWaitMs));
+		await screenshot(cdp, "browser-first-industrial-ready-844x390.png");
+		const industrialClaimInput = setInterval(() => {
+			void touch(cdp, 650, 318);
+		}, 700);
+		let industrialBuilt;
+		try {
+			await touch(cdp, 650, 318);
+			industrialBuilt = await waitFor(
+				"completed porcelain plant persisted to IndexedDB",
+				async () => {
+					const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+					return Number(save?.facilities?.porcelain_plant ?? 0) === 1
+						&& Object.keys(save?.facilityWork ?? {}).length === 0
+						? save
+						: null;
+				},
+				10000,
+				250,
+			);
+		} finally {
+			clearInterval(industrialClaimInput);
+		}
+		await new Promise((accept) => setTimeout(accept, 500));
+		await screenshot(cdp, "browser-first-industrial-commissioned-844x390.png");
+		const porcelainBeforeClaim = Number(industrialBuilt.materials?.porcelain ?? 0);
+		await touch(cdp, 650, 268);
+		const commissioningClaim = await waitFor(
+			"commissioning output persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return Number(save?.materials?.porcelain ?? 0) > porcelainBeforeClaim ? save : null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await screenshot(cdp, "browser-first-industrial-collected-844x390.png");
+		await touch(cdp, 570, 184);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await touch(cdp, 630, 300);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-first-growth-choice-844x390.png");
+		await touch(cdp, 210, 285);
+		const firstGrowth = await waitFor(
+			"assault two-star growth persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const assault = save?.roster?.find((hero) => hero.archetypeId === "assault");
+				return Number(assault?.star ?? 0) === 2 ? save : null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-first-growth-committed-844x390.png");
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
@@ -545,7 +629,7 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through research breakthrough, first formation, and 1-4 counterattack victory",
+			journey: "fresh profile through 1-4 recovery, first industrial commissioning, and autonomous two-star growth",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
@@ -559,6 +643,12 @@ async function main() {
 			firstFormation: firstFormation.formation,
 			counterattackOutcome: "victory",
 			counterattackAttempts: counterattack.save.attempts.stage_1_4,
+			industrialFacility: "porcelain_plant",
+			industrialPlacement: industrialBuilt.facilityPlacements?.porcelain_plant,
+			commissioningPorcelainDelta:
+				Number(commissioningClaim.materials?.porcelain ?? 0) - porcelainBeforeClaim,
+			firstGrowthChoice: "assault",
+			firstGrowthStar: firstGrowth.roster.find((hero) => hero.archetypeId === "assault")?.star,
 			clearedStages: counterattack.save.clearedStages,
 			skillCardTouchInputs: skillTouches
 				+ stage12.skillTouches
@@ -585,6 +675,13 @@ async function main() {
 				"artifacts/browser-first-formation-complete-844x390.png",
 				"artifacts/browser-first-wall-counterattack-started-844x390.png",
 				"artifacts/browser-first-wall-counterattack-victory-844x390.png",
+				"artifacts/browser-first-industrial-choice-844x390.png",
+				"artifacts/browser-first-industrial-placement-844x390.png",
+				"artifacts/browser-first-industrial-ready-844x390.png",
+				"artifacts/browser-first-industrial-commissioned-844x390.png",
+				"artifacts/browser-first-industrial-collected-844x390.png",
+				"artifacts/browser-first-growth-choice-844x390.png",
+				"artifacts/browser-first-growth-committed-844x390.png",
 			],
 		}, null, 2));
 	} finally {

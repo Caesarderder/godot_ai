@@ -365,6 +365,13 @@ console error 与网络失败，并保存少量关键转折截图。当前 Chrom
 隐藏的战区二次确认，不合成结算，也不允许 Web 验证脚本写存档。连续浏览器证据必须点击已渲染
 的 `FormationCounterattackButton`，随后从 IndexedDB 观察第二次 1-4 尝试与真实胜利。
 
+反攻后的工业备战继续复用同一场景 owner 与命令边界，不增加首局专用 Autoload 或旁路状态：
+`BattleResultScreen` 只发出 `factory`，App Shell 投影聚焦的 `FactoryScreen`；设施选择、3D
+网格选址、施工和验收分别通过既有 `construct_facility` / `claim_facility_work` 命令，首批
+产出通过 `claim_facility_output`，随后由 onboarding 的权威 objective 把玩家送到
+`LegionScreen` 二选一。Web 旅程必须以设施等级、位置、订单清空、资源增量和具体永久角色
+`star == 2` 为到达条件；不得直接推进 objective、补材料或调用 UI 内部方法。
+
 该旅程证明真实 Web UI 的连续可达性与保存链，不证明玩家理解、乐趣、20–30 分钟节奏或移动
 设备表现；这些仍由目标玩家盲测和真机门禁负责。
 
