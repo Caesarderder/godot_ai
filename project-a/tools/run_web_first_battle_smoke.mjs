@@ -702,7 +702,7 @@ async function main() {
 		}
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-chapter-two-skill-growth-committed-844x390.png");
-		await touch(cdp, 315, 330);
+		await touch(cdp, 315, 358);
 		await new Promise((accept) => setTimeout(accept, 900));
 		const chapterTwoAfterGrowth = await evaluate(cdp, READ_SAVE_EXPRESSION);
 		if (
@@ -764,7 +764,7 @@ async function main() {
 				archetypeId: "gman",
 				activeSkillLevel: skillResearchAfter.roster.find((hero) => hero.archetypeId === "gman")?.activeSkillLevel,
 				cost: actualSkillResearchDelta,
-				chapterTwoAttemptsAfterReturn: chapterTwoAfterGrowth.attempts.stage_2_1,
+				chapterTwoAttemptsAfterReturn: Number(chapterTwoAfterGrowth.attempts?.stage_2_1 ?? 0),
 			},
 			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: skillTouches
