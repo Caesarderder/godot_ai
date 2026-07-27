@@ -102,6 +102,18 @@ commit、Godot 版本、线程模式、全量文件哈希及确定性 gzip-9 体
 python3 tools/release_audit.py --artifact-dir build/web
 ```
 
+干净候选通过审计后，可冻结并在隔离临时目录演练确定性回滚包：
+
+```bash
+python3 tools/run_web_rollback_tests.py
+python3 tools/package_web_rollback.py --rehearse
+```
+
+打包器只接受与 clean HEAD 相同 revision 的 `build/web`，连续生成两份归档并要求字节完全一致。
+演练拒绝绝对路径、`..`、链接和非普通文件，恢复后逐文件复核 SHA256，再对恢复目录运行同一
+`release_audit.py`。该证据只证明本地静态候选可恢复；生产监控阈值、具名事故负责人、
+托管/CDN 版本切换和生产来源演练仍属于 `HOSTING_VERIFIED` 门禁。
+
 `run_factory_casualty_tests.gd` 现验证战后完全无损、结算幂等、schema v5→v8 与无尽进度兼容；
 旧持久伤损、抽图和废料恢复断言不再执行。
 
