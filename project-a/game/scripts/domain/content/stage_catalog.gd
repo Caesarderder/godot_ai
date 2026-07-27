@@ -75,10 +75,10 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 		config["solo_pressure_bp"] = 10000
 		config["stage_names"] = ["警报街区"]
 		config["final_structure_id"] = "alerted_city"
-		config["enemies"] = _scaled_enemies([
-			_enemy("militia_l", "远程摄像警卫", "ranger", 0, 420, 0, 90, 15, 3, 160, 9, false),
-			_enemy("militia_r", "远程摄像警卫", "ranger", 0, 460, 2, 90, 15, 3, 160, 9, false),
-		], power_bp)
+		config["enemies"] = _fixed_enemies([
+			_enemy("militia_l", "远程摄像警卫", "ranger", 0, 420, 0, 65, 11, 2, 160, 9, false, "camera_sentry"),
+			_enemy("militia_r", "远程摄像警卫", "ranger", 0, 460, 2, 65, 11, 2, 160, 9, false, "camera_sentry"),
+		])
 		config["structures"] = _scaled_structures([
 			_structure("alerted_city", "警报中的城市", "city", 0, 720, 1, 820, 5, 0, 0),
 		], power_bp)
@@ -90,22 +90,25 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 		config["solo_pressure_bp"] = 13000
 		config["stage_names"] = ["联盟街垒", "城市议事厅"]
 		config["final_structure_id"] = "alliance_hall"
-		config["enemies"] = _scaled_enemies([
-			_enemy("alliance_grunt_l", "联盟摄像兵", "ranger", 0, 280, 0, 105, 18, 4, 120, 9, false),
-			_enemy("alliance_grunt_c", "联盟摄像兵", "ranger", 0, 310, 1, 115, 19, 5, 120, 9, false),
-			_enemy("alliance_grunt_r", "联盟摄像兵", "ranger", 0, 340, 2, 105, 18, 4, 120, 9, false),
-			_enemy("alliance_captain", "联盟临时队长", "guardian", 1, 530, 1, 175, 23, 9, 110, 9, true),
-		], power_bp)
+		config["enemies"] = _fixed_enemies([
+			_enemy("alliance_grunt_l", "联盟摄像兵", "ranger", 0, 280, 0, 88, 16, 3, 120, 9, false, "camera_trooper"),
+			_enemy("alliance_grunt_c", "联盟摄像兵", "ranger", 0, 310, 1, 88, 16, 3, 120, 9, false, "camera_trooper"),
+			_enemy("alliance_grunt_r", "联盟摄像兵", "ranger", 0, 340, 2, 88, 16, 3, 120, 9, false, "camera_trooper"),
+			_enemy("alliance_captain", "联盟临时队长", "guardian", 1, 530, 1, 147, 19, 7, 110, 9, true, "camera_field_captain"),
+		])
 		config["structures"] = _scaled_structures([
 			_structure("alliance_barricade", "联盟街垒", "structure", 0, 420, 1, 200, 7, 0, 0),
 			_structure("warning_turret", "警戒轻炮塔", "turret", 1, 580, 1, 160, 6, 17, 8),
 			_structure("alliance_hall", "联盟议事厅", "city", 1, 700, 1, 430, 7, 0, 0),
 		], power_bp)
 		return _apply_authored_definition(config, authored_definition)
-	config["enemies"] = _scaled_enemies(_enemy_template_for(chapter, stage_in_chapter), power_bp)
+	var enemy_template := _enemy_template_for(chapter, stage_in_chapter)
+	config["enemies"] = _fixed_enemies(enemy_template) if chapter == 1 else _scaled_enemies(enemy_template, power_bp)
 	config["structures"] = _scaled_structures(_structure_template_for(chapter, stage_in_chapter), power_bp)
 	config = _apply_authored_definition(config, authored_definition)
-	if stage_in_chapter == 5 and chapter >= 2:
+	if stage_id == "stage_1_5":
+		_shape_chapter_one_boss(config)
+	elif stage_in_chapter == 5 and chapter >= 2:
 		_shape_boss_finale(config)
 	return config
 
@@ -360,7 +363,7 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 		"stage_1_4": {
 			"recommended": [],
 			"fallback": ["ordinary.assault"],
-			"reason": "炮台防线是设计好的首次失败点；失败后从信号招募接收基础图纸，再由研究所研发永久装甲与冲锋援军。",
+			"reason": "炮台防线是设计好的首次失败点；失败后由研究所研发 1-2、1-3 首通获得的永久装甲与冲锋援军。",
 		},
 		"stage_1_5": {
 			"recommended": ["heavy.armored", "ordinary.assault"],
@@ -537,7 +540,7 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		},
 		"stage_1_4": {
 			"threat": "联盟部署固定炮台、精英守军与交叉火力，形成首次必败墙。",
-			"counter": "首次失败后接收基础图纸十连，建研究所研发装甲与冲锋，再把两名永久援军编入队伍反攻。",
+			"counter": "回到开局建成的研究所，研发 1-2、1-3 获得的装甲与冲锋图纸，再把两名永久援军编入队伍反攻。",
 		},
 	}
 	if opening_readability.has(stage_id):
@@ -586,20 +589,23 @@ static func _enemy_template_for(chapter: int, stage_in_chapter: int) -> Array[Di
 		"alliance": "联合核心近卫",
 	}.get(family, "联盟精英"))
 	var ranged_class: String = "ranger" if family == "camera" else ("arcanist" if family in ["speaker", "tv"] else "guardian")
+	var grunt_archetype := "%s_grunt" % family
+	var support_archetype := "%s_support" % family
+	var elite_archetype := "%s_elite" % family
 	var values: Array[Dictionary] = [
-		_enemy("%s_grunt_l" % family, base_label, "fighter", 0, 220, 0, 105, 20, 6, 34, 8, false),
-		_enemy("%s_grunt_c" % family, base_label, "fighter", 0, 245, 1, 115, 22, 7, 34, 8, false),
-		_enemy("%s_support_r" % family, base_label, ranged_class, 0, 272, 2, 98, 22, 5, 94, 9, false),
-		_enemy("%s_elite_mid" % family, elite_label, "guardian", 1, 505, 1, 190, 29, 12, 38, 8, true),
+		_enemy("%s_grunt_l" % family, base_label, "fighter", 0, 220, 0, 95, 18, 5, 34, 8, false, grunt_archetype),
+		_enemy("%s_grunt_c" % family, base_label, "fighter", 0, 245, 1, 95, 18, 5, 34, 8, false, grunt_archetype),
+		_enemy("%s_support_r" % family, "%s射手" % base_label.trim_suffix("兵"), ranged_class, 0, 272, 2, 95, 20, 5, 108, 8, false, support_archetype),
+		_enemy("%s_elite_mid" % family, elite_label, "guardian", 1, 505, 1, 190, 29, 12, 38, 8, true, elite_archetype),
 	]
 	if stage_in_chapter >= 2:
-		values.append(_enemy("%s_flank_l" % family, base_label, ranged_class, 1, 480, 0, 120, 25, 7, 108, 7, false))
+		values.append(_enemy("%s_flank_l" % family, "%s射手" % base_label.trim_suffix("兵"), ranged_class, 1, 480, 0, 95, 20, 5, 108, 8, false, support_archetype))
 	if stage_in_chapter >= 3:
-		values.append(_enemy("%s_flank_r" % family, base_label, ranged_class, 1, 520, 2, 125, 25, 7, 108, 7, false))
+		values.append(_enemy("%s_flank_r" % family, "%s射手" % base_label.trim_suffix("兵"), ranged_class, 1, 520, 2, 95, 20, 5, 108, 8, false, support_archetype))
 	if stage_in_chapter >= 4:
-		values.append(_enemy("%s_elite_base" % family, elite_label, "arcanist", 2, 805, 1, 240, 34, 11, 96, 8, true))
-	values.append(_enemy("%s_core_guard_l" % family, "核心近卫", "guardian", 2, 840, 0, 190, 29, 13, 38, 7, true))
-	values.append(_enemy("%s_core_guard_r" % family, "核心近卫", "guardian", 2, 840, 2, 190, 29, 13, 38, 7, true))
+		values.append(_enemy("%s_elite_base" % family, "%s监军" % elite_label.trim_suffix("卫"), "arcanist", 2, 805, 1, 240, 34, 11, 96, 8, true, "%s_overseer" % family))
+	values.append(_enemy("%s_core_guard_l" % family, "核心近卫", "guardian", 2, 840, 0, 190, 29, 13, 38, 7, true, "core_guard"))
+	values.append(_enemy("%s_core_guard_r" % family, "核心近卫", "guardian", 2, 840, 2, 190, 29, 13, 38, 7, true, "core_guard"))
 	return values
 
 
@@ -640,6 +646,15 @@ static func _scaled_enemies(enemies: Array[Dictionary], power_bp: int) -> Array[
 	return values
 
 
+static func _fixed_enemies(enemies: Array[Dictionary]) -> Array[Dictionary]:
+	var values: Array[Dictionary] = []
+	for enemy_data in enemies:
+		var enemy := enemy_data.duplicate(true)
+		enemy["max_hp"] = int(enemy["hp"])
+		values.append(enemy)
+	return values
+
+
 static func _scaled_structures(structures: Array[Dictionary], power_bp: int) -> Array[Dictionary]:
 	var values: Array[Dictionary] = []
 	for structure_data in structures:
@@ -661,8 +676,6 @@ static func _shape_boss_finale(config: Dictionary) -> void:
 	config["cannon_suppression_target"] = 800 + chapter * 100
 	config["boss_cannon_damage"] = 140 + chapter * 20
 	config["boss_cannon_period_ticks"] = 28 - chapter
-	config["boss_core_enrage_ticks"] = 85
-	config["boss_core_required_power"] = int(config.get("recommended_power", 0)) + 1000
 	for enemy in config.get("enemies", []):
 		if int(enemy.get("stage", -1)) != 2:
 			continue
@@ -677,6 +690,11 @@ static func _shape_boss_finale(config: Dictionary) -> void:
 			structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 40 / 100))
 			structure["hp"] = int(structure["max_hp"])
 			structure["attack"] = maxi(0, int(int(structure.get("attack", 0)) * 40 / 100))
+
+
+static func _shape_chapter_one_boss(config: Dictionary) -> void:
+	# 首章 Boss 只通过可见的敌人、结构和巨炮形成压力，不使用计时强制判负。
+	pass
 
 
 static func _legacy_stage_1_1_enemies() -> Array[Dictionary]:
@@ -705,9 +723,10 @@ static func _legacy_stage_1_1_structures() -> Array[Dictionary]:
 	]
 
 
-static func _enemy(id: String, label: String, class_id: String, stage_index: int, road_position: int, lane: int, hp: int, attack: int, defense: int, attack_range: int, period: int, elite: bool) -> Dictionary:
+static func _enemy(id: String, label: String, class_id: String, stage_index: int, road_position: int, lane: int, hp: int, attack: int, defense: int, attack_range: int, period: int, elite: bool, archetype_id: String = "") -> Dictionary:
 	return {
 		"unit_id": id,
+		"archetype_id": archetype_id if not archetype_id.is_empty() else id,
 		"display_name": label,
 		"class_id": class_id,
 		"stage": stage_index,

@@ -4,6 +4,9 @@ const CampaignObjectiveProjectionScript := preload(
 	"res://game/scripts/domain/objectives/campaign_objective_projection.gd"
 )
 const GameStateScript := preload("res://game/scripts/state/game_state.gd")
+const ResearchBreakthroughServiceScript := preload(
+	"res://game/scripts/domain/recruitment/research_breakthrough_service.gd"
+)
 
 var failures: Array[String] = []
 
@@ -92,6 +95,9 @@ func _chapter_two_state() -> RefCounted:
 		"stage_1_5",
 	]
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_1"
+	var claimed := state.onboarding.get("claimed", {}) as Dictionary
+	claimed[ResearchBreakthroughServiceScript.FACTION_CLAIM_KEY] = true
+	state.onboarding["claimed"] = claimed
 	return state
 
 

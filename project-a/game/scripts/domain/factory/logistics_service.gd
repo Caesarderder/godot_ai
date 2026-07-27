@@ -33,7 +33,8 @@ const RESOURCE_BY_FACILITY: Dictionary = {
 	"energy_station": "porcelain",
 }
 const MAX_OFFLINE_SECONDS: int = 12 * 60 * 60
-const EARLY_FACILITY_BUILD_SECONDS: int = 5
+const DEBUG_TIMED_WORK_SECONDS: int = 5
+const EARLY_FACILITY_BUILD_SECONDS: int = DEBUG_TIMED_WORK_SECONDS
 const FACILITY_BUILD_SECONDS: Dictionary = {
 	"porcelain_plant": EARLY_FACILITY_BUILD_SECONDS,
 	"parts_workshop": EARLY_FACILITY_BUILD_SECONDS,
@@ -42,8 +43,9 @@ const FACILITY_BUILD_SECONDS: Dictionary = {
 	"research_lab": EARLY_FACILITY_BUILD_SECONDS,
 }
 const STAR_COSTS: Dictionary = {
-	2: {"hero_shards": 4},
-	3: {"hero_shards": 16},
+	"B": {2: 20, 3: 40},
+	"A": {2: 30, 3: 60},
+	"S": {2: 40, 3: 80},
 }
 const SPECIALTY_FACILITY: Dictionary = {
 	"gman": "command_center",
@@ -248,23 +250,28 @@ static func star_upgrade_quote(
 	var target_star := int(hero.star) + 1
 	if target_star > 3:
 		return {"ok": false, "error": "HERO_STAR_CAP_REACHED"}
-	var catalog_cost := STAR_COSTS[target_star] as Dictionary
-	var shard_cost := int(catalog_cost["hero_shards"])
 	var archetype_id := String(hero.archetype_id)
+	var rarity := String(hero.aptitude_id)
+	if not STAR_COSTS.has(rarity):
+		rarity = "B"
+	var shard_cost := int((STAR_COSTS[rarity] as Dictionary)[target_star])
+	var fragment_balance := int(state.meta_progression.hero_fragments.get(archetype_id, 0))
 	var error := ""
-	if not waive_data_cost and int(state.economy.hero_shards) < shard_cost:
-		error = "NOT_ENOUGH_HERO_SHARDS"
+	if not waive_data_cost and fragment_balance < shard_cost:
+		error = "NOT_ENOUGH_HERO_FRAGMENTS"
 	return {
 		"ok": error.is_empty(),
 		"error": error,
 		"hero_id": hero_id,
 		"archetype_id": archetype_id,
+		"rarity": rarity,
+		"fragment_balance": fragment_balance,
 		"target_star": target_star,
 		"cost": {
-			"hero_shards": 0 if waive_data_cost else shard_cost,
+			"hero_fragments": 0 if waive_data_cost else shard_cost,
 		},
 		"waived_cost": {
-			"hero_shards": shard_cost,
+			"hero_fragments": shard_cost,
 		} if waive_data_cost else {},
 		"source": "new_player_welfare" if waive_data_cost else "normal_growth",
 	}
@@ -281,8 +288,11 @@ static func _upgrade_star(state: RefCounted, hero_id: String, waive_data_cost: b
 	var target_star := int(quote["target_star"])
 	var archetype_id := String(quote["archetype_id"])
 	var cost := quote["cost"] as Dictionary
-	var data_spent := int(cost["hero_shards"])
-	state.economy.hero_shards -= data_spent
+	var fragments_spent := int(cost["hero_fragments"])
+	state.meta_progression.hero_fragments[archetype_id] = (
+		int(state.meta_progression.hero_fragments.get(archetype_id, 0))
+		- fragments_spent
+	)
 	hero.star = target_star
 	var unlock_id := "%s_%s" % [String(hero.archetype_id), "passive" if target_star == 2 else "mastery"]
 	if not hero.skill_ids.has(unlock_id):
@@ -294,8 +304,9 @@ static func _upgrade_star(state: RefCounted, hero_id: String, waive_data_cost: b
 		"star": target_star,
 		"unlock_id": unlock_id,
 		"cost": {
-			"hero_shards": data_spent,
+			"hero_fragments": fragments_spent,
 		},
+		"fragment_balance": int(state.meta_progression.hero_fragments.get(archetype_id, 0)),
 		"waived_cost": (quote.get("waived_cost", {}) as Dictionary).duplicate(true),
 		"source": String(quote.get("source", "normal_growth")),
 	}}
@@ -397,7 +408,7 @@ static func upgrade_facility(state: RefCounted, facility_id: String, now_unix: i
 	if not state.factory.can_spend(material_cost):
 		return {"ok": false, "error": "NOT_ENOUGH_FACTORY_MATERIALS"}
 	state.factory.spend(material_cost)
-	var duration_seconds := 60 * current
+	var duration_seconds := DEBUG_TIMED_WORK_SECONDS
 	state.factory.facility_work = {
 		"work_type": "upgrade",
 		"facility_id": facility_id,
@@ -505,10 +516,8 @@ static func claim_facility_work(state: RefCounted, now_unix: int) -> Dictionary:
 
 static func facility_work_completes_at(work: Dictionary) -> int:
 	var stored_completion := int(work.get("completes_at_unix", 0))
-	if String(work.get("work_type", "")) != "construction":
-		return stored_completion
 	var started_at := int(work.get("started_at_unix", stored_completion))
-	return mini(stored_completion, started_at + EARLY_FACILITY_BUILD_SECONDS)
+	return mini(stored_completion, started_at + DEBUG_TIMED_WORK_SECONDS)
 
 
 static func apply_battle_damage(state: RefCounted, deployed_ids: Array, disabled_ids: Array, outcome: String) -> Dictionary:

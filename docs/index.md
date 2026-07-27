@@ -40,6 +40,10 @@ Godot 场景、脚本、Resource、Autoload 与资产治理的增量重构路线
 [KM:reference.game-state-measurement-framework](references/product-design/game-state-measurement-framework.md)。
 涉及任务、指挥官等级、战令、招募、成就及奖励预算时，读
 [KM:reference.meta-progression-system](references/product-design/meta-progression-system.md)。
+涉及首章完成后的免费十连、专属角色碎片、星级质变、阵营形成与第二章 30–60 分钟旅程时，读
+[KM:reference.post-30m-faction-progression](references/product-design/post-30m-faction-progression.md)，
+实现边界见
+[KM:reference.post-30m-faction-technical-design](references/architecture/post-30m-faction-technical-design.md)。
 涉及大中小目标、大小卡点、失败恢复和跨坎奖励时，读
 [KM:reference.objective-hurdle-reward-ladder](references/product-design/objective-hurdle-reward-ladder.md)。
 涉及同类产品、首局结构、渐进披露、产品承诺一致性或上线体验基准时，读

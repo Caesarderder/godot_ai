@@ -56,25 +56,18 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 				"detail": "这是设计好的首次情报战；先亲自观察单人职责缺口，失败不会损失永久资产。",
 				"hero_id": "",
 			}
-		elif not _foundational_signal_claimed(state):
-			next_action = {
-				"id": "recruit",
-				"title": "接收免费基础图纸十连",
-				"detail": "首败信号已被截获；前往信号招募接收冲锋与装甲设计图纸，不直接生成角色。",
-				"hero_id": "",
-			}
 		elif int(state.factory.facilities.get("research_lab", 0)) <= 0:
 			next_action = {
 				"id": "research",
 				"title": "建造研究所",
-				"detail": "基础图纸已经入库；使用工业材料建造研究所，把设计转化为永久援军。",
+				"detail": "研究所应在开局完成建设；它会把关卡获得的设计图纸转化为永久援军。",
 				"hero_id": "",
 			}
 		elif not (_has_archetype(state, "assault") and _has_archetype(state, "armored")):
 			next_action = {
 				"id": "research",
 				"title": "研发冲锋与装甲图纸",
-				"detail": "研究所已经就绪；依次研发已拥有的两张基础图纸，完成后永久角色才会入列。",
+				"detail": "研究所已经就绪；依次研发 1-2、1-3 首通获得的两张图纸，完成后永久角色才会入列。",
 				"hero_id": "",
 			}
 		elif not (

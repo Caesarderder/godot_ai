@@ -40,7 +40,7 @@ related:
 
 # 状态、命令与生命周期契约
 
-> 当前已实现 `GameState` schema 8、content `toilet-factory-slg-v2`、公开耐久命令、fingerprint、
+> 当前已实现 `GameState` schema 11、content `toilet-factory-slg-v3-factions`、公开耐久命令、fingerprint、
 > 幂等、revision、先存后换、严格 JSON、主备恢复、导入预览与 bootstrap gate。v5/v6/v7 有显式迁移；
 > 旧图纸、生产队列、维修与库存字段只作兼容输入，不再拥有玩家入口或领域权威。
 

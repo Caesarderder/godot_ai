@@ -5,6 +5,7 @@ const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const FactoryStateScript := preload("res://game/scripts/state/factory_state.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const DEBUG_RESEARCH_SECONDS: int = 5
 
 
 static func start_production(state: RefCounted, recipe_id: String, now_unix: int) -> Dictionary:
@@ -49,8 +50,7 @@ static func start_blueprint_research(state: RefCounted, recipe_id: String, now_u
 		return {"ok": false, "error": "BLUEPRINT_NOT_DISCOVERED"}
 	if not state.factory.blueprint_research.is_empty():
 		return {"ok": false, "error": "BLUEPRINT_RESEARCH_BUSY"}
-	var recipe := FactoryCatalogScript.recipe(recipe_id)
-	var completes_at_unix := now_unix + maxi(5, int(recipe.get("duration_seconds", 5)))
+	var completes_at_unix := now_unix + DEBUG_RESEARCH_SECONDS
 	state.factory.blueprint_research = {
 		"recipe_id": recipe_id,
 		"started_at_unix": now_unix,
@@ -69,7 +69,7 @@ static func start_blueprint_research(state: RefCounted, recipe_id: String, now_u
 static func claim_blueprint_research(state: RefCounted, now_unix: int) -> Dictionary:
 	if state.factory.blueprint_research.is_empty():
 		return {"ok": false, "error": "NO_BLUEPRINT_RESEARCH"}
-	if now_unix < int(state.factory.blueprint_research.get("completes_at_unix", 0)):
+	if now_unix < blueprint_research_completes_at(state.factory.blueprint_research):
 		return {"ok": false, "error": "BLUEPRINT_RESEARCH_NOT_READY"}
 	var recipe_id := String(state.factory.blueprint_research.get("recipe_id", ""))
 	state.factory.blueprints[recipe_id] = true
@@ -169,11 +169,8 @@ static func offline_summary(state: RefCounted, now_unix: int) -> Dictionary:
 
 
 static func apply_battle_unlocks(state: RefCounted, outcome: String, attempt_count: int, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID) -> Array[String]:
-	if stage_id != "stage_1_4" or outcome != "defeat" or attempt_count != 1:
-		return []
-	# 首败只开放建造资格。研究所必须由玩家在基地亲手选址并建造。
-	state.factory.eligible_facilities["research_lab"] = true
-	return ["research_lab"]
+	# 研究所从新档开始即可建设；战斗不再负责补发建造资格。
+	return []
 
 
 static func unlock_foundational_blueprint(
@@ -191,7 +188,7 @@ static func unlock_foundational_blueprint(
 		return {"ok": false, "error": "BLUEPRINT_ALREADY_RESEARCHED"}
 	if not state.factory.blueprint_research.is_empty():
 		return {"ok": false, "error": "BLUEPRINT_RESEARCH_BUSY"}
-	var completes_at_unix := now_unix + 45
+	var completes_at_unix := now_unix + DEBUG_RESEARCH_SECONDS
 	state.factory.blueprint_research = {
 		"recipe_id": recipe_id,
 		"started_at_unix": now_unix,
@@ -207,7 +204,7 @@ static func unlock_foundational_blueprint(
 static func claim_foundational_blueprint(state: RefCounted, now_unix: int) -> Dictionary:
 	if state.factory.blueprint_research.is_empty():
 		return {"ok": false, "error": "NO_BLUEPRINT_RESEARCH"}
-	if now_unix < int(state.factory.blueprint_research.get("completes_at_unix", 0)):
+	if now_unix < blueprint_research_completes_at(state.factory.blueprint_research):
 		return {"ok": false, "error": "BLUEPRINT_RESEARCH_NOT_READY"}
 	var recipe_id := String(state.factory.blueprint_research.get("recipe_id", ""))
 	var recipe := FactoryCatalogScript.recipe(recipe_id)
@@ -230,6 +227,13 @@ static func claim_foundational_blueprint(state: RefCounted, now_unix: int) -> Di
 		hero.aptitude_id = String(recipe.get("rating", "B"))
 		hero.display_name = String(recipe["display_name"])
 		state.roster.append(hero)
+	if FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS.has(recipe_id):
+		var tutorial_fragments := 20 if String(recipe.get("rating", "B")) == "B" else 30
+		var archetype_id := String(recipe["archetype_id"])
+		state.meta_progression.hero_fragments[archetype_id] = maxi(
+			tutorial_fragments,
+			int(state.meta_progression.hero_fragments.get(archetype_id, 0))
+		)
 	return {"ok": true, "event": {
 		"type": (
 			"foundational_blueprint_unlocked"
@@ -241,7 +245,16 @@ static func claim_foundational_blueprint(state: RefCounted, now_unix: int) -> Di
 		"display_name": hero.display_name,
 		"rating": String(recipe.get("rating", "B")),
 		"newly_researched": newly_researched,
+		"tutorial_fragments": int(
+			state.meta_progression.hero_fragments.get(String(recipe["archetype_id"]), 0)
+		),
 	}}
+
+
+static func blueprint_research_completes_at(research: Dictionary) -> int:
+	var stored_completion := int(research.get("completes_at_unix", 0))
+	var started_at := int(research.get("started_at_unix", stored_completion))
+	return mini(stored_completion, started_at + DEBUG_RESEARCH_SECONDS)
 
 
 static func _hero_for_archetype(state: RefCounted, archetype_id: String) -> RefCounted:

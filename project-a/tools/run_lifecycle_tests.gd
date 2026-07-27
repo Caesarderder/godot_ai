@@ -43,7 +43,7 @@ func _run() -> void:
 	_check(bool(final_load.get("ok", false)), "final state reloads")
 	if bool(final_load.get("ok", false)):
 		var final_state: RefCounted = final_load["state"]
-		_check(int(final_state.schema_version) == 10, "final save remains schema v10")
+		_check(int(final_state.schema_version) == 11, "final save remains schema v11")
 		for hero_id in permanent_ids:
 			_check(int(final_state.hero_by_id(hero_id).readiness) == 100, "all heroes remain lossless after reload")
 		_check(final_state.factory.repair_orders.is_empty(), "legacy repair queue remains empty")

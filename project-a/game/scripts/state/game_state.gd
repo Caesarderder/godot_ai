@@ -10,8 +10,8 @@ const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory
 const OnboardingServiceScript := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const MetaProgressionStateScript := preload("res://game/scripts/state/meta_progression_state.gd")
 
-var schema_version: int = 10
-var content_version: String = "toilet-factory-slg-v2"
+var schema_version: int = 11
+var content_version: String = "toilet-factory-slg-v3-factions"
 var save_id: String = ""
 var run_seed: int = 0
 var revision: int = 0
@@ -132,7 +132,7 @@ func to_dict() -> Dictionary:
 
 static func from_dict(data: Dictionary) -> GameState:
 	var state := GameState.new()
-	state.schema_version = int(data.get("schema_version", 10))
+	state.schema_version = int(data.get("schema_version", 11))
 	# 缺少合同版本的存档必须按 legacy 处理，不能因为默认值而伪装成新玩法存档。
 	state.content_version = String(data.get("content_version", "legacy-unknown"))
 	state.save_id = String(data.get("save_id", ""))
@@ -167,7 +167,7 @@ static func from_dict(data: Dictionary) -> GameState:
 
 func validate() -> Array[String]:
 	var errors: Array[String] = []
-	if schema_version != 10:
+	if schema_version != 11:
 		errors.append("unsupported schema_version")
 	if content_version.is_empty():
 		errors.append("content_version is required")

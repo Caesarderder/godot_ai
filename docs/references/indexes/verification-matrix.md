@@ -58,9 +58,14 @@ related:
 | M4 UI/UX | view model、command routing、手动技能、复盘、阵位候选、UI smoke | 四屏、战区直接出击、战术 HUD、结算、编队 844×390 | 无指导完成核心操作 |
 | M5 首 30 分钟 | deterministic flow、存档恢复、经济守恒 | 844×390、刷新/关闭、20m session | 复述双向循环并愿意再战 |
 | M6 Web 候选 | 全套 headless、export、artifact audit | Android Chrome、iOS Safari、生产 HTTPS | 最终 scope audit |
-| M7 长期进度 | v5/v6/v7→v8、周期 generation、批量领奖幂等、十抽 A、60 抽 S、专属数据升星、六槽替换、保底持久化 | 三页签、顶层待领取数、30 级奖励轨、招募结果与编队编辑 844×390 | 周期目标是否强化攻城而非红点劳动 |
+| M7 长期进度 | v5–v10→v11、周期 generation、批量领奖幂等、十抽 A、60 抽 S、型号专属碎片升星、免费阵营十连保证、S1≥B2、六槽替换、保底持久化 | 三页签、顶层待领取数、30 级奖励轨、招募结果、研发、升星与编队编辑 844×390 | 玩家能否形成阵营认同，并因下一次抽取/升星主动继续 |
 
 ## 2026-07-27 当前证据
+
+- M6/M7 生产承接：2026-07-28 Sites 私有生产 v5 已成功发布到
+  `https://gray-mirror-faction-game.caesarliu23.chatgpt.site`；仅当前账号可访问。生产 WASM/PCK
+  下载哈希与本地可复现候选一致，阵营十连、专属碎片、研发、升星、编队和第二章战斗由
+  `run_post_30m_faction_tests.gd` 的 7-seed 旅程覆盖。公开发布与真人继续游玩意愿仍需独立证据。
 
 - M1–M3：`run_balance_tests.gd`、`run_slg_loop_tests.gd`、`run_lifecycle_tests.gd`、
   `run_battle_tests.gd`、`run_campaign_tests.gd` 覆盖升级属性与 `ΔCP`、首章旅程、永久角色、三星、
@@ -133,7 +138,7 @@ related:
   缺口；四项核心余额由 App Shell 常驻在管理页面右上角，军团成员列表与研究蓝图不再重复占用
   内容区。`ui-global-resource-hud-844x390.png` 证明金币、军团数据、工业材料和招募券
   在标题右侧、菜单左侧完整可读；`run_blueprint_screen_tests.gd` 锁定基础蓝图需要 0、
-  余额不变和仅耗时 45 秒，并在模拟 App Shell 的 `844×342` 内容区检查十连、基础研发、返回按钮
+  余额不变和调试阶段仅耗时 5 秒，并在模拟 App Shell 的 `844×342` 内容区检查十连、基础研发、返回按钮
   的全局边界与焦点可达性；`run_new_player_welfare_tests.gd` 与 `run_balance_tests.gd` 锁定
   `star_upgrade_quote` 和普通/免材料执行结果同源。上述测试不替代 844×390 真实浏览器视觉验收。
   研究所回归覆盖 1-4 首败后的主动建造入口、带主干连线的四分支八节点科技蓝图、两个基础节点 CTA 和返回基地路径。
@@ -263,7 +268,7 @@ related:
   成长资源并运行真实 `BattleSession`。首轮编队 CP `9172–9554`，2-1 至 2-4 全胜、2-5
   全败且均到达最终阶段、摧毁 6 个结构并把核心压到 50.80%–81.69%；第二轮 CP
   `10961–11558`，2-5 至 3-4 全胜、3-5 全败。`run_battle_tests.gd` 另锁定未配置关卡继续使用
-  46 伤害/42 tick 默认巨炮，显式 Boss 参数才能启用不同炮压与低战力核心过载。
+  46 伤害/42 tick 默认巨炮，并锁定经过任意 tick 后都不会因旧核心过载参数强制判负。
   `run_balance_tests.gd` 另锁定主动技能研究会进入角色与战斗快照的同源战力。该自动证据证明
   确定性节奏合同，不证明真人会感到卡点合理或资源消费选择有趣。
 - 新游福利：`run_new_player_welfare_tests.gd` 锁定 1-5 前不可领取、固定 durable ledger 抵抗

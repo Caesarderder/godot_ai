@@ -29,6 +29,7 @@ func _init() -> void:
 	var opening := StageCatalogScript.stage("stage_1_1")
 	_check(int(opening.get("structure_hp_bp", 0)) == 9500, "opening effective durability multiplier is authored")
 	_check(int(boss.get("structure_hp_bp", 0)) == 8500, "boss effective durability multiplier is authored")
+	_check_early_camera_archetypes_are_stable()
 	if failures.is_empty():
 		print("STAGE_DEFINITION_TESTS_OK")
 		quit(0)
@@ -42,3 +43,30 @@ func _init() -> void:
 func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+
+func _check_early_camera_archetypes_are_stable() -> void:
+	var signatures: Dictionary = {}
+	for stage_number in range(2, 6):
+		var stage_id := "stage_1_%d" % stage_number
+		var config := StageCatalogScript.stage(stage_id)
+		for enemy_value in config.get("enemies", []):
+			var enemy := enemy_value as Dictionary
+			var archetype_id := String(enemy.get("archetype_id", ""))
+			_check(not archetype_id.is_empty(), "%s enemy exposes a stable archetype id" % stage_id)
+			var signature := [
+				String(enemy.get("display_name", "")),
+				String(enemy.get("class_id", "")),
+				int(enemy.get("max_hp", enemy.get("hp", 0))),
+				int(enemy.get("attack", 0)),
+				int(enemy.get("defense", 0)),
+				int(enemy.get("range", 0)),
+				int(enemy.get("attack_period_ticks", 0)),
+			]
+			if signatures.has(archetype_id):
+				_check(
+					signatures[archetype_id] == signature,
+					"%s keeps one stat line across early stages" % archetype_id
+				)
+			else:
+				signatures[archetype_id] = signature

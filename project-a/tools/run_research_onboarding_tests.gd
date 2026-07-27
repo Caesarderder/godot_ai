@@ -9,51 +9,34 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	var state: RefCounted = GameState.create_new(20260726, 1000, false)
-	_check(int(state.factory.facilities["research_lab"]) == 0, "研究所开局应锁定")
+	_check(int(state.factory.facilities["research_lab"]) == 0, "研究所开局尚未建成")
+	_check(bool(state.factory.eligible_facilities.get("research_lab", false)), "研究所开局即取得建造资格")
 	_check(state.factory.blueprints.is_empty(), "开局不应预解锁马桶人蓝图")
 	var executor := CommandExecutor.new(state, func(_candidate: RefCounted) -> bool: return true)
-
-	var early_defeat := _execute(executor, "battle:early-defeat", "settle_battle", {
-		"battle_id": "battle:early-defeat",
-		"stage_id": "stage_1_1",
-		"outcome": "defeat",
-		"ticks": 30,
-		"deployed_unit_ids": executor.state.formation.hero_ids(),
-		"dead_unit_ids": [],
-	})
-	_check(bool(early_defeat.get("ok", false)), "早期战败应正常结算")
-	_check(int(executor.state.factory.facilities["research_lab"]) == 0, "1-4 之前的失败不得提前解锁研究所")
-
-	var defeat := _execute(executor, "battle:first-high-wall-defeat", "settle_battle", {
-		"battle_id": "battle:first-high-wall-defeat",
-		"stage_id": "stage_1_4",
-		"outcome": "defeat",
-		"ticks": 30,
-		"deployed_unit_ids": executor.state.formation.hero_ids(),
-		"dead_unit_ids": [],
-	})
-	_check(bool(defeat.get("ok", false)), "首次战败应成功结算：%s" % str(defeat))
-	_check(int(executor.state.factory.facilities["research_lab"]) == 0, "首次战败只应开放资格，不得自动建立研究所")
-	_check((defeat.get("event", {}) as Dictionary).get("eligible_facilities", []).has("research_lab"), "1-4 首败应开放研究所建造资格")
-	_check(executor.state.factory.discovered_blueprints.is_empty(), "信号接收前不得提前开放基础蓝图")
-	var signal_result := _execute(executor, "signal:foundational-ten", "claim_foundational_signal", {})
-	_check(bool(signal_result.get("ok", false)), "首败信号应允许接收免费基础图纸十连")
-	_check(executor.state.roster.size() == 1, "信号十连只给图纸，不直接授予角色")
-	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "信号十连应提供冲锋基础图纸")
-	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "信号十连应提供装甲基础图纸")
 	var construct := _execute(executor, "construct:research-lab", "construct_facility", {
 		"facility_id": "research_lab",
 		"now_unix": 1000,
 		"grid_x": 2,
 		"grid_z": 1,
 	})
-	_check(bool(construct.get("ok", false)), "玩家应能在首败后主动建立研究所：%s" % str(construct))
+	_check(bool(construct.get("ok", false)), "玩家应能在开局主动建立研究所：%s" % str(construct))
 	_check(int(executor.state.factory.facilities["research_lab"]) == 0, "建造命令只开始施工，不应立即落成")
 	_check(not bool(_execute(executor, "construct:research-lab:early", "claim_facility_work", {"now_unix": 1004}).get("ok", false)), "研究所四秒时不得提前验收")
 	_check(bool(_execute(executor, "construct:research-lab:claim", "claim_facility_work", {"now_unix": 1005}).get("ok", false)), "研究所五秒到时后应可验收")
 	_check(int(executor.state.factory.facilities["research_lab"]) == 1, "验收完成后研究所才应落成")
-	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "研究所建成不改变已入库的冲锋图纸")
-	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "研究所建成不改变已入库的装甲图纸")
+	_check(executor.state.factory.discovered_blueprints.is_empty(), "研究所建成时仍没有角色图纸")
+	for stage_id in ["stage_1_2", "stage_1_3"]:
+		var settlement := _execute(executor, "battle:%s" % stage_id, "settle_battle", {
+			"battle_id": "battle:%s" % stage_id,
+			"stage_id": stage_id,
+			"outcome": "victory",
+			"ticks": 30,
+			"deployed_unit_ids": executor.state.formation.hero_ids(),
+			"dead_unit_ids": [],
+		})
+		_check(bool(settlement.get("ok", false)), "%s 首通应成功结算" % stage_id)
+	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "1-2 首通应提供冲锋基础图纸")
+	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "1-3 首通应提供装甲基础图纸")
 	_check(FactoryCatalog.recipes().size() == 8, "科技蓝图应列出全部八种马桶人")
 
 	var roster_before: int = executor.state.roster.size()
@@ -63,8 +46,8 @@ func _init() -> void:
 	})
 	_check(bool(unlock.get("ok", false)), "基础蓝图应可开始研发")
 	_check(executor.state.roster.size() == roster_before, "开始研发时不应立即授予永久角色")
-	_check(not bool(_execute(executor, "blueprint:assault:early", "claim_blueprint_research", {"now_unix": 1144}).get("ok", false)), "基础蓝图不得提前领取")
-	var research_claim := _execute(executor, "blueprint:assault:claim", "claim_blueprint_research", {"now_unix": 1145})
+	_check(not bool(_execute(executor, "blueprint:assault:early", "claim_blueprint_research", {"now_unix": 1104}).get("ok", false)), "基础蓝图四秒时不得提前领取")
+	var research_claim := _execute(executor, "blueprint:assault:claim", "claim_blueprint_research", {"now_unix": 1105})
 	_check(bool(research_claim.get("ok", false)), "基础蓝图到时后应可领取")
 	_check(executor.state.roster.size() == roster_before + 1, "领取完成的基础蓝图应授予一个永久角色")
 	var hero_id := String((research_claim.get("event", {}) as Dictionary).get("hero_id", ""))
@@ -88,7 +71,7 @@ func _init() -> void:
 		"now_unix": 1200,
 	})
 	_check(bool(armored_unlock.get("ok", false)), "装甲基础蓝图应可开始研发")
-	var armored_claim := _execute(executor, "blueprint:armored:claim", "claim_blueprint_research", {"now_unix": 1245})
+	var armored_claim := _execute(executor, "blueprint:armored:claim", "claim_blueprint_research", {"now_unix": 1205})
 	_check(bool(armored_claim.get("ok", false)), "装甲基础蓝图到时后应可领取")
 	var armored_hero_id := String((armored_claim.get("event", {}) as Dictionary).get("hero_id", ""))
 	var armored_deploy := _execute(executor, "formation:armored", "assign_formation_slot", {

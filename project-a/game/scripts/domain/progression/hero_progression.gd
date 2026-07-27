@@ -9,6 +9,7 @@ const MAX_XP: int = 320
 const LEVEL_XP: Array[int] = [0, 0, 40, 100, 200, 320]
 const GOLD_PER_BOOK_BY_LEVEL: Array[int] = [0, 20, 35, 55, 80, 0]
 const APTITUDE_BP: Dictionary = {"C": 8500, "B": 10000, "A": 11500, "S": 13000}
+const RARITY_BASE_BP: Dictionary = {"C": 10000, "B": 10000, "A": 10000, "S": 14000}
 const CLASS_GROWTH_MILLI: Dictionary = {
 	"guardian": {"hp": 20000, "attack": 2400, "defense": 4000, "speed_milli": 1600000, "crit_bp": 20000},
 	"fighter": {"hp": 10000, "attack": 5400, "defense": 2000, "speed_milli": 3200000, "crit_bp": 40000},
@@ -79,10 +80,11 @@ static func level_for_xp(xp: int) -> int:
 static func derived_battle_stats(hero: RefCounted) -> Dictionary:
 	var star_index := clampi(int(hero.star), 1, 3)
 	var star_bp: int = [0, 10000, 13000, 16000][star_index]
+	var rarity_bp := int(RARITY_BASE_BP.get(String(hero.aptitude_id), 10000))
 	return {
-		"hp": int(int(hero.base_stats["hp"]) * star_bp / 10000),
-		"attack": int(int(hero.base_stats["attack"]) * star_bp / 10000),
-		"defense": int(int(hero.base_stats["defense"]) * star_bp / 10000),
+		"hp": int(int(hero.base_stats["hp"]) * star_bp * rarity_bp / 100000000),
+		"attack": int(int(hero.base_stats["attack"]) * star_bp * rarity_bp / 100000000),
+		"defense": int(int(hero.base_stats["defense"]) * star_bp * rarity_bp / 100000000),
 		"speed_milli": int(hero.base_stats["speed_milli"]),
 		"crit_bp": clampi(int(hero.base_stats["crit_bp"]), 0, 5000),
 	}

@@ -68,15 +68,18 @@ func _run() -> void:
 	_check(_tree_has_text(main, "冲锋压炮 4 次"), "assault mastery proof uses runtime cannon facts")
 	_check(_tree_has_text(main, "首章解锁 · 第2章战线 · 信号招募 · 免费战役战令"), "completion lists only actual unlocked systems")
 	_check(_tree_has_text(main, "首章训练闭环达成"), "the seven-action onboarding loop visibly settles")
-	var next_chapter := _button_with_text(main, "开启第2章 · 侦察 2-1")
-	_check(next_chapter != null, "completion exposes one next autonomous campaign goal")
-	if next_chapter != null:
-		next_chapter.pressed.emit()
+	var faction_recruit := _button_with_text(main, "领取阵营起手十连")
+	_check(faction_recruit != null, "completion exposes the faction-starter recruitment goal")
+	if faction_recruit != null:
+		faction_recruit.pressed.emit()
 		await _wait_frames(4)
-	_check(String(main.get("selected_stage_id")) == "stage_2_1", "next-chapter action selects the exact unlocked stage")
-	_check(_tree_has_text(main, "2-1 震荡封锁线"), "next-chapter action opens reconnaissance instead of forcing another battle")
-	_check(_tree_has_text(main, "我方") and _tree_has_text(main, "推荐"), "second-chapter reconnaissance compares current and recommended power")
-	_check(_tree_has_button(main, "立即出击"), "post-growth squad may immediately test the 2-1 opening stage")
+	_check(String(main.get("legion_tab")) == "recruit", "faction CTA lands on recruitment")
+	_check(_tree_has_text(main, "阵营起手十连"), "faction CTA opens recruitment and explains the starter draw")
+	var free_ten := main.find_child("FoundationalSignalTenButton", true, false) as Button
+	_check(free_ten != null, "faction recruitment exposes the actual free ten-pull")
+	if free_ten != null:
+		free_ten.pressed.emit()
+		await _wait_frames(4)
 	main.set("legion_tab", "roster")
 	main.call("_show_legion")
 	await _wait_frames(4)
@@ -86,43 +89,38 @@ func _run() -> void:
 		"chapter-two growth opens permanent hero growth instead of an unrelated formation overview"
 	)
 	_check(
-		_tree_has_text(main, "80 金币 · 4 军团数据"),
-		"the first skill sink exposes its exact canonical cost"
-	)
-	var skill_research := main.find_child("ResearchSkill_assault", true, false) as Button
-	_check(
-		skill_research != null and not skill_research.disabled,
-		"Boss rewards make active-skill level two an immediately actionable post-chapter option"
+		main.find_child("CultivationAction_star", true, false) != null,
+		"post-chapter roster exposes permanent character star growth"
 	)
 
 	main.call("_show_goals")
 	await _wait_frames(4)
 	_check(_tree_has_text(main, "第二章：突破震荡封锁线"), "post-onboarding goals replace the completed training label with the next chapter")
-	_check(_tree_has_text(main, "侦察并准备进攻"), "post-onboarding goals name the immediately actionable reconnaissance")
+	_check(_tree_has_text(main, "将军团提升至挑战线"), "post-onboarding goals name the immediate growth gap")
 	_check(_tree_has_text(main, "第二章声波防线"), "post-onboarding goals name the new medium hurdle")
-	_check(_tree_has_button(main, "侦察 2-1"), "post-onboarding goals retain one executable campaign action")
-	var goal_scout := _button_with_text(main, "侦察 2-1")
-	if goal_scout != null:
-		goal_scout.pressed.emit()
+	_check(_tree_has_button(main, "先培养军团"), "post-onboarding goals retain one executable growth action")
+	var goal_growth := _button_with_text(main, "先培养军团")
+	if goal_growth != null:
+		goal_growth.pressed.emit()
 		await _wait_frames(4)
-	_check(_tree_has_text(main, "2-1 震荡封锁线"), "post-onboarding goal action opens the target reconnaissance")
+	_check(main.find_child("LegionFormationTab", true, false) != null, "post-onboarding goal action opens permanent legion growth")
 
 	main.call("_show_title")
 	await _wait_frames(4)
-	_check(_tree_has_text(main, "下一行动"), "returning title summarizes the same chapter-two action")
+	_check(_tree_has_text(main, "第二章备战"), "returning title summarizes the same chapter-two growth gap")
 	var resume := _button_with_text(main, "返回指挥室")
 	_check(resume != null, "returning chapter-one save exposes a safe command-room resume")
 	if resume != null:
 		resume.pressed.emit()
 		await _wait_frames(4)
 	_check(_tree_has_text(main, "第二章备战：震荡封锁线"), "resumed factory replaces the completed onboarding card with the next campaign task")
-	_check(_tree_has_text(main, "侦察并准备进攻"), "resumed factory preserves the executable reconnaissance objective")
-	var resumed_scout := _button_with_text(main, "侦察 2-1")
-	_check(resumed_scout != null, "resumed factory keeps the campaign route as its primary action")
-	if resumed_scout != null:
-		resumed_scout.pressed.emit()
+	_check(_tree_has_text(main, "将军团提升至挑战线"), "resumed factory preserves the executable growth objective")
+	var resumed_growth := _button_with_text(main, "先培养军团")
+	_check(resumed_growth != null, "resumed factory keeps the growth route as its primary action")
+	if resumed_growth != null:
+		resumed_growth.pressed.emit()
 		await _wait_frames(4)
-	_check(_tree_has_text(main, "2-1 震荡封锁线"), "resumed factory campaign action opens the exact map target")
+	_check(main.find_child("LegionFormationTab", true, false) != null, "resumed factory growth action opens the legion")
 
 	state = game.current_state()
 	assault = _hero_for(state, "assault")
@@ -162,6 +160,9 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 
 func _seed_foundational_research(main: Node) -> void:
 	main.call("_command", "claim_foundational_signal", {})
+	var state: RefCounted = main.get("game").current_state()
+	state.factory.discovered_blueprints["ordinary.assault"] = true
+	state.factory.discovered_blueprints["heavy.armored"] = true
 	for entry in [["ordinary.assault", 1000, 1045], ["heavy.armored", 1045, 1090]]:
 		main.call("_command", "unlock_foundational_blueprint", {
 			"recipe_id": String(entry[0]), "now_unix": int(entry[1]),

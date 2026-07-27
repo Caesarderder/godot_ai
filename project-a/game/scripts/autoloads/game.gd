@@ -2,7 +2,7 @@ extends Node
 
 const GameStateScript := preload("res://game/scripts/state/game_state.gd")
 const CommandExecutorScript := preload("res://game/scripts/commands/command_executor.gd")
-const ACTIVE_CONTENT_VERSION: String = "toilet-factory-slg-v2"
+const ACTIVE_CONTENT_VERSION: String = "toilet-factory-slg-v3-factions"
 
 signal bootstrap_completed(status: String)
 

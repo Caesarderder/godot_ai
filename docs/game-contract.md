@@ -1,5 +1,5 @@
 ---
-contract_version: 7
+contract_version: 9
 project_id: toilet-factory-siege
 last_updated: 2026-07-27
 km_id: reference.game-contract
@@ -33,7 +33,7 @@ related:
 - owner: producer
 - status: accepted
 - accepted_intent: 玩家从唯一永久英雄 Gman 开始，通过主动攻城暴露职责缺口，再把战果转化为研究所、确定性永久援军、编队调整和自主成长，逐步把地下工厂经营成支撑永久军团的战争机器。
-- acceptance_criteria: 首局连续完成 Gman 单人前三关、1-4 首败、信号招募免费接收基础图纸十连、研究所逐张研发冲锋与装甲、两名永久角色入列、三人编队和 1-4 反攻，再自主选择一条成长路线攻克 1-5；角色不得永久删除，关键路径不得因资源、失败或抽卡死锁。
+- acceptance_criteria: 首局先建设研究所，再由 Gman 推进前三关；1-2、1-3 首通分别固定获得冲锋与装甲图纸，研究所逐张研发后两名永久角色入列，三人编队完成 1-4 反攻并自主选择一条成长路线攻克 1-5；免费十连只在信号招募功能正式解锁后开放，不承担首批通关必需角色供给；角色不得永久删除，关键路径不得因资源、失败或抽卡死锁。
 - implementation_reference: project-a/scripts/slg_main.gd, project-a/game/scripts/commands/command_executor.gd
 - verification_evidence: project-a/tools/run_slg_loop_tests.gd
 - conflict_references: docs/game-contract.md@contract_version-1, project-a/game/scripts/state/game_state.gd
@@ -71,7 +71,7 @@ related:
 - owner: game-design
 - status: accepted
 - accepted_intent: 工厂以进度事件逐步取得建筑资格，所有资源产线统一生产工业材料；研究所把信号图纸转化为确定性永久援军和角色研究，不生产或消耗库存单位。
-- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；首次 1-4 失败后开放研究所建造资格和一次免费的基础图纸信号十连，十连位于信号招募页，只形成冲锋/装甲两张完整设计图纸与八张同型号设计分图，不直接授予角色、不发资源、不推进长期保底；研究所只消费已拥有图纸和时间，研发完成后才授予对应唯一永久角色。首章首次设施施工统一为 5 秒；资源生产、建造、研发、升级和领取 exact-once。
+- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；新档直接取得研究所建造资格，但必须由玩家主动选址、施工和验收；1-2、1-3 首通分别固定入库冲锋与装甲图纸，不直接授予角色；研究所消费已拥有图纸和时间，研发完成后才授予对应唯一永久角色；重复图纸转为该型号专属碎片，供已解锁角色升星。免费十连位于信号招募页，且只有信号招募正式解锁后开放，并推进同一长期保底。调试阶段所有设施建造、设施升级和蓝图研发统一为 5 秒；资源生产、建造、研发、升级和领取 exact-once。
 - implementation_reference: project-a/game/scripts/domain/factory/logistics_service.gd, project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd, project-a/scripts/slg_main.gd
 - verification_evidence: project-a/tools/run_slg_loop_tests.gd, project-a/tools/run_research_breakthrough_tests.gd
 - conflict_references: project-a/game/scripts/domain/factory/factory_service.gd, project-a/game/scripts/state/factory_state.gd
@@ -81,9 +81,9 @@ related:
 - handoff_request: 保留命令幂等边界，以后勤资源生产支持永久成长；研究只解锁或强化永久角色
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 新入口已实现六座可点击 3D 建筑、5×5 有界放置和后勤服务；研究所已接通 locked、eligible、built 三态，
-  1-4 首败开放基础信号与研究所资格；信号十连确定性入库冲锋/装甲图纸，研究所逐张研发后两名
-  永久角色才入列。长期信号招募只产 B/A/S 图纸，重复图纸转军团数据。量产兵和单位订单属于已取消旧方向。
+- deviation: 新入口已实现六座可点击 3D 建筑、5×5 有界放置和后勤服务；研究所已接通 eligible、built 状态并在新档开放建造，
+  1-2、1-3 首通确定性入库冲锋/装甲图纸，研究所逐张研发后两名永久角色才入列。免费十连与长期信号招募统一在招募功能解锁后出现；
+  信号只产 B/A/S 图纸；长期重复图纸目标改为型号专属碎片，当前代码尚待本轮迁移完成。量产兵和单位订单属于已取消旧方向。
 - last_updated: 2026-07-27
 - last_verified: —
 
@@ -110,7 +110,7 @@ related:
 - owner: game-design
 - status: accepted
 - accepted_intent: 当前玩家只管理金币、军团数据、工业材料、招募券四种可消费核心资源。金币与军团数据服务角色成长，工业材料只服务设施建造与升级，招募券只服务信号招募；战斗经验与设计图纸是进度/解锁条件，不是通用货币。
-- acceptance_criteria: 角色升级消耗金币并检查战斗经验，升星消耗军团数据，技能研究消耗金币与军团数据；设施建造与升级只消耗工业材料；信号招募只消耗招募券。常规战斗不直接掉落工业材料。旧工业技术、技能芯片、陶瓷/零件/能源分账、专属英雄数据和重复图纸数据通过 schema v9 一次性归并，之后当前命令、奖励、成本和 UI 不得再读写这些旧账本。
+- acceptance_criteria: 角色升级消耗金币并检查战斗经验；长期升星只消耗该角色型号的专属碎片，教学核心可以 exact-once 免除一次 1★→2★ 碎片成本；技能研究仍消耗金币与受控研究数据；设施建造与升级只消耗工业材料；信号招募只消耗招募券，首章完成免费十连除外。常规战斗不直接掉落工业材料。schema v11 必须新增专属碎片账本而不把无法追溯来源的旧通用数据伪造成任一角色碎片。
 - implementation_reference: project-a/game/scripts/state/economy_state.gd, project-a/game/scripts/domain/factory/logistics_service.gd
 - verification_evidence: project-a/tools/run_slg_loop_tests.gd
 - conflict_references: project-a/game/scripts/state/economy_state.gd, project-a/game/scripts/domain/economy/economy_valuation.gd
@@ -127,8 +127,8 @@ related:
 ## GC-006: 首个重构切片与 UX
 - owner: producer
 - status: accepted
-- accepted_intent: 第一切片用“Gman 单人连胜—1-4 撞墙—信号图纸十连—研究所定向研发—永久援军编队—反攻—自主升星—资源设施投产—1-5 Boss”证明角色成长与工业扩张是相邻但不混用成本的双线循环。
-- acceptance_criteria: 新档只有 Gman；单人稳定通过 1-1 至 1-3、首次 1-4 稳定失败；之后主动建研究所并固定获得冲锋与装甲，三人稳定攻克 1-4；玩家再选择并建成一种资源设施、收取首批真实后勤，在至少两条经济可达成长路线中选择其一并稳定攻克 1-5；不得用强制挂机等待首批产出；模型时间不超过 30 分钟，844×390 下目标、门禁、阵位、炮击机制和恢复路径可读。
+- accepted_intent: 第一切片用“先建研究所—Gman 推进—1-2/1-3 获取角色图纸—研究所定向研发—1-4 撞墙—永久援军编队反攻—自主升星—资源设施投产—1-5 Boss—解锁信号招募免费十连”证明确定性主线角色与长期招募彼此分离。
+- acceptance_criteria: 新档只有 Gman并可立即主动建设研究所；单人稳定通过 1-1 至 1-3，1-2、1-3 首通分别获得冲锋与装甲图纸；研究所完成两张图纸后形成三人编队并稳定攻克 1-4；玩家再选择并建成一种资源设施、收取首批真实后勤，在至少两条经济可达成长路线中选择其一并稳定攻克 1-5；信号招募解锁后才出现免费十连；不得用强制挂机等待首批产出；模型时间不超过 30 分钟，844×390 下目标、门禁、阵位、炮击机制和恢复路径可读。
 - implementation_reference: project-a/scripts/slg_main.gd
 - verification_evidence: project-a/tools/run_first_chapter_balance_scan.gd, project-a/tools/run_first_30m_journey_tests.gd, project-a/tools/run_research_breakthrough_tests.gd, project-a/tools/run_ui_smoke_tests.gd
 - conflict_references: project-a/scripts/main.gd, project-a/scenes/screens/main.tscn
@@ -164,8 +164,8 @@ related:
 ## GC-008: 数值可解释性与商业化前置度量
 - owner: game-design
 - status: accepted
-- accepted_intent: 使用统一单位解释当前编队战力、关卡能力比、工业资源时间价值、永久成长效率、内容寿命和未来商品影响；保持独立资源门禁，不用固定全局汇率、账号总战力或页面私有公式掩盖问题。
-- acceptance_criteria: 策划评审能给出 `CP_formation`、`CP_stage`、能力比、挑战/推荐线、IM/TFA/IL、资源压力、成本/`ΔCP`、经济可达关卡和下一可见成长事件；工厂金币能力明确区分直接产出与出征支持的间接获取；新乘区、货币和商品通过通胀、死锁、内容寿命及非付费可达性审查；所有结论标注 implemented、derived、target、playtest hypothesis、measured 或 unknown。
+- accepted_intent: 使用统一单位解释当前编队战力、关卡能力比、工业资源时间价值、永久成长效率、内容寿命和未来商品影响；保持独立资源门禁，不用固定全局汇率、账号总战力或页面私有公式掩盖问题。同一敌人类型必须使用稳定 archetype 和同一套基础战斗数值，不得因所在关卡不同暗改生命、攻击、防御、射程或攻速；关卡难度改由敌人编成、结构、机制和明确命名的新敌人类型承担。
+- acceptance_criteria: 策划评审能给出 `CP_formation`、`CP_stage`、能力比、挑战/推荐线、IM/TFA/IL、资源压力、成本/`ΔCP`、经济可达关卡和下一可见成长事件；同一敌人 archetype 在所有出现关卡的 HP、攻击、防御、射程和攻速完全一致，数值职责变化必须改用玩家可辨认的新名称与 archetype；工厂金币能力明确区分直接产出与出征支持的间接获取；新乘区、货币和商品通过通胀、死锁、内容寿命及非付费可达性审查；所有结论标注 implemented、derived、target、playtest hypothesis、measured 或 unknown。
 - implementation_reference: docs/references/product-design/game-state-measurement-framework.md, project-a/game/scripts/domain/progression/war_readiness_report.gd, project-a/scripts/slg_main.gd
 - verification_evidence: project-a/tools/run_balance_tests.gd, project-a/tools/run_progression_cycle_scan.gd, project-a/tools/run_ui_smoke_tests.gd, python3 tools/docs_lint.py
 - conflict_references: project-a/scripts/slg_main.gd, project-a/game/scripts/domain/content/stage_catalog.gd
@@ -182,20 +182,20 @@ related:
 ## GC-009: 长期进度、免费战令、招募与成就
 - owner: game-design
 - status: accepted
-- accepted_intent: 在工厂与主动攻城核心闭环之上加入行动任务、指挥官等级、28 天免费战令、永久成就、游戏内招募券驱动的 B/A/S 设计图纸信号招募，以及首章完成后的一次性新游福利；图纸必须经研究所研发才成为永久角色。
-- acceptance_criteria: 首章按 Lv2/3/4/5 渐进开放任务、成就、招募和战令；任务不要求抽卡或付费；战令 30 级并有缺勤容错；招募公开概率、十抽 A、60 抽 S 与定向继承；重复图纸转军团数据；1-5 后福利只可领取一次，特殊升星核心仅可替代一次 1★→2★ 所需的 4 份军团数据，工业材料从不参与角色升星，后勤箱固定发放 25 工业材料；福利不得破坏既定推进窗；系统间不得通过领奖事件形成奖励循环。
-- implementation_reference: docs/references/product-design/meta-progression-system.md, project-a/game/scripts/state/meta_progression_state.gd, project-a/game/scripts/domain/meta/meta_progression_service.gd, project-a/game/scripts/domain/meta/new_player_welfare_service.gd, project-a/game/scripts/domain/recruitment/signal_recruit_service.gd, project-a/scripts/slg_main.gd
+- accepted_intent: 在工厂与主动攻城核心闭环之上加入行动任务、指挥官等级、28 天免费战令、永久成就、游戏内招募券驱动的 B/A/S 设计图纸信号招募，以及首章完成后的阵营起手十连；玩家由抽取到的角色池、研究顺序、专属碎片升星与编队形成自己的长期阵营玩法，图纸必须经研究所研发才成为永久角色。
+- acceptance_criteria: 首章按 Lv2/3/4/5 渐进开放任务、成就、招募和战令；任务不要求抽卡或付费；战令 30 级并有缺勤容错；招募公开概率、十抽 A、60 抽 S 与定向继承；首章完成免费十连使用同一概率与保底、保证至少一个新型号和一次对应重复；重复图纸只转该型号专属碎片；B/A/S 的 2★需求分别为 20/30/40 专属碎片，3★需求分别为 40/60/80；S 级一星即拥有完整技能并具备约 A 级二星的基础强度；特殊升星核心只可替代一次 1★→2★ 的目标型号碎片，工业材料从不参与角色升星；系统间不得通过领奖事件形成奖励循环。
+- implementation_reference: docs/references/product-design/meta-progression-system.md, docs/references/product-design/post-30m-faction-progression.md, docs/references/architecture/post-30m-faction-technical-design.md, project-a/game/scripts/state/meta_progression_state.gd, project-a/game/scripts/domain/meta/meta_progression_service.gd, project-a/game/scripts/domain/meta/new_player_welfare_service.gd, project-a/game/scripts/domain/recruitment/signal_recruit_service.gd, project-a/scripts/slg_main.gd
 - verification_evidence: godot --headless --path project-a --script res://tools/run_meta_progression_tests.gd, godot --headless --path project-a --script res://tools/run_new_player_welfare_tests.gd, godot --headless --path project-a --script res://tools/run_progression_cycle_scan.gd, godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd
 - conflict_references: project-a/game/scripts/domain/quest/quest_catalog.gd, project-a/game/scripts/domain/achievement/achievement_catalog.gd, project-a/game/scripts/domain/economy/blueprint_draw_service.gd
 - handoffs: GC-002, GC-003, GC-004, GC-005, GC-008
 - handoff_from: game-design
 - handoff_to: programming
-- handoff_request: 先建立共享事件和指挥官状态，再迁移任务成就、免费战令与设计图纸信号招募；不得恢复直接抽英雄或图纸材料混池
+- handoff_request: 把长期重复图纸迁移为型号专属碎片，免费十连使用标准保底并形成至少一条新角色升星路线；保留“抽图纸、研究为永久角色”，不得恢复直接抽英雄或图纸材料混池
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 领域状态、事务、v5/v6/v7/v8→v9 迁移和 App Shell 已实现；任务、成就、招募、战令按关卡与等级双条件开放，目标页三标签、顶层待领取计数、完整 30 级奖励轨和批量领奖已接通；图纸研发出的新英雄可部署到六槽编队，重复图纸转军团数据。1-5 后一次性“黑市援助”已接入行动页、军团页和持久账本；核心替代军团数据、后勤箱补充工业材料，两个用途不再混淆。四资源重构后的完整推进扫描和真人周期体验仍待验证。
-- last_updated: 2026-07-26
-- last_verified: 2026-07-26
+- deviation: 2026-07-28 已完成型号专属碎片账本、重复图纸转换、按稀有度升星成本、免费阵营十连保证、S1 强度、研发/编队/UI/存档接线，并由 7-seed `run_post_30m_faction_tests.gd` 覆盖；真人阵营认同和继续游玩意愿仍待验证，不能由自动测试宣称“好玩”。
+- last_updated: 2026-07-28
+- last_verified: 2026-07-28
 
 ## GC-010: 玩家优先与乐趣门槛
 - owner: producer

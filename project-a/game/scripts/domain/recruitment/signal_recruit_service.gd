@@ -14,7 +14,10 @@ const POOLS: Dictionary = {
 	"A": ["sonic", "armored", "bomber"],
 	"S": ["parasite", "saw"],
 }
-const DUPLICATE_DATA: Dictionary = {"B": 2, "A": 8, "S": 24}
+const DUPLICATE_FRAGMENTS: Dictionary = {"B": 20, "A": 30, "S": 40}
+# Compatibility alias for authored onboarding cards. The value now means
+# archetype-specific fragments, never shared legion data.
+const DUPLICATE_DATA: Dictionary = DUPLICATE_FRAGMENTS
 
 
 static func recruit(state: RefCounted, count: int, target_archetype: String = TARGET_S) -> Dictionary:
@@ -44,6 +47,82 @@ static func recruit(state: RefCounted, count: int, target_archetype: String = TA
 	}
 
 
+static func recruit_free_faction_ten(
+	state: RefCounted,
+	target_archetype: String = TARGET_S
+) -> Dictionary:
+	if not bool(MetaCatalogScript.unlocks(state)["recruitment"]):
+		return {"ok": false, "error": "SIGNAL_RECRUIT_LOCKED"}
+	if not (POOLS["S"] as Array).has(target_archetype):
+		return {"ok": false, "error": "RECRUIT_TARGET_INVALID"}
+	var results: Array[Dictionary] = []
+	for _index in 8:
+		results.append(_draw_once(state, target_archetype))
+	results.append(_draw_forced_rarity(state, "A", target_archetype))
+	var duplicate_source := _first_new_design(results)
+	if duplicate_source.is_empty():
+		duplicate_source = {
+			"recipe_id": "flying.rocket",
+			"archetype_id": "rocket",
+			"rarity": "B",
+		}
+		if not bool(state.factory.discovered_blueprints.get("flying.rocket", false)):
+			results[0] = grant_design(
+				state,
+				"flying.rocket",
+				"B",
+				int(DUPLICATE_FRAGMENTS["B"])
+			)
+	results.append(_draw_guaranteed_duplicate(state, duplicate_source, target_archetype))
+	return {
+		"ok": true,
+		"event": {
+			"type": "foundational_signal_resolved",
+			"count": 10,
+			"target_archetype": target_archetype,
+			"results": results,
+			"s_pity": state.meta_progression.recruit_s_pity,
+			"a_pity": state.meta_progression.recruit_a_pity,
+			"target_guaranteed": state.meta_progression.recruit_target_guaranteed,
+			"guaranteed_duplicate_archetype": String(duplicate_source.get("archetype_id", "")),
+			"pity_advanced": true,
+		},
+	}
+
+
+static func _draw_guaranteed_duplicate(
+	state: RefCounted,
+	duplicate_source: Dictionary,
+	target_archetype: String
+) -> Dictionary:
+	var meta: RefCounted = state.meta_progression
+	meta.recruit_draw_count += 1
+	meta.recruit_s_pity += 1
+	meta.recruit_a_pity += 1
+	var duplicate_rarity := String(duplicate_source.get("rarity", "B"))
+	var duplicate_result := grant_design(
+		state,
+		String(duplicate_source.get("recipe_id", "")),
+		duplicate_rarity,
+		int(DUPLICATE_FRAGMENTS.get(duplicate_rarity, 20))
+	)
+	# The tenth response advances the same hard pity as every ticket draw. If it
+	# reaches 60, preserve the promised matching fragments and attach the S pity
+	# result to this response instead of silently delaying the guarantee.
+	if meta.recruit_s_pity >= S_PITY:
+		meta.recruit_s_pity = 0
+		meta.recruit_a_pity = 0
+		var s_archetype := _pick_archetype(state, "S", target_archetype)
+		var s_recipe := FactoryCatalogScript.recipe_for_archetype(s_archetype)
+		duplicate_result["pity_bonus"] = grant_design(
+			state,
+			String(s_recipe.get("recipe_id", "")),
+			"S",
+			int(DUPLICATE_FRAGMENTS["S"])
+		)
+	return duplicate_result
+
+
 static func _draw_once(state: RefCounted, target_archetype: String) -> Dictionary:
 	var meta: RefCounted = state.meta_progression
 	meta.recruit_draw_count += 1
@@ -62,7 +141,38 @@ static func _draw_once(state: RefCounted, target_archetype: String) -> Dictionar
 		meta.recruit_a_pity = 0
 	var archetype_id := _pick_archetype(state, rarity, target_archetype)
 	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
-	return grant_design(state, String(recipe.get("recipe_id", "")), rarity, int(DUPLICATE_DATA[rarity]))
+	return grant_design(state, String(recipe.get("recipe_id", "")), rarity, int(DUPLICATE_FRAGMENTS[rarity]))
+
+
+static func _draw_forced_rarity(
+	state: RefCounted,
+	rarity: String,
+	target_archetype: String
+) -> Dictionary:
+	var meta: RefCounted = state.meta_progression
+	meta.recruit_draw_count += 1
+	meta.recruit_s_pity += 1
+	meta.recruit_a_pity += 1
+	if rarity == "S":
+		meta.recruit_s_pity = 0
+		meta.recruit_a_pity = 0
+	elif rarity == "A":
+		meta.recruit_a_pity = 0
+	var archetype_id := _pick_archetype(state, rarity, target_archetype)
+	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
+	return grant_design(
+		state,
+		String(recipe.get("recipe_id", "")),
+		rarity,
+		int(DUPLICATE_FRAGMENTS[rarity])
+	)
+
+
+static func _first_new_design(results: Array[Dictionary]) -> Dictionary:
+	for result in results:
+		if String(result.get("kind", "")) == "blueprint":
+			return result
+	return {}
 
 
 static func _pick_archetype(state: RefCounted, rarity: String, target_archetype: String) -> String:
@@ -95,13 +205,15 @@ static func grant_design(
 		bool(state.factory.discovered_blueprints.get(recipe_id, false))
 		or bool(state.factory.blueprints.get(recipe_id, false))
 	):
-		state.economy.hero_shards += duplicate_data_amount
+		var fragments := state.meta_progression.hero_fragments as Dictionary
+		fragments[archetype_id] = int(fragments.get(archetype_id, 0)) + duplicate_data_amount
 		return {
 			"rarity": rarity,
 			"archetype_id": archetype_id,
 			"recipe_id": recipe_id,
-			"kind": "legion_data",
+			"kind": "hero_fragments",
 			"amount": duplicate_data_amount,
+			"balance": int(fragments[archetype_id]),
 		}
 	state.factory.discovered_blueprints[recipe_id] = true
 	return {
@@ -113,8 +225,23 @@ static func grant_design(
 
 
 static func _stable_roll(run_seed: int, pool_id: String, draw_index: int, salt: String) -> int:
-	var context := HashingContext.new()
-	context.start(HashingContext.HASH_SHA256)
-	context.update(("%d|%s|%d|%s" % [run_seed, pool_id, draw_index, salt]).to_utf8_buffer())
-	var bytes := context.finish()
-	return ((int(bytes[0]) << 8) + int(bytes[1])) % 10000
+	var nonce := 0
+	while true:
+		var context := HashingContext.new()
+		context.start(HashingContext.HASH_SHA256)
+		context.update(
+			("%d|%s|%d|%s|%d" % [run_seed, pool_id, draw_index, salt, nonce]).to_utf8_buffer()
+		)
+		var bytes := context.finish()
+		var value := (
+			(int(bytes[0]) << 24)
+			| (int(bytes[1]) << 16)
+			| (int(bytes[2]) << 8)
+			| int(bytes[3])
+		)
+		# Largest multiple of 10_000 below 2^32. Rejection sampling keeps
+		# the published basis-point weights exact.
+		if value < 4_294_960_000:
+			return value % 10000
+		nonce += 1
+	return 0

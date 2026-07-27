@@ -23,6 +23,8 @@ func _init() -> void:
 func _run() -> void:
 	for archetype_id in ARCHETYPES:
 		await _check_ally_archetype(archetype_id)
+	await _check_gman_toilet_model()
+	await _check_camera_enemy_model()
 	await _check_enemy_fallback()
 	_finish()
 
@@ -62,6 +64,46 @@ func _check_ally_archetype(archetype_id: String) -> void:
 		var health_label := body_pivot.get_node_or_null("HealthLabel") as Label3D
 		_ok(name_label != null and name_label.font_size >= 60 and name_label.pixel_size < 0.003, "%s uses a high-resolution world-space name label" % archetype_id)
 		_ok(health_label != null and health_label.font_size >= 52 and health_label.pixel_size < 0.003, "%s uses a high-resolution world-space health label" % archetype_id)
+	view.queue_free()
+	await process_frame
+
+
+func _check_gman_toilet_model() -> void:
+	var view := ToiletUnitViewScript.new()
+	root.add_child(view)
+	view.setup(_snapshot("gman", 0))
+	await process_frame
+	var body_pivot := view.get_node_or_null("BodyPivot")
+	_ok(body_pivot != null, "gman creates BodyPivot")
+	if body_pivot != null:
+		_ok(body_pivot.get_node_or_null("ExternalModel_gman") == null, "gman does not use an external surveillance-unit model")
+		var procedural_base := body_pivot.get_node_or_null("Base") as VisualInstance3D
+		var procedural_bowl := body_pivot.get_node_or_null("Bowl") as VisualInstance3D
+		var procedural_head := body_pivot.get_node_or_null("Head") as VisualInstance3D
+		_ok(
+			procedural_base != null and procedural_base.visible
+			and procedural_bowl != null and procedural_bowl.visible
+			and procedural_head != null and procedural_head.visible,
+			"gman keeps the procedural toilet-person model visible"
+		)
+	view.queue_free()
+	await process_frame
+
+
+func _check_camera_enemy_model() -> void:
+	var view := ToiletUnitViewScript.new()
+	root.add_child(view)
+	view.setup(_snapshot("camera_trooper", 1))
+	await process_frame
+	var body_pivot := view.get_node_or_null("BodyPivot")
+	_ok(body_pivot != null, "camera enemy creates BodyPivot")
+	if body_pivot != null:
+		var external := body_pivot.get_node_or_null("ExternalEnemyModel_camera_trooper")
+		_ok(external != null, "camera enemy instantiates the cameraman GLB")
+		if external != null:
+			_ok(_mesh_count(external) > 0, "camera enemy GLB contains meshes")
+		var procedural_base := body_pivot.get_node_or_null("Base") as VisualInstance3D
+		_ok(procedural_base != null and not procedural_base.visible, "camera enemy hides the procedural toilet fallback")
 	view.queue_free()
 	await process_frame
 

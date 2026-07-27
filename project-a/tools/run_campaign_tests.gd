@@ -195,7 +195,7 @@ func _test_opening_defense_curve() -> void:
 	_check(int(StageCatalogScript.stage("stage_1_4").get("factory_production_target", 0)) == 0, "stage 1-4 does not require a legacy nine-unit merge batch")
 	_check((StageCatalogScript.stage("stage_1_4").get("unlock_on_victory", []) as Array).is_empty(), "stage 1-4 does not drop the armored blueprint")
 	var wall_counter := String(StageCatalogScript.stage("stage_1_4").get("counter_hint", ""))
-	_check(wall_counter.contains("信号招募") and wall_counter.contains("基础图纸") and wall_counter.contains("研究所"), "stage 1-4 reconnaissance names the signal-to-research recovery")
+	_check(wall_counter.contains("1-2、1-3") and wall_counter.contains("图纸") and wall_counter.contains("研究所"), "stage 1-4 reconnaissance names the stage-blueprint-to-research recovery")
 	_check(wall_counter.contains("永久") and wall_counter.contains("装甲") and wall_counter.contains("冲锋"), "stage 1-4 reconnaissance explains the permanent two-role counter")
 	_check(wall_counter.contains("图纸") and not wall_counter.contains("生产 9") and not wall_counter.contains("三合一"), "stage 1-4 reconnaissance uses the new blueprint research path")
 	var boss_counter := String(StageCatalogScript.stage("stage_1_5").get("counter_hint", ""))

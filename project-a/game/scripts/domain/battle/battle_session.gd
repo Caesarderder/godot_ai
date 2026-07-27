@@ -3,7 +3,6 @@ extends RefCounted
 
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
-const CombatPowerScript := preload("res://game/scripts/domain/progression/combat_power.gd")
 
 const TICKS_PER_SECOND: int = 5
 const TEAM_ALLY: int = 0
@@ -39,10 +38,6 @@ var _cannon_suppression_target: int = 0
 var _cannon_warning_ticks: int = CANNON_FUSE_TICKS
 var _boss_cannon_damage: int = DEFAULT_BOSS_CANNON_DAMAGE
 var _boss_cannon_period_ticks: int = DEFAULT_BOSS_CANNON_PERIOD_TICKS
-var _boss_core_enrage_ticks: int = 0
-var _boss_core_engaged_tick: int = -1
-var _boss_core_required_power: int = 0
-var _formation_power: int = 0
 var _cannons_suppressed: int = 0
 var _cannon_impacts: int = 0
 var _cannon_impacts_guarded: int = 0
@@ -84,13 +79,6 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 		1,
 		int(_stage_config.get("boss_cannon_period_ticks", DEFAULT_BOSS_CANNON_PERIOD_TICKS))
 	)
-	_boss_core_enrage_ticks = maxi(0, int(_stage_config.get("boss_core_enrage_ticks", 0)))
-	_boss_core_engaged_tick = -1
-	_boss_core_required_power = maxi(0, int(_stage_config.get("boss_core_required_power", 0)))
-	var typed_snapshots: Array[Dictionary] = []
-	for snapshot_value in hero_snapshots:
-		typed_snapshots.append(snapshot_value as Dictionary)
-	_formation_power = CombatPowerScript.snapshots_power(typed_snapshots)
 	_solo_pressure_bp = maxi(10000, int(_stage_config.get("solo_pressure_bp", 10000)))
 	if _cannon_warning_ticks <= 0:
 		_cannon_warning_ticks = CANNON_FUSE_TICKS
@@ -180,22 +168,7 @@ func advance_tick() -> Array[Dictionary]:
 	_run_enemies(events)
 	_run_allies(events)
 	_update_stage(events)
-	var final_structure := _structure_by_id(_final_structure_id)
-	if (
-		_boss_core_enrage_ticks > 0
-		and (_boss_core_required_power <= 0 or _formation_power < _boss_core_required_power)
-		and _boss_core_engaged_tick < 0
-		and _is_structure_attackable(final_structure)
-	):
-		_boss_core_engaged_tick = tick_index
 	_resolve_battle(events)
-	if (
-		not is_finished
-		and _boss_core_engaged_tick >= 0
-		and tick_index - _boss_core_engaged_tick >= _boss_core_enrage_ticks
-	):
-		is_finished = true
-		result = _finish_result(false, "boss_core_enrage")
 	return events
 
 
@@ -539,7 +512,14 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 						if _target_id(extra) != _target_id(target):
 							_damage_target(extra, int(unit["attack"]) * 8 / 10, unit["unit_id"], true, events)
 				if star < 3:
-					unit["hp"] = maxi(1, int(unit["max_hp"]) * 35 / 100)
+					var retained_percent := 72 if star >= 2 else 35
+					unit["hp"] = maxi(
+						1,
+						mini(
+							int(unit["hp"]),
+							int(unit["max_hp"]) * retained_percent / 100
+						)
+					)
 		"siege_shield":
 			var shield_percent := 48 if star >= 3 else (40 if star >= 2 else 26)
 			for ally in _living_allies():

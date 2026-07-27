@@ -47,16 +47,24 @@ func _run() -> void:
 			and String(retired_research_pull.get("error", "")) == "UNKNOWN_COMMAND",
 		"the retired research-lab ten-pull command is no longer reachable"
 	)
+	executor.state.factory.eligible_facilities["research_lab"] = false
 	var locked := _command(executor, "claim_foundational_signal", {})
-	_check(not bool(locked.get("ok", false)), "foundational signal requires the first-wall detection")
+	_check(
+		not bool(locked.get("ok", false))
+			and String(locked.get("error", "")) == "FOUNDATIONAL_SIGNAL_NOT_DETECTED",
+		"foundational ten-pull remains locked until the 1-4 signal is detected"
+	)
 	executor.state.factory.eligible_facilities["research_lab"] = true
+	executor.state.stage_progress["cleared_stages"] = [
+		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5",
+	]
+	executor.state.meta_progression.commander_xp = 180
 	var pity_before := int(executor.state.meta_progression.recruit_a_pity)
 	var materials_before := (executor.state.factory.materials as Dictionary).duplicate(true)
 	var skill_chips_before := int(executor.state.economy.skill_chips)
-	var legion_data_before := int(executor.state.economy.hero_shards)
 	var roster_before: int = executor.state.roster.size()
 	var result := _command(executor, "claim_foundational_signal", {})
-	_check(bool(result.get("ok", false)), "first-wall detection unlocks the free blueprint signal: %s" % str(result))
+	_check(bool(result.get("ok", false)), "signal recruitment unlocks the free blueprint ten-pull: %s" % str(result))
 	var event := result.get("event", {}) as Dictionary
 	var results := event.get("results", []) as Array
 	_check(results.size() == 10, "foundational signal reveals exactly ten blueprint cards")
@@ -79,24 +87,20 @@ func _run() -> void:
 		"signal does not grant a skill chip"
 	)
 	_check(
-		int(executor.state.economy.hero_shards) == legion_data_before,
-		"eight foundational fragments do not inject long-term legion data"
-	)
-	_check(
 		executor.state.factory.blueprint_data.is_empty(),
 		"foundational signal never writes the retired blueprint-data ledger"
 	)
 	var complete_designs := 0
-	var design_fragments := 0
+	var duplicate_results := 0
 	for item_value in results:
 		var item := item_value as Dictionary
 		if String(item.get("kind", "")) == "blueprint":
 			complete_designs += 1
 		elif String(item.get("kind", "")) == "blueprint_fragment":
-			design_fragments += 1
+			duplicate_results += 1
 	_check(
-		complete_designs == 2 and design_fragments == 8,
-		"foundational signal resolves as two complete designs plus eight non-funding fragments"
+		complete_designs == 2 and duplicate_results == 8,
+		"foundational ten-pull resolves as two complete designs plus eight tutorial duplicates"
 	)
 	var duplicate := _command(executor, "claim_foundational_signal", {})
 	_check(not bool(duplicate.get("ok", false)), "a second business action cannot duplicate the reward")

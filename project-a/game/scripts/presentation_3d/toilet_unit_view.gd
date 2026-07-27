@@ -12,6 +12,9 @@ const EXTERNAL_ALLY_MODELS: Dictionary = {
 	"repair": preload("res://game/scenes/actors/ally_models/repair_model.tscn"),
 	"parasite": preload("res://game/scenes/actors/ally_models/parasite_model.tscn"),
 }
+const EXTERNAL_CAMERA_ENEMY_MODEL: PackedScene = preload(
+	"res://game/scenes/actors/enemy_models/cameraman_model.tscn"
+)
 
 static var _shared_meshes: Dictionary = {}
 static var _shared_materials: Dictionary = {}
@@ -151,7 +154,7 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 	var archetype_id := String(unit_snapshot.get("archetype_id", class_id))
 	var display_name := String(unit_snapshot.get("display_name", ""))
 	var elite := bool(unit_snapshot.get("elite", false))
-	_use_external_model = _add_external_ally_model(archetype_id)
+	_use_external_model = _add_external_unit_model(archetype_id)
 	if team == TEAM_ALLY and slot == 0 and not bool(unit_snapshot.get("temporary", false)):
 		_add_command_marker()
 	var porcelain_key := "ally_porcelain" if team == TEAM_ALLY else "enemy_porcelain"
@@ -276,16 +279,21 @@ func _health_bar_material(color: Color) -> StandardMaterial3D:
 	return material
 
 
-func _add_external_ally_model(archetype_id: String) -> bool:
-	if team != TEAM_ALLY:
-		return false
-	var packed_scene := EXTERNAL_ALLY_MODELS.get(archetype_id) as PackedScene
+func _add_external_unit_model(archetype_id: String) -> bool:
+	var packed_scene: PackedScene
+	var model_name: String
+	if team == TEAM_ALLY:
+		packed_scene = EXTERNAL_ALLY_MODELS.get(archetype_id) as PackedScene
+		model_name = "ExternalModel_%s" % archetype_id
+	elif archetype_id.begins_with("camera_"):
+		packed_scene = EXTERNAL_CAMERA_ENEMY_MODEL
+		model_name = "ExternalEnemyModel_%s" % archetype_id
 	if packed_scene == null:
 		return false
 	var model := packed_scene.instantiate() as Node3D
 	if model == null:
 		return false
-	model.name = "ExternalModel_%s" % archetype_id
+	model.name = model_name
 	_body_pivot.add_child(model)
 	return true
 

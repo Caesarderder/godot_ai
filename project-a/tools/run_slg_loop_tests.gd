@@ -31,12 +31,20 @@ func _run_contract() -> void:
 	_verify_independent_facility_collection()
 	_verify_factory_capacity_contract()
 	_verify_skill_research_contract()
-	_expect(executor.state.content_version == "toilet-factory-slg-v2", "new saves use revised first-session contract")
+	_expect(executor.state.content_version == "toilet-factory-slg-v3-factions", "new saves use the faction-progression contract")
 	_expect(executor.state.roster.size() == 1, "new game owns only permanent G-Man")
 	var permanent_ids: Array[String] = executor.state.roster_ids()
 	_expect(executor.state.formation.hero_ids() == permanent_ids, "new game deploys only its unlocked hero")
 
 	var hero_id := String(permanent_ids[0])
+	_expect_ok(_command("construct_facility", {
+		"facility_id": "research_lab",
+		"now_unix": 1000,
+		"grid_x": 2,
+		"grid_z": 1,
+	}), "player starts by constructing the research lab")
+	_expect_ok(_command("claim_facility_work", {"now_unix": 1005}), "opening research lab completes")
+	_expect_task("operation.lone_vanguard", false, 1)
 	var first_battle := _settle("stage_1_1", "victory", permanent_ids)
 	_expect_ok(first_battle, "first town settles")
 	_expect(executor.state.roster_ids() == permanent_ids, "battle never deletes heroes")
@@ -57,30 +65,13 @@ func _run_contract() -> void:
 	var high_wall_defeat := _settle("stage_1_4", "defeat", permanent_ids)
 	_expect_ok(high_wall_defeat, "Gman first high-wall attempt settles as defeat")
 	_expect_task("operation.research_reinforcements", false, 0)
-	_expect(int(executor.state.factory.facilities["research_lab"]) == 0, "high-wall defeat does not auto-build the research lab")
-	_expect(bool(executor.state.factory.eligible_facilities.get("research_lab", false)), "high-wall defeat grants research-lab eligibility")
-	var foundational_signal := _command("claim_foundational_signal", {})
-	_expect_ok(foundational_signal, "free signal ten-pull stores foundational design blueprints")
-	_expect(int(((foundational_signal.get("event", {}) as Dictionary).get("results", []) as Array).size()) == 10, "foundational signal reveals ten blueprint results")
-	_expect(executor.state.roster.size() == 1, "signal reception never creates a permanent hero")
-	_expect_task("operation.research_reinforcements", false, 1)
-
-	var construct_lab := _command("construct_facility", {
-		"facility_id": "research_lab",
-		"now_unix": 1010,
-		"grid_x": 2,
-		"grid_z": 1,
-	})
-	_expect_ok(construct_lab, "player actively constructs the eligible research lab")
-	_expect(int(executor.state.factory.facilities["research_lab"]) == 0, "research lab remains inactive while construction runs")
-	_expect_ok(_command("claim_facility_work", {"now_unix": 1015}), "player accepts the research lab after five seconds")
-	_expect(int(executor.state.factory.facilities["research_lab"]) == 1, "research lab becomes built only after timed construction")
+	_expect(int(executor.state.factory.facilities["research_lab"]) == 1, "opening research lab remains available after the high-wall defeat")
 	_expect_ok(_command("unlock_foundational_blueprint", {
 		"recipe_id": "ordinary.assault", "now_unix": 1015,
 	}), "research lab starts the assault design")
 	var assault_research := _command("claim_blueprint_research", {"now_unix": 1060})
 	_expect_ok(assault_research, "assault research creates the permanent hero")
-	_expect_task("operation.research_reinforcements", false, 2)
+	_expect_task("operation.research_reinforcements", false, 1)
 	_expect_ok(_command("unlock_foundational_blueprint", {
 		"recipe_id": "heavy.armored", "now_unix": 1060,
 	}), "research lab starts the armored design")
@@ -189,12 +180,11 @@ func _verify_late_onboarding_objective_reconciliation() -> void:
 	_expect(not bool(passed_wall.get("completed", true)), "research remains a real unfinished player action")
 
 	probe.state.onboarding["active_index"] = 3
-	(probe.state.onboarding["claimed"] as Dictionary)["reward.foundational_signal_ten"] = true
 	probe.state.factory.blueprints["ordinary.assault"] = true
 	probe.state.factory.blueprints["heavy.armored"] = true
 	var late_research := OnboardingService.snapshot(probe.state)
-	_expect(bool(late_research.get("completed", false)), "late research task completes from durable signal and researched designs")
-	_expect(int(late_research.get("progress", 0)) == 3, "durable signal and both research objectives reconcile")
+	_expect(bool(late_research.get("completed", false)), "late research task completes from durable researched designs")
+	_expect(int(late_research.get("progress", 0)) == 2, "both stage-earned research objectives reconcile")
 
 
 func _verify_independent_facility_collection() -> void:
@@ -334,7 +324,7 @@ func _verify_skill_research_contract() -> void:
 
 
 func _verify_objective_event_guards() -> void:
-	var probe: RefCounted = GameState.create_new(99, 1000)
+	var probe: RefCounted = GameState.create_new(99, 1000, false)
 	OnboardingService.apply_event(probe, {
 		"type": "battle_settled",
 		"battle_id": "future-boss",
@@ -343,6 +333,11 @@ func _verify_objective_event_guards() -> void:
 	})
 	var untouched := OnboardingService.snapshot(probe)
 	_expect(int(untouched.get("progress", -1)) == 0, "future operation events cannot skip the active operation")
+	OnboardingService.apply_event(probe, {
+		"type": "facility_constructed",
+		"facility_id": "research_lab",
+		"request_id": "opening-research-lab",
+	})
 	var opening_settlement := OnboardingService.apply_event(probe, {
 		"type": "battle_settled",
 		"battle_id": "opening-win",
@@ -408,7 +403,7 @@ func _verify_legacy_save_migration() -> void:
 	var service := GameService.new()
 	var status := service.bootstrap_with_manager(manager, 20260726, 200)
 	_expect(status == "created", "legacy contract is replaced before entering UI")
-	_expect(service.current_state().content_version == "toilet-factory-slg-v2", "migration creates active content version")
+	_expect(service.current_state().content_version == "toilet-factory-slg-v3-factions", "migration creates active faction content version")
 	_expect(service.current_state().roster.size() == 1, "replaced legacy contract starts with only permanent G-Man")
 	manager.delete_local_save()
 	service.free()

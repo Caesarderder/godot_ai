@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="OnboardingTaskDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="OnboardingTaskDefinition" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://game/scripts/content/onboarding_task_definition.gd" id="1"]
-[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/capture_1_1.tres" id="2"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/construct_research_lab.tres" id="2"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/capture_1_1.tres" id="3"]
 
 [resource]
 script = ExtResource("1")
 task_id = &"operation.lone_vanguard"
-title = "行动一：孤身先锋"
-lesson = "让 Gman 直接进攻第一座城镇，先体验自动推进与技能介入。"
-objectives = Array[Resource]([ExtResource("2")])
+title = "行动一：建设研究所"
+lesson = "先在基地建成研究所，再让 Gman 进攻第一座城镇；后续关卡获得的图纸会在这里转化为永久角色。"
+objectives = Array[Resource]([ExtResource("2"), ExtResource("3")])
 toilet_coins = 30

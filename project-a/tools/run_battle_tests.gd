@@ -378,17 +378,15 @@ func _test_configurable_boss_cannon_defaults() -> void:
 		int(default_session._boss_cannon_period_ticks) == BattleSessionScript.DEFAULT_BOSS_CANNON_PERIOD_TICKS,
 		"unconfigured stages keep the legacy 42-tick boss cannon period"
 	)
-	_check(int(default_session._boss_core_enrage_ticks) == 0, "unconfigured stages have no boss-core enrage")
+	_check(not default_config.has("boss_core_enrage_ticks"), "boss stages expose no timed defeat")
+	_check(not default_config.has("boss_core_required_power"), "boss stages expose no hidden power-gated defeat")
 	var configured_session: RefCounted = BattleSessionScript.new()
 	var configured := default_config.duplicate(true)
 	configured["boss_cannon_damage"] = 123
 	configured["boss_cannon_period_ticks"] = 17
-	configured["boss_core_enrage_ticks"] = 61
-	configured["boss_core_required_power"] = 999999
 	configured_session.start(_siege_heroes(), "stage_1_5", configured)
 	_check(int(configured_session._boss_cannon_damage) == 123, "stage config overrides boss cannon damage")
 	_check(int(configured_session._boss_cannon_period_ticks) == 17, "stage config overrides boss cannon period")
-	_check(int(configured_session._boss_core_enrage_ticks) == 61, "stage config enables boss-core enrage")
 
 
 func _test_opening_warning_turret_teaches_the_signal() -> void:
@@ -416,10 +414,14 @@ func _test_same_input_same_result() -> void:
 
 func _test_battle_has_no_time_limit() -> void:
 	var session: RefCounted = BattleSessionScript.new()
-	_start_standard_battle(session, _siege_heroes())
+	var config := StageCatalogScript.stage("stage_2_5")
+	config["boss_core_enrage_ticks"] = 1
+	config["boss_core_required_power"] = 999999
+	session.start(_siege_heroes(), "stage_2_5", config)
+	session._stage_index = 2
 	session.tick_index = 100000
 	session.advance_tick()
-	_check(not session.is_finished, "elapsed ticks never end a living battle")
+	_check(not session.is_finished, "elapsed ticks and legacy enrage config never end a living battle")
 	_check(not session.snapshot().has("max_ticks"), "battle snapshot exposes no attack countdown")
 
 

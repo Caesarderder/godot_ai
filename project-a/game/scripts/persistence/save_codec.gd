@@ -7,7 +7,7 @@ const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_gener
 const FactoryStateScript := preload("res://game/scripts/state/factory_state.gd")
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
-const CURRENT_SCHEMA_VERSION: int = 10
+const CURRENT_SCHEMA_VERSION: int = 11
 const GAME_KEYS: Array[String] = [
 	"schema_version", "content_version", "save_id", "run_seed", "revision",
 	"roster", "inventory", "formation", "economy", "factory", "camp", "quests", "pity",
@@ -117,7 +117,7 @@ static func decode(data: Variant) -> Dictionary:
 		return {"ok": false, "error": primitive_error}
 	if not dict.has("schema_version") or typeof(dict["schema_version"]) != TYPE_INT:
 		return {"ok": false, "error": "schema_version must be int"}
-	if not [5, 6, 7, 8, 9, CURRENT_SCHEMA_VERSION].has(int(dict["schema_version"])):
+	if not [5, 6, 7, 8, 9, 10, CURRENT_SCHEMA_VERSION].has(int(dict["schema_version"])):
 		return {"ok": false, "error": "unsupported schema_version; delete local save to start Gman campaign"}
 	if int(dict["schema_version"]) == 8:
 		var migration_input_error := _validate_v8_resource_migration_inputs(dict)
@@ -150,6 +150,7 @@ static func _upgrade_legacy_v5_factory_loop(data: Dictionary) -> Dictionary:
 			"recruit_draw_count": 0, "recruit_s_pity": 0, "recruit_a_pity": 0,
 			"recruit_target_guaranteed": false, "recruit_pool_id": "signal_standard_1",
 			"hero_data": {},
+			"hero_fragments": {},
 		}
 	elif not (upgraded["meta_progression"] as Dictionary).has("commander_claimed_levels"):
 		(upgraded["meta_progression"] as Dictionary)["commander_claimed_levels"] = {}
@@ -227,8 +228,10 @@ static func _upgrade_legacy_v5_factory_loop(data: Dictionary) -> Dictionary:
 		upgraded["achievements"] = {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}
 	if source_schema < 9:
 		upgraded = _migrate_v8_resources_to_v9(upgraded)
-	if source_schema < CURRENT_SCHEMA_VERSION:
+	if source_schema < 10:
 		upgraded = _migrate_v9_hero_stats_to_v10(upgraded)
+	if source_schema < CURRENT_SCHEMA_VERSION:
+		upgraded = _migrate_v10_factions_to_v11(upgraded)
 	return upgraded
 
 
@@ -303,7 +306,17 @@ static func _migrate_v9_hero_stats_to_v10(data: Dictionary) -> Dictionary:
 		hero["stat_remainders"] = {
 			"hp": 0, "attack": 0, "defense": 0, "speed_milli": 0, "crit_bp": 0,
 		}
+	migrated["schema_version"] = 10
+	return migrated
+
+
+static func _migrate_v10_factions_to_v11(data: Dictionary) -> Dictionary:
+	var migrated := data.duplicate(true)
+	var meta := (migrated.get("meta_progression", {}) as Dictionary).duplicate(true)
+	meta["hero_fragments"] = (meta.get("hero_fragments", {}) as Dictionary).duplicate(true)
+	migrated["meta_progression"] = meta
 	migrated["schema_version"] = CURRENT_SCHEMA_VERSION
+	migrated["content_version"] = "toilet-factory-slg-v3-factions"
 	return migrated
 
 
@@ -503,7 +516,7 @@ static func _validate_meta_progression_schema(value: Variant) -> String:
 		"missions", "mission_claims", "season_id", "season_merit", "pass_claimed_levels",
 		"achievement_progress", "achievement_claimed", "event_keys", "recruit_draw_count",
 		"recruit_s_pity", "recruit_a_pity", "recruit_target_guaranteed", "recruit_pool_id",
-		"hero_data",
+		"hero_data", "hero_fragments",
 	]
 	var key_error := _exact_keys(meta, keys, "meta_progression")
 	if not key_error.is_empty():
@@ -516,9 +529,20 @@ static func _validate_meta_progression_schema(value: Variant) -> String:
 			return "meta_progression.%s must be string" % key
 	if typeof(meta["recruit_target_guaranteed"]) != TYPE_BOOL:
 		return "meta_progression.recruit_target_guaranteed must be bool"
-	for key in ["commander_claimed_levels", "missions", "mission_claims", "pass_claimed_levels", "achievement_progress", "achievement_claimed", "event_keys", "hero_data"]:
+	for key in ["commander_claimed_levels", "missions", "mission_claims", "pass_claimed_levels", "achievement_progress", "achievement_claimed", "event_keys", "hero_data", "hero_fragments"]:
 		if typeof(meta[key]) != TYPE_DICTIONARY:
 			return "meta_progression.%s must be dictionary" % key
+	for archetype_id_value in (meta["hero_fragments"] as Dictionary):
+		if typeof(archetype_id_value) != TYPE_STRING:
+			return "meta_progression.hero_fragments keys must be strings"
+		var archetype_id := String(archetype_id_value)
+		if FactoryCatalogScript.recipe_for_archetype(archetype_id).is_empty():
+			return "meta_progression.hero_fragments contains unknown archetype %s" % archetype_id
+		if (
+			typeof((meta["hero_fragments"] as Dictionary)[archetype_id_value]) != TYPE_INT
+			or int((meta["hero_fragments"] as Dictionary)[archetype_id_value]) < 0
+		):
+			return "meta_progression.hero_fragments values must be non-negative integers"
 	return ""
 
 

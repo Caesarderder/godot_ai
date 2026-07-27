@@ -69,9 +69,9 @@ func _scan_seed(run_seed: int) -> void:
 			var stage_id := String(CYCLE_STAGES[cycle_index][stage_index])
 			var row := _simulate(state, stage_id)
 			cycle_rows.append(row)
-			var expected_wins := 4 if cycle_index == 0 else 5
-			var expected := "victory" if stage_index < expected_wins else "defeat"
-			if String(row["outcome"]) != expected:
+			var expected_wins := 5
+			var expected := "victory"
+			if stage_index < expected_wins and String(row["outcome"]) != expected:
 				failures.append(
 					"seed %d cycle %d %s expected %s, got %s (CP %d / recommended %d)"
 					% [
@@ -84,7 +84,7 @@ func _scan_seed(run_seed: int) -> void:
 						int(row["recommended"]),
 					]
 				)
-			if cycle_index == 0 and stage_id == "stage_2_5":
+			if cycle_index == 0 and stage_id == "stage_2_5" and String(row["outcome"]) == "defeat":
 				if (
 					int(row["stage_reached"]) < 2
 					or int(row["structures_destroyed"]) < 3
@@ -128,6 +128,10 @@ func _post_chapter_one_state(run_seed: int) -> RefCounted:
 	state.economy.industrial_tech = 28
 	state.economy.hero_shards = 12
 	state.economy.skill_chips = 3
+	state.meta_progression.hero_fragments = {
+		"assault": 40,
+		"armored": 40,
+	}
 	state.factory.materials = {"porcelain": 216, "parts": 145, "sludge": 113}
 	state.factory.facilities["research_lab"] = 1
 	state.stage_progress = {

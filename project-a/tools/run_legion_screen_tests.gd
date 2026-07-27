@@ -102,32 +102,52 @@ func _run() -> void:
 		"recruitment_unlocked": false,
 		"recruitment_progress": "指挥官 Lv2/4 · 关卡 1-5 未通关",
 		"foundational_signal": {
-			"unlocked": true,
-			"claimable": true,
+			"unlocked": false,
+			"claimable": false,
 			"claimed": false,
 		},
 	})
 	await process_frame
-	_check(_tree_has_text(legion, "所有信号结果只包含设计图纸"), "locked long-term recruitment preserves the blueprint-only contract")
+	_check(_tree_has_text(legion, "解锁信号招募后才开放免费十连"), "locked recruitment also keeps the free ten-pull locked")
 	var foundational_signal := legion.find_child("FoundationalSignalTenButton", true, false) as Button
-	_check(foundational_signal != null, "first-wall recovery exposes the free blueprint ten-pull in signal recruitment")
+	_check(foundational_signal == null, "free blueprint ten-pull is absent before signal recruitment unlocks")
 	legion.configure({
 		"tab": "recruit",
 		"recruitment_unlocked": true,
 		"recruit_tickets": 10,
 		"recruit_s_pity": 0,
 		"recruit_target_guaranteed": false,
-		"blueprint_data_copy": "重复图纸将自动转化为军团数据",
+		"blueprint_data_copy": "重复图纸将自动转化为型号专属碎片",
 		"recruit_results": [{
 			"rarity": "B",
-			"kind": "legion_data",
+			"kind": "hero_fragments",
 			"display_name": "冲锋马桶人",
-			"amount": 2,
+			"amount": 20,
 		}],
+		"recruit_focus": {
+			"archetype_id": "assault",
+			"hero_id": "",
+			"display_name": "冲锋马桶人",
+			"faction": "高速突袭",
+			"status": "图纸已获得 · 研发后角色永久入列",
+			"next_star_effect": "攻击会顺劈附近敌人",
+			"action": "open_research",
+			"action_label": "前往研究所 · 研发阵营核心",
+		},
 	})
 	await process_frame
-	_check(_tree_has_text(legion, "军团数据 +2"), "duplicate signal result projects the unified legion data")
+	_check(_tree_has_text(legion, "冲锋马桶人专属碎片 +20"), "duplicate signal result projects archetype-specific fragments")
 	_check(not _tree_has_text(legion, "设计数据"), "recruitment no longer projects blueprint data as a resource")
+	_check(_tree_has_text(legion, "阵营核心 · 高速突袭"), "recruit result identifies the faction core")
+	_check(_tree_has_text(legion, "2★质变：攻击会顺劈附近敌人"), "recruit result previews the qualitative star upgrade")
+	var recruit_focus_action := legion.find_child("RecruitFocusActionButton", true, false) as Button
+	_check(
+		recruit_focus_action != null and recruit_focus_action.size.y >= 48.0,
+		"recruit result exposes a touch-ready dominant next action"
+	)
+	if recruit_focus_action != null:
+		recruit_focus_action.pressed.emit()
+	_check(request["action"] == "open_research", "recruit result routes directly to research")
 	legion.configure({
 		"tab": "codex",
 		"first_formation": {"active": false},
@@ -198,6 +218,9 @@ func _run() -> void:
 			"skill_effect": "为全队建立吸收伤害的装甲屏障",
 			"skill_timing": "敌方集火前释放",
 			"next_growth": "升至 2★ 解锁职责被动",
+			"faction": "钢铁防线",
+			"fragment_balance": 1,
+			"next_star_effect": "炮击格挡、冲门与反震",
 			"welfare_star_core_count": 1,
 			"auto_skill": false,
 			"level_resource_context": {
@@ -211,16 +234,16 @@ func _run() -> void:
 					"name": "StarResources_hero_armored",
 					"title": "普通升至 2★ · 当前/需要 → 操作后",
 					"items": [
-						{"id": "hero_shards", "name": "军团数据", "short_name": "军团数据", "current": 1, "required": 4},
+						{"id": "hero_fragments", "name": "装甲冲城马桶人专属碎片", "short_name": "专属碎片", "current": 1, "required": 30},
 					],
 				},
 				"welfare_star_resource_context": {
 					"name": "WelfareStarResources_hero_armored",
-					"title": "黑金核心升至 2★ · 军团数据本次免除",
+					"title": "黑金核心升至 2★ · 专属碎片本次免除",
 					"items": [
-						{"id": "hero_shards", "name": "军团数据", "short_name": "军团数据", "current": 1, "required": 4, "waived": true},
+						{"id": "hero_fragments", "name": "装甲冲城马桶人专属碎片", "short_name": "专属碎片", "current": 1, "required": 30, "waived": true},
 					],
-					"note": "核心替代本次军团数据；工业材料不参与升星。",
+					"note": "核心替代本次型号碎片；工业材料不参与升星。",
 				},
 			"skill_resource_context": {
 				"name": "SkillResources_hero_armored",
@@ -327,8 +350,8 @@ func _run() -> void:
 		"roster leaves the fixed core-resource summary to the App Shell top bar"
 	)
 	_check(_tree_has_text(legion, "金币 120/60 → 60"), "level context projects the post-upgrade balance")
-	_check(_tree_has_text(legion, "军团数据 1/4 · 缺3"), "star context exposes the exact resource shortage")
-	_check(_tree_has_text(legion, "军团数据 1/4 · 免"), "welfare star path marks the data cost as replaced")
+	_check(_tree_has_text(legion, "专属碎片 1/30 · 缺29"), "star context exposes the exact archetype-fragment shortage")
+	_check(_tree_has_text(legion, "专属碎片 1/30 · 免"), "welfare star path marks the fragment cost as replaced")
 	_check(
 		not _tree_has_text(legion, "所有马桶人共用"),
 		"hero detail does not duplicate quote-derived star cost with a hardcoded summary"
@@ -341,8 +364,8 @@ func _run() -> void:
 	_check(not _tree_has_text(legion, "招募券"), "roster omits resources unrelated to growth decisions")
 	var welfare_core := legion.find_child("WelfareStarCore_hero_armored", true, false) as Button
 	_check(
-		welfare_core != null and welfare_core.text.contains("本次军团数据全免"),
-		"one-star hero card exposes the contraband data-waiver action"
+		welfare_core != null and welfare_core.text.contains("本次专属碎片全免"),
+		"one-star hero card exposes the contraband fragment-waiver action"
 	)
 	for action_spec in [
 		["upgrade", "CultivationAction_upgrade"],

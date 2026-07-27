@@ -6,7 +6,10 @@
   "renderer": "GL Compatibility",
   "platforms": ["web", "mobile", "desktop"],
   "entry_strategy": "Instantiate game-owned wrapper scenes below ToiletUnitView.BodyPivot; wrappers own imported GLB transforms and protect gameplay from importer subtree changes",
-  "runtime_wrapper_directory": "res://game/scenes/actors/ally_models",
+  "runtime_wrapper_directories": [
+    "res://game/scenes/actors/ally_models",
+    "res://game/scenes/actors/enemy_models"
+  ],
   "source_assets": [
     {
       "asset_id": "3d-model.modular-kits.project-a-porcelain-raider-kit.001",
@@ -16,6 +19,13 @@
     }
   ],
   "files": [
+    {
+      "archetype": "camera_enemy",
+      "path": "models/porcelain-raider-cameraman-v001.glb",
+      "sha256": "fdd99b31de3ac0bc64777fe91077d172fdba469c5136bed02dec304a739f8fed",
+      "triangles": 876,
+      "license_status": "original-project-asset"
+    },
     {
       "archetype": "assault",
       "path": "models/porcelain-raider-assault-v001.glb",

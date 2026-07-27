@@ -57,9 +57,8 @@ func _test_war_readiness_report() -> void:
 	state.attempt_counters["stage_1_4"] = 1
 	state.factory.eligible_facilities["research_lab"] = true
 	var known_wall := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
-	_eq(String((known_wall.get("next_action", {}) as Dictionary).get("id", "")), "recruit", "known 1-4 wall routes to the signal page before research")
-	_check(String((known_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("基础图纸十连"), "known 1-4 wall names the first executable signal recovery")
-	state.onboarding["claimed"]["reward.foundational_signal_ten"] = true
+	_eq(String((known_wall.get("next_action", {}) as Dictionary).get("id", "")), "research", "known 1-4 wall routes to the authored research recovery")
+	_check(String((known_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("建造研究所"), "known 1-4 wall names the first executable research recovery")
 	state.factory.discovered_blueprints["ordinary.assault"] = true
 	state.factory.discovered_blueprints["heavy.armored"] = true
 	var designs_owned := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
@@ -158,7 +157,10 @@ func _test_permanent_upgrade_contract() -> void:
 func _test_star_quote_contract() -> void:
 	var state: RefCounted = GameStateScript.create_new(20260727, 1000, false)
 	var hero: RefCounted = state.roster[0]
-	state.economy.hero_shards = 4
+	var fragment_cost := int(
+		(LogisticsServiceScript.STAR_COSTS[String(hero.aptitude_id)] as Dictionary)[2]
+	)
+	state.meta_progression.hero_fragments[String(hero.archetype_id)] = fragment_cost
 	state.economy.skill_chips = 0
 	state.factory.materials = {"porcelain": 0, "parts": 0, "sludge": 0}
 	var normal_quote := LogisticsServiceScript.star_upgrade_quote(state, String(hero.hero_id))
@@ -166,14 +168,14 @@ func _test_star_quote_contract() -> void:
 	_check(bool(normal_quote.get("ok", false)), "normal star quote depends on hero data instead of factory materials")
 	_check(bool(waived_quote.get("ok", false)), "welfare star quote replaces the hero-data cost")
 	_eq(
-		(waived_quote.get("cost", {}) as Dictionary).get("hero_shards", -1),
+		(waived_quote.get("cost", {}) as Dictionary).get("hero_fragments", -1),
 		0,
-		"welfare star quote charges no legion data"
+		"welfare star quote charges no character-specific fragments"
 	)
 	_eq(
-		(waived_quote.get("waived_cost", {}) as Dictionary).get("hero_shards", -1),
-		4,
-		"welfare star quote exposes the exact replaced legion-data cost"
+		(waived_quote.get("waived_cost", {}) as Dictionary).get("hero_fragments", -1),
+		fragment_cost,
+		"welfare star quote exposes the exact replaced character-fragment cost"
 	)
 	var materials_before: Dictionary = state.factory.materials.duplicate(true)
 	var upgraded := LogisticsServiceScript.upgrade_star(state, String(hero.hero_id))

@@ -66,8 +66,8 @@ func _initialize() -> void:
 			"work_type": "upgrade",
 			"started_at_unix": 3000,
 			"completes_at_unix": 3060,
-		}) == 3060,
-		"facility upgrades retain their authored duration"
+		}) == 3005,
+		"legacy facility upgrades adopt the five-second debug contract"
 	)
 	var decoded := SaveCodecScript.decode(state.to_dict())
 	_expect(bool(decoded.get("ok", false)), "placement survives strict save decoding")

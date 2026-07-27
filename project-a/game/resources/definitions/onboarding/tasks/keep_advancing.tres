@@ -7,6 +7,6 @@
 [resource]
 script = ExtResource("1")
 task_id = &"operation.keep_advancing"
-title = "行动二：压力升级"
-lesson = "连续突破远程守军与轻炮预警；出战积累角色经验，胜利获得金币与成长战果。"
+title = "行动二：夺取角色图纸"
+lesson = "攻克 1-2 获得冲锋马桶人图纸，攻克 1-3 获得装甲马桶人图纸；图纸入库后回研究所研发。"
 objectives = Array[Resource]([ExtResource("2"), ExtResource("3")])

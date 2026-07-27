@@ -43,6 +43,18 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	var clock := 1000
 	var battle_seconds := 0
 
+	var construction := _command(executor, "construct_facility", {
+		"facility_id": "research_lab",
+		"now_unix": clock,
+		"grid_x": 2,
+		"grid_z": 1,
+	}, clock)
+	_expect_ok(run_seed, construction, "research lab construction starts at the beginning")
+	var construction_done := int((construction.get("event", {}) as Dictionary).get("completes_at_unix", clock))
+	clock = construction_done
+	_expect_ok(run_seed, _command(executor, "claim_facility_work", {"now_unix": clock}, clock), "opening research lab completes")
+	clock += INTERACTION_SECONDS
+
 	var opening := _battle_and_settle(executor, "stage_1_1", clock)
 	clock += int(opening.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(opening.get("seconds", 0))
@@ -58,22 +70,6 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	clock += int(wall.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(wall.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_4 first attempt", wall, "defeat")
-	var foundational_signal := _command(executor, "claim_foundational_signal", {}, clock)
-	_expect_ok(run_seed, foundational_signal, "foundational signal stores ten design cards")
-	_check(run_seed, executor.state.roster.size() == 1, "signal reception does not create heroes")
-	clock += INTERACTION_SECONDS
-
-	var construction := _command(executor, "construct_facility", {
-		"facility_id": "research_lab",
-		"now_unix": clock,
-		"grid_x": 2,
-		"grid_z": 1,
-	}, clock)
-	_expect_ok(run_seed, construction, "research lab construction starts without injected currency")
-	var construction_done := int((construction.get("event", {}) as Dictionary).get("completes_at_unix", clock))
-	clock = construction_done
-	_expect_ok(run_seed, _command(executor, "claim_facility_work", {"now_unix": clock}, clock), "research lab completes")
-	clock += INTERACTION_SECONDS
 
 	var researched_hero_ids: Dictionary = {}
 	for recipe_id in ["ordinary.assault", "heavy.armored"]:

@@ -137,7 +137,7 @@ Immutable BattleResult
 - `EPHEMERAL`：导航、动画、战斗表现 Tick、详情预览，不进入 `GameState`。
 
 当前存档仍使用兼容文件名 `user://save_v1.json`，内部 schema 已为 8，内容版本为
-`toilet-factory-slg-v2`；v5/v6/v7 可迁移，损坏存档由主备恢复路径处理。实现严格 JSON、2 MiB
+`toilet-factory-slg-v3-factions`；v5–v10 可迁移至 schema v11，损坏存档由主备恢复路径处理。实现严格 JSON、2 MiB
 导入上限、主档/备份恢复、新档持久化、浏览器持久性提示、JSON 下载，以及同一 schema 管线下的
 预览和二次确认恢复。设置另存于 `user://settings.cfg`；PWA 缓存不能替代玩家存档。
 

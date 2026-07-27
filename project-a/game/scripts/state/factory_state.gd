@@ -21,7 +21,7 @@ var blueprint_research: Dictionary = {}
 var production_queue: Array[Dictionary] = []
 var next_sequence: int = 1
 var next_hero_sequence: int = 2
-var eligible_facilities: Dictionary = {}
+var eligible_facilities: Dictionary = {"research_lab": true}
 var facilities: Dictionary = {
 	"command_center": 1,
 	"porcelain_plant": 1,
@@ -61,7 +61,8 @@ static func create_starting(include_built_facilities: bool = true) -> FactorySta
 			"research_lab": 0,
 		}
 		factory.facility_placements = {"command_center": [0, -1]}
-	# 开局没有可研发图纸；首批设计只在 1-4 首败后的信号招募中出现。
+	# 新档先建设研究所；首批两张设计图纸分别由 1-2、1-3 首通获得。
+	factory.eligible_facilities = {"research_lab": true}
 	# v9 将工业库存归并到 porcelain 兼容槽；parts/sludge 只保留旧存档结构。
 	factory.materials = {"porcelain": 112, "parts": 0, "sludge": 0}
 	factory.discovered_blueprints = {}

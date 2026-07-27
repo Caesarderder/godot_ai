@@ -3,6 +3,7 @@ extends RefCounted
 
 const QuestCatalogScript := preload("res://game/scripts/domain/quest/quest_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
 
 static func refresh_quests(state: RefCounted) -> Dictionary:
@@ -212,7 +213,12 @@ static func _grant_reward(state: RefCounted, reward: Dictionary) -> void:
 			bool(state.factory.discovered_blueprints.get(blueprint_id, false))
 			or bool(state.factory.blueprints.get(blueprint_id, false))
 		):
-			state.economy.hero_shards += 10
+			var archetype_id := String(
+				FactoryCatalogScript.recipe(blueprint_id).get("archetype_id", "")
+			)
+			state.meta_progression.hero_fragments[archetype_id] = (
+				int(state.meta_progression.hero_fragments.get(archetype_id, 0)) + 10
+			)
 		else:
 			state.factory.discovered_blueprints[blueprint_id] = true
 

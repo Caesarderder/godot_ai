@@ -61,12 +61,12 @@ func _run() -> void:
 	)
 	var research := Catalog.task_view("operation.research_reinforcements")
 	_check(
-		String((research["objectives"] as Array)[0].get("target", "")) == "legion",
-		"forced loss routes to the foundational signal before research"
+		String((research["objectives"] as Array)[0].get("target", "")) == "research",
+		"the reinforcement step routes stage-earned blueprints directly to research"
 	)
 	_check(
-		(research["objectives"] as Array).size() == 3,
-		"signal reception and two deterministic blueprint researches are distinct goals"
+		(research["objectives"] as Array).size() == 2,
+		"the two deterministic stage blueprints are distinct research goals"
 	)
 	var growth := Catalog.task_view("operation.choose_growth")
 	_check(

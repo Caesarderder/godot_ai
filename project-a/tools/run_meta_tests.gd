@@ -84,8 +84,8 @@ func _eq(actual: Variant, expected: Variant, message: String) -> void:
 
 func _test_new_game_contract() -> void:
 	var state := GameStateScript.create_new(12345, 100)
-	_eq(state.schema_version, 10, "new game uses the five-stat schema v10 envelope")
-	_eq(state.content_version, "toilet-factory-slg-v2", "new game uses the revised permanent-legion SLG contract")
+	_eq(state.schema_version, 11, "new game uses the character-fragment schema v11 envelope")
+	_eq(state.content_version, "toilet-factory-slg-v3-factions", "new game uses the faction-progression contract")
 	_eq(state.roster.size(), 1, "new game grants only permanent G-Man")
 	_eq(state.economy.toilet_coins, 250, "new game starts with 250 toilet coins")
 	_eq(state.economy.toilet_gems, 0, "new game starts without premium currency")
@@ -1116,7 +1116,7 @@ func _test_save_export_import_contract() -> void:
 	var incompatible_text := JSON.stringify(incompatible)
 	var rejected_preview: Dictionary = game_node.preview_local_save_import(manager, incompatible_text)
 	_eq(rejected_preview.get("error"), "SAVE_IMPORT_INCOMPATIBLE_CONTENT", "game rejects a schema-valid backup from another content contract")
-	_eq(game_node.current_state().content_version, "toilet-factory-slg-v2", "rejected content import leaves the live state unchanged")
+	_eq(game_node.current_state().content_version, "toilet-factory-slg-v3-factions", "rejected content import leaves the live state unchanged")
 	game_node.free()
 	for suffix in ["", ".tmp", ".bak"]:
 		if FileAccess.file_exists(path + suffix):

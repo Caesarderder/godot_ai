@@ -642,7 +642,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		not bool(instance.call("_requires_landscape_gate", Vector2(1280, 540))),
 		"ultrawide landscape remains supported"
 	)
-	_ok(game_autoload != null and String(game_autoload.current_state().content_version) == "toilet-factory-slg-v2", "UI boots the revised permanent-legion contract")
+	_ok(game_autoload != null and String(game_autoload.current_state().content_version) == "toilet-factory-slg-v3-factions", "UI boots the faction-progression contract")
 	_ok(instance.find_child("TitlePrimaryButton", true, false) != null, "SLG shell boots into a dedicated title screen")
 	_ok(instance.find_child("TitleSettingsButton", true, false) != null, "title screen exposes settings before entering the campaign")
 	_ok(instance.find_child("TitleHelpButton", true, false) != null, "title screen exposes gameplay help before entering the campaign")
@@ -681,7 +681,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(help_gameplay_scroll != null and help_info_scroll != null, "both help columns scroll independently on short screens")
 	_ok(_tree_has_text(instance, "选择建筑") and _tree_has_text(instance, "100%"), "help explains construction and manual battle skills")
 	_ok(
-		_tree_has_text(instance, "信号招募接收冲锋与装甲图纸")
+		_tree_has_text(instance, "首次攻克 1-2、1-3")
 			and _tree_has_text(instance, "冲锋二星")
 			and _tree_has_text(instance, "装甲二星")
 			and _tree_has_text(instance, "完全恢复"),
@@ -776,11 +776,32 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_return_from_settings")
 	await _wait_frames(3)
 	var base_camera_before_orbit := (instance.get_node_or_null("WorldHost/FactoryCamera") as Camera3D).position
+	var command_marker_before_orbit := instance.find_child("FactoryMarker_command_center", true, false) as Button
+	var command_marker_position_before_orbit := (
+		command_marker_before_orbit.position
+		if command_marker_before_orbit != null
+		else Vector2.ZERO
+	)
 	instance.call("_begin_factory_pointer", Vector2(180, 180), 0)
 	instance.call("_drag_factory_pointer", Vector2(240, 180), Vector2(60, 0))
 	var base_camera_after_orbit := (instance.get_node_or_null("WorldHost/FactoryCamera") as Camera3D).position
 	_ok(base_camera_after_orbit != base_camera_before_orbit, "factory camera orbits outside construction mode")
 	_ok(absf(float(instance.get("factory_camera_yaw"))) > 0.1, "horizontal dragging changes the persistent factory orbit angle")
+	var command_marker_after_orbit := instance.find_child("FactoryMarker_command_center", true, false) as Button
+	var command_building_after_orbit := instance.get_node_or_null("WorldHost/FactoryBuilding_command_center") as Node3D
+	if command_marker_after_orbit != null and command_building_after_orbit != null:
+		var orbit_camera := instance.get_node_or_null("WorldHost/FactoryCamera") as Camera3D
+		var expected_marker_center := orbit_camera.unproject_position(
+			command_building_after_orbit.global_position + Vector3(0.0, 3.25, 0.0)
+		)
+		_ok(
+			command_marker_after_orbit.position != command_marker_position_before_orbit,
+			"factory building marker moves when the camera rotates"
+		)
+		_ok(
+			command_marker_after_orbit.get_global_rect().has_point(expected_marker_center),
+			"factory building marker remains projected over its building after camera rotation"
+		)
 	instance.call("_drag_factory_pointer", Vector2(240, 800), Vector2(0, 1000))
 	_ok(is_equal_approx(float(instance.get("factory_camera_pitch")), deg_to_rad(68.0)), "vertical factory orbit clamps at the safe maximum pitch")
 	instance.call("_reset_factory_pointer")
@@ -982,10 +1003,13 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		restored_mission_tab.pressed.emit()
 		await _wait_frames(3)
 	_ok(_tree_has_text(instance, "前线来电"), "fresh save presents onboarding as an in-world transmission")
-	_ok(_tree_has_text(instance, "使用 Gman 攻克 1-1"), "fresh-save mission starts with the player's first attack")
+	_ok(_tree_has_text(instance, "在基地选址并建成研究所"), "fresh-save mission starts with research-lab construction")
 	_ok(not _tree_has_text(instance, "收取一次工厂产出"), "fresh-save mission does not start with factory chores")
 	_ok(not _tree_has_text(instance, "选择并升级一名主力"), "fresh-save mission does not require growth before combat")
-	_ok(_tree_has_button(instance, "立即进攻 1-1"), "operation CTA routes directly to the opening attack")
+	_ok(
+		_tree_has_button(instance, "先建设研究所") or _tree_has_button(instance, "立即进攻 1-1"),
+		"operation CTA routes to construction first, or to 1-1 when the lab is already built"
+	)
 	var intel_button := instance.find_child("OpenWarIntelligenceButton", true, false) as Button
 	_ok(intel_button != null, "factory mission panel exposes the unified war intelligence")
 	if intel_button != null:
@@ -1010,7 +1034,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_select_stage_card", "stage_1_4")
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "fourth town clearly marks the first growth wall")
-	_ok(_tree_has_text(instance, "信号招募接收基础图纸"), "first wall reconnaissance names the actual signal recovery action")
+	_ok(_tree_has_text(instance, "1-2、1-3") and _tree_has_text(instance, "图纸"), "first wall reconnaissance names the stage-earned blueprint recovery")
 	_ok(_tree_has_text(instance, "两名永久援军"), "first wall reconnaissance connects researched permanent roles to the counterattack")
 	_ok(_tree_has_text(instance, "图纸") and _tree_has_text(instance, "研究所"), "first wall reconnaissance explains the blueprint research path")
 	_ok(_tree_has_text(instance, "下一步 · 先试探炮台防线"), "first wall reconnaissance prioritizes discovery over premature growth")
@@ -1036,14 +1060,14 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		if (candidate as Button).is_visible_in_tree():
 			known_wall_preparation = candidate as Button
 			break
-	_ok(known_wall_preparation != null and known_wall_preparation.text == "接收免费基础图纸十连", "known first wall advances to the signal recruitment recovery")
+	_ok(known_wall_preparation != null and known_wall_preparation.text == "建造研究所", "known first wall returns to the missing research-lab construction")
 	if known_wall_preparation != null:
 		known_wall_preparation.pressed.emit()
 		await _wait_frames(3)
 	_ok(
-		String(instance.get("legion_tab")) == "recruit"
-			and instance.find_child("LegionScreen", true, false) != null,
-		"map recovery action opens signal recruitment before laboratory construction"
+		instance.find_child("FactoryScreen", true, false) != null
+			or instance.find_child("BaseScreen", true, false) != null,
+		"map recovery action returns to the factory for laboratory construction"
 	)
 	instance.call("_show_map")
 	await _wait_frames(2)
@@ -1223,7 +1247,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(_tree_has_text(instance, "军团数据 +"), "boss result exposes the unified legion-data reward")
 	_ok(_tree_has_text(instance, "路线验证"), "boss result closes the chosen growth mastery loop")
 	_ok(_tree_has_text(instance, "首章解锁 · 第2章战线"), "boss result exposes the actual next campaign unlock")
-	_ok(_tree_has_button(instance, "开启第2章 · 侦察 2-1"), "boss result exposes one next-chapter CTA")
+	_ok(_tree_has_button(instance, "领取阵营起手十连"), "boss result exposes the faction-starter CTA")
 	instance.call("_show_settlement_error", "存储空间不足")
 	await _wait_frames(2)
 	_ok(instance.find_child("BattleSettlementErrorPanel", true, false) != null, "failed durable settlement opens a blocking recovery screen")

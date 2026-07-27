@@ -4,6 +4,9 @@ extends RefCounted
 const ObjectiveHurdleCatalogScript := preload("res://game/scripts/content/objective_hurdle_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 const WarReadinessReportScript := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
+const ResearchBreakthroughServiceScript := preload(
+	"res://game/scripts/domain/recruitment/research_breakthrough_service.gd"
+)
 
 const CHAPTER_ONE_STAGE_IDS: Array[String] = [
 	"stage_1_1",
@@ -30,13 +33,22 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 	var chapter_one_cleared := _count_cleared(cleared, CHAPTER_ONE_STAGE_IDS)
 	var campaign_cleared := _count_cleared(cleared, StageCatalogScript.ACT1_STAGE_IDS)
 	var onboarding_finished := bool(onboarding.get("finished", false))
+	var faction_recruit_pending := (
+		onboarding_finished
+		and cleared.has("stage_1_5")
+		and not ResearchBreakthroughServiceScript.is_faction_claimed(state)
+	)
 	var hierarchy := _onboarding_hierarchy(onboarding, cleared)
 	if onboarding_finished:
-		hierarchy = _next_chapter_hierarchy(
-			stage_id,
-			stage_config,
-			needs_growth,
-			challenge_gap
+		hierarchy = (
+			_faction_recruit_hierarchy()
+			if faction_recruit_pending
+			else _next_chapter_hierarchy(
+				stage_id,
+				stage_config,
+				needs_growth,
+				challenge_gap
+			)
 		)
 	return {
 		"stage_id": stage_id,
@@ -48,7 +60,13 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 		"campaign_cleared": campaign_cleared,
 		"chapter_one_complete": chapter_one_cleared >= CHAPTER_ONE_STAGE_IDS.size(),
 		"campaign_complete": campaign_cleared >= StageCatalogScript.ACT1_STAGE_IDS.size(),
-		"title": _title_view(
+		"title": (
+			{
+				"primary_label": "返回指挥室",
+				"objective": "下一行动 · 领取阵营起手十连",
+			}
+			if faction_recruit_pending
+			else _title_view(
 			cleared.is_empty(),
 			campaign_cleared >= StageCatalogScript.ACT1_STAGE_IDS.size(),
 			chapter_one_cleared,
@@ -56,10 +74,13 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 			report,
 			needs_growth,
 			challenge_gap
+			)
 		),
 		"hierarchy": hierarchy,
 		"factory_task": (
-			_next_chapter_factory_task(
+			_faction_recruit_factory_task()
+			if faction_recruit_pending
+			else _next_chapter_factory_task(
 				stage_id,
 				stage_config,
 				needs_growth,
@@ -132,6 +153,46 @@ static func _onboarding_hierarchy(onboarding: Dictionary, cleared: Array) -> Dic
 		"cta_label": String(onboarding.get("cta_label", "继续")),
 		"target": String(onboarding.get("target", "expedition")),
 		"stage_id": String(onboarding.get("stage_id", "")),
+	}
+
+
+static func _faction_recruit_hierarchy() -> Dictionary:
+	return {
+		"macro": "形成自己的马桶人阵营",
+		"medium": "第二阶段：接收阵营起手信号",
+		"small": "领取免费十连，选择优先研发的新马桶人",
+		"hurdle": {
+			"scale": "中目标",
+			"title": "军团扩编",
+			"reason": "首章基础三人已经证明核心职责；下一步由抽取结果形成不同玩家的阵营路线。",
+			"recovery": "免费十连不消耗招募券，并保证至少一名新型号和一次对应专属碎片。",
+		},
+		"finished": true,
+		"actionable": true,
+		"cta_label": "领取阵营起手十连",
+		"target": "legion",
+		"stage_id": "stage_2_1",
+	}
+
+
+static func _faction_recruit_factory_task() -> Dictionary:
+	return {
+		"finished": false,
+		"onboarding_finished": true,
+		"title": "阵营成形：接收起手信号",
+		"lesson": "免费十连保证新型号与其重复碎片；先看抽取结果，再决定研发和升星路线。",
+		"cta_label": "领取阵营起手十连",
+		"target": "legion",
+		"stage_id": "stage_2_1",
+		"progress": 0,
+		"target_value": 1,
+		"completed": false,
+		"claimed": true,
+		"objectives": [{
+			"id": "claim_faction_starter",
+			"label": "领取免费十连，选择优先研发的新马桶人",
+			"completed": false,
+		}],
 	}
 
 

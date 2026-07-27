@@ -10,7 +10,7 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	var state: RefCounted = GameStateScript.create_new(20260726, 100)
-	_check(int(state.schema_version) == 10, "new campaign uses schema v10")
+	_check(int(state.schema_version) == 11, "new campaign uses schema v11")
 	_check(String(state.roster[0].archetype_id) == "gman", "starter legion is led by permanent G-Man")
 	_check(state.roster.size() == 1, "new campaign starts with G-Man as its only unlocked hero")
 	_check(state.factory.blueprints.size() == 4, "hidden compatibility data preserves four baseline model blueprints")

@@ -149,10 +149,10 @@ func _test_schema_v6_round_trip() -> void:
 	var state: RefCounted = GameStateScript.create_new(904, 100)
 	state.economy.hero_shards = 12
 	var decoded: Dictionary = SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(state))
-	_expect(bool(decoded.get("ok", false)), "schema v10 save should round-trip")
+	_expect(bool(decoded.get("ok", false)), "schema v11 save should round-trip")
 	if bool(decoded.get("ok", false)):
 		var loaded: RefCounted = decoded["state"]
-		_expect(int(loaded.schema_version) == 10, "round-trip should preserve schema v10")
+		_expect(int(loaded.schema_version) == 11, "round-trip should preserve schema v11")
 		_expect(int(loaded.economy.hero_shards) == 12, "round-trip should preserve legion data")
 
 
@@ -268,7 +268,7 @@ func _test_legacy_v5_migrates_to_v6() -> void:
 	_expect(bool(migrated.get("ok", false)), "legacy schema v5 should migrate instead of forcing save deletion")
 	if bool(migrated.get("ok", false)):
 		var state: RefCounted = migrated["state"]
-		_expect(int(state.schema_version) == 10, "legacy migration should produce schema v10")
+		_expect(int(state.schema_version) == 11, "legacy migration should produce schema v11")
 		_expect(int(state.economy.toilet_coins) == 321, "legacy gold should convert to toilet coins")
 
 

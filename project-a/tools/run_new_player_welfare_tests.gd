@@ -105,21 +105,21 @@ func _test_claim_open_and_core_contract() -> void:
 	)
 	var hero: RefCounted = HeroGeneratorScript.generate_archetype(20260727, 2, "armored", "guardian")
 	state.roster.append(hero)
-	state.economy.hero_shards = 0
+	state.meta_progression.hero_fragments["armored"] = 0
 	state.factory.materials = {"porcelain": 0, "parts": 0, "sludge": 0}
 	var normal_quote := LogisticsServiceScript.star_upgrade_quote(state, String(hero.hero_id))
 	var welfare_quote := LogisticsServiceScript.star_upgrade_quote(state, String(hero.hero_id), true)
-	_eq(normal_quote.get("error", ""), "NOT_ENOUGH_HERO_SHARDS", "normal quote keeps the legion-data gate")
-	_ok(bool(welfare_quote.get("ok", false)), "welfare quote replaces only the legion-data gate")
+	_eq(normal_quote.get("error", ""), "NOT_ENOUGH_HERO_FRAGMENTS", "normal quote requires matching character fragments")
+	_ok(bool(welfare_quote.get("ok", false)), "welfare quote replaces only the matching-fragment gate")
 	_eq(
-		(welfare_quote.get("cost", {}) as Dictionary).get("hero_shards", -1),
+		(welfare_quote.get("cost", {}) as Dictionary).get("hero_fragments", -1),
 		0,
-		"welfare quote charges no legion data"
+		"welfare quote charges no character fragments"
 	)
 	_eq(
 		(welfare_quote.get("waived_cost", {}) as Dictionary),
-		{"hero_shards": 4},
-		"welfare quote marks the exact legion-data cost as replaced"
+		{"hero_fragments": 30},
+		"welfare quote marks the exact A-rarity fragment cost as replaced"
 	)
 	var materials_before_core: Dictionary = state.factory.materials.duplicate(true)
 	var core_result := _execute(
@@ -133,19 +133,19 @@ func _test_claim_open_and_core_contract() -> void:
 	state = executor.state
 	hero = state.hero_by_id(String(hero.hero_id))
 	_eq(hero.star, 2, "core upgrades exactly from one star to two stars")
-	_eq(state.economy.hero_shards, 0, "core does not require legion data")
+	_eq(int(state.meta_progression.hero_fragments.get("armored", 0)), 0, "core does not require character fragments")
 	_eq(state.factory.materials, materials_before_core, "star growth never spends industrial materials")
 	var event := core_result.get("event", {}) as Dictionary
 	_eq(event.get("source", ""), "new_player_welfare", "core event exposes its welfare source")
 	_eq(
-		(event.get("cost", {}) as Dictionary).get("hero_shards", -1),
+		(event.get("cost", {}) as Dictionary).get("hero_fragments", -1),
 		0,
-		"core event records zero charged legion data"
+		"core event records zero charged character fragments"
 	)
 	_eq(
 		(event.get("waived_cost", {}) as Dictionary),
-		{"hero_shards": 4},
-		"core event exposes the exact replaced legion-data cost"
+		{"hero_fragments": 30},
+		"core event exposes the exact replaced A-rarity fragment cost"
 	)
 	_eq(
 		NewPlayerWelfareServiceScript.item_balance(state, NewPlayerWelfareServiceScript.STAR_CORE_ITEM_ID),

@@ -270,6 +270,8 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			return SignalRecruitServiceScript.recruit(candidate, int(data["count"]), String(data["target_archetype"]))
 		"claim_foundational_signal":
 			return ResearchBreakthroughServiceScript.claim(candidate)
+		"claim_faction_signal":
+			return ResearchBreakthroughServiceScript.claim_faction_ten(candidate)
 		"start_production":
 			return FactoryService.start_production(candidate, String(data["recipe_id"]), int(data["now_unix"]))
 		"unlock_foundational_blueprint":
@@ -659,6 +661,8 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 			return ""
 		"claim_foundational_signal":
 			return _exact_keys(data, [], "claim_foundational_signal")
+		"claim_faction_signal":
+			return _exact_keys(data, [], "claim_faction_signal")
 		"start_production":
 			var start_error := _exact_keys(data, ["recipe_id", "now_unix"], "start_production")
 			if not start_error.is_empty():
@@ -814,6 +818,8 @@ func _unlock_campaign_blueprint(candidate: RefCounted, stage_id: String, already
 	if already_cleared:
 		return {}
 	var unlocks := {
+		"stage_1_2": "ordinary.assault",
+		"stage_1_3": "heavy.armored",
 		"stage_2_5": "flying.bomber",
 		"stage_3_5": "heavy.saw",
 	}

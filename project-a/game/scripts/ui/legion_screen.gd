@@ -327,12 +327,12 @@ func _recruit_panel() -> Control:
 	var foundational := _view.get("foundational_signal", {}) as Dictionary
 	if bool(foundational.get("unlocked", false)):
 		panel.add_child(_label(
-			"首批信号 · 10 张 B/A 级基础设计图纸 · 保证包含冲锋与装甲设计",
+			"阵营起手十连 · 真正参与 A/S 保底 · 新图纸研发角色，重复型号转专属碎片",
 			13,
 			GREEN
 		))
 		if bool(foundational.get("claimable", false)):
-			var foundational_ten := _button("免费接收基础图纸十连", true)
+			var foundational_ten := _button("领取免费阵营十连", true)
 			foundational_ten.name = "FoundationalSignalTenButton"
 			foundational_ten.custom_minimum_size.y = 48
 			foundational_ten.pressed.connect(
@@ -340,10 +340,10 @@ func _recruit_panel() -> Control:
 			)
 			panel.add_child(foundational_ten)
 		elif bool(foundational.get("claimed", false)):
-			panel.add_child(_label("基础图纸已接收 · 前往研究所选择图纸研发永久角色", 12, CYAN))
+			panel.add_child(_label("免费十连已领取 · 新图纸去研究所研发，重复型号碎片可让对应角色升星", 12, CYAN))
 	if not bool(_view.get("recruitment_unlocked", false)):
 		panel.add_child(_label(String(_view.get("recruitment_progress", "主线推进后开放")), 14, MUTED))
-		panel.add_child(_label("长期招募在首章后开放；所有信号结果只包含设计图纸，重复图纸转为军团数据。", 12, GREEN))
+		panel.add_child(_label("解锁信号招募后才开放免费十连；1-2、1-3 的首批角色图纸不依赖抽取。", 12, GREEN))
 		return panel
 	panel.add_child(_label(
 		"招募券 %d · S 图纸保底 %d/60 · 十抽至少 A · 定向保底%s" % [
@@ -354,7 +354,7 @@ func _recruit_panel() -> Control:
 		14,
 		GOLD
 	))
-	panel.add_child(_label("图纸评级 B 80% / A 18% / S 2% · 重复图纸转军团数据", 12, MUTED))
+	panel.add_child(_label("图纸评级 B 80% / A 18% / S 2% · 重复图纸只转该型号专属碎片", 12, MUTED))
 	panel.add_child(_label("定向 S：寄生母体设计图 · 十抽至少出现一张 A 级或更高图纸", 12, TEXT))
 	var actions := HBoxContainer.new()
 	var single := _button("招募 1 次", true)
@@ -370,16 +370,62 @@ func _recruit_panel() -> Control:
 	if not results.is_empty():
 		var result_panel := _panel("本次信号响应")
 		result_panel.name = "SignalRecruitResultPanel"
+		var focus := _view.get("recruit_focus", {}) as Dictionary
+		if not focus.is_empty():
+			var focus_card := _panel("阵营核心 · %s" % String(focus.get("faction", "")))
+			focus_card.name = "RecruitFactionFocus"
+			focus_card.add_child(_label(
+				"%s · %s" % [
+					String(focus.get("display_name", "")),
+					String(focus.get("status", "")),
+				],
+				16,
+				GOLD
+			))
+			focus_card.add_child(_label(
+				"2★质变：%s" % String(focus.get("next_star_effect", "")),
+				12,
+				CYAN
+			))
+			var focus_action := String(focus.get("action", ""))
+			if not focus_action.is_empty():
+				var next_button := _button(String(focus.get("action_label", "继续培养")), true)
+				next_button.name = "RecruitFocusActionButton"
+				next_button.custom_minimum_size.y = 48
+				next_button.pressed.connect(action_requested.emit.bind(focus_action, {
+					"hero_id": String(focus.get("hero_id", "")),
+				}))
+				focus_card.add_child(next_button)
+			result_panel.add_child(focus_card)
 		var grid := GridContainer.new()
 		grid.columns = 5
 		for draw_value in results:
 			var draw := draw_value as Dictionary
 			var rarity := String(draw.get("rarity", "B"))
+			var pity_bonus := draw.get("pity_bonus", {}) as Dictionary
+			var bonus_copy := ""
+			if not pity_bonus.is_empty():
+				bonus_copy = "\n60抽保底 · S级%s%s" % [
+					String(pity_bonus.get("display_name", "")),
+					(
+						"碎片 +%d" % int(pity_bonus.get("amount", 0))
+						if String(pity_bonus.get("kind", "")) == "hero_fragments"
+						else "新图纸"
+					),
+				]
 			var card := _label(
-				"%s · %s\n%s" % [
+				"%s · %s\n%s%s" % [
 					rarity,
 					String(draw.get("display_name", "")),
-					"新设计图纸" if String(draw.get("kind", "blueprint")) == "blueprint" else "军团数据 +%d" % int(draw.get("amount", 0)),
+					(
+						"新设计图纸"
+						if String(draw.get("kind", "blueprint")) == "blueprint"
+						else "%s专属碎片 +%d" % [
+							String(draw.get("display_name", "")),
+							int(draw.get("amount", 0)),
+						]
+					),
+					bonus_copy,
 				],
 				12,
 				GOLD if rarity == "S" else (CYAN if rarity == "A" else MUTED)
@@ -418,6 +464,14 @@ func _codex_panel() -> Control:
 			rating_color
 		))
 		card.add_child(_label(String(entry.get("description", "")), 11, TEXT))
+		card.add_child(_label(
+			"%s · 专属碎片 %d" % [
+				String(entry.get("faction", "独立战术")),
+				int(entry.get("fragments", 0)),
+			],
+			11,
+			GOLD
+		))
 		card.add_child(_label(
 			String(entry.get("status_copy", "尚未获得设计图纸")),
 			12,
@@ -570,10 +624,12 @@ func _hero_card(hero: Dictionary) -> Control:
 	identity_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	identity.add_child(identity_copy)
 	identity_copy.add_child(_label(
-		"%s  ·  Lv.%d  %d★" % [
+		"%s  ·  Lv.%d  %d★  ·  %s  ·  碎片%d" % [
 			String(hero.get("display_name", "未知角色")),
 			int(hero.get("level", 1)),
 			int(hero.get("star", 1)),
+			String(hero.get("faction", "独立战术")),
+			int(hero.get("fragment_balance", 0)),
 		],
 		14,
 		TEXT
@@ -685,14 +741,14 @@ func _hero_card(hero: Dictionary) -> Control:
 	if int(hero.get("star", 1)) == 1 and int(hero.get("welfare_star_core_count", 0)) > 0:
 		var welfare_core := _add_cultivation_action(
 			cultivation,
-			"福利升星 · 本次军团数据全免",
+			"福利升星 · 本次专属碎片全免",
 			"welfare_star_core",
 			hero,
 			hero.get("welfare_star_resource_context", {}) as Dictionary,
 			true
 		)
 		welfare_core.name = "WelfareStarCore_%s" % String(hero.get("hero_id", "hero"))
-		welfare_core.tooltip_text = "黑金核心：本次军团数据全免；工业材料不参与升星。"
+		welfare_core.tooltip_text = "黑金核心：本次型号专属碎片全免；工业材料不参与升星。"
 	if int(hero.get("skill_level", 1)) < 3:
 		var research := _add_cultivation_action(
 			cultivation,
@@ -751,6 +807,20 @@ func _add_cultivation_action(
 	button.name = "CultivationAction_%s" % action_id
 	button.custom_minimum_size.y = 48
 	button.add_theme_font_size_override("font_size", 10)
+	var available_key: String = String({
+		"upgrade": "level_upgrade_available",
+		"star": "star_upgrade_available",
+	}.get(action_id, ""))
+	var block_key: String = String({
+		"upgrade": "level_block_reason",
+		"star": "star_block_reason",
+	}.get(action_id, ""))
+	if not available_key.is_empty():
+		button.disabled = not bool(hero.get(available_key, false))
+		var block_reason := String(hero.get(block_key, ""))
+		if button.disabled and not block_reason.is_empty():
+			quote.text = block_reason
+			quote.add_theme_color_override("font_color", RED)
 	parent.add_child(tile)
 	return button
 

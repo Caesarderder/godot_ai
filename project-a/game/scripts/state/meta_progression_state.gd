@@ -23,6 +23,7 @@ var recruit_a_pity: int = 0
 var recruit_target_guaranteed: bool = false
 var recruit_pool_id: String = "signal_standard_1"
 var hero_data: Dictionary = {}
+var hero_fragments: Dictionary = {}
 
 
 static func create_starting() -> MetaProgressionState:
@@ -51,6 +52,7 @@ func to_dict() -> Dictionary:
 		"recruit_target_guaranteed": recruit_target_guaranteed,
 		"recruit_pool_id": recruit_pool_id,
 		"hero_data": hero_data.duplicate(true),
+		"hero_fragments": hero_fragments.duplicate(true),
 	}
 
 
@@ -76,6 +78,13 @@ static func from_dict(data: Dictionary) -> MetaProgressionState:
 	value.recruit_target_guaranteed = bool(data.get("recruit_target_guaranteed", false))
 	value.recruit_pool_id = String(data.get("recruit_pool_id", "signal_standard_1"))
 	value.hero_data = (data.get("hero_data", {}) as Dictionary).duplicate(true)
+	value.hero_fragments = {}
+	for archetype_id_value in (data.get("hero_fragments", {}) as Dictionary):
+		var archetype_id := String(archetype_id_value)
+		value.hero_fragments[archetype_id] = maxi(
+			0,
+			int((data.get("hero_fragments", {}) as Dictionary)[archetype_id_value])
+		)
 	return value
 
 
@@ -91,7 +100,12 @@ func validate() -> Array[String]:
 		errors.append("meta progression identifiers are required")
 	if event_keys.size() > MAX_EVENT_KEYS:
 		errors.append("meta progression event ledger exceeds cap")
-	for bucket in [commander_claimed_levels, missions, mission_claims, pass_claimed_levels, achievement_progress, achievement_claimed, event_keys, hero_data]:
+	for bucket in [commander_claimed_levels, missions, mission_claims, pass_claimed_levels, achievement_progress, achievement_claimed, event_keys, hero_data, hero_fragments]:
 		if typeof(bucket) != TYPE_DICTIONARY:
 			errors.append("meta progression bucket must be dictionary")
+	for archetype_id_value in hero_fragments:
+		if typeof(archetype_id_value) != TYPE_STRING or String(archetype_id_value).is_empty():
+			errors.append("hero fragment keys must be non-empty strings")
+		if typeof(hero_fragments[archetype_id_value]) != TYPE_INT or int(hero_fragments[archetype_id_value]) < 0:
+			errors.append("hero fragment balances must be non-negative integers")
 	return errors

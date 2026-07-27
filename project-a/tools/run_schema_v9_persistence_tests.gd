@@ -30,7 +30,8 @@ func _init() -> void:
 func _test_new_save_contract() -> void:
 	var state := GameStateScript.create_new(9001, 100, false)
 	var encoded := SaveCodecScript.encode(state)
-	_eq(encoded["schema_version"], 10, "new saves use schema v10")
+	_eq(encoded["schema_version"], 11, "new saves use schema v11")
+	_eq(encoded["meta_progression"]["hero_fragments"], {}, "new saves start with an empty archetype-fragment ledger")
 	_eq(
 		encoded["factory"]["materials"],
 		{"porcelain": 112, "parts": 0, "sludge": 0},
@@ -74,7 +75,7 @@ func _test_v8_resource_migration_is_exact_and_once_only() -> void:
 		_eq(migrated.economy.get(key), 0, "migration clears legacy economy field %s" % key)
 
 	var encoded_v9 := SaveCodecScript.encode(migrated)
-	_eq(encoded_v9["schema_version"], 10, "migrated state rewrites as schema v10")
+	_eq(encoded_v9["schema_version"], 11, "migrated state rewrites as schema v11")
 	var decoded_again := SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(migrated))
 	_ok(bool(decoded_again.get("ok", false)), "rewritten v9 JSON save decodes")
 	if bool(decoded_again.get("ok", false)):
