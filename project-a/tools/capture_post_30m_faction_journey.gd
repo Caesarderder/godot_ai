@@ -102,8 +102,20 @@ func _capture() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_4"
 	main.call("_show_goals")
 	await _wait_frames(4)
+	if not _save("res://artifacts/ui-faction-late-wall-probe-844x390.png"):
+		return
+	var probe_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	if probe_cta == null or not probe_cta.text.contains("试探后段防线"):
+		_fail("faction late-wall probe unavailable")
+		return
+	probe_cta.pressed.emit()
+	await _wait_frames(5)
+	state = game.current_state()
+	state.attempt_counters["stage_2_4"] = 1
+	main.call("_show_goals")
+	await _wait_frames(4)
 	var star_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
-	if star_cta == null:
+	if star_cta == null or not star_cta.text.contains("升至2★"):
 		_fail("faction star goal unavailable")
 		return
 	star_cta.pressed.emit()

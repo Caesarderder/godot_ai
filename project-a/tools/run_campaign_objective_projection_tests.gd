@@ -143,7 +143,19 @@ func _test_faction_journey_projection() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_4"
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
-	_check(String(hierarchy.get("target", "")) == "legion", "three battlefield proofs route to the selected core's star growth")
+	_check(String(hierarchy.get("target", "")) == "map", "three battlefield proofs first route to a lossless late-line probe")
+	_check(String(hierarchy.get("stage_id", "")) == "stage_2_4", "late-line probe focuses the exact 2-4 pressure test")
+	_check(String(hierarchy.get("small", "")).contains("保持1★"), "probe preserves one-star state so growth has an experienced cause")
+	state.stage_progress["cleared_stages"].append("stage_2_4")
+	state.attempt_counters["stage_2_4"] = 1
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "map", "a one-star 2-4 victory continues to the actual 2-5 pressure wall")
+	_check(String(hierarchy.get("stage_id", "")) == "stage_2_5", "winning the first probe focuses the chapter boss without premature growth")
+	state.stage_progress["cleared_stages"].erase("stage_2_4")
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "legion", "a failed 2-4 probe unlocks the selected core's star growth")
 	_check(String(hierarchy.get("hero_id", "")) == String(hero.hero_id), "star step preserves the exact hero for roster focus")
 	_check(String(hierarchy.get("small", "")).contains("专属碎片"), "star step explains the duplicate-to-specific-character causality")
 

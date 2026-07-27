@@ -148,6 +148,15 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 		var chapter_two_clears := _count_cleared(cleared, [
 			"stage_2_1", "stage_2_2", "stage_2_3",
 		])
+		var late_probe_stage_id := ""
+		if int(hero.star) < 2:
+			if int(state.attempt_counters.get("stage_2_4", 0)) == 0:
+				late_probe_stage_id = "stage_2_4"
+			elif (
+				cleared.has("stage_2_4")
+				and int(state.attempt_counters.get("stage_2_5", 0)) == 0
+			):
+				late_probe_stage_id = "stage_2_5"
 		if not deployed:
 			phase = "formation"
 			small = "把%s编入六槽队伍，建立%s起手式" % [role_name, faction_name]
@@ -171,13 +180,28 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			hurdle_title = "阵营打法尚未经过实战"
 			hurdle_reason = "战力数字不能替代玩家亲自看见新职责改变战局。"
 			recovery = "连续推进三座城，观察新角色的技能时机与战报贡献。"
+		elif int(hero.star) < 2 and not late_probe_stage_id.is_empty():
+			phase = "probe_late_wall"
+			stage_id = late_probe_stage_id
+			var probe_stage_name := String(
+				StageCatalogScript.stage(stage_id).get("display_name", stage_id)
+			)
+			small = "保持1★%s，试探%s并亲自确认成长缺口" % [
+				role_name,
+				probe_stage_name,
+			]
+			cta_label = "试探后段防线 · %s" % probe_stage_name
+			target = "map"
+			hurdle_title = "阵营第一次压力测试"
+			hurdle_reason = "先打一场，才能知道阵营缺的是技能时机、站位还是核心质变。"
+			recovery = "试探无永久损失；无论胜负，战报都会保留机制数据与下一步。"
 		elif int(hero.star) < 2:
 			phase = "star"
 			small = "使用%s专属碎片升至2★，兑现阵营质变" % role_name
 			cta_label = "将%s升至2★" % role_name
 			target = "legion"
 			hurdle_title = "第二章后段成长墙"
-			hurdle_reason = "1★已经证明角色定位，后段要求一次可感知的职责质变。"
+			hurdle_reason = "1★已经完成后段试探；现在用专属碎片解决刚刚暴露的成长缺口。"
 			recovery = "免费十连已保证同型号重复；碎片只用于这个角色。"
 		elif not cleared.has("stage_2_5"):
 			phase = "breakthrough"
@@ -248,6 +272,7 @@ static func _faction_phase_title(phase: String) -> String:
 		"research": "研发新角色",
 		"formation": "建立阵营编队",
 		"prove_one_star": "证明核心打法",
+		"probe_late_wall": "试探后段防线",
 		"star": "解锁2★质变",
 		"breakthrough": "突破第二章",
 	}

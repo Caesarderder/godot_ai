@@ -133,7 +133,17 @@ func _run() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_4"
 	main.call("_show_goals")
 	await _wait_frames(4)
-	_check(_tree_has_text(main, "专属碎片升至2★"), "three battle clears advance to the promised qualitative star goal")
+	_check(_tree_has_text(main, "保持1★"), "three battle clears preserve the one-star core for one causal pressure test")
+	var probe_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(probe_cta != null and probe_cta.text.contains("试探后段防线"), "proof phase exposes one lossless 2-4 pressure-test action")
+	if probe_cta != null:
+		probe_cta.pressed.emit()
+		await _wait_frames(4)
+	_check(String(main.get("selected_stage_id")) == "stage_2_4", "pressure-test action focuses the exact 2-4 encounter")
+	state.attempt_counters["stage_2_4"] = 1
+	main.call("_show_goals")
+	await _wait_frames(4)
+	_check(_tree_has_text(main, "专属碎片升至2★"), "the first 2-4 attempt converts experienced pressure into the qualitative star goal")
 	var star_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
 	_check(star_cta != null and star_cta.text.contains("升至2★"), "star phase exposes the exact faction core action")
 	if star_cta != null:
