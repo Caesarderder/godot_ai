@@ -5,8 +5,9 @@ const GameStateScript := preload("res://game/scripts/state/game_state.gd")
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 
 const FactoryStateScript := preload("res://game/scripts/state/factory_state.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
-const CURRENT_SCHEMA_VERSION: int = 8
+const CURRENT_SCHEMA_VERSION: int = 10
 const GAME_KEYS: Array[String] = [
 	"schema_version", "content_version", "save_id", "run_seed", "revision",
 	"roster", "inventory", "formation", "economy", "factory", "camp", "quests", "pity",
@@ -27,7 +28,7 @@ const PRODUCTION_KEYS: Array[String] = ["order_id", "recipe_id", "started_at_uni
 const REPAIR_ORDER_KEYS: Array[String] = ["order_id", "hero_id", "started_at_unix", "completes_at_unix", "target_readiness"]
 const BLUEPRINT_RESEARCH_KEYS: Array[String] = ["recipe_id", "started_at_unix", "completes_at_unix"]
 const FACILITY_WORK_KEYS: Array[String] = ["work_type", "facility_id", "started_at_unix", "completes_at_unix", "target_level", "grid_x", "grid_z"]
-const ATTR_KEYS: Array[String] = ["vig", "str", "agi", "int"]
+const ATTR_KEYS: Array[String] = ["hp", "attack", "defense", "speed_milli", "crit_bp"]
 const EQUIPMENT_SLOT_KEYS: Array[String] = ["weapon", "armor", "accessory"]
 const V1_GAME_KEYS: Array[String] = [
 	"schema_version", "content_version", "save_id", "run_seed", "revision",
@@ -116,8 +117,12 @@ static func decode(data: Variant) -> Dictionary:
 		return {"ok": false, "error": primitive_error}
 	if not dict.has("schema_version") or typeof(dict["schema_version"]) != TYPE_INT:
 		return {"ok": false, "error": "schema_version must be int"}
-	if not [5, 6, 7, CURRENT_SCHEMA_VERSION].has(int(dict["schema_version"])):
+	if not [5, 6, 7, 8, 9, CURRENT_SCHEMA_VERSION].has(int(dict["schema_version"])):
 		return {"ok": false, "error": "unsupported schema_version; delete local save to start Gman campaign"}
+	if int(dict["schema_version"]) == 8:
+		var migration_input_error := _validate_v8_resource_migration_inputs(dict)
+		if not migration_input_error.is_empty():
+			return {"ok": false, "error": migration_input_error}
 	dict = _upgrade_legacy_v5_factory_loop(dict)
 	var schema_error := _validate_game_schema(dict)
 	if not schema_error.is_empty():
@@ -131,8 +136,9 @@ static func decode(data: Variant) -> Dictionary:
 
 static func _upgrade_legacy_v5_factory_loop(data: Dictionary) -> Dictionary:
 	var upgraded := data.duplicate(true)
-	var was_legacy_v5 := int(data.get("schema_version", 0)) == 5
-	upgraded["schema_version"] = CURRENT_SCHEMA_VERSION
+	var source_schema := int(data.get("schema_version", 0))
+	var was_legacy_v5 := source_schema == 5
+	upgraded["schema_version"] = source_schema
 	if was_legacy_v5:
 		upgraded["content_version"] = "toilet-factory-siege-v6"
 	if not upgraded.has("meta_progression"):
@@ -219,7 +225,189 @@ static func _upgrade_legacy_v5_factory_loop(data: Dictionary) -> Dictionary:
 	if was_legacy_v5:
 		upgraded["quests"] = {"active": {}, "completed": {}, "claimed": {}}
 		upgraded["achievements"] = {"progress": {}, "completed": {}, "claimed": {}, "event_keys": {}, "counters": {}}
+	if source_schema < 9:
+		upgraded = _migrate_v8_resources_to_v9(upgraded)
+	if source_schema < CURRENT_SCHEMA_VERSION:
+		upgraded = _migrate_v9_hero_stats_to_v10(upgraded)
 	return upgraded
+
+
+static func _migrate_v8_resources_to_v9(data: Dictionary) -> Dictionary:
+	var migrated := data.duplicate(true)
+	migrated["schema_version"] = 9
+
+	var economy := (migrated.get("economy", {}) as Dictionary).duplicate(true)
+	var factory := (migrated.get("factory", {}) as Dictionary).duplicate(true)
+	var materials := (factory.get("materials", {}) as Dictionary).duplicate(true)
+	var meta := (migrated.get("meta_progression", {}) as Dictionary).duplicate(true)
+
+	var weighted_materials := (
+		2 * int(materials.get("porcelain", 0))
+		+ 4 * int(materials.get("parts", 0))
+		+ 3 * int(materials.get("sludge", 0))
+	)
+	var industrial_materials := (
+		int(round(float(weighted_materials) / 4.0))
+		+ 3 * int(economy.get("industrial_tech", 0))
+	)
+	var legion_data := (
+		int(economy.get("hero_shards", 0))
+		+ 4 * int(economy.get("skill_chips", 0))
+		+ _sum_int_values(factory.get("blueprint_data", {}))
+		+ _sum_int_values(meta.get("hero_data", {}))
+	)
+	var converted_tickets := int(economy.get("toilet_gems", 0)) / 10
+
+	economy["recruit_tickets"] = int(economy.get("recruit_tickets", 0)) + converted_tickets
+	economy["hero_shards"] = legion_data
+	economy["toilet_gems"] = 0
+	economy["gold"] = 0
+	economy["xp_books"] = 0
+	economy["forge_stones"] = 0
+	economy["industrial_tech"] = 0
+	economy["skill_chips"] = 0
+
+	factory["materials"] = {
+		"porcelain": industrial_materials,
+		"parts": 0,
+		"sludge": 0,
+	}
+	factory["blueprint_data"] = {}
+	var normalized_factory := FactoryStateScript.from_dict(factory)
+	normalized_factory.refresh_capacities()
+	factory["capacities"] = normalized_factory.capacities.duplicate(true)
+
+	meta["hero_data"] = {}
+	migrated["economy"] = economy
+	migrated["factory"] = factory
+	migrated["meta_progression"] = meta
+	return migrated
+
+
+static func _migrate_v9_hero_stats_to_v10(data: Dictionary) -> Dictionary:
+	var migrated := data.duplicate(true)
+	for hero_value in migrated.get("roster", []):
+		var hero := hero_value as Dictionary
+		var legacy := hero.get("base_stats", {}) as Dictionary
+		var vig := int(legacy.get("vig", 0))
+		var str_stat := int(legacy.get("str", 0))
+		var agi := int(legacy.get("agi", 0))
+		var int_stat := int(legacy.get("int", 0))
+		hero["base_stats"] = {
+			"hp": 50 + vig * 10,
+			"attack": maxi(str_stat, int_stat) * 3,
+			"defense": _legacy_class_armor(String(hero.get("class_id", ""))) + vig * 2,
+			"speed_milli": 60000 + agi * 4000,
+			"crit_bp": clampi(500 + agi * 50, 0, 5000),
+		}
+		hero["stat_remainders"] = {
+			"hp": 0, "attack": 0, "defense": 0, "speed_milli": 0, "crit_bp": 0,
+		}
+	migrated["schema_version"] = CURRENT_SCHEMA_VERSION
+	return migrated
+
+
+static func _legacy_class_armor(class_id: String) -> int:
+	match class_id:
+		"guardian":
+			return 12
+		"fighter":
+			return 8
+		"ranger":
+			return 5
+		"arcanist":
+			return 3
+		_:
+			return 0
+
+
+static func _validate_v8_resource_migration_inputs(data: Dictionary) -> String:
+	if typeof(data.get("economy")) != TYPE_DICTIONARY:
+		return "Economy must be dictionary"
+	var economy := data["economy"] as Dictionary
+	for key in ECONOMY_KEYS:
+		if not economy.has(key) or typeof(economy[key]) != TYPE_INT:
+			return "Economy.%s must be int" % key
+		if int(economy[key]) < 0:
+			return "Economy.%s must not be negative" % key
+	if typeof(data.get("factory")) != TYPE_DICTIONARY:
+		return "Factory must be dictionary"
+	var factory := data["factory"] as Dictionary
+	if typeof(factory.get("materials")) != TYPE_DICTIONARY:
+		return "Factory.materials must be dictionary"
+	var materials := factory["materials"] as Dictionary
+	for key in FactoryStateScript.MATERIAL_KEYS:
+		if not materials.has(key) or typeof(materials[key]) != TYPE_INT:
+			return "Factory.materials.%s must be int" % key
+		if int(materials[key]) < 0:
+			return "Factory.materials.%s must not be negative" % key
+	var blueprint_data_error := _validate_non_negative_int_values(
+		factory.get("blueprint_data"),
+		"Factory.blueprint_data"
+	)
+	if not blueprint_data_error.is_empty():
+		return blueprint_data_error
+	for recipe_id in (factory["blueprint_data"] as Dictionary).keys():
+		if not FactoryCatalogScript.has_recipe(String(recipe_id)):
+			return "Factory.blueprint_data contains unknown recipe %s" % String(recipe_id)
+	if typeof(data.get("meta_progression")) != TYPE_DICTIONARY:
+		return "meta_progression must be dictionary"
+	var hero_data: Variant = (data["meta_progression"] as Dictionary).get("hero_data")
+	var hero_data_error := _validate_non_negative_int_values(
+		hero_data,
+		"meta_progression.hero_data"
+	)
+	if not hero_data_error.is_empty():
+		return hero_data_error
+	for archetype_id in (hero_data as Dictionary).keys():
+		if (
+			FactoryCatalogScript.archetype(String(archetype_id)).is_empty()
+			and not FactoryCatalogScript.has_recipe(String(archetype_id))
+		):
+			return "meta_progression.hero_data contains unknown archetype %s" % String(archetype_id)
+	return ""
+
+
+static func _validate_non_negative_int_values(value: Variant, label: String) -> String:
+	if typeof(value) != TYPE_DICTIONARY:
+		return "%s must be dictionary" % label
+	for entry in (value as Dictionary).values():
+		if typeof(entry) != TYPE_INT:
+			return "%s values must be int" % label
+		if int(entry) < 0:
+			return "%s values must not be negative" % label
+	return ""
+
+
+static func _validate_v9_consolidated_resources(data: Dictionary) -> String:
+	var economy := data["economy"] as Dictionary
+	for key in ["toilet_gems", "gold", "xp_books", "forge_stones", "industrial_tech", "skill_chips"]:
+		if int(economy[key]) != 0:
+			return "Economy.%s must be zero in schema v9" % key
+	var factory := data["factory"] as Dictionary
+	var materials := factory["materials"] as Dictionary
+	for key in ["parts", "sludge"]:
+		if int(materials[key]) != 0:
+			return "Factory.materials.%s must be zero in schema v9" % key
+	if not (factory["blueprint_data"] as Dictionary).is_empty():
+		return "Factory.blueprint_data must be empty in schema v9"
+	if not ((data["meta_progression"] as Dictionary)["hero_data"] as Dictionary).is_empty():
+		return "meta_progression.hero_data must be empty in schema v9"
+	var expected_capacities := FactoryStateScript.capacities_for_facilities(
+		factory["facilities"] as Dictionary
+	)
+	if factory["capacities"] != expected_capacities:
+		return "Factory.capacities must match active resource line levels in schema v9"
+	return ""
+
+
+static func _sum_int_values(value: Variant) -> int:
+	if typeof(value) != TYPE_DICTIONARY:
+		return 0
+	var total := 0
+	for entry in (value as Dictionary).values():
+		total += int(entry)
+	return total
 
 
 static func _normalize_json_numbers(value: Variant) -> Dictionary:
@@ -303,7 +491,7 @@ static func _validate_game_schema(data: Dictionary) -> String:
 	var meta_error := _validate_meta_progression_schema(data["meta_progression"])
 	if not meta_error.is_empty():
 		return meta_error
-	return ""
+	return _validate_v9_consolidated_resources(data)
 
 
 static func _validate_meta_progression_schema(value: Variant) -> String:

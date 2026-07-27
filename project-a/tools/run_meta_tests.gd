@@ -84,16 +84,16 @@ func _eq(actual: Variant, expected: Variant, message: String) -> void:
 
 func _test_new_game_contract() -> void:
 	var state := GameStateScript.create_new(12345, 100)
-	_eq(state.schema_version, 8, "new game uses the meta-progression schema v8 envelope")
+	_eq(state.schema_version, 10, "new game uses the five-stat schema v10 envelope")
 	_eq(state.content_version, "toilet-factory-slg-v2", "new game uses the revised permanent-legion SLG contract")
 	_eq(state.roster.size(), 1, "new game grants only permanent G-Man")
 	_eq(state.economy.toilet_coins, 250, "new game starts with 250 toilet coins")
 	_eq(state.economy.toilet_gems, 0, "new game starts without premium currency")
-	_eq(state.economy.xp_books, 2, "new game starts with two xp books")
+	_eq(state.economy.xp_books, 0, "new game keeps retired xp books empty")
 	_eq(state.economy.forge_stones, 0, "new game starts with zero forge stones")
 	_eq(state.economy.recruit_tickets, 0, "new game has no implicit recruitment tickets")
 	_eq(state.formation.hero_ids(), state.roster_ids(), "new game deploys only permanent G-Man")
-	_eq(state.factory.materials, {"porcelain": 80, "parts": 48, "sludge": 32}, "new game starts with industrial growth and repair materials")
+	_eq(state.factory.materials, {"porcelain": 112, "parts": 0, "sludge": 0}, "new game starts with unified industrial materials")
 	_eq(state.factory.discovered_blueprints, {}, "new game starts without discovered blueprints")
 	_eq(state.factory.blueprints.size(), 4, "compatibility data preserves four hidden legacy blueprints")
 	_eq(state.factory.blueprint_research, {}, "new game starts without active Doctor research")
@@ -186,7 +186,7 @@ func _test_war_merit_reward_track() -> void:
 	executor.state.inventory["items"][QuestCatalogScript.WAR_MERIT_ITEM_ID] = 640
 	_eq(WarMeritTrackScript.reached_level(executor.state), 5, "cumulative merit reaches level five at the canonical threshold")
 	_eq(WarMeritTrackScript.claimable_count(executor.state), 4, "all newly reached unclaimed merit levels become claimable")
-	var gems_before := int(executor.state.economy.toilet_gems)
+	var tickets_before := int(executor.state.economy.recruit_tickets)
 	_exec_ok(
 		executor,
 		"merit-claim-5",
@@ -194,7 +194,7 @@ func _test_war_merit_reward_track() -> void:
 		{"request_id": "merit-request-5", "level": 5},
 		"merit-business-5"
 	)
-	_eq(executor.state.economy.toilet_gems, gems_before + 5, "every fifth merit level grants a small toilet-gem reward")
+	_eq(executor.state.economy.recruit_tickets, tickets_before, "fifth merit level does not create a fifth resource")
 	var decoded := SaveCodecScript.decode(SaveCodecScript.encode(executor.state))
 	_ok(bool(decoded.get("ok", false)), "merit reward state survives strict save codec")
 	if bool(decoded.get("ok", false)):
@@ -216,14 +216,16 @@ func _test_seeded_hero_generation() -> void:
 	_ok(state_a.roster[0].to_dict() != state_c.roster[0].to_dict(), "different run seed changes generated hero")
 	_ok(HeroGenerator.GIVEN_NAMES.size() * HeroGenerator.FAMILY_NAMES.size() >= 40, "name pool has at least 40 combinations")
 	_eq(HeroGenerator.TRAIT_IDS.size(), 8, "trait pool has eight traits")
-	_eq(HeroGenerator.APTITUDE_WEIGHT_BP, {"C": 4000, "B": 3500, "A": 2000, "S": 500}, "aptitude weights match configured default")
+	_eq(HeroGenerator.APTITUDE_WEIGHT_BP, {"B": 8000, "A": 1800, "S": 200}, "active role rating weights use only B/A/S")
+	_eq(HeroGenerator.ACTIVE_APTITUDE_IDS, ["B", "A", "S"], "new roles cannot roll the retired C rating")
 	for hero in state_a.roster:
 		if String(hero.archetype_id) == "gman":
 			continue
 		for key in HeroStateScript.ATTR_KEYS:
 			var baseline := int(HeroGenerator.CLASS_BASE_STATS[hero.class_id][key])
 			var delta := int(hero.base_stats[key]) - baseline
-			_ok(delta >= -1 and delta <= 1, "L1 variance is -1/0/+1 for %s.%s" % [hero.hero_id, key])
+			var extent := int(HeroGenerator.STAT_VARIANCE[key])
+			_ok(delta >= -extent and delta <= extent, "L1 five-stat variance stays bounded for %s.%s" % [hero.hero_id, key])
 
 
 func _test_recruit_four_to_eight_and_ticket_cost() -> void:
@@ -245,10 +247,11 @@ func _test_progression_clamp_bulk_equivalence() -> void:
 	_eq(bulk.xp, 320, "bulk training clamps XP to 320")
 	_eq(step.to_dict(), bulk.to_dict(), "incremental and bulk training produce identical hero state")
 	var stats := HeroProgression.derived_battle_stats(bulk)
-	_eq(stats["max_hp"], 50 + int(bulk.base_stats["vig"]) * 10, "derived max_hp formula")
-	_eq(stats["defense"], HeroProgression.class_armor(bulk.class_id) + int(bulk.base_stats["vig"]) * 2, "derived defense formula")
-	_eq(stats["physical_atk"], int(bulk.base_stats["str"]) * 3, "derived physical attack formula")
-	_eq(stats["magic_atk"], int(bulk.base_stats["int"]) * 3, "derived magic attack formula")
+	_eq(stats["hp"], int(bulk.base_stats["hp"]), "one-star derived HP equals authoritative HP")
+	_eq(stats["attack"], int(bulk.base_stats["attack"]), "one-star derived attack equals authoritative attack")
+	_eq(stats["defense"], int(bulk.base_stats["defense"]), "one-star derived defense equals authoritative defense")
+	_eq(stats["speed_milli"], int(bulk.base_stats["speed_milli"]), "speed is not multiplied by star")
+	_eq(stats["crit_bp"], int(bulk.base_stats["crit_bp"]), "crit is not multiplied by star")
 	_eq(HeroProgression.active_skill_id(bulk), FactoryCatalogScript.active_skill_for_archetype(bulk.archetype_id), "hero progression uses the factory catalog canonical active skill")
 	_eq(HeroProgression.skill_tier(bulk), 1, "one-star hero uses skill tier 1")
 	bulk.star = 2
@@ -877,27 +880,27 @@ func _test_fingerprint_and_idempotency() -> void:
 	_ok(not bool(fp_bad["ok"]), "float payload is rejected")
 
 	var executor := CommandExecutorScript.new(GameStateScript.create_new(555, 0), Callable(self, "_record_save_success"))
-	var first := _exec_ok(executor, "idem-1", "grant_resources", {"resources": {"gold": 10}}, "same-business")
+	var first := _exec_ok(executor, "idem-1", "grant_resources", {"resources": {"toilet_coins": 10}}, "same-business")
 	var revision_after_first: int = executor.state.revision
-	var second := executor.execute(_env_with_revision("idem-1", "grant_resources", {"resources": {"gold": 10}}, "same-business", 0))
+	var second := executor.execute(_env_with_revision("idem-1", "grant_resources", {"resources": {"toilet_coins": 10}}, "same-business", 0))
 	_eq(second, first, "same command id and fingerprint returns original receipt")
 	_eq(executor.state.revision, revision_after_first, "idempotent replay does not mutate state")
-	var mismatch_id := executor.execute(_env("idem-1", "grant_resources", {"resources": {"gold": 11}}, "same-business-2", executor))
+	var mismatch_id := executor.execute(_env("idem-1", "grant_resources", {"resources": {"toilet_coins": 11}}, "same-business-2", executor))
 	_eq(mismatch_id["error"], "COMMAND_ID_REUSE_MISMATCH", "same command id different fingerprint is rejected")
-	var mismatch_business := executor.execute(_env("idem-2", "grant_resources", {"resources": {"gold": 11}}, "same-business", executor))
+	var mismatch_business := executor.execute(_env("idem-2", "grant_resources", {"resources": {"toilet_coins": 11}}, "same-business", executor))
 	_eq(mismatch_business["error"], "BUSINESS_KEY_REUSE_MISMATCH", "same business key different fingerprint is rejected")
 
 
 func _test_no_save_callback_rejects_commands() -> void:
 	var executor := CommandExecutorScript.new(GameStateScript.create_new(556, 0))
-	var result := executor.execute(_env("no-save", "grant_resources", {"resources": {"gold": 1}}, "no-save", executor))
+	var result := executor.execute(_env("no-save", "grant_resources", {"resources": {"toilet_coins": 1}}, "no-save", executor))
 	_eq(result["error"], "SAVE_UNAVAILABLE", "commands require explicit save callback")
 
 
 func _test_revision_contract() -> void:
 	var executor := CommandExecutorScript.new(GameStateScript.create_new(557, 0), Callable(self, "_record_save_success"))
-	_exec_ok(executor, "rev-1", "grant_resources", {"resources": {"gold": 1}}, "rev-1")
-	var stale := executor.execute(_env_with_revision("rev-2", "grant_resources", {"resources": {"gold": 1}}, "rev-2", 0))
+	_exec_ok(executor, "rev-1", "grant_resources", {"resources": {"toilet_coins": 1}}, "rev-1")
+	var stale := executor.execute(_env_with_revision("rev-2", "grant_resources", {"resources": {"toilet_coins": 1}}, "rev-2", 0))
 	_eq(stale["error"], "STALE_REVISION", "new command with old revision is rejected")
 
 
@@ -905,9 +908,9 @@ func _test_payload_schema_rejections() -> void:
 	var executor := CommandExecutorScript.new(GameStateScript.create_new(558, 0), Callable(self, "_record_save_success"))
 	var unknown_resource := executor.execute(_env("bad-resource", "grant_resources", {"resources": {"diamonds": 1}}, "bad-resource", executor))
 	_eq(unknown_resource["error"], "UNKNOWN_RESOURCE_KEY", "unknown resource key rejected")
-	var string_amount := executor.execute(_env("string-resource", "grant_resources", {"resources": {"gold": "1"}}, "string-resource", executor))
+	var string_amount := executor.execute(_env("string-resource", "grant_resources", {"resources": {"toilet_coins": "1"}}, "string-resource", executor))
 	_eq(string_amount["error"], "RESOURCE_AMOUNT_MUST_BE_INT", "stringified int resource rejected")
-	var negative_amount := executor.execute(_env("negative-resource", "grant_resources", {"resources": {"gold": -1}}, "negative-resource", executor))
+	var negative_amount := executor.execute(_env("negative-resource", "grant_resources", {"resources": {"toilet_coins": -1}}, "negative-resource", executor))
 	_eq(negative_amount["error"], "RESOURCE_AMOUNT_MUST_NOT_BE_NEGATIVE", "negative grant rejected")
 	var extra_key := executor.execute(_env("extra-train", "train_hero", {"hero_id": "x", "book_count": 1, "extra": 1}, "extra-train", executor))
 	_ok(String(extra_key["error"]).contains("payload keys mismatch"), "extra command payload key rejected")
@@ -917,7 +920,7 @@ func _test_save_failure_does_not_swap() -> void:
 	var state := GameStateScript.create_new(666, 0)
 	var executor := CommandExecutorScript.new(state, Callable(self, "_save_failure"))
 	var before: Dictionary = executor.state.to_dict()
-	var result := executor.execute(_env("fail-save", "grant_resources", {"resources": {"gold": 100}}, "fail-save", executor))
+	var result := executor.execute(_env("fail-save", "grant_resources", {"resources": {"toilet_coins": 100}}, "fail-save", executor))
 	_eq(result["error"], "SAVE_FAILED", "save failure rejects durable operation")
 	_eq(executor.state.to_dict(), before, "save failure does not swap live state")
 

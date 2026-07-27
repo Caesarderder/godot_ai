@@ -37,6 +37,8 @@ func _run() -> void:
 	var research_choice := factory.find_child("ChooseFacility_research_lab", true, false) as Button
 	_check(research_choice != null and research_choice.disabled, "research lab remains unavailable before battle evidence")
 	_check(String(research_choice.tooltip_text).contains("挑战 1-4"), "locked research explains the exact unlock action")
+	var porcelain_choice := factory.find_child("ChooseFacility_porcelain_plant", true, false) as Button
+	_check(porcelain_choice != null and porcelain_choice.text.contains("5秒"), "construction catalog exposes the five-second wait before selection")
 
 	build_view["construction"] = {
 		"options": [],
@@ -44,6 +46,7 @@ func _run() -> void:
 		"active_name": "研究所",
 		"active_copy": "把战场情报转化为永久援军",
 		"cost": 70,
+		"build_seconds": 5,
 		"placement_copy": "已选择格子 (2, 1)；确认后才扣除资源。",
 		"can_confirm": true,
 		"occupied": false,
@@ -51,6 +54,7 @@ func _run() -> void:
 	factory.configure(build_view)
 	await process_frame
 	_check(_tree_has_text(factory, "确认后才扣除资源"), "placement makes the transaction boundary explicit")
+	_check(_tree_has_text(factory, "耗时 5 秒"), "placement states the short construction wait before confirmation")
 	var confirm := factory.find_child("ConfirmFacilityConstruction", true, false) as Button
 	_check(confirm != null and not confirm.disabled, "valid placement exposes a single confirmation action")
 	var cancel := factory.find_child("CancelFacilityConstruction", true, false) as Button
@@ -143,8 +147,8 @@ func _base_view() -> Dictionary:
 		},
 		"construction": {
 			"options": [
-				{"facility_id": "porcelain_plant", "name": "陶瓷厂", "cost": 30, "copy": "生产陶瓷", "disabled": false},
-				{"facility_id": "research_lab", "name": "研究所", "cost": 70, "copy": "先挑战 1-4，让首败战报定位研究所方案。", "disabled": true},
+				{"facility_id": "porcelain_plant", "name": "陶瓷厂", "cost": 30, "copy": "生产陶瓷", "build_seconds": 5, "disabled": false},
+				{"facility_id": "research_lab", "name": "研究所", "cost": 70, "copy": "先挑战 1-4，让首败战报定位研究所方案。", "build_seconds": 5, "disabled": true},
 			],
 			"active_id": "",
 		},

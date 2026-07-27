@@ -4,7 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-card_id = &"breakthrough.skill_chip"
-rarity = "A"
-kind = "skill_chip"
-amount = 1
+card_id = &"signal.design.assault.2"
+kind = "blueprint"
+recipe_id = &"ordinary.assault"
+archetype_id = &"assault"
+class_id = &"fighter"
+duplicate_data_amount = 2

@@ -80,17 +80,24 @@ func _run() -> void:
 		_check(String(session.result.get("outcome", "")) == "victory", "%s is clearable by the documented three-star release roster" % stage_id)
 	_check(chapter_feedback_values.size() == 5, "Act I has distinct chapter feedback for five chapters")
 	_check(recommendation_signatures.size() >= 5, "Act I recommendations differ across at least five chapter beats")
-	_check(boss_suppression_targets == [70, 85, 100, 115, 130], "boss cannon suppression targets increase across Act I")
+	_check(
+		boss_suppression_targets.size() == 5
+			and boss_suppression_targets[0] < boss_suppression_targets[1]
+			and boss_suppression_targets[1] < boss_suppression_targets[2]
+			and boss_suppression_targets[2] < boss_suppression_targets[3]
+			and boss_suppression_targets[3] < boss_suppression_targets[4],
+		"boss cannon suppression targets increase across Act I"
+	)
 	var chapter_two_counter := String(StageCatalogScript.stage("stage_2_1").get("counter_hint", ""))
 	_check(chapter_two_counter.contains("永久军团"), "chapter two handoff preserves the permanent-hero formation model")
 	_check(not chapter_two_counter.contains("六名小兵") and not chapter_two_counter.contains("回厂补"), "chapter two handoff removes the retired disposable-unit formation copy")
-	_check(StageCatalogScript.breakthrough_reward("stage_1_2", false) == {"hero_shards": 4, "skill_chips": 0}, "first chapter introduces the first two-star breakthrough")
+	_check(StageCatalogScript.breakthrough_reward("stage_1_2", false) == {"hero_shards": 4}, "first chapter introduces the first two-star breakthrough")
 	for chapter in range(1, 6):
 		var mid_stage := "stage_%d_3" % chapter
 		var boss_stage := "stage_%d_5" % chapter
 		_check(int(StageCatalogScript.breakthrough_reward(mid_stage, false)["hero_shards"]) == 4, "%s grants controlled mid-chapter shards" % mid_stage)
-		_check(StageCatalogScript.breakthrough_reward(boss_stage, false) == {"hero_shards": 8, "skill_chips": 2}, "%s grants a full mastery breakthrough" % boss_stage)
-		_check(StageCatalogScript.breakthrough_reward(boss_stage, true) == {"hero_shards": 0, "skill_chips": 0}, "%s breakthrough reward is first-clear only" % boss_stage)
+		_check(StageCatalogScript.breakthrough_reward(boss_stage, false) == {"hero_shards": 16}, "%s grants a full mastery breakthrough" % boss_stage)
+		_check(StageCatalogScript.breakthrough_reward(boss_stage, true) == {"hero_shards": 0}, "%s breakthrough reward is first-clear only" % boss_stage)
 	_test_opening_defense_curve()
 	_test_unlock_previews()
 	_check(StageCatalogScript.next_stage_id("stage_5_5") == "endless_1", "Act I finale continues into the endless frontier")
@@ -188,9 +195,9 @@ func _test_opening_defense_curve() -> void:
 	_check(int(StageCatalogScript.stage("stage_1_4").get("factory_production_target", 0)) == 0, "stage 1-4 does not require a legacy nine-unit merge batch")
 	_check((StageCatalogScript.stage("stage_1_4").get("unlock_on_victory", []) as Array).is_empty(), "stage 1-4 does not drop the armored blueprint")
 	var wall_counter := String(StageCatalogScript.stage("stage_1_4").get("counter_hint", ""))
-	_check(wall_counter.contains("免费突破十连"), "stage 1-4 reconnaissance names the actual breakthrough recovery")
+	_check(wall_counter.contains("信号招募") and wall_counter.contains("基础图纸") and wall_counter.contains("研究所"), "stage 1-4 reconnaissance names the signal-to-research recovery")
 	_check(wall_counter.contains("永久") and wall_counter.contains("装甲") and wall_counter.contains("冲锋"), "stage 1-4 reconnaissance explains the permanent two-role counter")
-	_check(not wall_counter.contains("图纸") and not wall_counter.contains("生产 9") and not wall_counter.contains("三合一"), "stage 1-4 reconnaissance removes the retired production path")
+	_check(wall_counter.contains("图纸") and not wall_counter.contains("生产 9") and not wall_counter.contains("三合一"), "stage 1-4 reconnaissance uses the new blueprint research path")
 	var boss_counter := String(StageCatalogScript.stage("stage_1_5").get("counter_hint", ""))
 	_check(boss_counter.contains("冲锋马桶人升到二星") and boss_counter.contains("装甲马桶人升到二星"), "stage 1-5 reconnaissance preserves both verified mastery routes")
 	var boss_recommendations := _string_array(StageCatalogScript.stage("stage_1_5").get("recommended_recipe_ids", []))

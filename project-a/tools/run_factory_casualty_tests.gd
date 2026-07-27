@@ -147,15 +147,13 @@ func _test_blueprint_pity_duplicate_and_model_tech() -> void:
 
 func _test_schema_v6_round_trip() -> void:
 	var state: RefCounted = GameStateScript.create_new(904, 100)
-	state.economy.toilet_gems = 777
-	state.factory.blueprint_data["ordinary.assault"] = 12
+	state.economy.hero_shards = 12
 	var decoded: Dictionary = SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(state))
-	_expect(bool(decoded.get("ok", false)), "schema v8 save should round-trip")
+	_expect(bool(decoded.get("ok", false)), "schema v10 save should round-trip")
 	if bool(decoded.get("ok", false)):
 		var loaded: RefCounted = decoded["state"]
-		_expect(int(loaded.schema_version) == 8, "round-trip should preserve schema v8")
-		_expect(int(loaded.economy.toilet_gems) == 777, "round-trip should preserve toilet gems")
-		_expect(int(loaded.factory.blueprint_data["ordinary.assault"]) == 12, "round-trip should preserve blueprint data")
+		_expect(int(loaded.schema_version) == 10, "round-trip should preserve schema v10")
+		_expect(int(loaded.economy.hero_shards) == 12, "round-trip should preserve legion data")
 
 
 func _test_retreat_and_s_unique_rule() -> void:
@@ -242,7 +240,7 @@ func _test_milestone_blueprint_and_gem_source() -> void:
 		"payload": {},
 	})
 	_expect(bool(refresh.get("ok", false)), "milestone quest refresh should succeed")
-	var gems_before := int(executor.state.economy.toilet_gems)
+	var tickets_before := int(executor.state.economy.recruit_tickets)
 	var claim: Dictionary = executor.execute({
 		"type": "claim_quest",
 		"command_id": "claim-stage-1-5-milestone",
@@ -251,7 +249,7 @@ func _test_milestone_blueprint_and_gem_source() -> void:
 		"payload": {"quest_id": "major.stage_1_5", "generation": 0, "request_id": "major-stage-1-5-claim"},
 	})
 	_expect(bool(claim.get("ok", false)), "chapter milestone quest should be claimable")
-	_expect(int(executor.state.economy.toilet_gems) == gems_before + 10, "chapter milestone should grant a small toilet gem amount")
+	_expect(int(executor.state.economy.recruit_tickets) == tickets_before + 1, "chapter milestone should grant one recruit ticket")
 	_expect(bool(executor.state.factory.blueprints.get("ordinary.sonic", false)), "chapter milestone should grant deterministic non-S blueprint")
 
 
@@ -270,7 +268,7 @@ func _test_legacy_v5_migrates_to_v6() -> void:
 	_expect(bool(migrated.get("ok", false)), "legacy schema v5 should migrate instead of forcing save deletion")
 	if bool(migrated.get("ok", false)):
 		var state: RefCounted = migrated["state"]
-		_expect(int(state.schema_version) == 8, "legacy migration should produce schema v8")
+		_expect(int(state.schema_version) == 10, "legacy migration should produce schema v10")
 		_expect(int(state.economy.toilet_coins) == 321, "legacy gold should convert to toilet coins")
 
 
@@ -280,7 +278,7 @@ func _test_endless_frontier_continuation() -> void:
 	_expect(not endless_one.is_empty(), "endless frontier should generate its first stage")
 	_expect(String(endless_one.get("next_stage_id", "")) == "endless_2", "endless stage should point to the next deterministic stage")
 	_expect(int(endless_two.get("power_bp", 0)) > int(endless_one.get("power_bp", 0)), "endless difficulty should increase monotonically")
-	_expect((endless_one.get("reward_defeat", {}) as Dictionary) == {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}, "endless defeat reward must remain zero")
+	_expect((endless_one.get("reward_defeat", {}) as Dictionary) == {"gold": 0}, "endless defeat reward must remain zero")
 	var state: RefCounted = GameStateScript.create_new(909, 100)
 	state.stage_progress["highest_unlocked_stage"] = "stage_5_5"
 	var executor: RefCounted = CommandExecutorScript.new(state, func(_candidate: RefCounted) -> bool: return true)

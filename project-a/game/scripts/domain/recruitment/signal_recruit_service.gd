@@ -1,7 +1,7 @@
 class_name SignalRecruitService
 extends RefCounted
 
-const HeroGeneratorScript := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const MetaCatalogScript := preload("res://game/scripts/domain/meta/meta_catalog.gd")
 
 const S_RATE_BP: int = 200
@@ -10,16 +10,11 @@ const S_PITY: int = 60
 const A_PITY: int = 10
 const TARGET_S: String = "parasite"
 const POOLS: Dictionary = {
-	"R": ["assault", "rocket", "repair"],
+	"B": ["assault", "rocket", "repair"],
 	"A": ["sonic", "armored", "bomber"],
 	"S": ["parasite", "saw"],
 }
-const CLASS_BY_ARCHETYPE: Dictionary = {
-	"assault": "fighter", "rocket": "ranger", "repair": "arcanist",
-	"sonic": "arcanist", "armored": "guardian", "bomber": "ranger",
-	"parasite": "arcanist", "saw": "fighter",
-}
-const DUPLICATE_DATA: Dictionary = {"R": 2, "A": 8, "S": 24}
+const DUPLICATE_DATA: Dictionary = {"B": 2, "A": 8, "S": 24}
 
 
 static func recruit(state: RefCounted, count: int, target_archetype: String = TARGET_S) -> Dictionary:
@@ -55,7 +50,7 @@ static func _draw_once(state: RefCounted, target_archetype: String) -> Dictionar
 	meta.recruit_s_pity += 1
 	meta.recruit_a_pity += 1
 	var rarity_roll := _stable_roll(state.run_seed, meta.recruit_pool_id, meta.recruit_draw_count, "rarity")
-	var rarity := "R"
+	var rarity := "B"
 	if meta.recruit_s_pity >= S_PITY or rarity_roll < S_RATE_BP:
 		rarity = "S"
 	elif meta.recruit_a_pity >= A_PITY or rarity_roll < S_RATE_BP + A_RATE_BP:
@@ -66,22 +61,8 @@ static func _draw_once(state: RefCounted, target_archetype: String) -> Dictionar
 	elif rarity == "A":
 		meta.recruit_a_pity = 0
 	var archetype_id := _pick_archetype(state, rarity, target_archetype)
-	var existing := _hero_for_archetype(state, archetype_id)
-	if existing != null:
-		var amount := int(DUPLICATE_DATA[rarity])
-		meta.hero_data[archetype_id] = int(meta.hero_data.get(archetype_id, 0)) + amount
-		return {"rarity": rarity, "archetype_id": archetype_id, "kind": "hero_data", "amount": amount}
-	var roster_index: int = int(state.allocate_hero_index())
-	var hero: RefCounted = HeroGeneratorScript.generate_archetype(
-		state.run_seed,
-		roster_index,
-		archetype_id,
-		String(CLASS_BY_ARCHETYPE[archetype_id])
-	)
-	hero.display_name = HeroGeneratorScript.archetype_display_name(archetype_id)
-	hero.aptitude_id = "B" if rarity == "R" else rarity
-	state.roster.append(hero)
-	return {"rarity": rarity, "archetype_id": archetype_id, "kind": "hero", "hero_id": hero.hero_id}
+	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
+	return grant_design(state, String(recipe.get("recipe_id", "")), rarity, int(DUPLICATE_DATA[rarity]))
 
 
 static func _pick_archetype(state: RefCounted, rarity: String, target_archetype: String) -> String:
@@ -100,11 +81,35 @@ static func _pick_archetype(state: RefCounted, rarity: String, target_archetype:
 	return String(values[_stable_roll(state.run_seed, meta.recruit_pool_id, meta.recruit_draw_count, "pick") % values.size()])
 
 
-static func _hero_for_archetype(state: RefCounted, archetype_id: String) -> RefCounted:
-	for hero in state.roster:
-		if String(hero.archetype_id) == archetype_id:
-			return hero
-	return null
+static func grant_design(
+	state: RefCounted,
+	recipe_id: String,
+	rarity: String,
+	duplicate_data_amount: int
+) -> Dictionary:
+	var recipe := FactoryCatalogScript.recipe(recipe_id)
+	var archetype_id := String(recipe.get("archetype_id", ""))
+	if recipe.is_empty():
+		return {"rarity": rarity, "kind": "invalid_blueprint", "recipe_id": recipe_id}
+	if (
+		bool(state.factory.discovered_blueprints.get(recipe_id, false))
+		or bool(state.factory.blueprints.get(recipe_id, false))
+	):
+		state.economy.hero_shards += duplicate_data_amount
+		return {
+			"rarity": rarity,
+			"archetype_id": archetype_id,
+			"recipe_id": recipe_id,
+			"kind": "legion_data",
+			"amount": duplicate_data_amount,
+		}
+	state.factory.discovered_blueprints[recipe_id] = true
+	return {
+		"rarity": rarity,
+		"archetype_id": archetype_id,
+		"recipe_id": recipe_id,
+		"kind": "blueprint",
+	}
 
 
 static func _stable_roll(run_seed: int, pool_id: String, draw_index: int, salt: String) -> int:

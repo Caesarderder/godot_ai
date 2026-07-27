@@ -6,6 +6,7 @@ const SaveCodecScript := preload("res://game/scripts/persistence/save_codec.gd")
 const ResearchBreakthroughCatalogScript := preload(
 	"res://game/scripts/content/research_breakthrough_catalog.gd"
 )
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
 var failures: Array[String] = []
 var serial: int = 0
@@ -19,58 +20,91 @@ func _run() -> void:
 	var content_errors := ResearchBreakthroughCatalogScript.validate_all()
 	_check(
 		content_errors.is_empty(),
-		"typed breakthrough card definitions validate: %s" % ", ".join(content_errors)
+		"typed foundational signal cards validate: %s" % ", ".join(content_errors)
 	)
 	_check(
 		ResearchBreakthroughCatalogScript.material_grant()
-			== {"porcelain": 18, "parts": 10, "sludge": 8},
-		"ten-card recipe owns the exact first-session material budget"
+			== {"porcelain": 0, "parts": 0, "sludge": 0},
+		"foundational signal contains no industrial materials"
 	)
 	_check(
-		ResearchBreakthroughCatalogScript.skill_chip_grant() == 1,
-		"ten-card recipe owns the exact skill-chip budget"
+		ResearchBreakthroughCatalogScript.skill_chip_grant() == 0,
+		"foundational signal contains no skill chips"
 	)
+	for recipe in FactoryCatalogScript.recipes():
+		_check(
+			String(recipe.get("rating", "")) in ["B", "A", "S"],
+			"every toilet design uses only the B/A/S rating model"
+		)
 	var state: RefCounted = GameStateScript.create_new(20260727, 1000, false)
 	var executor: RefCounted = CommandExecutorScript.new(
 		state,
 		func(_candidate: RefCounted) -> bool: return true
 	)
-	var locked := _command(executor, "claim_research_breakthrough", {})
-	_check(not bool(locked.get("ok", false)), "breakthrough requires a built research lab")
-	executor.state.factory.facilities["research_lab"] = 1
-	executor.state.factory.facility_placements["research_lab"] = [2, 1]
+	var retired_research_pull := _command(executor, "claim_research_breakthrough", {})
+	_check(
+		not bool(retired_research_pull.get("ok", false))
+			and String(retired_research_pull.get("error", "")) == "UNKNOWN_COMMAND",
+		"the retired research-lab ten-pull command is no longer reachable"
+	)
+	var locked := _command(executor, "claim_foundational_signal", {})
+	_check(not bool(locked.get("ok", false)), "foundational signal requires the first-wall detection")
+	executor.state.factory.eligible_facilities["research_lab"] = true
 	var pity_before := int(executor.state.meta_progression.recruit_a_pity)
 	var materials_before := (executor.state.factory.materials as Dictionary).duplicate(true)
 	var skill_chips_before := int(executor.state.economy.skill_chips)
-	var result := _command(executor, "claim_research_breakthrough", {})
-	_check(bool(result.get("ok", false)), "built lab unlocks the free breakthrough: %s" % str(result))
+	var legion_data_before := int(executor.state.economy.hero_shards)
+	var roster_before: int = executor.state.roster.size()
+	var result := _command(executor, "claim_foundational_signal", {})
+	_check(bool(result.get("ok", false)), "first-wall detection unlocks the free blueprint signal: %s" % str(result))
 	var event := result.get("event", {}) as Dictionary
 	var results := event.get("results", []) as Array
-	_check(results.size() == 10, "breakthrough reveals exactly ten cards")
-	_check(event.get("guaranteed_archetypes", []) == ["assault", "armored"], "ten-pull declares both deterministic reinforcements")
-	_check(not bool(event.get("pity_advanced", true)), "onboarding celebration does not manipulate paid-pool pity")
+	_check(results.size() == 10, "foundational signal reveals exactly ten blueprint cards")
+	_check(
+		event.get("guaranteed_recipe_ids", []) == ["ordinary.assault", "heavy.armored"],
+		"ten-pull declares both deterministic foundational designs"
+	)
+	_check(not bool(event.get("pity_advanced", true)), "onboarding signal does not manipulate long-term pity")
 	_check(int(executor.state.meta_progression.recruit_a_pity) == pity_before, "long-term A pity remains unchanged")
-	_check(_hero_for(executor.state, "assault") != null, "assault reinforcement is permanent")
-	_check(_hero_for(executor.state, "armored") != null, "armored reinforcement is permanent")
-	_check(bool(executor.state.factory.blueprints.get("ordinary.assault", false)), "assault blueprint becomes durable")
-	_check(bool(executor.state.factory.blueprints.get("heavy.armored", false)), "armored blueprint becomes durable")
+	_check(executor.state.roster.size() == roster_before, "signal reception does not create permanent heroes")
+	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "assault design enters the research inventory")
+	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "armored design enters the research inventory")
+	_check(not bool(executor.state.factory.blueprints.get("ordinary.assault", false)), "assault remains unresearched after the signal")
 	_check(
-		int(executor.state.factory.materials["porcelain"]) - int(materials_before["porcelain"]) == 18
-			and int(executor.state.factory.materials["parts"]) - int(materials_before["parts"]) == 10
-			and int(executor.state.factory.materials["sludge"]) - int(materials_before["sludge"]) == 8,
-		"transaction grants the Resource-authored material aggregate exactly once"
+		executor.state.factory.materials == materials_before,
+		"signal does not cross-subsidize the industrial-material ledger"
 	)
 	_check(
-		int(executor.state.economy.skill_chips) - skill_chips_before == 1,
-		"transaction grants the Resource-authored skill chip"
+		int(executor.state.economy.skill_chips) == skill_chips_before,
+		"signal does not grant a skill chip"
 	)
-	var duplicate := _command(executor, "claim_research_breakthrough", {})
+	_check(
+		int(executor.state.economy.hero_shards) == legion_data_before,
+		"eight foundational fragments do not inject long-term legion data"
+	)
+	_check(
+		executor.state.factory.blueprint_data.is_empty(),
+		"foundational signal never writes the retired blueprint-data ledger"
+	)
+	var complete_designs := 0
+	var design_fragments := 0
+	for item_value in results:
+		var item := item_value as Dictionary
+		if String(item.get("kind", "")) == "blueprint":
+			complete_designs += 1
+		elif String(item.get("kind", "")) == "blueprint_fragment":
+			design_fragments += 1
+	_check(
+		complete_designs == 2 and design_fragments == 8,
+		"foundational signal resolves as two complete designs plus eight non-funding fragments"
+	)
+	var duplicate := _command(executor, "claim_foundational_signal", {})
 	_check(not bool(duplicate.get("ok", false)), "a second business action cannot duplicate the reward")
 	var replay: Dictionary = executor.execute({
 		"command_id": String(result.get("command_id", "")),
-		"type": "claim_research_breakthrough",
+		"type": "claim_foundational_signal",
 		"payload": {},
-		"business_key": "research-breakthrough-test-2",
+		"business_key": String(result.get("command_id", "")),
 		"expected_revision": 0,
 	})
 	_check(bool(replay.get("ok", false)), "the original durable receipt replays safely")
@@ -79,30 +113,33 @@ func _run() -> void:
 	if bool(decoded.get("ok", false)):
 		_check(
 			(decoded["state"].onboarding.get("claimed", {}) as Dictionary).has(
-				"reward.research_breakthrough_ten"
+				"reward.foundational_signal_ten"
 			),
 			"one-time claim marker persists"
 		)
 	_check(executor.state.validate().is_empty(), "breakthrough preserves game-state invariants")
-	var duplicate_state: RefCounted = executor.state.deep_clone()
-	(duplicate_state.onboarding.get("claimed", {}) as Dictionary).erase(
-		ResearchBreakthroughCatalogScript.CLAIM_KEY
-	)
-	var duplicate_roster_size: int = duplicate_state.roster.size()
-	var duplicate_executor: RefCounted = CommandExecutorScript.new(
-		duplicate_state,
-		func(_candidate: RefCounted) -> bool: return true
-	)
-	var duplicate_existing := _command(duplicate_executor, "claim_research_breakthrough", {})
-	_check(bool(duplicate_existing.get("ok", false)), "existing permanent heroes resolve through duplicate conversion")
+	executor.state.factory.facilities["research_lab"] = 1
+	executor.state.factory.facility_placements["research_lab"] = [2, 1]
+	var start_assault := _command(executor, "unlock_foundational_blueprint", {
+		"recipe_id": "ordinary.assault",
+		"now_unix": 1000,
+	})
+	_check(bool(start_assault.get("ok", false)), "research lab starts the owned assault design")
+	var claim_assault := _command(executor, "claim_blueprint_research", {"now_unix": 1045})
+	_check(bool(claim_assault.get("ok", false)), "research completion creates the assault hero")
+	_check(_hero_for(executor.state, "assault") != null, "assault becomes permanent only after research")
+	var start_armored := _command(executor, "unlock_foundational_blueprint", {
+		"recipe_id": "heavy.armored",
+		"now_unix": 1045,
+	})
+	_check(bool(start_armored.get("ok", false)), "research lab starts the owned armored design")
+	var claim_armored := _command(executor, "claim_blueprint_research", {"now_unix": 1090})
+	_check(bool(claim_armored.get("ok", false)), "research completion creates the armored hero")
+	_check(_hero_for(executor.state, "armored") != null, "armored becomes permanent only after research")
 	_check(
-		duplicate_executor.state.roster.size() == duplicate_roster_size,
-		"duplicate conversion does not create extra permanent heroes"
-	)
-	_check(
-		int(duplicate_executor.state.meta_progression.hero_data.get("assault", 0)) == 2
-			and int(duplicate_executor.state.meta_progression.hero_data.get("armored", 0)) == 2,
-		"hero-card duplicate amounts come from the typed definitions"
+		String(_hero_for(executor.state, "assault").aptitude_id) == "B"
+			and String(_hero_for(executor.state, "armored").aptitude_id) == "A",
+		"researched heroes inherit the canonical B/A ratings"
 	)
 	if failures.is_empty():
 		print("RESEARCH_BREAKTHROUGH_TESTS_OK")

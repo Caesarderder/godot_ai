@@ -194,8 +194,8 @@ func _test_local_playtest_first_session_metrics() -> void:
 		{"type": "battle_started", "details": {"stage_id": "stage_1_4", "manual_skills": true}, "time": 2232},
 		{"type": "battle_finished", "details": {"stage_id": "stage_1_4", "outcome": "defeat"}, "time": 2264},
 		{"type": "command_result", "details": {"command_type": "upgrade_hero_star", "ok": true}, "time": 2270},
+		{"type": "command_result", "details": {"command_type": "claim_foundational_signal", "ok": true}, "time": 2290},
 		{"type": "command_result", "details": {"command_type": "construct_facility", "ok": true}, "time": 2320},
-		{"type": "command_result", "details": {"command_type": "claim_research_breakthrough", "ok": true}, "time": 2370},
 		{"type": "command_result", "details": {"command_type": "assign_formation_slot", "ok": true, "revision_after": 7}, "time": 2374},
 		{"type": "command_result", "details": {"command_type": "assign_formation_slot", "ok": true, "revision_after": 8}, "time": 2378},
 		{"type": "battle_started", "details": {"stage_id": "stage_1_4", "deployed_heroes": 3, "manual_skills": true}, "time": 2380},
@@ -222,9 +222,9 @@ func _test_local_playtest_first_session_metrics() -> void:
 	_check(bool(metrics.get("chapter_loop_completed", false)), "derived funnel recognizes chapter-loop completion")
 	_eq(String(metrics.get("next_missing_milestone", "missing")), "", "completed funnel has no missing milestone")
 	_eq(
-		int((metrics.get("milestone_intervals_seconds", {}) as Dictionary).get("research_breakthrough", -1)),
-		50,
-		"derived funnel isolates time between laboratory construction and breakthrough"
+		int((metrics.get("milestone_intervals_seconds", {}) as Dictionary).get("foundational_signal", -1)),
+		26,
+		"derived funnel isolates time between the high-wall failure and foundational signal"
 	)
 	_eq(
 		int((metrics.get("milestone_elapsed_seconds", {}) as Dictionary).get("growth_chosen", -1)),

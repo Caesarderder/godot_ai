@@ -91,7 +91,7 @@ func _apply_configuration() -> void:
 	threat_level.visible = false
 	var action := _report.get("next_action", {}) as Dictionary
 	var action_id := String(action.get("id", "attack"))
-	var needs_preparation := action_id in ["upgrade", "research", "formation"] and _unlocked and not _cleared
+	var needs_preparation := action_id in ["upgrade", "research", "recruit", "formation"] and _unlocked and not _cleared
 	var needs_discovery := action_id == "discover" and _unlocked and not _cleared
 	_preparation_action_id = action_id
 	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
@@ -99,6 +99,8 @@ func _apply_configuration() -> void:
 	growth_button.visible = needs_preparation
 	if action_id == "upgrade":
 		growth_button.text = "先培养军团"
+	elif action_id == "recruit":
+		growth_button.text = String(action.get("title", "前往信号招募"))
 	elif action_id == "formation":
 		growth_button.text = "编入两名援军"
 	else:

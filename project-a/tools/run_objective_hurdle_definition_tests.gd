@@ -42,8 +42,9 @@ func _run() -> void:
 	var high_wall := ObjectiveHurdleCatalogScript.hurdle_view("operation.high_wall")
 	_check(String(high_wall.get("scale", "")) == "大坎", "the first forced loss remains a major hurdle")
 	_check(
-		String(high_wall.get("recovery", "")).contains("免费突破十连"),
-		"the first forced loss points to its deterministic breakthrough reward"
+		String(high_wall.get("recovery", "")).contains("免费基础图纸十连")
+			and String(high_wall.get("recovery", "")).contains("研究所研发"),
+		"the first forced loss points to its deterministic signal-to-research recovery"
 	)
 	high_wall["title"] = "mutated view"
 	_check(

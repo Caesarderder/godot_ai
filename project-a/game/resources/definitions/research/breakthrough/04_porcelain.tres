@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-card_id = &"breakthrough.porcelain.1"
-kind = "porcelain"
-amount = 6
+card_id = &"signal.design.armored.2"
+rarity = "A"
+kind = "blueprint"
+recipe_id = &"heavy.armored"
+archetype_id = &"armored"
+class_id = &"guardian"
+duplicate_data_amount = 8

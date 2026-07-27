@@ -12,7 +12,7 @@ const FIRST_VICTORY_UNLOCKS: Array[String] = ["flying.bomber", "heavy.saw", "spe
 const CORE_CLEAR_UNLOCKS: Array[String] = ["special.parasite"]
 
 var materials: Dictionary = {"porcelain": 0, "parts": 0, "sludge": 0}
-var capacities: Dictionary = {"porcelain": 4320, "parts": 2160, "sludge": 2880}
+var capacities: Dictionary = {"porcelain": 2160, "parts": 2160, "sludge": 2160}
 var discovered_blueprints: Dictionary = {}
 var blueprints: Dictionary = {}
 var blueprint_data: Dictionary = {}
@@ -61,9 +61,9 @@ static func create_starting(include_built_facilities: bool = true) -> FactorySta
 			"research_lab": 0,
 		}
 		factory.facility_placements = {"command_center": [0, -1]}
-	# 开局没有可生产兵种，也不预塞工厂资源。
-	# 前三关胜利与第四关失败提供首轮九兵扩军所需材料。
-	factory.materials = {"porcelain": 80, "parts": 48, "sludge": 32}
+	# 开局没有可研发图纸；首批设计只在 1-4 首败后的信号招募中出现。
+	# v9 将工业库存归并到 porcelain 兼容槽；parts/sludge 只保留旧存档结构。
+	factory.materials = {"porcelain": 112, "parts": 0, "sludge": 0}
 	factory.discovered_blueprints = {}
 	factory.blueprints = (
 		{"ordinary.assault": true, "flying.rocket": true, "heavy.armored": true, "special.repair": true}
@@ -179,22 +179,32 @@ func spend(cost: Dictionary) -> void:
 func grant(reward: Dictionary) -> void:
 	for key in MATERIAL_KEYS:
 		if reward.has(key):
-			materials[key] = mini(
-				int(capacities.get(key, 0)),
-				int(materials.get(key, 0)) + int(reward[key])
-			)
+			var current := int(materials.get(key, 0))
+			var headroom := maxi(0, int(capacities.get(key, 0)) - current)
+			materials[key] = current + mini(headroom, maxi(0, int(reward[key])))
 
 
 func refresh_capacities() -> void:
-	var command_level := int(facilities.get("command_center", 1))
-	var command_multiplier := 1.0 + float(maxi(0, command_level - 1)) * 0.1
-	capacities = {
-		"porcelain": int(round(4320.0 * float(maxi(1, int(facilities.get("porcelain_plant", 0)))) * command_multiplier)),
-		"parts": int(round(2160.0 * float(maxi(1, int(facilities.get("parts_workshop", 0)))) * command_multiplier)),
-		"sludge": int(round(2880.0 * float(maxi(1, int(facilities.get("energy_station", 0)))) * command_multiplier)),
-	}
+	capacities = capacities_for_facilities(facilities)
 	for key in MATERIAL_KEYS:
+		# A v8 conversion may legitimately exceed the new pooled capacity.
+		# Preserve that balance and let later spending bring it below the cap.
+		if key == "porcelain" and int(materials.get(key, 0)) > int(capacities[key]):
+			continue
 		materials[key] = mini(int(materials.get(key, 0)), int(capacities[key]))
+
+
+static func capacities_for_facilities(facility_levels: Dictionary) -> Dictionary:
+	var active_line_levels := 0
+	for facility_id in ["porcelain_plant", "parts_workshop", "energy_station"]:
+		active_line_levels += maxi(0, int(facility_levels.get(facility_id, 0)))
+	var industrial_capacity := maxi(2160, active_line_levels * 2160)
+	return {
+		"porcelain": industrial_capacity,
+		# Compatibility slots must stay valid for strict legacy save decoding.
+		"parts": 2160,
+		"sludge": 2160,
+	}
 
 
 func unlock_blueprints(recipe_ids: Array[String]) -> Array[String]:
@@ -213,7 +223,7 @@ func validate() -> Array[String]:
 			errors.append("factory.materials.%s must not be negative" % key)
 		if int(capacities.get(key, 0)) <= 0:
 			errors.append("factory.capacities.%s must be positive" % key)
-		elif int(materials.get(key, 0)) > int(capacities[key]):
+		elif key != "porcelain" and int(materials.get(key, 0)) > int(capacities[key]):
 			errors.append("factory.materials.%s exceeds capacity" % key)
 	if next_sequence < 1:
 		errors.append("factory.next_sequence must be positive")

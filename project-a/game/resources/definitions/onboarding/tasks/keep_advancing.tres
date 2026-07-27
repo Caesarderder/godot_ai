@@ -8,5 +8,5 @@
 script = ExtResource("1")
 task_id = &"operation.keep_advancing"
 title = "行动二：压力升级"
-lesson = "连续突破远程守军与轻炮预警；关卡战果已经包含工业材料。"
+lesson = "连续突破远程守军与轻炮预警；出战积累角色经验，胜利获得金币与成长战果。"
 objectives = Array[Resource]([ExtResource("2"), ExtResource("3")])

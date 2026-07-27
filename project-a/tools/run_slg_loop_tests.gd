@@ -42,7 +42,7 @@ func _run_contract() -> void:
 	_expect(executor.state.roster_ids() == permanent_ids, "battle never deletes heroes")
 	_expect(int(executor.state.hero_by_id(hero_id).readiness) == 100, "battle leaves every permanent hero fully ready")
 	_expect((first_battle["event"]["damage_manifest"] as Dictionary).is_empty(), "battle settlement has no persistent damage manifest")
-	_expect(int(executor.state.economy.industrial_tech) >= 4, "town victory grants expansion technology")
+	_expect(int(executor.state.economy.industrial_tech) == 0, "town victory does not recreate retired expansion technology")
 	_expect(
 		String((first_battle["event"]["onboarding_settlement"] as Dictionary).get("task_id", "")) == "operation.lone_vanguard",
 		"first action reward settles inside the authoritative battle command"
@@ -59,6 +59,11 @@ func _run_contract() -> void:
 	_expect_task("operation.research_reinforcements", false, 0)
 	_expect(int(executor.state.factory.facilities["research_lab"]) == 0, "high-wall defeat does not auto-build the research lab")
 	_expect(bool(executor.state.factory.eligible_facilities.get("research_lab", false)), "high-wall defeat grants research-lab eligibility")
+	var foundational_signal := _command("claim_foundational_signal", {})
+	_expect_ok(foundational_signal, "free signal ten-pull stores foundational design blueprints")
+	_expect(int(((foundational_signal.get("event", {}) as Dictionary).get("results", []) as Array).size()) == 10, "foundational signal reveals ten blueprint results")
+	_expect(executor.state.roster.size() == 1, "signal reception never creates a permanent hero")
+	_expect_task("operation.research_reinforcements", false, 1)
 
 	var construct_lab := _command("construct_facility", {
 		"facility_id": "research_lab",
@@ -68,21 +73,23 @@ func _run_contract() -> void:
 	})
 	_expect_ok(construct_lab, "player actively constructs the eligible research lab")
 	_expect(int(executor.state.factory.facilities["research_lab"]) == 0, "research lab remains inactive while construction runs")
-	_expect_ok(_command("claim_facility_work", {"now_unix": 1085}), "player accepts the completed research lab")
+	_expect_ok(_command("claim_facility_work", {"now_unix": 1015}), "player accepts the research lab after five seconds")
 	_expect(int(executor.state.factory.facilities["research_lab"]) == 1, "research lab becomes built only after timed construction")
-	var breakthrough := _command("claim_research_breakthrough", {})
-	_expect_ok(breakthrough, "research breakthrough ten-pull grants both foundational heroes")
-	_expect(int(((breakthrough.get("event", {}) as Dictionary).get("results", []) as Array).size()) == 10, "research breakthrough reveals ten results")
+	_expect_ok(_command("unlock_foundational_blueprint", {
+		"recipe_id": "ordinary.assault", "now_unix": 1015,
+	}), "research lab starts the assault design")
+	var assault_research := _command("claim_blueprint_research", {"now_unix": 1060})
+	_expect_ok(assault_research, "assault research creates the permanent hero")
+	_expect_task("operation.research_reinforcements", false, 2)
+	_expect_ok(_command("unlock_foundational_blueprint", {
+		"recipe_id": "heavy.armored", "now_unix": 1060,
+	}), "research lab starts the armored design")
+	var armored_research := _command("claim_blueprint_research", {"now_unix": 1105})
+	_expect_ok(armored_research, "armored research creates the permanent hero")
 	_expect_task("operation.counterattack", false, 0)
 
-	var assault_id := ""
-	var armored_id := ""
-	for item_value in (breakthrough.get("event", {}) as Dictionary).get("results", []):
-		var item := item_value as Dictionary
-		if String(item.get("archetype_id", "")) == "assault":
-			assault_id = String(item.get("hero_id", ""))
-		elif String(item.get("archetype_id", "")) == "armored":
-			armored_id = String(item.get("hero_id", ""))
+	var assault_id := String((assault_research.get("event", {}) as Dictionary).get("hero_id", ""))
+	var armored_id := String((armored_research.get("event", {}) as Dictionary).get("hero_id", ""))
 	_expect_ok(_command("assign_formation_slot", {"slot": "troop_1", "hero_id": assault_id}), "assault toilet joins the formation")
 	_expect_ok(_command("assign_formation_slot", {"slot": "troop_2", "hero_id": armored_id}), "armored toilet joins the formation")
 	_expect(executor.state.formation.hero_ids().size() == 3, "Gman and both researched toilets form the counterattack squad")
@@ -90,16 +97,16 @@ func _run_contract() -> void:
 	_expect_task("operation.choose_growth", false, 0)
 	var construct_support := _command("construct_facility", {
 		"facility_id": "porcelain_plant",
-		"now_unix": 1090,
+		"now_unix": 1110,
 		"grid_x": -2,
 		"grid_z": 1,
 	})
 	_expect_ok(construct_support, "player chooses a real industrial support facility before the boss")
-	_expect_ok(_command("claim_facility_work", {"now_unix": 1120}), "support facility completes its commissioning run")
+	_expect_ok(_command("claim_facility_work", {"now_unix": 1115}), "support facility completes its five-second commissioning run")
 	_expect_task("operation.choose_growth", false, 1)
 	_expect_ok(_command("claim_facility_output", {
 		"facility_id": "porcelain_plant",
-		"now_unix": 1120,
+		"now_unix": 1115,
 	}), "player collects the first real factory output")
 	_expect_task("operation.choose_growth", false, 2)
 	_expect_ok(_command("upgrade_hero_star", {"hero_id": armored_id}), "player chooses one visible combat growth before the boss")
@@ -110,12 +117,24 @@ func _run_contract() -> void:
 	_expect(bool(snapshot.get("finished", false)), "seven-operation first chapter guidance completes")
 	var chapter_two_boss := _settle("stage_2_5", "victory", executor.state.formation.hero_ids())
 	_expect_ok(chapter_two_boss, "second chapter boss settles")
-	_expect(String((chapter_two_boss["event"]["unlocked_hero"] as Dictionary).get("archetype_id", "")) == "bomber", "second chapter unlocks the permanent bomber")
-	_expect(executor.state.roster.size() == 4 and executor.state.formation.hero_ids().size() == 4, "first campaign unlock joins roster and empty formation slot")
+	var chapter_two_blueprints := chapter_two_boss["event"]["unlocked_blueprints"] as Array
+	_expect(chapter_two_blueprints.size() == 1 and String((chapter_two_blueprints[0] as Dictionary).get("recipe_id", "")) == "flying.bomber", "second chapter boss grants the bomber design blueprint")
+	_expect(executor.state.roster.size() == 3, "campaign blueprint never bypasses research to create a hero")
+	_expect_ok(_command("unlock_foundational_blueprint", {
+		"recipe_id": "flying.bomber", "now_unix": 1200,
+	}), "research lab starts the boss-earned bomber design")
+	_expect_ok(_command("claim_blueprint_research", {"now_unix": 1245}), "research lab creates the permanent bomber")
+	_expect(executor.state.roster.size() == 4 and executor.state.formation.hero_ids().size() == 3, "researched bomber joins the roster without silently changing formation")
 	var chapter_three_boss := _settle("stage_3_5", "victory", executor.state.formation.hero_ids())
 	_expect_ok(chapter_three_boss, "third chapter boss settles")
-	_expect(String((chapter_three_boss["event"]["unlocked_hero"] as Dictionary).get("archetype_id", "")) == "saw", "third chapter unlocks the permanent saw hero")
-	_expect(executor.state.roster.size() == 5 and executor.state.formation.hero_ids().size() == 5, "campaign grows the legion through later hero unlocks")
+	var chapter_three_blueprints := chapter_three_boss["event"]["unlocked_blueprints"] as Array
+	_expect(chapter_three_blueprints.size() == 1 and String((chapter_three_blueprints[0] as Dictionary).get("recipe_id", "")) == "heavy.saw", "third chapter boss grants the saw design blueprint")
+	_expect(executor.state.roster.size() == 4, "later campaign blueprint also waits for research")
+	_expect_ok(_command("unlock_foundational_blueprint", {
+		"recipe_id": "heavy.saw", "now_unix": 1300,
+	}), "research lab starts the boss-earned saw design")
+	_expect_ok(_command("claim_blueprint_research", {"now_unix": 1345}), "research lab creates the permanent saw hero")
+	_expect(executor.state.roster.size() == 5 and executor.state.formation.hero_ids().size() == 3, "researched campaign designs grow the permanent roster without silently changing formation")
 	var unlocked_ids: Array[String] = executor.state.roster_ids()
 	var unique_unlocked_ids: Dictionary = {}
 	for unlocked_id in unlocked_ids:
@@ -149,7 +168,7 @@ func _verify_late_onboarding_objective_reconciliation() -> void:
 	})
 	_expect_ok(late_claim, "late-completed task reward can be claimed immediately")
 	_expect(
-		int(probe.state.economy.toilet_coins) == coins_before + 70,
+		int(probe.state.economy.toilet_coins) == coins_before + 30,
 		"late catch-up atomically settles the already-proven high-wall reward exactly once"
 	)
 	var replay := probe.execute({
@@ -170,10 +189,12 @@ func _verify_late_onboarding_objective_reconciliation() -> void:
 	_expect(not bool(passed_wall.get("completed", true)), "research remains a real unfinished player action")
 
 	probe.state.onboarding["active_index"] = 3
-	(probe.state.onboarding["claimed"] as Dictionary)["reward.research_breakthrough_ten"] = true
+	(probe.state.onboarding["claimed"] as Dictionary)["reward.foundational_signal_ten"] = true
+	probe.state.factory.blueprints["ordinary.assault"] = true
+	probe.state.factory.blueprints["heavy.armored"] = true
 	var late_research := OnboardingService.snapshot(probe.state)
-	_expect(bool(late_research.get("completed", false)), "late research task completes from durable breakthrough receipt")
-	_expect(int(late_research.get("progress", 0)) == 1, "durable breakthrough objective reconciles")
+	_expect(bool(late_research.get("completed", false)), "late research task completes from durable signal and researched designs")
+	_expect(int(late_research.get("progress", 0)) == 3, "durable signal and both research objectives reconcile")
 
 
 func _verify_independent_facility_collection() -> void:
@@ -195,6 +216,7 @@ func _verify_independent_facility_collection() -> void:
 	_expect_ok(porcelain, "a resource building can be collected independently")
 	_expect(int(probe.state.factory.materials["porcelain"]) > int(before["porcelain"]), "porcelain building grants only its stored material")
 	_expect(int(probe.state.factory.materials["parts"]) == int(before["parts"]), "collecting porcelain does not reset or grant parts")
+	var after_first_line := int(probe.state.factory.materials["porcelain"])
 	var duplicate := probe.execute({
 		"command_id": "facility-porcelain-2",
 		"type": "claim_facility_output",
@@ -213,7 +235,7 @@ func _verify_independent_facility_collection() -> void:
 		"requested_at": 1600,
 	})
 	_expect_ok(parts, "another building keeps its own unclaimed production window")
-	_expect(int(probe.state.factory.materials["parts"]) > int(before["parts"]), "parts workshop grants its stored parts after porcelain was collected")
+	_expect(int(probe.state.factory.materials["porcelain"]) > after_first_line, "second production line grants industrial material after the first was collected")
 
 
 func _verify_factory_capacity_contract() -> void:
@@ -234,7 +256,6 @@ func _verify_factory_capacity_contract() -> void:
 	_expect(int(result["event"]["materials"]["porcelain"]) == 1, "claim event reports only accepted inventory")
 	_expect(int(result["event"]["overflow"]["porcelain"]) > 0, "claim event reports production lost to overflow")
 	probe.state.economy.toilet_coins = 9999
-	probe.state.economy.industrial_tech = 999
 	var upgrade := probe.execute({
 		"command_id": "capacity-upgrade",
 		"type": "upgrade_facility",
@@ -264,20 +285,16 @@ func _verify_factory_capacity_contract() -> void:
 func _verify_skill_research_contract() -> void:
 	var probe := CommandExecutor.new(GameState.create_new(89, 1000), func(_state: RefCounted) -> bool: return true)
 	var hero_id := String(probe.state.roster[0].hero_id)
-	probe.state.economy.industrial_tech = 99
-	probe.state.economy.skill_chips = 9
+	probe.state.economy.hero_shards = 20
 	probe.state.economy.toilet_coins = 999
-	probe.state.factory.materials = {"porcelain": 999, "parts": 999, "sludge": 999}
 	var quote := LogisticsService.active_skill_research_quote(probe.state, hero_id)
 	_expect_ok(quote, "active-skill quote recognizes an affordable level-two research")
 	_expect(
 		quote.get("cost", {}) == {
 			"toilet_coins": 80,
-			"industrial_tech": 6,
-			"skill_chips": 1,
-			"materials": {"porcelain": 24, "parts": 16, "sludge": 20},
+			"hero_shards": 4,
 		},
-		"active-skill quote exposes the same complete cost used by the transaction"
+		"active-skill quote exposes the coin-and-legion-data cost used by the transaction"
 	)
 	var level_two := probe.execute({
 		"command_id": "skill-research-2",

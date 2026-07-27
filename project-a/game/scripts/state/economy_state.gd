@@ -18,7 +18,15 @@ static func create_starting() -> EconomyState:
 	var economy := EconomyState.new()
 	economy.toilet_coins = 250
 	economy.recruit_tickets = 0
-	economy.xp_books = 2
+	# Schema v9 keeps only the four active ledgers non-zero. Legacy fields remain
+	# serialized so older call sites can be retired without corrupting saves.
+	economy.toilet_gems = 0
+	economy.gold = 0
+	economy.xp_books = 0
+	economy.forge_stones = 0
+	economy.industrial_tech = 0
+	economy.skill_chips = 0
+	economy.hero_shards = 0
 	return economy
 
 

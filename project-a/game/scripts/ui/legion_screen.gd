@@ -1,10 +1,21 @@
 class_name LegionScreen
 extends VBoxContainer
 
+class PanelVBox:
+	extends VBoxContainer
+
+	var panel_style: StyleBox
+
+	func _draw() -> void:
+		if panel_style != null:
+			panel_style.draw(get_canvas_item(), Rect2(Vector2.ZERO, size))
+
 signal tab_selected(tab_id: String)
 signal action_requested(action_id: String, payload: Dictionary)
+signal hero_selected(hero_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
@@ -14,7 +25,12 @@ const CYAN := Color("#58c9c2")
 const GOLD := Color("#e5a84b")
 const GREEN := Color("#78b982")
 const RED := Color("#d95c4f")
-
+const CLASS_NAMES := {
+	"guardian": "守卫",
+	"fighter": "战士",
+	"ranger": "远程",
+	"arcanist": "术能",
+}
 const SLOT_NAMES := {
 	"commander": "前排 1",
 	"troop_1": "前排 2",
@@ -28,17 +44,22 @@ const SLOT_NAMES := {
 @onready var task_tabs: HBoxContainer = $TaskTabs
 @onready var formation_tab: Button = %LegionFormationTab
 @onready var recruit_tab: Button = %LegionRecruitTab
+@onready var codex_tab: Button = %LegionCodexTab
 @onready var roster_tab: Button = %LegionRosterTab
 
 var _view: Dictionary = {}
+var _selected_hero_id := ""
+var _roster_hero_list: VBoxContainer
 
 
 func _ready() -> void:
 	formation_tab.pressed.connect(tab_selected.emit.bind("formation"))
 	recruit_tab.pressed.connect(tab_selected.emit.bind("recruit"))
+	codex_tab.pressed.connect(tab_selected.emit.bind("codex"))
 	roster_tab.pressed.connect(tab_selected.emit.bind("roster"))
 	_style_tab(formation_tab, true)
 	_style_tab(recruit_tab, false)
+	_style_tab(codex_tab, false)
 	_style_tab(roster_tab, false)
 	if not _view.is_empty():
 		_rebuild()
@@ -46,6 +67,8 @@ func _ready() -> void:
 
 func configure(view: Dictionary) -> void:
 	_view = view.duplicate(true)
+	_selected_hero_id = String(_view.get("selected_hero_id", _selected_hero_id))
+	_ensure_selected_hero()
 	if is_node_ready():
 		_rebuild()
 
@@ -63,7 +86,13 @@ func _rebuild() -> void:
 	scroll.name = "LegionContentScroll_%s" % active_tab
 	_style_tab(formation_tab, active_tab == "formation")
 	_style_tab(recruit_tab, active_tab == "recruit")
+	_style_tab(codex_tab, active_tab == "codex")
 	_style_tab(roster_tab, active_tab == "roster")
+	scroll.vertical_scroll_mode = (
+		ScrollContainer.SCROLL_MODE_DISABLED
+		if active_tab == "roster"
+		else ScrollContainer.SCROLL_MODE_AUTO
+	)
 	_clear_content()
 	if bool(first_growth.get("active", false)):
 		content.add_child(_growth_choice_panel(first_growth))
@@ -74,9 +103,11 @@ func _rebuild() -> void:
 	match active_tab:
 		"recruit":
 			content.add_child(_recruit_panel())
+		"codex":
+			content.add_child(_codex_panel())
 		"roster":
-			for hero_value in _view.get("roster", []):
-				content.add_child(_hero_card(hero_value as Dictionary))
+			content.add_child(_roster_panel())
+			call_deferred("_focus_selected_roster_hero")
 		_:
 			content.add_child(_formation_panel())
 
@@ -165,6 +196,9 @@ func _growth_choice_panel(first_growth: Dictionary) -> Control:
 			GOLD
 		))
 		card.add_child(_label("消耗 · %s" % String(choice.get("cost", "")), 11, TEXT))
+		var resource_context := choice.get("resource_context", {}) as Dictionary
+		if not resource_context.is_empty():
+			card.add_child(_resource_context(resource_context))
 		var upgraded := bool(choice.get("already_upgraded", false))
 		var action := _button("已完成二星成长" if upgraded else "选择此路线并升至 2★", true)
 		action.name = "ChooseGrowth_%s" % String(choice.get("archetype_id", ""))
@@ -290,12 +324,29 @@ func _candidate_panel(slot_id: String) -> Control:
 
 func _recruit_panel() -> Control:
 	var panel := _panel("信号招募")
+	var foundational := _view.get("foundational_signal", {}) as Dictionary
+	if bool(foundational.get("unlocked", false)):
+		panel.add_child(_label(
+			"首批信号 · 10 张 B/A 级基础设计图纸 · 保证包含冲锋与装甲设计",
+			13,
+			GREEN
+		))
+		if bool(foundational.get("claimable", false)):
+			var foundational_ten := _button("免费接收基础图纸十连", true)
+			foundational_ten.name = "FoundationalSignalTenButton"
+			foundational_ten.custom_minimum_size.y = 48
+			foundational_ten.pressed.connect(
+				action_requested.emit.bind("claim_foundational_signal", {})
+			)
+			panel.add_child(foundational_ten)
+		elif bool(foundational.get("claimed", false)):
+			panel.add_child(_label("基础图纸已接收 · 前往研究所选择图纸研发永久角色", 12, CYAN))
 	if not bool(_view.get("recruitment_unlocked", false)):
 		panel.add_child(_label(String(_view.get("recruitment_progress", "主线推进后开放")), 14, MUTED))
-		panel.add_child(_label("冲锋与装甲由主线确定性获得；随机招募不会卡住首章。", 12, GREEN))
+		panel.add_child(_label("长期招募在首章后开放；所有信号结果只包含设计图纸，重复图纸转为军团数据。", 12, GREEN))
 		return panel
 	panel.add_child(_label(
-		"招募券 %d · S 保底 %d/60 · 十抽至少 A · 定向保底%s" % [
+		"招募券 %d · S 图纸保底 %d/60 · 十抽至少 A · 定向保底%s" % [
 			int(_view.get("recruit_tickets", 0)),
 			int(_view.get("recruit_s_pity", 0)),
 			"已生效" if bool(_view.get("recruit_target_guaranteed", false)) else "未触发",
@@ -303,9 +354,8 @@ func _recruit_panel() -> Control:
 		14,
 		GOLD
 	))
-	panel.add_child(_label("概率 R 80% / A 18% / S 2% · 重复英雄转专属数据", 12, MUTED))
-	panel.add_child(_label("定向 S：寄生母体 · 十抽至少出现一名 A 级或更高成员", 12, TEXT))
-	panel.add_child(_label(String(_view.get("hero_data_copy", "英雄数据：暂无")), 12, MUTED))
+	panel.add_child(_label("图纸评级 B 80% / A 18% / S 2% · 重复图纸转军团数据", 12, MUTED))
+	panel.add_child(_label("定向 S：寄生母体设计图 · 十抽至少出现一张 A 级或更高图纸", 12, TEXT))
 	var actions := HBoxContainer.new()
 	var single := _button("招募 1 次", true)
 	single.disabled = int(_view.get("recruit_tickets", 0)) < 1
@@ -324,12 +374,12 @@ func _recruit_panel() -> Control:
 		grid.columns = 5
 		for draw_value in results:
 			var draw := draw_value as Dictionary
-			var rarity := String(draw.get("rarity", "R"))
+			var rarity := String(draw.get("rarity", "B"))
 			var card := _label(
 				"%s · %s\n%s" % [
 					rarity,
 					String(draw.get("display_name", "")),
-					"永久英雄" if String(draw.get("kind", "hero")) == "hero" else "英雄数据 +%d" % int(draw.get("amount", 0)),
+					"新设计图纸" if String(draw.get("kind", "blueprint")) == "blueprint" else "军团数据 +%d" % int(draw.get("amount", 0)),
 				],
 				12,
 				GOLD if rarity == "S" else (CYAN if rarity == "A" else MUTED)
@@ -341,87 +391,315 @@ func _recruit_panel() -> Control:
 	return panel
 
 
-func _hero_card(hero: Dictionary) -> Control:
-	var panel := _panel("")
-	var line := HBoxContainer.new()
-	line.add_theme_constant_override("separation", 12)
-	panel.add_child(line)
-	var info := VBoxContainer.new()
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_child(info)
-	info.add_child(_label(
-		"%s    Lv.%d · %d★ · 战力 %d" % [
-			String(hero.get("display_name", "")),
-			int(hero.get("level", 1)),
-			int(hero.get("star", 1)),
-			int(hero.get("power", 0)),
-		],
-		18,
-		TEXT
-	))
-	info.add_child(_label("%s · 无损可出征" % String(hero.get("role", "")), 13, GREEN))
-	info.add_child(_label(
-		"主动技能：%s Lv.%d · 下一成长 %s" % [
-			String(hero.get("skill_name", "")),
-			int(hero.get("skill_level", 1)),
-			String(hero.get("next_growth", "已达当前上限")),
-		],
-		12,
+func _codex_panel() -> Control:
+	var panel := _panel("马桶角色图鉴")
+	panel.name = "ToiletRoleCodex"
+	panel.add_child(_label(
+		"B / A / S 为当前三档角色评级；图纸来自信号招募，永久角色只在研究所完成研发。",
+		13,
 		CYAN
 	))
-	info.add_child(_label(
-		"%s\n%s\n最佳时机：%s" % [
+	var grid := GridContainer.new()
+	grid.name = "ToiletRoleCodexGrid"
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	for entry_value in _view.get("codex", []):
+		var entry := entry_value as Dictionary
+		var rating := String(entry.get("rating", "B"))
+		var status := String(entry.get("status", "undiscovered"))
+		var rating_color := GOLD if rating == "S" else (CYAN if rating == "A" else GREEN)
+		var card := _panel("")
+		card.name = "Codex_%s" % String(entry.get("archetype_id", "unknown"))
+		card.custom_minimum_size = Vector2(330, 88)
+		card.add_child(_label(
+			"%s 评级 · %s" % [rating, String(entry.get("display_name", "未知马桶人"))],
+			16,
+			rating_color
+		))
+		card.add_child(_label(String(entry.get("description", "")), 11, TEXT))
+		card.add_child(_label(
+			String(entry.get("status_copy", "尚未获得设计图纸")),
+			12,
+			GREEN if status == "researched" else (CYAN if status == "blueprint_owned" else MUTED)
+		))
+		grid.add_child(card)
+	panel.add_child(grid)
+	return panel
+
+
+func _roster_panel() -> Control:
+	var split := HBoxContainer.new()
+	split.name = "RosterSplitView"
+	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	split.add_theme_constant_override("separation", 8)
+	var roster := _view.get("roster", []) as Array
+
+	var list_frame := PanelContainer.new()
+	list_frame.name = "RosterListPanel"
+	list_frame.custom_minimum_size.x = 188
+	list_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_frame.add_theme_stylebox_override("panel", _box(Color("#10161c"), Color("#42525a")))
+	split.add_child(list_frame)
+	var list_margin := MarginContainer.new()
+	list_margin.add_theme_constant_override("margin_left", 6)
+	list_margin.add_theme_constant_override("margin_top", 5)
+	list_margin.add_theme_constant_override("margin_right", 6)
+	list_margin.add_theme_constant_override("margin_bottom", 5)
+	list_frame.add_child(list_margin)
+	var list_column := VBoxContainer.new()
+	list_column.add_theme_constant_override("separation", 4)
+	list_margin.add_child(list_column)
+	var list_title := HBoxContainer.new()
+	list_column.add_child(list_title)
+	var title := _label("角色名册", 14, TEXT)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_title.add_child(title)
+	list_title.add_child(_label("%d 名" % roster.size(), 10, CYAN))
+	var list_scroll := ScrollContainer.new()
+	list_scroll.name = "RosterHeroListScroll"
+	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_column.add_child(list_scroll)
+	var list := VBoxContainer.new()
+	list.name = "RosterHeroList"
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 4)
+	list_scroll.add_child(list)
+	_roster_hero_list = list
+	for hero_value in roster:
+		var hero := hero_value as Dictionary
+		var hero_id := String(hero.get("hero_id", ""))
+		var selected := hero_id == _selected_hero_id
+		var entry := _button(
+			"%s%s\nLv.%d · %d★  战力 %d" % [
+				"◆ " if selected else "",
+				String(hero.get("display_name", "未知角色")),
+				int(hero.get("level", 1)),
+				int(hero.get("star", 1)),
+				int(hero.get("power", 0)),
+			],
+			selected
+		)
+		entry.name = "RosterHero_%s" % hero_id
+		entry.custom_minimum_size = Vector2(168, 56)
+		entry.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		entry.add_theme_font_size_override("font_size", 11)
+		entry.pressed.connect(_select_roster_hero.bind(hero_id))
+		list.add_child(entry)
+
+	var detail_frame := PanelContainer.new()
+	detail_frame.name = "RosterDetailPanel"
+	detail_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_frame.add_theme_stylebox_override("panel", _box(Color("#151c22"), Color("#53636b")))
+	split.add_child(detail_frame)
+	var detail_margin := MarginContainer.new()
+	detail_margin.add_theme_constant_override("margin_left", 7)
+	detail_margin.add_theme_constant_override("margin_top", 2)
+	detail_margin.add_theme_constant_override("margin_right", 7)
+	detail_margin.add_theme_constant_override("margin_bottom", 2)
+	detail_frame.add_child(detail_margin)
+	var selected_hero := _selected_hero()
+	if selected_hero.is_empty():
+		var empty := _panel("")
+		empty.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		empty.add_child(_label("暂无永久角色", 18, TEXT))
+		empty.add_child(_label("完成角色研发后，成员会出现在这里。", 12, MUTED))
+		detail_margin.add_child(empty)
+	else:
+		detail_margin.add_child(_hero_card(selected_hero))
+	return split
+
+
+func _ensure_selected_hero() -> void:
+	var roster := _view.get("roster", []) as Array
+	if roster.is_empty():
+		_selected_hero_id = ""
+		return
+	for hero_value in roster:
+		if String((hero_value as Dictionary).get("hero_id", "")) == _selected_hero_id:
+			return
+	_selected_hero_id = String((roster[0] as Dictionary).get("hero_id", ""))
+
+
+func _selected_hero() -> Dictionary:
+	for hero_value in _view.get("roster", []):
+		var hero := hero_value as Dictionary
+		if String(hero.get("hero_id", "")) == _selected_hero_id:
+			return hero
+	return {}
+
+
+func _select_roster_hero(hero_id: String) -> void:
+	if hero_id == _selected_hero_id:
+		return
+	_selected_hero_id = hero_id
+	_view["selected_hero_id"] = hero_id
+	hero_selected.emit(hero_id)
+	_rebuild()
+
+
+func _focus_selected_roster_hero() -> void:
+	if _roster_hero_list == null or not is_instance_valid(_roster_hero_list):
+		return
+	var selected := _roster_hero_list.get_node_or_null(
+		NodePath("RosterHero_%s" % _selected_hero_id)
+	) as Button
+	if selected != null and not selected.disabled:
+		selected.grab_focus()
+
+
+func _hero_card(hero: Dictionary) -> Control:
+	var panel := VBoxContainer.new()
+	panel.name = "RosterHeroDetail_%s" % String(hero.get("hero_id", "unknown"))
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_theme_constant_override("separation", 2)
+
+	# The roster receives about 180 px in the compact App Shell. Keep identity,
+	# the two-dimensional data board and all cultivation decisions in one frame.
+	var identity := HBoxContainer.new()
+	identity.name = "RosterIdentityStrip"
+	identity.custom_minimum_size.y = 32
+	identity.add_theme_constant_override("separation", 6)
+	panel.add_child(identity)
+	var identity_copy := VBoxContainer.new()
+	identity_copy.add_theme_constant_override("separation", -3)
+	identity_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	identity.add_child(identity_copy)
+	identity_copy.add_child(_label(
+		"%s  ·  Lv.%d  %d★" % [
+			String(hero.get("display_name", "未知角色")),
+			int(hero.get("level", 1)),
+			int(hero.get("star", 1)),
+		],
+		14,
+		TEXT
+	))
+	identity_copy.add_child(_label(
+		"%s · %s评级 · %s  |  经验 %s · 无损可出征" % [
+			String(CLASS_NAMES.get(String(hero.get("class_id", "")), "未知职业")),
+			String(hero.get("aptitude_id", "?")),
+			String(hero.get("role", "待命")),
+			"上限" if int(hero.get("level", 1)) >= 5 else "%d/%d" % [
+				int(hero.get("xp", 0)),
+				int(hero.get("next_level_xp", 0)),
+			],
+		],
+		10,
+		CYAN
+	))
+	var power_card := VBoxContainer.new()
+	power_card.custom_minimum_size.x = 84
+	power_card.add_theme_constant_override("separation", -4)
+	power_card.add_child(_label("战力", 9, MUTED))
+	power_card.add_child(_label("%d" % int(hero.get("power", 0)), 17, GOLD))
+	identity.add_child(power_card)
+
+	var data_board := HBoxContainer.new()
+	data_board.name = "RosterDataBoard"
+	data_board.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	data_board.add_theme_constant_override("separation", 6)
+	panel.add_child(data_board)
+	var stat_board := VBoxContainer.new()
+	stat_board.name = "RosterStatBoard"
+	stat_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stat_board.add_theme_constant_override("separation", 2)
+	data_board.add_child(stat_board)
+	var battle_stats := hero.get("battle_stats", {}) as Dictionary
+	var battle_grid := GridContainer.new()
+	battle_grid.name = "RosterBattleStats"
+	battle_grid.columns = 5
+	battle_grid.add_theme_constant_override("h_separation", 3)
+	for metric in [
+		["生命", "%d" % int(battle_stats.get("hp", 0))],
+		["攻击", "%d" % int(battle_stats.get("attack", 0))],
+		["防御", "%d" % int(battle_stats.get("defense", 0))],
+		["速度", "%.1f" % (float(battle_stats.get("speed_milli", 0)) / 1000.0)],
+		["暴击", "%.1f%%" % (float(battle_stats.get("crit_bp", 0)) / 100.0)],
+	]:
+		battle_grid.add_child(_compact_metric(String(metric[0]), String(metric[1]), TEXT))
+	stat_board.add_child(battle_grid)
+
+	var skill_board := VBoxContainer.new()
+	skill_board.name = "RosterSkillBoard"
+	skill_board.custom_minimum_size.x = 210
+	skill_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	skill_board.add_theme_constant_override("separation", 1)
+	data_board.add_child(skill_board)
+	var skill_name := _label(
+		"主动技能  %s Lv.%d" % [
+			String(hero.get("skill_name", "")),
+			int(hero.get("skill_level", 1)),
+		],
+		10,
+		CYAN
+	)
+	skill_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	skill_name.autowrap_mode = TextServer.AUTOWRAP_OFF
+	skill_board.add_child(skill_name)
+	var skill_detail := _label(
+		"职责：%s\n效果：%s" % [
 			String(hero.get("skill_role", "")),
 			String(hero.get("skill_effect", "")),
-			String(hero.get("skill_timing", "")),
 		],
-		11,
-		MUTED
-	))
+		9,
+		TEXT
+	)
+	skill_detail.name = "RosterSkillDetail"
+	skill_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	skill_board.add_child(skill_detail)
+	var skill_timing := _label(
+		"最佳时机：%s" % String(hero.get("skill_timing", "")),
+		9,
+		GREEN
+	)
+	skill_timing.name = "RosterSkillTiming"
+	skill_timing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	skill_board.add_child(skill_timing)
+
+	var cultivation := HBoxContainer.new()
+	cultivation.name = "RosterCultivationBar"
+	cultivation.custom_minimum_size.y = 64
+	cultivation.add_theme_constant_override("separation", 4)
+	panel.add_child(cultivation)
+	_add_cultivation_action(
+		cultivation,
+		"升级",
+		"upgrade",
+		hero,
+		hero.get("level_resource_context", {}) as Dictionary,
+		true
+	)
 	if int(hero.get("star", 1)) < 3:
-		info.add_child(_label(
-			"专属数据 %d/%d · 不足部分可由通用碎片补足" % [
-				int(hero.get("owned_data", 0)),
-				int(hero.get("next_star_data", 4)),
-			],
-			11,
-			GOLD if int(hero.get("owned_data", 0)) > 0 else MUTED
-		))
+		_add_cultivation_action(
+			cultivation,
+			"升星",
+			"star",
+			hero,
+			hero.get("star_resource_context", {}) as Dictionary,
+			false
+		)
+	if int(hero.get("star", 1)) == 1 and int(hero.get("welfare_star_core_count", 0)) > 0:
+		var welfare_core := _add_cultivation_action(
+			cultivation,
+			"福利升星 · 本次军团数据全免",
+			"welfare_star_core",
+			hero,
+			hero.get("welfare_star_resource_context", {}) as Dictionary,
+			true
+		)
+		welfare_core.name = "WelfareStarCore_%s" % String(hero.get("hero_id", "hero"))
+		welfare_core.tooltip_text = "黑金核心：本次军团数据全免；工业材料不参与升星。"
 	if int(hero.get("skill_level", 1)) < 3:
-		var skill_cost := hero.get("skill_research_cost", {}) as Dictionary
-		if not skill_cost.is_empty():
-			var materials := skill_cost.get("materials", {}) as Dictionary
-			info.add_child(_label(
-				"技能 Lv.%d：%d 币 · %d 技术 · %d 芯片 · 陶瓷/零件/能源 %d/%d/%d" % [
-					int(hero.get("skill_research_target", int(hero.get("skill_level", 1)) + 1)),
-					int(skill_cost.get("toilet_coins", 0)),
-					int(skill_cost.get("industrial_tech", 0)),
-					int(skill_cost.get("skill_chips", 0)),
-					int(materials.get("porcelain", 0)),
-					int(materials.get("parts", 0)),
-					int(materials.get("sludge", 0)),
-				],
-				11,
-				MUTED
-			))
-			info.add_child(_label(
-				_skill_research_status(String(hero.get("skill_research_error", ""))),
-				11,
-				GREEN if bool(hero.get("skill_research_affordable", false)) else GOLD
-			))
-	var actions := GridContainer.new()
-	actions.columns = 2
-	actions.custom_minimum_size.x = 360
-	line.add_child(actions)
-	_add_action(actions, "升级角色", "upgrade", hero, true)
-	if int(hero.get("star", 1)) < 3:
-		_add_action(actions, "升星", "star", hero, false)
-	if int(hero.get("skill_level", 1)) < 3:
-		var research := _add_action(
-			actions,
+		var research := _add_cultivation_action(
+			cultivation,
 			"研究技能 Lv.%d" % (int(hero.get("skill_level", 1)) + 1),
 			"skill",
 			hero,
+			hero.get("skill_resource_context", {}) as Dictionary,
 			false
 		)
 		research.name = "ResearchSkill_%s" % String(hero.get("archetype_id", "hero"))
@@ -433,24 +711,82 @@ func _hero_card(hero: Dictionary) -> Control:
 			)
 		)
 	if int(hero.get("star", 1)) >= 2:
-		_add_action(
-			actions,
+		_add_secondary_action(
+			cultivation,
 			"派驻%s%s" % [
 				String(hero.get("specialty_name", "")),
 				" ✓" if bool(hero.get("specialty_assigned", false)) else "",
 			],
 			"specialist",
-			hero,
-			false
+			hero
 		)
-	_add_action(
-		actions,
+	_add_secondary_action(
+		cultivation,
 		"自动技能：%s" % ("开" if bool(hero.get("auto_skill", false)) else "关"),
 		"auto",
-		hero,
-		false
+		hero
 	)
 	return panel
+
+
+func _add_cultivation_action(
+	parent: Control,
+	text: String,
+	action_id: String,
+	hero: Dictionary,
+	resource_context: Dictionary,
+	primary: bool
+) -> Button:
+	var tile := VBoxContainer.new()
+	tile.name = String(resource_context.get("name", "Cultivation_%s" % action_id))
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tile.add_theme_constant_override("separation", 1)
+	var quote := _label(_resource_projection_copy(resource_context), 9, MUTED)
+	quote.name = "CultivationQuote_%s" % action_id
+	quote.autowrap_mode = TextServer.AUTOWRAP_OFF
+	quote.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	quote.tooltip_text = String(resource_context.get("title", ""))
+	tile.add_child(quote)
+	var button := _add_action(tile, text, action_id, hero, primary)
+	button.name = "CultivationAction_%s" % action_id
+	button.custom_minimum_size.y = 48
+	button.add_theme_font_size_override("font_size", 10)
+	parent.add_child(tile)
+	return button
+
+
+func _add_secondary_action(
+	parent: Control,
+	text: String,
+	action_id: String,
+	hero: Dictionary
+) -> Button:
+	var tile := VBoxContainer.new()
+	tile.name = "SecondaryAction_%s" % action_id
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tile.add_theme_constant_override("separation", 1)
+	var context := _label("次操作", 9, MUTED)
+	context.autowrap_mode = TextServer.AUTOWRAP_OFF
+	tile.add_child(context)
+	var button := _add_action(tile, text, action_id, hero, false)
+	button.name = "RosterSecondaryAction_%s" % action_id
+	button.custom_minimum_size.y = 48
+	button.add_theme_font_size_override("font_size", 10)
+	parent.add_child(tile)
+	return button
+
+
+func _resource_projection_copy(view: Dictionary) -> String:
+	var projections: Array[String] = []
+	for item_value in view.get("items", []):
+		projections.append(ResourceContextHudScript.projection_copy(item_value as Dictionary))
+	if projections.is_empty():
+		return "当前已达上限"
+	var result := " · ".join(projections)
+	var note := String(view.get("note", ""))
+	if not note.is_empty():
+		result += " · %s" % note
+	return result
 
 
 func _skill_research_status(error: String) -> String:
@@ -459,14 +795,10 @@ func _skill_research_status(error: String) -> String:
 			return "资源已齐 · 研究后主动技能威力提高 20%"
 		"RESEARCH_LAB_LEVEL_TOO_LOW":
 			return "需先升级研究所"
-		"NOT_ENOUGH_INDUSTRIAL_TECH":
-			return "工业技术不足 · 继续首次占领新城"
 		"NOT_ENOUGH_SKILL_CHIPS":
-			return "技能芯片不足 · 击败章节 Boss 或领取长期进度"
+			return "军团数据不足 · 击败章节 Boss 或领取长期进度"
 		"NOT_ENOUGH_TOILET_COINS":
-			return "马桶币不足 · 继续攻城获得战果"
-		"NOT_ENOUGH_FACTORY_MATERIALS":
-			return "工业材料不足 · 收取工厂产出"
+			return "金币不足 · 继续攻城获得战果"
 		_:
 			return "当前不可研究"
 
@@ -482,6 +814,48 @@ func _add_action(parent: Control, text: String, action_id: String, hero: Diction
 	return button
 
 
+func _resource_context(view: Dictionary) -> Control:
+	var context := ResourceContextHudScript.new() as Control
+	context.call("configure", view)
+	context.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return context
+
+
+func _section_title(value: String) -> Label:
+	var title := _label(value, 13, CYAN)
+	title.add_theme_color_override("font_shadow_color", Color("#071012"))
+	title.add_theme_constant_override("shadow_offset_y", 1)
+	return title
+
+
+func _metric(title: String, value: String, color: Color) -> Control:
+	var metric := PanelContainer.new()
+	metric.custom_minimum_size = Vector2(104, 48)
+	metric.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	metric.add_theme_stylebox_override("panel", _box(Color("#0e1419"), Color("#344149")))
+	var copy := VBoxContainer.new()
+	copy.add_theme_constant_override("separation", -2)
+	metric.add_child(copy)
+	copy.add_child(_label(title, 10, MUTED))
+	copy.add_child(_label(value, 15, color))
+	return metric
+
+
+func _compact_metric(title: String, value: String, color: Color) -> Control:
+	var metric := VBoxContainer.new()
+	metric.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	metric.add_theme_constant_override("separation", -4)
+	var title_label := _label(title, 8, MUTED)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	metric.add_child(title_label)
+	var value_label := _label(value, 10, color)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	metric.add_child(value_label)
+	return metric
+
+
 func _style_tab(button: Button, active: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
@@ -495,7 +869,7 @@ func _style_tab(button: Button, active: bool) -> void:
 func _button(value: String, primary: bool) -> Button:
 	var button := Button.new()
 	button.text = value
-	button.custom_minimum_size.y = 44
+	button.custom_minimum_size.y = 48
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 13)
@@ -506,10 +880,10 @@ func _button(value: String, primary: bool) -> Button:
 	return button
 
 
-func _panel(title: String) -> VBoxContainer:
-	var panel := VBoxContainer.new()
+func _panel(title: String) -> PanelVBox:
+	var panel := PanelVBox.new()
 	panel.add_theme_constant_override("separation", 7)
-	panel.add_theme_stylebox_override("panel", _box(PANEL, LINE))
+	panel.panel_style = _box(PANEL, LINE)
 	if not title.is_empty():
 		panel.add_child(_label(title, 16, CYAN))
 	return panel

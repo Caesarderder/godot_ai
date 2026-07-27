@@ -70,45 +70,39 @@ static func pass_level(merit: int) -> int:
 static func pass_reward(level: int) -> Dictionary:
 	if level < 1 or level > PASS_MAX_LEVEL:
 		return {}
-	var reward := {"toilet_coins": 30, "porcelain": 0, "parts": 0, "sludge": 0, "recruit_tickets": 0, "hero_shards": 0, "skill_chips": 0}
+	var reward := {"toilet_coins": 30, "porcelain": 0, "recruit_tickets": 0, "hero_shards": 0}
 	if level % 3 == 0:
-		reward["porcelain"] = 20
-		reward["parts"] = 12
-		reward["sludge"] = 10
+		reward["porcelain"] = 30
 	if level in [5, 10, 15, 20, 25, 30]:
 		reward["recruit_tickets"] = 2
 	if level in [8, 18, 28]:
-		reward["hero_shards"] = 4
+		reward["hero_shards"] = int(reward["hero_shards"]) + 4
 	if level in [7, 14, 21, 28]:
-		reward["skill_chips"] = 1
+		reward["hero_shards"] = int(reward["hero_shards"]) + 4
 	return reward
 
 
 static func commander_reward(level: int) -> Dictionary:
 	if level < 2 or level > 30:
 		return {}
-	var reward := {"toilet_coins": 20, "porcelain": 0, "parts": 0, "sludge": 0, "recruit_tickets": 0, "skill_chips": 0}
+	var reward := {"toilet_coins": 20, "porcelain": 0, "recruit_tickets": 0, "hero_shards": 0}
 	if level % 3 == 0:
-		reward["porcelain"] = 15
-		reward["parts"] = 10
-		reward["sludge"] = 8
+		reward["porcelain"] = 24
 	if level == 6:
-		reward["porcelain"] = 25
-		reward["parts"] = 25
-		reward["sludge"] = 25
+		reward["porcelain"] = 56
 	if level == 8:
 		reward["recruit_tickets"] = 1
 	if level == 10:
 		reward["toilet_coins"] = 100
 	if level == 15:
-		reward["skill_chips"] = 1
+		reward["hero_shards"] = 4
 	if level == 20:
 		reward["recruit_tickets"] = 2
 	if level == 25:
 		reward["toilet_coins"] = 200
 	if level == 30:
 		reward["recruit_tickets"] = 3
-		reward["skill_chips"] = 2
+		reward["hero_shards"] = 8
 	return reward
 
 

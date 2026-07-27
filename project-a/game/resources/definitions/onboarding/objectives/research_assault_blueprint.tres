@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="OnboardingObjectiveDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/onboarding_objective_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+objective_id = &"research_assault_blueprint"
+label = "在研究所研发冲锋马桶人图纸"
+event_type = &"foundational_blueprint_unlocked"
+recipe_id = &"ordinary.assault"
+target = "research"
+cta_label = "研发冲锋马桶人"

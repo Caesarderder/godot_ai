@@ -1,7 +1,7 @@
 class_name HeroState
 extends RefCounted
 
-const ATTR_KEYS: Array[String] = ["vig", "str", "agi", "int"]
+const ATTR_KEYS: Array[String] = ["hp", "attack", "defense", "speed_milli", "crit_bp"]
 
 var hero_id: String = ""
 var display_name: String = ""
@@ -19,8 +19,12 @@ var xp: int = 0
 var readiness: int = 100
 var injury_flags: Array[String] = []
 var assigned_facility_id: String = ""
-var base_stats: Dictionary = {"vig": 0, "str": 0, "agi": 0, "int": 0}
-var stat_remainders: Dictionary = {"vig": 0, "str": 0, "agi": 0, "int": 0}
+var base_stats: Dictionary = {
+	"hp": 0, "attack": 0, "defense": 0, "speed_milli": 0, "crit_bp": 0
+}
+var stat_remainders: Dictionary = {
+	"hp": 0, "attack": 0, "defense": 0, "speed_milli": 0, "crit_bp": 0
+}
 var seed_token: String = ""
 
 

@@ -31,6 +31,51 @@ func _run() -> void:
 		cta.pressed.emit()
 	_check(action_request["id"] == "follow_task", "primary CTA emits a semantic follow request")
 	_check(action_request["stage_id"] == "stage_1_4", "primary CTA preserves the exact stage target")
+	var locked_welfare := goals.find_child("NewPlayerWelfareClaimButton", true, false) as Button
+	_check(locked_welfare != null and locked_welfare.disabled, "welfare card is visible but locked before 1-5")
+	var welfare_view := _action_view()
+	welfare_view["new_player_welfare"] = {
+		"unlocked": true,
+		"claimable": true,
+		"claimed": false,
+		"star_core_count": 0,
+		"logistics_case_count": 0,
+	}
+	goals.call("configure", welfare_view)
+	await process_frame
+	var welfare_claim := goals.find_child("NewPlayerWelfareClaimButton", true, false) as Button
+	_check(welfare_claim != null and not welfare_claim.disabled, "post-chapter welfare card becomes claimable")
+	if welfare_claim != null:
+		welfare_claim.pressed.emit()
+	_check(action_request["id"] == "claim_new_player_welfare", "welfare claim emits its semantic command request")
+	welfare_view["new_player_welfare"] = {
+		"unlocked": true,
+		"claimable": false,
+		"claimed": true,
+		"case_openable": true,
+		"case_opened": false,
+		"star_core_count": 1,
+		"logistics_case_count": 1,
+	}
+	goals.call("configure", welfare_view)
+	await process_frame
+	var open_case := goals.find_child("SmuggledLogisticsCaseButton", true, false) as Button
+	_check(open_case != null, "claimed welfare card exposes the unopened logistics case")
+	if open_case != null:
+		open_case.pressed.emit()
+	_check(action_request["id"] == "open_smuggled_logistics_case", "case button emits its semantic command request")
+	welfare_view["new_player_welfare"] = {
+		"unlocked": true,
+		"claimable": false,
+		"claimed": true,
+		"case_openable": false,
+		"case_opened": true,
+		"star_core_count": 1,
+		"logistics_case_count": 0,
+	}
+	goals.call("configure", welfare_view)
+	await process_frame
+	_check(_tree_has_text(goals, "走私后勤箱已开启"), "welfare card renders the opened-case state")
 
 	var tab_request := {"id": ""}
 	goals.connect("tab_selected", func(tab_id: String) -> void: tab_request["id"] = tab_id)
@@ -78,6 +123,11 @@ func _action_view() -> Dictionary:
 			"stage_id": "stage_1_4",
 		},
 		"campaign": {"cleared": 3, "chapters_copy": "第1章 3/5 · 第2章 0/5"},
+		"new_player_welfare": {
+			"unlocked": false,
+			"claimable": false,
+			"claimed": false,
+		},
 		"missions_unlocked": false,
 		"mission_lock": {
 			"title": "行动任务", "level": 1, "required_level": 2,

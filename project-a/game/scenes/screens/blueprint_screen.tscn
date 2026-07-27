@@ -65,21 +65,38 @@ theme_override_constants/separation = 5
 [node name="Heading" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
 layout_mode = 2
 text = "研究核心"
+visible = false
 
-[node name="BlueprintCoreStatus" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+[node name="CoreOverviewRow" type="HBoxContainer" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BlueprintCoreStatus" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content/CoreOverviewRow"]
 unique_name_in_owner = true
 layout_mode = 2
+custom_minimum_size = Vector2(205, 0)
 
-[node name="BlueprintBreakthroughCopy" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+[node name="BlueprintResourceContext" type="VBoxContainer" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content/CoreOverviewRow"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BreakthroughRow" type="HBoxContainer" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BlueprintBreakthroughCopy" type="Label" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content/BreakthroughRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="ClaimResearchBreakthroughTen" type="Button" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content"]
+[node name="ClaimResearchBreakthroughTen" type="Button" parent="BlueprintTree/BlueprintTreeRoot/Margin/Content/BreakthroughRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(250, 44)
 layout_mode = 2
-text = "免费启动研究突破十连"
+text = "前往信号招募接收设计图纸"
 
 [node name="ResearchBreakthroughResults" type="PanelContainer" parent="BlueprintTree"]
 unique_name_in_owner = true
@@ -149,6 +166,7 @@ theme_override_constants/separation = 6
 unique_name_in_owner = true
 layout_mode = 2
 text = "研究分支"
+visible = false
 
 [node name="BlueprintNodeRow" type="HBoxContainer" parent="BlueprintTree/BlueprintBranchRow/BlueprintBranchPanel/Margin/Content"]
 unique_name_in_owner = true
@@ -158,7 +176,7 @@ theme_override_constants/separation = 6
 
 [node name="BlueprintBackButton" type="Button" parent="."]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 48)
+custom_minimum_size = Vector2(360, 44)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "返回研究所"

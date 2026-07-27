@@ -15,33 +15,35 @@ const FACILITY_IDS: Array[String] = [
 	"research_lab",
 ]
 const FACILITY_BUILD_COSTS: Dictionary = {
-	"porcelain_plant": 30,
-	"parts_workshop": 40,
-	"energy_station": 35,
-	"repair_center": 55,
-	"research_lab": 70,
+	# 旧三材料按各自产速折算为统一工业材料：
+	# (2 * 陶瓷 + 4 * 零件 + 3 * 能源) / 4。
+	# 这样会保留原配方对应的生产分钟，而不是粗暴相加制造通胀。
+	"porcelain_plant": {"porcelain": 21, "parts": 0, "sludge": 0},
+	"parts_workshop": {"porcelain": 30, "parts": 0, "sludge": 0},
+	"energy_station": {"porcelain": 26, "parts": 0, "sludge": 0},
+	"repair_center": {"porcelain": 34, "parts": 0, "sludge": 0},
+	"research_lab": {"porcelain": 30, "parts": 0, "sludge": 0},
 }
 const OUTPUT_PER_MINUTE: Dictionary = {
-	"porcelain": 6,
-	"parts": 3,
-	"sludge": 4,
+	"porcelain": 3,
 }
 const RESOURCE_BY_FACILITY: Dictionary = {
 	"porcelain_plant": "porcelain",
-	"parts_workshop": "parts",
-	"energy_station": "sludge",
+	"parts_workshop": "porcelain",
+	"energy_station": "porcelain",
 }
 const MAX_OFFLINE_SECONDS: int = 12 * 60 * 60
+const EARLY_FACILITY_BUILD_SECONDS: int = 5
 const FACILITY_BUILD_SECONDS: Dictionary = {
-	"porcelain_plant": 30,
-	"parts_workshop": 45,
-	"energy_station": 40,
-	"repair_center": 60,
-	"research_lab": 75,
+	"porcelain_plant": EARLY_FACILITY_BUILD_SECONDS,
+	"parts_workshop": EARLY_FACILITY_BUILD_SECONDS,
+	"energy_station": EARLY_FACILITY_BUILD_SECONDS,
+	"repair_center": EARLY_FACILITY_BUILD_SECONDS,
+	"research_lab": EARLY_FACILITY_BUILD_SECONDS,
 }
 const STAR_COSTS: Dictionary = {
-	2: {"hero_shards": 4, "skill_chips": 0, "materials": {"porcelain": 18, "parts": 10, "sludge": 8}},
-	3: {"hero_shards": 8, "skill_chips": 2, "materials": {"porcelain": 36, "parts": 24, "sludge": 20}},
+	2: {"hero_shards": 4},
+	3: {"hero_shards": 16},
 }
 const SPECIALTY_FACILITY: Dictionary = {
 	"gman": "command_center",
@@ -60,7 +62,7 @@ static func claim_output(state: RefCounted, now_unix: int) -> Dictionary:
 		var amount := int(preview.get("amount", 0))
 		if amount <= 0:
 			continue
-		output[material_id] = amount
+		output[material_id] = int(output.get(material_id, 0)) + amount
 		elapsed_max = maxi(elapsed_max, int(preview.get("elapsed_seconds", 0)))
 		state.factory.facility_output_anchors[facility_id] = now_unix
 	if elapsed_max <= 0:
@@ -140,7 +142,7 @@ static func facility_output_preview(state: RefCounted, facility_id: String, now_
 
 
 static func _facility_output(state: RefCounted, elapsed: int, material_id: String, facility_id: String) -> int:
-	var per_minute := rate_per_minute(state, material_id)
+	var per_minute := facility_rate_per_minute(state, facility_id)
 	var base := float(elapsed) * float(per_minute) / 60.0
 	return maxi(1, int(floor(base)))
 
@@ -148,12 +150,15 @@ static func _facility_output(state: RefCounted, elapsed: int, material_id: Strin
 static func rate_per_minute(state: RefCounted, material_id: String) -> float:
 	if not OUTPUT_PER_MINUTE.has(material_id):
 		return 0.0
-	var facility_id := ""
+	var total := 0.0
 	for candidate in RESOURCE_BY_FACILITY.keys():
 		if String(RESOURCE_BY_FACILITY[candidate]) == material_id:
-			facility_id = String(candidate)
-			break
-	if facility_id.is_empty():
+			total += facility_rate_per_minute(state, String(candidate))
+	return total
+
+
+static func facility_rate_per_minute(state: RefCounted, facility_id: String) -> float:
+	if not RESOURCE_BY_FACILITY.has(facility_id):
 		return 0.0
 	var level := int(state.factory.facilities.get(facility_id, 0))
 	if level <= 0:
@@ -162,7 +167,7 @@ static func rate_per_minute(state: RefCounted, material_id: String) -> float:
 	for hero in state.roster:
 		if String(hero.assigned_facility_id) == facility_id:
 			specialty_multiplier += 0.2
-	return float(int(OUTPUT_PER_MINUTE[material_id]) * level) * specialty_multiplier
+	return float(int(OUTPUT_PER_MINUTE["porcelain"]) * level) * specialty_multiplier
 
 
 static func seconds_until_full(state: RefCounted, material_id: String) -> int:
@@ -187,13 +192,12 @@ static func upgrade_hero(state: RefCounted, hero_id: String) -> Dictionary:
 	var cost := hero_upgrade_cost(hero)
 	var next_level := int(cost["target_level"])
 	var coin_cost := int(cost["coin_cost"])
-	var material_cost := cost["materials"] as Dictionary
+	var xp_required := int(cost["xp_required"])
 	if int(state.economy.toilet_coins) < coin_cost:
 		return {"ok": false, "error": "NOT_ENOUGH_TOILET_COINS"}
-	if not state.factory.can_spend(material_cost):
-		return {"ok": false, "error": "NOT_ENOUGH_FACTORY_MATERIALS"}
+	if int(hero.xp) < xp_required:
+		return {"ok": false, "error": "NOT_ENOUGH_HERO_XP"}
 	state.economy.toilet_coins -= coin_cost
-	state.factory.spend(material_cost)
 	var power_before := CombatPowerScript.hero_power(hero)
 	if not HeroProgressionScript.upgrade_to_level(hero, next_level):
 		return {"ok": false, "error": "HERO_LEVEL_UPGRADE_FAILED"}
@@ -205,7 +209,7 @@ static func upgrade_hero(state: RefCounted, hero_id: String) -> Dictionary:
 			"hero_id": hero_id,
 			"level": next_level,
 			"coin_cost": coin_cost,
-			"material_cost": material_cost,
+			"xp_required": xp_required,
 			"power_before": power_before,
 			"power_after": power_after,
 			"power_gain": power_after - power_before,
@@ -220,39 +224,65 @@ static func hero_upgrade_cost(hero: RefCounted) -> Dictionary:
 	return {
 		"target_level": target_level,
 		"coin_cost": 30 * target_level,
-		"materials": {
-			"porcelain": 8 * target_level,
-			"parts": 4 * target_level,
-			"sludge": 3 * target_level,
-		},
+		"xp_current": int(hero.xp),
+		"xp_required": int(HeroProgressionScript.LEVEL_XP[target_level]),
 	}
 
 
 static func upgrade_star(state: RefCounted, hero_id: String) -> Dictionary:
+	return _upgrade_star(state, hero_id, false)
+
+
+static func upgrade_star_with_core(state: RefCounted, hero_id: String) -> Dictionary:
+	return _upgrade_star(state, hero_id, true)
+
+
+static func star_upgrade_quote(
+	state: RefCounted,
+	hero_id: String,
+	waive_data_cost: bool = false
+) -> Dictionary:
 	var hero: RefCounted = state.hero_by_id(hero_id)
 	if hero == null:
 		return {"ok": false, "error": "HERO_NOT_FOUND"}
 	var target_star := int(hero.star) + 1
 	if target_star > 3:
 		return {"ok": false, "error": "HERO_STAR_CAP_REACHED"}
-	var cost := STAR_COSTS[target_star] as Dictionary
-	var materials := cost["materials"] as Dictionary
-	var shard_cost := int(cost["hero_shards"])
+	var catalog_cost := STAR_COSTS[target_star] as Dictionary
+	var shard_cost := int(catalog_cost["hero_shards"])
 	var archetype_id := String(hero.archetype_id)
-	var available_data := int(state.meta_progression.hero_data.get(archetype_id, 0))
-	var data_spent := mini(shard_cost, available_data)
-	var universal_spent := shard_cost - data_spent
-	if int(state.economy.hero_shards) < universal_spent:
-		return {"ok": false, "error": "NOT_ENOUGH_HERO_SHARDS"}
-	if int(state.economy.skill_chips) < int(cost["skill_chips"]):
-		return {"ok": false, "error": "NOT_ENOUGH_SKILL_CHIPS"}
-	if not state.factory.can_spend(materials):
-		return {"ok": false, "error": "NOT_ENOUGH_FACTORY_MATERIALS"}
-	if data_spent > 0:
-		state.meta_progression.hero_data[archetype_id] = available_data - data_spent
-	state.economy.hero_shards -= universal_spent
-	state.economy.skill_chips -= int(cost["skill_chips"])
-	state.factory.spend(materials)
+	var error := ""
+	if not waive_data_cost and int(state.economy.hero_shards) < shard_cost:
+		error = "NOT_ENOUGH_HERO_SHARDS"
+	return {
+		"ok": error.is_empty(),
+		"error": error,
+		"hero_id": hero_id,
+		"archetype_id": archetype_id,
+		"target_star": target_star,
+		"cost": {
+			"hero_shards": 0 if waive_data_cost else shard_cost,
+		},
+		"waived_cost": {
+			"hero_shards": shard_cost,
+		} if waive_data_cost else {},
+		"source": "new_player_welfare" if waive_data_cost else "normal_growth",
+	}
+
+
+static func _upgrade_star(state: RefCounted, hero_id: String, waive_data_cost: bool) -> Dictionary:
+	var quote := star_upgrade_quote(state, hero_id, waive_data_cost)
+	if not bool(quote.get("ok", false)):
+		return {
+			"ok": false,
+			"error": String(quote.get("error", "HERO_STAR_UPGRADE_UNAVAILABLE")),
+		}
+	var hero: RefCounted = state.hero_by_id(hero_id)
+	var target_star := int(quote["target_star"])
+	var archetype_id := String(quote["archetype_id"])
+	var cost := quote["cost"] as Dictionary
+	var data_spent := int(cost["hero_shards"])
+	state.economy.hero_shards -= data_spent
 	hero.star = target_star
 	var unlock_id := "%s_%s" % [String(hero.archetype_id), "passive" if target_star == 2 else "mastery"]
 	if not hero.skill_ids.has(unlock_id):
@@ -264,11 +294,10 @@ static func upgrade_star(state: RefCounted, hero_id: String) -> Dictionary:
 		"star": target_star,
 		"unlock_id": unlock_id,
 		"cost": {
-			"hero_data": data_spent,
-			"universal_hero_shards": universal_spent,
-			"skill_chips": int(cost["skill_chips"]),
-			"materials": materials.duplicate(true),
+			"hero_shards": data_spent,
 		},
+		"waived_cost": (quote.get("waived_cost", {}) as Dictionary).duplicate(true),
+		"source": String(quote.get("source", "normal_growth")),
 	}}
 
 
@@ -279,21 +308,16 @@ static func research_active_skill(state: RefCounted, hero_id: String) -> Diction
 	var hero: RefCounted = state.hero_by_id(hero_id)
 	var target_level := int(quote["target_level"])
 	var cost := quote["cost"] as Dictionary
-	var material_cost := cost["materials"] as Dictionary
-	state.economy.industrial_tech -= int(cost["industrial_tech"])
-	state.economy.skill_chips -= int(cost["skill_chips"])
+	state.economy.hero_shards -= int(cost["hero_shards"])
 	state.economy.toilet_coins -= int(cost["toilet_coins"])
-	state.factory.spend(material_cost)
 	hero.active_skill_level = target_level
 	return {"ok": true, "event": {
 		"type": "active_skill_researched",
 		"hero_id": hero_id,
 		"skill_id": FactoryCatalogScript.active_skill_for_archetype(String(hero.archetype_id)),
 		"skill_level": target_level,
-		"industrial_tech_cost": int(cost["industrial_tech"]),
-		"skill_chip_cost": int(cost["skill_chips"]),
+		"legion_data_cost": int(cost["hero_shards"]),
 		"coin_cost": int(cost["toilet_coins"]),
-		"material_cost": material_cost.duplicate(true),
 		"skill_power_bp": 10000 + (target_level - 1) * 2000,
 	}}
 
@@ -307,13 +331,7 @@ static func active_skill_research_quote(state: RefCounted, hero_id: String) -> D
 		return {"ok": false, "error": "ACTIVE_SKILL_LEVEL_CAP_REACHED"}
 	var cost := {
 		"toilet_coins": 80 if target_level == 2 else 160,
-		"industrial_tech": 6 if target_level == 2 else 12,
-		"skill_chips": 1 if target_level == 2 else 2,
-		"materials": {
-			"porcelain": 24 if target_level == 2 else 48,
-			"parts": 16 if target_level == 2 else 32,
-			"sludge": 20 if target_level == 2 else 40,
-		},
+		"hero_shards": 4 if target_level == 2 else 8,
 	}
 	var lab_level := int(state.factory.facilities.get("research_lab", 1))
 	if target_level > lab_level + 1:
@@ -325,14 +343,10 @@ static func active_skill_research_quote(state: RefCounted, hero_id: String) -> D
 			"lab_level": lab_level,
 		}
 	var error := ""
-	if int(state.economy.industrial_tech) < int(cost["industrial_tech"]):
-		error = "NOT_ENOUGH_INDUSTRIAL_TECH"
-	elif int(state.economy.skill_chips) < int(cost["skill_chips"]):
-		error = "NOT_ENOUGH_SKILL_CHIPS"
+	if int(state.economy.hero_shards) < int(cost["hero_shards"]):
+		error = "NOT_ENOUGH_HERO_SHARDS"
 	elif int(state.economy.toilet_coins) < int(cost["toilet_coins"]):
 		error = "NOT_ENOUGH_TOILET_COINS"
-	elif not state.factory.can_spend(cost["materials"] as Dictionary):
-		error = "NOT_ENOUGH_FACTORY_MATERIALS"
 	return {
 		"ok": error.is_empty(),
 		"error": error,
@@ -375,21 +389,13 @@ static func upgrade_facility(state: RefCounted, facility_id: String, now_unix: i
 		return {"ok": false, "error": "FACILITY_LEVEL_CAP_REACHED"}
 	if not state.factory.facility_work.is_empty():
 		return {"ok": false, "error": "FACILITY_WORK_BUSY"}
-	var tech_cost := 2 * current
-	var coin_cost := 40 * current
 	var material_cost := {
-		"porcelain": 20 * current,
-		"parts": 12 * current,
-		"sludge": 16 * current,
+		"porcelain": 40 * current,
+		"parts": 0,
+		"sludge": 0,
 	}
-	if int(state.economy.industrial_tech) < tech_cost:
-		return {"ok": false, "error": "NOT_ENOUGH_INDUSTRIAL_TECH"}
-	if int(state.economy.toilet_coins) < coin_cost:
-		return {"ok": false, "error": "NOT_ENOUGH_TOILET_COINS"}
 	if not state.factory.can_spend(material_cost):
 		return {"ok": false, "error": "NOT_ENOUGH_FACTORY_MATERIALS"}
-	state.economy.industrial_tech -= tech_cost
-	state.economy.toilet_coins -= coin_cost
 	state.factory.spend(material_cost)
 	var duration_seconds := 60 * current
 	state.factory.facility_work = {
@@ -409,8 +415,7 @@ static func upgrade_facility(state: RefCounted, facility_id: String, now_unix: i
 			"facility_id": facility_id,
 			"target_level": current + 1,
 			"completes_at_unix": now_unix + duration_seconds,
-			"tech_cost": tech_cost,
-			"coin_cost": coin_cost,
+			"coin_cost": 0,
 			"material_cost": material_cost,
 		},
 	}
@@ -439,10 +444,10 @@ static func construct_facility(
 		var occupied_cell := state.factory.facility_placements[placed_facility_id] as Array
 		if occupied_cell.size() == 2 and int(occupied_cell[0]) == grid_x and int(occupied_cell[1]) == grid_z:
 			return {"ok": false, "error": "FACILITY_GRID_CELL_OCCUPIED"}
-	var coin_cost := int(FACILITY_BUILD_COSTS[facility_id])
-	if int(state.economy.toilet_coins) < coin_cost:
-		return {"ok": false, "error": "NOT_ENOUGH_TOILET_COINS"}
-	state.economy.toilet_coins -= coin_cost
+	var material_cost := (FACILITY_BUILD_COSTS[facility_id] as Dictionary).duplicate(true)
+	if not state.factory.can_spend(material_cost):
+		return {"ok": false, "error": "NOT_ENOUGH_FACTORY_MATERIALS"}
+	state.factory.spend(material_cost)
 	var duration_seconds := int(FACILITY_BUILD_SECONDS[facility_id])
 	state.factory.facility_work = {
 		"work_type": "construction",
@@ -462,7 +467,9 @@ static func construct_facility(
 			"grid_x": grid_x,
 			"grid_z": grid_z,
 			"target_level": 1,
-			"coin_cost": coin_cost,
+			"coin_cost": 0,
+			"material_cost": material_cost,
+			"duration_seconds": duration_seconds,
 			"completes_at_unix": now_unix + duration_seconds,
 		},
 	}
@@ -472,19 +479,14 @@ static func claim_facility_work(state: RefCounted, now_unix: int) -> Dictionary:
 	if state.factory.facility_work.is_empty():
 		return {"ok": false, "error": "NO_FACILITY_WORK"}
 	var work := state.factory.facility_work as Dictionary
-	if now_unix < int(work.get("completes_at_unix", 0)):
+	if now_unix < facility_work_completes_at(work):
 		return {"ok": false, "error": "FACILITY_WORK_NOT_READY"}
 	var facility_id := String(work["facility_id"])
 	var work_type := String(work["work_type"])
 	var target_level := int(work["target_level"])
 	state.factory.facilities[facility_id] = target_level
-	var discovered_blueprints: Array[String] = []
 	if work_type == "construction":
 		state.factory.facility_placements[facility_id] = [int(work["grid_x"]), int(work["grid_z"])]
-		if facility_id == "research_lab":
-			discovered_blueprints = state.factory.discover_blueprints(
-				FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS
-			)
 		if RESOURCE_BY_FACILITY.has(facility_id):
 			# A newly commissioned producer exposes one real minute of output immediately.
 			# This teaches the collect loop without turning the first session into a wait gate.
@@ -497,8 +499,16 @@ static func claim_facility_work(state: RefCounted, now_unix: int) -> Dictionary:
 		"facility_id": facility_id,
 		"level": target_level,
 		"completed_at_unix": now_unix,
-		"discovered_blueprints": discovered_blueprints,
+		"discovered_blueprints": [],
 	}}
+
+
+static func facility_work_completes_at(work: Dictionary) -> int:
+	var stored_completion := int(work.get("completes_at_unix", 0))
+	if String(work.get("work_type", "")) != "construction":
+		return stored_completion
+	var started_at := int(work.get("started_at_unix", stored_completion))
+	return mini(stored_completion, started_at + EARLY_FACILITY_BUILD_SECONDS)
 
 
 static func apply_battle_damage(state: RefCounted, deployed_ids: Array, disabled_ids: Array, outcome: String) -> Dictionary:

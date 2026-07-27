@@ -11,10 +11,8 @@ static func reward_for_level(level: int) -> Dictionary:
 		return {}
 	var reward := {
 		"toilet_coins": 10 + int((level - 1) / 5) * 5,
-		"toilet_gems": 5 if level % 5 == 0 else 0,
-		"porcelain": 5 if level % 3 == 0 else 0,
-		"parts": 3 if level % 3 == 0 else 0,
-		"sludge": 3 if level % 3 == 0 else 0,
+		"recruit_tickets": 1 if level % 10 == 0 else 0,
+		"porcelain": 8 if level % 3 == 0 else 0,
 	}
 	if level % 10 == 0:
 		reward["toilet_coins"] = int(reward["toilet_coins"]) + 40
@@ -70,12 +68,10 @@ static func claim_reward(state: RefCounted, request_id: String, level: int) -> D
 	state.quests["claimed"] = claimed_bucket
 	state.economy.grant({
 		"toilet_coins": int(reward.get("toilet_coins", 0)),
-		"toilet_gems": int(reward.get("toilet_gems", 0)),
+		"recruit_tickets": int(reward.get("recruit_tickets", 0)),
 	})
 	state.factory.grant({
 		"porcelain": int(reward.get("porcelain", 0)),
-		"parts": int(reward.get("parts", 0)),
-		"sludge": int(reward.get("sludge", 0)),
 	})
 	var event := {
 		"type": "war_merit_reward_claimed",

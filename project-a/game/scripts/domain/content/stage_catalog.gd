@@ -16,17 +16,17 @@ const ENDLESS_PREFIX: String = "endless_"
 const DEFAULT_STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地广场"]
 const RECOMMENDED_POWER: Array[int] = [
 	1950, 2000, 2020, 5700, 6500,
-	15500, 16500, 17500, 18500, 19500,
-	20000, 20500, 21000, 21500, 22000,
-	22500, 23000, 23500, 24000, 24500,
-	25000, 25500, 26000, 26250, 26500,
+	6900, 7300, 7700, 8100, 9000,
+	9400, 9800, 10200, 10600, 11500,
+	11900, 12300, 12700, 13100, 14000,
+	14400, 14800, 15200, 15600, 16500,
 ]
 const ENEMY_POWER_BP: Array[int] = [
 	6200, 7200, 8400, 9000, 10750,
-	20000, 26000, 27500, 29000, 30000,
-	31500, 32500, 33500, 34250, 35000,
-	35250, 35500, 35750, 36000, 36500,
-	36800, 37100, 37400, 37700, 38000,
+	11200, 11600, 12000, 16000, 18000,
+	20200, 23000, 22000, 22000, 27000,
+	28500, 29500, 30500, 31500, 33500,
+	35000, 36000, 37000, 38000, 40000,
 ]
 
 
@@ -63,8 +63,8 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 		]
 		config["threat_summary"] = "城市没有组织防守；先撞开废弃路障，再摧毁城市目标。"
 		config["counter_hint"] = "让 Gman 自动推进，能量充满后点击头像快速突破路障。"
-		config["reward_victory"] = {"gold": 80, "xp_books": 0, "porcelain": 24, "parts": 16, "sludge": 12}
-		config["reward_defeat"] = {"gold": 12, "xp_books": 2, "porcelain": 8, "parts": 5, "sludge": 4}
+		config["reward_victory"] = {"gold": 80}
+		config["reward_defeat"] = {"gold": 0}
 		config["unlock_on_defeat"] = []
 		config["unlock_on_victory"] = []
 		config["unlock_preview"] = ""
@@ -104,7 +104,10 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 		return _apply_authored_definition(config, authored_definition)
 	config["enemies"] = _scaled_enemies(_enemy_template_for(chapter, stage_in_chapter), power_bp)
 	config["structures"] = _scaled_structures(_structure_template_for(chapter, stage_in_chapter), power_bp)
-	return _apply_authored_definition(config, authored_definition)
+	config = _apply_authored_definition(config, authored_definition)
+	if stage_in_chapter == 5 and chapter >= 2:
+		_shape_boss_finale(config)
+	return config
 
 
 static func _apply_authored_definition(config: Dictionary, definition: Resource) -> Dictionary:
@@ -148,7 +151,7 @@ static func reward_for_context(
 	if base.is_empty():
 		return {}
 	if outcome == "defeat" and prior_attempts > 0:
-		return {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}
+		return {"gold": 0}
 	if outcome == "victory" and already_cleared:
 		return _scaled_repeat_reward(base)
 	return base
@@ -169,16 +172,17 @@ static func next_stage_id(stage_id: String) -> String:
 
 static func breakthrough_reward(stage_id: String, already_cleared: bool) -> Dictionary:
 	if already_cleared or not ACT1_STAGE_IDS.has(stage_id):
-		return {"hero_shards": 0, "skill_chips": 0}
+		return {"hero_shards": 0}
 	var index := ACT1_STAGE_IDS.find(stage_id)
 	var stage_in_chapter := int(index % 5) + 1
 	if stage_id == "stage_1_2":
-		return {"hero_shards": 4, "skill_chips": 0}
+		return {"hero_shards": 4}
 	if stage_in_chapter == 3:
-		return {"hero_shards": 4, "skill_chips": 0}
+		return {"hero_shards": 4}
 	if stage_in_chapter == 5:
-		return {"hero_shards": 8, "skill_chips": 2}
-	return {"hero_shards": 0, "skill_chips": 0}
+		# 旧 8 数据 + 2 芯片，按 1 芯片 = 4 军团数据合并。
+		return {"hero_shards": 16}
+	return {"hero_shards": 0}
 
 
 static func unlocks_for(stage_id: String, outcome: String) -> Array[String]:
@@ -228,17 +232,9 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"next_stage_id": next_id,
 		"reward_victory": {
 			"gold": 35 + chapter * 8 + stage_in_chapter * 3,
-			"xp_books": 1 if is_boss else 0,
-			"porcelain": 14 + chapter * 3 + stage_in_chapter * 2,
-			"parts": 10 + chapter * 3 + stage_in_chapter * 2,
-			"sludge": 8 + chapter * 3 + stage_in_chapter * 2,
 		},
 		"reward_defeat": {
 			"gold": 0,
-			"xp_books": 0,
-			"porcelain": 0,
-			"parts": 0,
-			"sludge": 0,
 		},
 		"unlock_on_defeat": [],
 		"unlock_on_victory": unlock_victory,
@@ -280,12 +276,8 @@ static func _endless_stage(index: int) -> Dictionary:
 	config["power_bp"] = power_bp
 	config["reward_victory"] = {
 		"gold": 78 + index * 3,
-		"xp_books": 0,
-		"porcelain": 30 + index,
-		"parts": 27 + index,
-		"sludge": 24 + index,
 	}
-	config["reward_defeat"] = {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}
+	config["reward_defeat"] = {"gold": 0}
 	config["unlock_on_defeat"] = []
 	config["unlock_on_victory"] = []
 	config["unlock_preview"] = ""
@@ -297,10 +289,6 @@ static func _endless_stage(index: int) -> Dictionary:
 static func _scaled_repeat_reward(base: Dictionary) -> Dictionary:
 	return {
 		"gold": int(int(base.get("gold", 0)) * 30 / 100),
-		"xp_books": 0,
-		"porcelain": int(int(base.get("porcelain", 0)) * 30 / 100),
-		"parts": int(int(base.get("parts", 0)) * 30 / 100),
-		"sludge": int(int(base.get("sludge", 0)) * 30 / 100),
 	}
 
 
@@ -372,7 +360,7 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 		"stage_1_4": {
 			"recommended": [],
 			"fallback": ["ordinary.assault"],
-			"reason": "炮台防线是设计好的首次失败点；失败后建研究所完成免费突破十连，再把永久装甲与冲锋援军编入反攻队。",
+			"reason": "炮台防线是设计好的首次失败点；失败后从信号招募接收基础图纸，再由研究所研发永久装甲与冲锋援军。",
 		},
 		"stage_1_5": {
 			"recommended": ["heavy.armored", "ordinary.assault"],
@@ -549,7 +537,7 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		},
 		"stage_1_4": {
 			"threat": "联盟部署固定炮台、精英守军与交叉火力，形成首次必败墙。",
-			"counter": "首次失败后建研究所完成免费突破十连，把永久装甲与冲锋援军编入队伍再反攻。",
+			"counter": "首次失败后接收基础图纸十连，建研究所研发装甲与冲锋，再把两名永久援军编入队伍反攻。",
 		},
 	}
 	if opening_readability.has(stage_id):
@@ -662,6 +650,33 @@ static func _scaled_structures(structures: Array[Dictionary], power_bp: int) -> 
 		structure["attack"] = int(int(structure["attack"]) * power_bp / 10000)
 		values.append(structure)
 	return values
+
+
+static func _shape_boss_finale(config: Dictionary) -> void:
+	# Boss 关把压力从“刚进第三段就团灭”转成最终核心的收尾检验：
+	# 降低第三段护卫与外围设施的压制，但加厚最终核心，使首轮成长能打到
+	# Boss 并削掉血量，下一轮成长后才稳定完成击破。
+	var final_structure_id := String(config.get("final_structure_id", "alliance_core"))
+	var chapter := int(config.get("chapter", 2))
+	config["cannon_suppression_target"] = 800 + chapter * 100
+	config["boss_cannon_damage"] = 140 + chapter * 20
+	config["boss_cannon_period_ticks"] = 28 - chapter
+	config["boss_core_enrage_ticks"] = 85
+	config["boss_core_required_power"] = int(config.get("recommended_power", 0)) + 1000
+	for enemy in config.get("enemies", []):
+		if int(enemy.get("stage", -1)) != 2:
+			continue
+		enemy["hp"] = maxi(1, int(int(enemy.get("hp", 1)) * 40 / 100))
+		enemy["max_hp"] = int(enemy["hp"])
+		enemy["attack"] = maxi(1, int(int(enemy.get("attack", 1)) * 40 / 100))
+	for structure in config.get("structures", []):
+		if String(structure.get("structure_id", "")) == final_structure_id:
+			structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 220 / 100))
+			structure["hp"] = int(structure["max_hp"])
+		elif int(structure.get("stage", -1)) == 2:
+			structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 40 / 100))
+			structure["hp"] = int(structure["max_hp"])
+			structure["attack"] = maxi(0, int(int(structure.get("attack", 0)) * 40 / 100))
 
 
 static func _legacy_stage_1_1_enemies() -> Array[Dictionary]:

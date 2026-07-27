@@ -14,6 +14,9 @@ signal tab_selected(tab_id: String)
 signal action_requested(action_id: String, payload: Dictionary)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const NotificationBadgeScript := preload(
+	"res://game/scripts/presentation/notification_badge.gd"
+)
 const PANEL := Color("#12171c")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -30,12 +33,18 @@ const GREEN := Color("#78b982")
 @onready var achievements_tab: Button = %MetaGoalsAchievementsTab
 
 var _view: Dictionary = {}
+var _tab_badges: Dictionary = {}
 
 
 func _ready() -> void:
 	action_tab.pressed.connect(tab_selected.emit.bind("action"))
 	pass_tab.pressed.connect(tab_selected.emit.bind("pass"))
 	achievements_tab.pressed.connect(tab_selected.emit.bind("achievements"))
+	_tab_badges = {
+		"action": _add_badge(action_tab, "ActionNotificationBadge"),
+		"pass": _add_badge(pass_tab, "PassNotificationBadge"),
+		"achievements": _add_badge(achievements_tab, "AchievementsNotificationBadge"),
+	}
 	_style_tab(action_tab, true)
 	_style_tab(pass_tab, false)
 	_style_tab(achievements_tab, false)
@@ -51,6 +60,16 @@ func configure(view: Dictionary) -> void:
 
 func _rebuild() -> void:
 	var active_tab := String(_view.get("tab", "action"))
+	var notification_counts := _view.get("notification_counts", {}) as Dictionary
+	(_tab_badges["action"] as NotificationBadge).set_count(
+		int(notification_counts.get("goals_action", 0))
+	)
+	(_tab_badges["pass"] as NotificationBadge).set_count(
+		int(notification_counts.get("goals_pass", 0))
+	)
+	(_tab_badges["achievements"] as NotificationBadge).set_count(
+		int(notification_counts.get("goals_achievements", 0))
+	)
 	action_tab.button_pressed = active_tab == "action"
 	pass_tab.button_pressed = active_tab == "pass"
 	achievements_tab.button_pressed = active_tab == "achievements"
@@ -72,11 +91,58 @@ func _rebuild() -> void:
 
 func _build_action() -> void:
 	content.add_child(_goal_hierarchy(_view.get("hierarchy", {}) as Dictionary))
+	content.add_child(_new_player_welfare_panel(
+		_view.get("new_player_welfare", {}) as Dictionary
+	))
 	content.add_child(_campaign_panel(_view.get("campaign", {}) as Dictionary))
 	if bool(_view.get("missions_unlocked", false)):
 		content.add_child(_mission_panel())
 	else:
 		content.add_child(_lock_panel(_view.get("mission_lock", {}) as Dictionary))
+
+
+func _new_player_welfare_panel(view: Dictionary) -> Control:
+	var panel := _panel("新游福利 · 黑市援助")
+	panel.name = "NewPlayerWelfarePanel"
+	if not bool(view.get("unlocked", false)):
+		panel.add_child(_label("完成第一章 1-5 后解锁 · 不提前跳过新兵训练", 13, MUTED))
+		var locked := _button("首章完成后可领取", false)
+		locked.name = "NewPlayerWelfareClaimButton"
+		locked.disabled = true
+		panel.add_child(locked)
+		return panel
+	if bool(view.get("claimable", false)):
+		panel.add_child(_label(
+			"黑金升星核心 ×1 · 走私后勤箱 ×1\n核心可替代一星角色升二星所需的英雄数据；工业材料不参与角色升星。",
+			13,
+			GOLD
+		))
+		var claim := _button("领取黑市援助", true)
+		claim.name = "NewPlayerWelfareClaimButton"
+		claim.pressed.connect(action_requested.emit.bind("claim_new_player_welfare", {}))
+		panel.add_child(claim)
+		return panel
+	panel.add_child(_label(
+		"黑金升星核心 ×%d · 走私后勤箱 ×%d" % [
+			int(view.get("star_core_count", 0)),
+			int(view.get("logistics_case_count", 0)),
+		],
+		14,
+		GREEN
+	))
+	if bool(view.get("case_openable", false)):
+		var open_case := _button("开启走私后勤箱 · 获得 18/10/8 工业材料", true)
+		open_case.name = "SmuggledLogisticsCaseButton"
+		open_case.pressed.connect(action_requested.emit.bind("open_smuggled_logistics_case", {}))
+		panel.add_child(open_case)
+	elif bool(view.get("case_opened", false)):
+		panel.add_child(_label("走私后勤箱已开启 · 工业材料已入库", 13, GREEN))
+	if int(view.get("star_core_count", 0)) > 0:
+		var legion := _button("去军团使用黑金核心", false)
+		legion.name = "NewPlayerWelfareLegionButton"
+		legion.pressed.connect(action_requested.emit.bind("open_legion_for_welfare", {}))
+		panel.add_child(legion)
+	return panel
 
 
 func _goal_hierarchy(view: Dictionary) -> Control:
@@ -288,8 +354,8 @@ func _lock_panel(view: Dictionary) -> Control:
 func _reward_copy(reward: Dictionary) -> String:
 	var parts: Array[String] = []
 	for pair in [
-		["toilet_coins", "金币"], ["porcelain", "陶瓷"], ["parts", "零件"], ["sludge", "能源"],
-		["recruit_tickets", "招募券"], ["hero_shards", "英雄数据"], ["skill_chips", "芯片"],
+		["toilet_coins", "金币"], ["porcelain", "工业材料"],
+		["recruit_tickets", "招募券"], ["hero_shards", "军团数据"],
 	]:
 		var amount := int(reward.get(String(pair[0]), 0))
 		if amount > 0:
@@ -327,6 +393,13 @@ func _button(copy: String, primary: bool) -> Button:
 	)
 	button.add_theme_color_override("font_color", Color("#14110c") if primary else TEXT)
 	return button
+
+
+func _add_badge(button: Button, badge_name: String) -> NotificationBadge:
+	var badge := NotificationBadgeScript.new() as NotificationBadge
+	badge.name = badge_name
+	button.add_child(badge)
+	return badge
 
 
 func _label(copy: String, font_size: int, color: Color) -> Label:

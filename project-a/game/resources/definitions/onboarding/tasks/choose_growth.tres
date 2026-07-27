@@ -8,6 +8,6 @@
 [resource]
 script = ExtResource("1")
 task_id = &"operation.choose_growth"
-title = "行动六：工业备战"
-lesson = "先让一座资源设施投产并收取首批后勤，再比较冲锋与装甲，选择一名升到二星。"
-objectives = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4")])
+title = "行动六：双线成长"
+lesson = "先用反攻获得的英雄数据强化军团，再建设一座资源设施，开启独立的工业成长线。"
+objectives = Array[Resource]([ExtResource("4"), ExtResource("2"), ExtResource("3")])

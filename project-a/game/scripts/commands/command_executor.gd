@@ -25,6 +25,7 @@ const OnboardingServiceScript := preload("res://game/scripts/domain/onboarding/o
 const MetaProgressionServiceScript := preload("res://game/scripts/domain/meta/meta_progression_service.gd")
 const SignalRecruitServiceScript := preload("res://game/scripts/domain/recruitment/signal_recruit_service.gd")
 const ResearchBreakthroughServiceScript := preload("res://game/scripts/domain/recruitment/research_breakthrough_service.gd")
+const NewPlayerWelfareServiceScript := preload("res://game/scripts/domain/meta/new_player_welfare_service.gd")
 
 var state: RefCounted = GameStateScript.create_new()
 var save_callback: Callable = Callable()
@@ -129,7 +130,10 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 	var data := payload as Dictionary
 	match command_type:
 		"grant_resources":
-			candidate.economy.grant(data.get("resources", {}) as Dictionary)
+			var resources := data.get("resources", {}) as Dictionary
+			candidate.economy.grant(resources)
+			if resources.has("porcelain"):
+				candidate.factory.grant({"porcelain": int(resources["porcelain"])})
 			return {"ok": true, "event": {"type": "resources_granted"}}
 		"settle_battle":
 			var battle_id := String(data.get("battle_id", ""))
@@ -144,13 +148,13 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			var damage_manifest := LogisticsServiceScript.apply_battle_damage(candidate, deployed_values, disabled_values, outcome)
 			var reward := StageCatalogScript.reward_for_context(stage_id, outcome, prior_attempts, already_cleared)
 			var reward_tier := StageCatalogScript.reward_tier(outcome, prior_attempts, already_cleared)
-			var unlocked_hero: Dictionary = {}
+			var unlocked_blueprints: Array[Dictionary] = []
 			if reward.is_empty():
 				return {"ok": false, "error": "STAGE_NOT_FOUND"}
 			if outcome == "victory":
 				reward = _randomize_victory_reward(candidate.run_seed, battle_id, stage_id, reward)
 			else:
-				reward = {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}
+				reward = {"gold": 0}
 			var was_first_victory := false
 			if outcome == "victory":
 				var cleared: Array = candidate.stage_progress.get("cleared_stages", [])
@@ -163,15 +167,15 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 					candidate.stage_progress["highest_unlocked_stage"] = _max_stage_id(String(candidate.stage_progress.get("highest_unlocked_stage", StageCatalogScript.DEFAULT_STAGE_ID)), next_stage)
 			if outcome == "victory":
 				candidate.economy.grant({"toilet_coins": int(reward.get("gold", 0))})
-				candidate.economy.grant({"industrial_tech": 2 if already_cleared else 4})
 				var breakthrough := StageCatalogScript.breakthrough_reward(stage_id, already_cleared)
 				candidate.economy.grant(breakthrough)
-				candidate.factory.grant({"porcelain": reward["porcelain"], "parts": reward["parts"], "sludge": reward["sludge"]})
-				unlocked_hero = _unlock_campaign_hero(candidate, stage_id, already_cleared)
+				var campaign_blueprint := _unlock_campaign_blueprint(candidate, stage_id, already_cleared)
+				if not campaign_blueprint.is_empty():
+					unlocked_blueprints.append(campaign_blueprint)
 			for deployed_value in deployed_values:
 				var deployed_hero: RefCounted = candidate.hero_by_id(String(deployed_value))
 				if deployed_hero != null:
-					deployed_hero.xp = mini(320, int(deployed_hero.xp) + (20 if outcome == "victory" else 8))
+					deployed_hero.xp = mini(320, int(deployed_hero.xp) + (30 if outcome == "victory" else 8))
 			var alliance_scrap_granted := 0
 			var alliance_scrap_receipt: Dictionary = {}
 			candidate.attempt_counters[stage_id] = int(candidate.attempt_counters.get(stage_id, 0)) + 1
@@ -186,7 +190,7 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 					"ticks": ticks,
 					"reward": reward,
 					"reward_tier": reward_tier,
-					"unlocked_blueprints": [],
+					"unlocked_blueprints": unlocked_blueprints,
 					"eligible_facilities": eligible_facilities,
 					"next_stage_id": StageCatalogScript.next_stage_id(stage_id) if outcome == "victory" else "",
 					"alliance_scrap_granted": alliance_scrap_granted,
@@ -194,10 +198,8 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 					"dead_unit_ids": [],
 					"surviving_unit_ids": candidate.formation.hero_ids(),
 					"damage_manifest": damage_manifest,
-					"industrial_tech": ((2 if already_cleared else 4) if outcome == "victory" else 0),
 					"hero_shards": int(StageCatalogScript.breakthrough_reward(stage_id, already_cleared).get("hero_shards", 0)) if outcome == "victory" else 0,
-					"skill_chips": int(StageCatalogScript.breakthrough_reward(stage_id, already_cleared).get("skill_chips", 0)) if outcome == "victory" else 0,
-					"unlocked_hero": unlocked_hero,
+					"unlocked_hero": {},
 					"campaign_completed": outcome == "victory" and stage_id == "stage_5_5",
 					"first_campaign_completion": outcome == "victory" and stage_id == "stage_5_5" and was_first_victory,
 				},
@@ -228,6 +230,12 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			return LogisticsServiceScript.claim_facility_work(candidate, int(data["now_unix"]))
 		"claim_onboarding_task":
 			return OnboardingServiceScript.claim_current(candidate, String(data["task_id"]))
+		"claim_new_player_welfare":
+			return NewPlayerWelfareServiceScript.claim(candidate)
+		"open_smuggled_logistics_case":
+			return NewPlayerWelfareServiceScript.open_logistics_case(candidate)
+		"use_welfare_star_core":
+			return NewPlayerWelfareServiceScript.use_star_core(candidate, String(data["hero_id"]))
 		"exchange_salvage":
 			return WalletServiceScript.exchange_salvage(candidate, String(data["request_id"]), String(data["offer_id"]))
 		"purchase_gold_shop":
@@ -260,7 +268,7 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			return MetaProgressionServiceScript.claim_all_achievements(candidate)
 		"signal_recruit":
 			return SignalRecruitServiceScript.recruit(candidate, int(data["count"]), String(data["target_archetype"]))
-		"claim_research_breakthrough":
+		"claim_foundational_signal":
 			return ResearchBreakthroughServiceScript.claim(candidate)
 		"start_production":
 			return FactoryService.start_production(candidate, String(data["recipe_id"]), int(data["now_unix"]))
@@ -281,12 +289,11 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 		"claim_scrap_recovery":
 			if not candidate.roster.is_empty():
 				return {"ok": false, "error": "RECOVERY_REQUIRES_EMPTY_UNIT_INVENTORY"}
-			var assault_cost := FactoryCatalogScript.recipe("ordinary.assault").get("cost", {}) as Dictionary
-			if candidate.factory.can_spend(assault_cost):
+			const RECOVERY_FLOOR: int = 10
+			var current_material := int(candidate.factory.materials.get("porcelain", 0))
+			if current_material >= RECOVERY_FLOOR:
 				return {"ok": false, "error": "RECOVERY_NOT_NEEDED"}
-			var recovery: Dictionary = {}
-			for key in candidate.factory.MATERIAL_KEYS:
-				recovery[key] = maxi(0, int(assault_cost.get(key, 0)) - int(candidate.factory.materials.get(key, 0)))
+			var recovery := {"porcelain": RECOVERY_FLOOR - current_material}
 			candidate.factory.grant(recovery)
 			return {"ok": true, "event": {"type": "scrap_recovery_claimed", "materials": recovery}}
 		"merge_heroes":
@@ -391,7 +398,7 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 			for key in resources.keys():
 				if typeof(key) != TYPE_STRING:
 					return "grant_resources resource keys must be strings"
-				if not ["toilet_coins", "toilet_gems", "gold", "recruit_tickets", "xp_books", "forge_stones", "industrial_tech", "skill_chips", "hero_shards"].has(String(key)):
+				if not ["toilet_coins", "hero_shards", "porcelain", "recruit_tickets"].has(String(key)):
 					return "UNKNOWN_RESOURCE_KEY"
 				if typeof(resources[key]) != TYPE_INT:
 					return "RESOURCE_AMOUNT_MUST_BE_INT"
@@ -502,6 +509,17 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 				return onboarding_error
 			if typeof(data["task_id"]) != TYPE_STRING or String(data["task_id"]).is_empty():
 				return "claim_onboarding_task.task_id must be non-empty string"
+			return ""
+		"claim_new_player_welfare":
+			return _exact_keys(data, [], "claim_new_player_welfare")
+		"open_smuggled_logistics_case":
+			return _exact_keys(data, [], "open_smuggled_logistics_case")
+		"use_welfare_star_core":
+			var welfare_core_error := _exact_keys(data, ["hero_id"], "use_welfare_star_core")
+			if not welfare_core_error.is_empty():
+				return welfare_core_error
+			if typeof(data["hero_id"]) != TYPE_STRING or String(data["hero_id"]).is_empty():
+				return "use_welfare_star_core.hero_id must be non-empty string"
 			return ""
 		"recruit_hero":
 			return _exact_keys(data, [], "recruit_hero")
@@ -639,8 +657,8 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 			if typeof(data["target_archetype"]) != TYPE_STRING or String(data["target_archetype"]).is_empty():
 				return "signal_recruit.target_archetype must be non-empty string"
 			return ""
-		"claim_research_breakthrough":
-			return _exact_keys(data, [], "claim_research_breakthrough")
+		"claim_foundational_signal":
+			return _exact_keys(data, [], "claim_foundational_signal")
 		"start_production":
 			var start_error := _exact_keys(data, ["recipe_id", "now_unix"], "start_production")
 			if not start_error.is_empty():
@@ -792,37 +810,23 @@ func _max_stage_id(current_stage_id: String, candidate_stage_id: String) -> Stri
 	return current_stage_id
 
 
-func _unlock_campaign_hero(candidate: RefCounted, stage_id: String, already_cleared: bool) -> Dictionary:
+func _unlock_campaign_blueprint(candidate: RefCounted, stage_id: String, already_cleared: bool) -> Dictionary:
 	if already_cleared:
 		return {}
 	var unlocks := {
-		"stage_2_5": {"archetype_id": "bomber", "class_id": "ranger", "display_name": "自爆飞行马桶人"},
-		"stage_3_5": {"archetype_id": "saw", "class_id": "fighter", "display_name": "双锯重装马桶人"},
+		"stage_2_5": "flying.bomber",
+		"stage_3_5": "heavy.saw",
 	}
 	if not unlocks.has(stage_id):
 		return {}
-	var spec := unlocks[stage_id] as Dictionary
-	for owned in candidate.roster:
-		if String(owned.archetype_id) == String(spec["archetype_id"]):
-			return {}
-	var roster_index: int = candidate.allocate_hero_index()
-	var hero: RefCounted = HeroGenerator.generate_archetype(
-		candidate.run_seed,
-		roster_index,
-		String(spec["archetype_id"]),
-		String(spec["class_id"])
+	var recipe_id := String(unlocks[stage_id])
+	var recipe := FactoryCatalogScript.recipe(recipe_id)
+	return SignalRecruitServiceScript.grant_design(
+		candidate,
+		recipe_id,
+		String(recipe.get("rating", "B")),
+		int(SignalRecruitServiceScript.DUPLICATE_DATA.get(String(recipe.get("rating", "B")), 2))
 	)
-	hero.display_name = String(spec["display_name"])
-	hero.aptitude_id = "B"
-	hero.readiness = 100
-	candidate.roster.append(hero)
-	var assigned: bool = candidate.formation.assign_next_troop(String(hero.hero_id))
-	return {
-		"hero_id": String(hero.hero_id),
-		"display_name": String(hero.display_name),
-		"archetype_id": String(hero.archetype_id),
-		"assigned_to_formation": assigned,
-	}
 
 
 func _apply_casualties(candidate: RefCounted, deployed_values: Array, dead_values: Array) -> String:
@@ -856,7 +860,7 @@ func _apply_casualties(candidate: RefCounted, deployed_values: Array, dead_value
 
 func _randomize_victory_reward(run_seed: int, battle_id: String, stage_id: String, base_reward: Dictionary) -> Dictionary:
 	var reward := base_reward.duplicate(true)
-	for key in ["gold", "porcelain", "parts", "sludge"]:
+	for key in ["gold"]:
 		var base_amount := int(base_reward.get(key, 0))
 		if base_amount <= 0:
 			reward[key] = 0
@@ -867,5 +871,4 @@ func _randomize_victory_reward(run_seed: int, battle_id: String, stage_id: Strin
 		var bytes := context.finish()
 		var variance_percent := (int(bytes[0]) % 41) - 20
 		reward[key] = maxi(1, base_amount * (100 + variance_percent) / 100)
-	reward["xp_books"] = 0
 	return reward

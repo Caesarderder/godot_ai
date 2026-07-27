@@ -56,18 +56,25 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 				"detail": "这是设计好的首次情报战；先亲自观察单人职责缺口，失败不会损失永久资产。",
 				"hero_id": "",
 			}
+		elif not _foundational_signal_claimed(state):
+			next_action = {
+				"id": "recruit",
+				"title": "接收免费基础图纸十连",
+				"detail": "首败信号已被截获；前往信号招募接收冲锋与装甲设计图纸，不直接生成角色。",
+				"hero_id": "",
+			}
 		elif int(state.factory.facilities.get("research_lab", 0)) <= 0:
 			next_action = {
 				"id": "research",
 				"title": "建造研究所",
-				"detail": "首败已经揭示职责缺口；使用保障币建造研究所，打开确定性援军方案。",
+				"detail": "基础图纸已经入库；使用工业材料建造研究所，把设计转化为永久援军。",
 				"hero_id": "",
 			}
 		elif not (_has_archetype(state, "assault") and _has_archetype(state, "armored")):
 			next_action = {
 				"id": "research",
-				"title": "启动免费突破十连",
-				"detail": "研究所已经就绪；免费突破固定获得冲锋与装甲，不消耗招募券或长期保底。",
+				"title": "研发冲锋与装甲图纸",
+				"detail": "研究所已经就绪；依次研发已拥有的两张基础图纸，完成后永久角色才会入列。",
 				"hero_id": "",
 			}
 		elif not (
@@ -78,6 +85,13 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 				"id": "formation",
 				"title": "把两名援军编入队伍",
 				"detail": "永久援军已经到位；让装甲承伤、冲锋压制，再发动反攻。",
+				"hero_id": "",
+			}
+		else:
+			next_action = {
+				"id": "attack",
+				"title": "三人小队可以反攻",
+				"detail": "装甲与冲锋已经入队；立即返回 1-4 验证新职责组合。",
 				"hero_id": "",
 			}
 	return {
@@ -106,6 +120,14 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 	}
 
 
+static func _foundational_signal_claimed(state: RefCounted) -> bool:
+	var claimed := state.onboarding.get("claimed", {}) as Dictionary
+	return (
+		claimed.has("reward.foundational_signal_ten")
+		or claimed.has("reward.research_breakthrough_ten")
+	)
+
+
 static func _risk(ratio: float) -> Dictionary:
 	if ratio < 0.80:
 		return {"id": "extreme", "label": "极高风险", "detail": "建议先培养角色或升级工厂；失败不会造成永久损失。"}
@@ -119,15 +141,13 @@ static func _risk(ratio: float) -> Dictionary:
 
 
 static func _weakest_resource(state: RefCounted) -> Dictionary:
-	var names := {"porcelain": "陶瓷", "parts": "零件", "sludge": "能源"}
-	var result := {"id": "porcelain", "label": "陶瓷", "percent": 100}
-	for material_id in names.keys():
-		var capacity := maxi(1, int(state.factory.capacities.get(material_id, 1)))
-		var current := maxi(0, int(state.factory.materials.get(material_id, 0)))
-		var percent := clampi(int(current * 100 / capacity), 0, 100)
-		if percent < int(result["percent"]):
-			result = {"id": material_id, "label": names[material_id], "percent": percent}
-	return result
+	var capacity := maxi(1, int(state.factory.capacities.get("porcelain", 1)))
+	var current := maxi(0, int(state.factory.materials.get("porcelain", 0)))
+	return {
+		"id": "porcelain",
+		"label": "工业材料",
+		"percent": clampi(int(current * 100 / capacity), 0, 100),
+	}
 
 
 static func _next_action(

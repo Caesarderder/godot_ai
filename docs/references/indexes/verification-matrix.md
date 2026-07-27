@@ -67,7 +67,8 @@ related:
   派驻、无损结算和 Boss；`run_factory_casualty_tests.gd` 补充无损结算、幂等与旧 schema 迁移兼容。
 - M0.5：`run_first_chapter_balance_scan.gd` 使用 7 个新档种子扫描真实 `BattleSession`，
   验证同一 Gman 在前三关开局属性一致、前三关稳定胜利、1-4 单人必败及三人基础编队稳定反攻。
-  1-3 已从原 82–102 秒两轮收紧至 51.6–69.2 秒，结束生命仍为 5.6%–32.8%；
+  五项战力口径下新档 Gman CP 为 `1603–1683`，前三关推荐线统一为 `1650`；
+  1-3 用时为 55.0–58.8 秒，结束生命为 19.3%–35.4%；
   1-5 基础三人 7/7 全败，冲锋升星和装甲升星
   两条命名路线分别 7/7 全胜并落入 70–120 秒自动合同。扫描器会真实执行基础研究、领取和编队，
   不再把“研究开始事件”误当作已授予英雄。`run_first_30m_journey_tests.gd` 另以 14 个干净新档
@@ -128,15 +129,20 @@ related:
   `run_factory_screen_tests.gd` 对独立 `FactoryScreen` 验证固定库存、互斥 HUD、研究所资格解释、
   三步网格建造和“确认后才扣资源”的交易边界；新 844×390 截图证明库存文案不换行挤压，
   右侧建造决策与左侧 3D 选址同时可见。
+  `run_legion_screen_tests.gd` 进一步锁定升级、升星、技能研究的当前/需要/操作后和独立资源
+  缺口；四项核心余额由 App Shell 常驻在管理页面右上角，军团成员列表与研究蓝图不再重复占用
+  内容区。`ui-global-resource-hud-844x390.png` 证明金币、军团数据、工业材料和招募券
+  在标题右侧、菜单左侧完整可读；`run_blueprint_screen_tests.gd` 锁定基础蓝图需要 0、
+  余额不变和仅耗时 45 秒，并在模拟 App Shell 的 `844×342` 内容区检查十连、基础研发、返回按钮
+  的全局边界与焦点可达性；`run_new_player_welfare_tests.gd` 与 `run_balance_tests.gd` 锁定
+  `star_upgrade_quote` 和普通/免材料执行结果同源。上述测试不替代 844×390 真实浏览器视觉验收。
   研究所回归覆盖 1-4 首败后的主动建造入口、带主干连线的四分支八节点科技蓝图、两个基础节点 CTA 和返回基地路径。
-- 首败研究纵切：`run_research_onboarding_tests.gd` 覆盖早期失败不解锁、1-4 首败只授予建造资格、
-  玩家主动放置并建成研究所后才开放冲锋与装甲蓝图、两者分别授予稳定 ID 永久角色、重复解锁拒绝、
+- 首败研究纵切：`run_research_onboarding_tests.gd` 覆盖早期失败不解锁、1-4 首败开放基础信号和建造资格、
+  信号十连只入库冲锋/装甲图纸，玩家主动放置研究所并逐张研发后才授予稳定 ID 永久角色、重复解锁拒绝、
   三人六槽上阵以及后续失败不重复触发。
-  `run_research_breakthrough_tests.gd` 进一步覆盖研究所落成后的一次性免费十连：正好十张、
-  冲锋与装甲确定性永久入列、长期招募 A 保底不变、二次领取拒绝、原 receipt 安全回放和
-  save roundtrip。`run_blueprint_screen_tests.gd` 另覆盖十连结果专注态、援军职责说明、无关
-  分支退场、减少动态降级和“立即编入反攻队”焦点；`ui-research-breakthrough-844x390.png`
-  记录真实 Compatibility 画面中的两名关键援军、八份次级资源与单一反攻出口。目标页 UI
+  `run_research_breakthrough_tests.gd` 进一步覆盖信号页一次性免费十连：正好十张设计卡、
+  不直接创建角色/材料/芯片、长期 A 保底不变、二次领取拒绝、receipt 回放、save roundtrip，
+  以及两张图纸研发后分别获得 B/A 永久角色。目标页 UI
   smoke 覆盖“大目标—中目标—小目标—当前坎—过坎办法—唯一 CTA”。
   `run_goals_screen_tests.gd` 独立实例化 authored `GoalsScreen`，覆盖三层目标、大小卡点、恢复
   文案、精确关卡 CTA、三页签语义信号、30 级战令轨和指挥官长期进度。
@@ -147,9 +153,8 @@ related:
   `run_first_formation_flow_tests.gd` 与 `run_battle_result_screen_tests.gd` 验证结算从真实出战、
   逐角色伤害和承伤统计生成过坎证据；`ui-counterattack-proof-844x390.png` 证明 844×390 下
   因果复盘与下一行动同时可读。
-  `run_first_growth_flow_tests.gd` 覆盖反攻结算 CTA 直接进入资源设施选择、非资源设施延后、
-  建成后定位投产收取、收取后并列两条 Boss 成长路线、真实 CP/成本预览、两按钮可选以及
-  `upgrade_hero_star` 命令后立即进入行动七；`ui-first-industrial-choice-844x390.png` 与
+  `run_first_growth_flow_tests.gd` 覆盖反攻结算后先并列两条 Boss 成长路线、真实 CP/成本预览、
+  两按钮可选，再进入独立资源设施选择、建成后定位投产收取；`ui-first-industrial-choice-844x390.png` 与
   `ui-first-growth-choice-844x390.png` 证明三个设施和两条成长路线分别在基准横屏首屏可操作。
   同一聚焦测试继续覆盖升星后所选路线、统一战力对比、5 秒技能时机和精确 1-5 战斗入口，并
   分别验证“成长未完成”“巨炮机制/技能时机”“阵容/战力”三类失败恢复；
@@ -160,12 +165,12 @@ related:
   不强制续战；`ui-chapter-one-complete-844x390.png` 证明奖励、贡献、路线兑现、实际解锁和
   下一章主 CTA 在基准横屏共同可读。
   `run_campaign_tests.gd` 与 `run_ui_smoke_tests.gd` 共同锁定首墙侦察口径：1-4 玩家可见
-  反制只指向研究所免费十连、永久装甲/冲锋援军和反攻，不再泄漏旧图纸、九兵量产或三合一；
+  反制只指向信号图纸、研究所研发、永久装甲/冲锋援军和反攻，不再泄漏研究所抽卡、九兵量产或三合一；
   1-5 推荐只保留两条已验证二星路线，首章巨炮预警合同为 5 秒；
   `ui-first-wall-reconnaissance-844x390.png` 提供真实战区首屏证据。
   `run_balance_tests.gd` 与 UI smoke 进一步验证情境行动优先级：1-4 零尝试时即使能力比极低，
   也只显示 48px“试探炮台防线”且隐藏通用培养按钮；记录一次尝试后才恢复成长建议。
-  同一领域测试覆盖首败后“建研究所 → 免费十连 → 编队 → 反攻”的持久状态矩阵；UI smoke
+  同一领域测试覆盖首败后“信号图纸 → 建研究所 → 两次研发 → 编队 → 反攻”的持久状态矩阵；UI smoke
   验证战区“建造研究所”语义行动准确打开研究设施而非通用军团页，
   `ui-first-wall-recovery-844x390.png` 保存首败恢复首屏。
   `run_chapter_one_completion_tests.gd` 继续覆盖章节间承接：2-1 极高风险侦察同时提供 48px
@@ -205,7 +210,7 @@ related:
   记录 1-1/1-2/1-3 通关、1-4 一次尝试且未通关、onboarding 进入研究突破，全程 0 运行时异常、
   0 非预期 console error、0 网络失败。首战与 `browser-first-wall-defeat-844x390.png` 保留
   战斗目标、逐关成长和“返回基地建造研究所”证据；重复触控本身不冒充真人主动技能理解证据，
-  同一旅程随后在真实 844×390 网格放置研究所、等待并原页验收 75 秒施工，完成 claim-once
+  同一旅程随后在真实 844×390 网格放置研究所、等待并原页验收当时版本的 75 秒施工，完成 claim-once
   免费十连并把装甲/冲锋两个具体永久 hero ID 写入 `troop_1/2`；候选 `0b3cc8542623` 用时
   356.3 秒继续点击真实反攻 CTA、轮询三张英雄技能卡并取得第二次 1-4 尝试胜利。存档的
   `cleared_stages` 精确新增 1-4，且运行期仍为 0 异常、0 非预期 console error、0 网络失败。
@@ -215,7 +220,7 @@ related:
   `browser-first-wall-counterattack-started-844x390.png` 与
   `browser-first-wall-counterattack-victory-844x390.png` 证明援军开场提示、胜利、单人失败到
   三人反攻的因果复盘，以及唯一“选择工业支援”出口。候选 `19279cf6bf84` 随后在同一新档
-  选择陶瓷厂、放置到 `[-1, 2]`、等待 30 秒施工、验收并领取预置的 6 陶瓷，再比较两条
+  选择陶瓷厂、放置到 `[-1, 2]`、等待当时版本的 30 秒施工、验收并领取预置的 6 陶瓷，再比较两条
   `7/7` 路线并把冲锋永久升至 2★；完整旅程用时 395.3 秒，仍为 0 异常、0 非预期 console
   error、0 网络失败。七张 `browser-first-industrial-*` / `browser-first-growth-*` 证据覆盖
   设施选择、网格交易边界、施工、首批收取、二选一和 Boss 验证入口。收取后零库存按钮现禁用
@@ -224,7 +229,8 @@ related:
   `cleared_stages` 精确包含 1-1 至 1-5，2-1 尝试数保持 0，710 次技能卡触控期间为 0
   runtime exception、0 非预期 console error、0 failed request。章节结算记录冲锋角色
   3389 伤害、75% 占比与压炮 4 次，并将唯一主行动交给第二章侦察；侦察页呈现
-  6476/15500、42% 极高风险和培养/试探选择而不自动开战。
+  6476/15500、42% 极高风险和培养/试探选择而不自动开战。该数值属于锯齿曲线改造前的历史
+  浏览器证据；当前 2-1 推荐线为 6900，尚未重新执行这段视觉旅程。
   `browser-first-boss-started-844x390.png`、`browser-first-boss-cannon-window-844x390.png`、
   `browser-chapter-one-complete-844x390.png` 与
   `browser-chapter-two-reconnaissance-844x390.png` 保存真实 Web 状态。中段截图只能证明
@@ -244,14 +250,27 @@ related:
 - 首章战斗心流诊断：`run_platform_tests.gd` 锁定技能成功/过早点击、分关手动输入和最长手动
   战斗决策间隔，不携带英雄 ID；暂停及自动技能区间不会产生假 90 秒停滞。Settings/UI/Lifecycle
   回归锁定玩家可见状态与 App Shell 记录路径；这些指标只为 5 人盲测定位录像，不替代中立访谈。
-- 技能芯片转化：`run_slg_loop_tests.gd` 锁定技能 II/III 的同源 quote、原子消费和研究所门禁；
+- 军团数据技能消耗：`run_slg_loop_tests.gd` 锁定技能 II/III 的同源 quote、原子消费和研究所门禁；
   14 条 `run_first_30m_journey_tests.gd` 新档证明冲锋/装甲路线在 Boss 后都立即负担得起技能 II。
-  `run_chapter_one_completion_tests.gd` 锁定第二章成长直达成员页、精确 80/6/1/24/16/20 成本与
+  `run_chapter_one_completion_tests.gd` 锁定第二章成长直达成员页、精确 `80 金币 + 4 军团数据` 成本与
   可操作按钮；`ui-chapter-two-skill-growth-844x390.png` 提供基准横屏首屏证据。revision
   `ea51420b56cb` 的真实 Chrome 150 新档又在 474.1 秒内从 2-1 侦察进入成员培养，点击正式
   G-Man 技能按钮，证明 Lv.2 与六项精确成本持久化，再通过底部战区导航返回 2-1，尝试数保持
   0；698 次战斗技能触控期间三类运行错误均为 0。新增三张
   `browser-chapter-two-skill-growth-*` 截图覆盖交易前、交易后和回访侦察。
+- 首章后成长周期：`run_progression_cycle_scan.gd` 从 7 个固定 seed 的保守 1-5 后账本出发，
+  先领取新游福利、开启 18/10/8 后勤箱并使用一次免材料升星核心，再用明确贪心策略消费永久
+  成长资源并运行真实 `BattleSession`。首轮编队 CP `9172–9554`，2-1 至 2-4 全胜、2-5
+  全败且均到达最终阶段、摧毁 6 个结构并把核心压到 50.80%–81.69%；第二轮 CP
+  `10961–11558`，2-5 至 3-4 全胜、3-5 全败。`run_battle_tests.gd` 另锁定未配置关卡继续使用
+  46 伤害/42 tick 默认巨炮，显式 Boss 参数才能启用不同炮压与低战力核心过载。
+  `run_balance_tests.gd` 另锁定主动技能研究会进入角色与战斗快照的同源战力。该自动证据证明
+  确定性节奏合同，不证明真人会感到卡点合理或资源消费选择有趣。
+- 新游福利：`run_new_player_welfare_tests.gd` 锁定 1-5 前不可领取、固定 durable ledger 抵抗
+  换 command/business id 重复领取、后勤箱 exact-once、核心仅供 1★→2★、仍扣 4 份英雄数据/
+  碎片、工业材料零扣除、strict codec 往返与保存失败不发布候选状态；`run_goals_screen_tests.gd`
+  和 `run_legion_screen_tests.gd` 锁定福利三态、开箱请求及英雄卡核心按钮。该证据不证明福利
+  文案与反馈能产生“开挂感”或提高继续游玩意愿。
 - Web 私密存储证据：`run_web_private_storage_smoke.mjs` 通过 CDP 原生隔离上下文证明同一 Chrome
   私密会话刷新后存档 hash 不变，销毁上下文再新建时得到不同存档；设置页截图同时证明玩家看到
   “未确认持久存储”与下载备份指引。
@@ -314,16 +333,16 @@ related:
   `CampaignObjectiveProjection` 返回 detached view。`run_objective_hurdle_definition_tests.gd`
   覆盖七段引导一一对应、1-4 大坎与免费十连恢复、未知 ID fail-closed 和共享 Resource 不可被
   view 调用方篡改；投影、研究引导、UI smoke 与 14 条新档旅程回归通过。
-- 行动任务内容边界：七个 `OnboardingTaskDefinition` 引用十个
+- 行动任务内容边界：七个 `OnboardingTaskDefinition` 引用十二个
   `OnboardingObjectiveDefinition`，固定 Catalog 校验稳定顺序、唯一 ID、自然行为条件、CTA 和
   完整奖励预算；`run_onboarding_definition_tests.gd` 锁定 1-4 首败到免费十连的大坎恢复、
   工业建造—收取—二星成长三个小目标、未知 ID fail-closed 与嵌套 detached view。研究引导、
   SLG、Meta、UI、启动和 14 条首 30 分钟新档旅程回归通过。
-- 免费突破十连内容边界：`ResearchBreakthroughCardDefinition` 与十个 `.tres` 锁定两张 A 级
-  冲锋/装甲和八张研究物资；Catalog 校验顺序、稀有度、字段、重复英雄转数据与聚合预算。
-  `run_research_breakthrough_tests.gd` 验证研究所门禁、十卡、英雄/蓝图永久性、资源 delta、
-  pity 隔离、重复业务拒绝、receipt replay、存档往返及已有英雄转数据；`run_blueprint_screen_tests.gd`
-  与 `run_first_formation_flow_tests.gd` 验证结果专注态、唯一编队 CTA、装甲/冲锋两次真实上阵和
+- 基础图纸十连内容边界：`ResearchBreakthroughCardDefinition` 与十个 `.tres` 锁定冲锋/装甲
+  B/A 设计与八张同型重复设计数据；Catalog 校验顺序、评级、字段和不泄漏其他图纸。
+  `run_research_breakthrough_tests.gd` 验证首败门禁、十卡、零角色/材料 delta、pity 隔离、
+  重复业务拒绝、receipt replay、存档往返及两次研发；`run_first_formation_flow_tests.gd` 验证
+  装甲/冲锋两次真实上阵和
   完成后直达 1-4 反攻。14 条新档旅程证明两条后续二星路线经济结果未漂移。
 - 仍缺：Firefox 桌面、Android Chrome、iOS Safari、生产 HTTPS、真人首 20–30 分钟及最终 IP/商店审查。
 

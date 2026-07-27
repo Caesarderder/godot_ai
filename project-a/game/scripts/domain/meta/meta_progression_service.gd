@@ -243,11 +243,8 @@ static func _empty_reward_total() -> Dictionary:
 	return {
 		"toilet_coins": 0,
 		"porcelain": 0,
-		"parts": 0,
-		"sludge": 0,
 		"recruit_tickets": 0,
 		"hero_shards": 0,
-		"skill_chips": 0,
 	}
 
 

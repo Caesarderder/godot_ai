@@ -34,7 +34,7 @@ static func for_stage(state: RefCounted, stage_config: Dictionary) -> Dictionary
 	if stage_id == "stage_1_4" and int(state.attempt_counters.get(stage_id, 0)) == 0:
 		result["action"] = "challenge"
 		result["title"] = "先侦察炮台防线"
-		result["detail"] = "本次首战用于发现真实威胁；失败后建研究所完成免费突破十连，永久获得装甲与冲锋援军。"
+		result["detail"] = "本次首战用于发现真实威胁；失败后先从信号招募接收基础图纸，再在研究所研发永久装甲与冲锋援军。"
 		result["estimated_gold_value"] = 0
 		result["estimate_label"] = "无需新增金币投入"
 		return result
@@ -79,45 +79,31 @@ static func for_stage(state: RefCounted, stage_config: Dictionary) -> Dictionary
 	if not upgrade.is_empty():
 		var coin_cost := int(upgrade["coin_cost"])
 		var gain := maxi(1, int(upgrade["power_gain"]))
-		var materials := upgrade["materials"] as Dictionary
 		var missing_coin := maxi(0, coin_cost - int(state.economy.toilet_coins))
-		var missing_materials: Dictionary = {}
-		for material_id in ["porcelain", "parts", "sludge"]:
-			missing_materials[material_id] = maxi(
-				0,
-				int(materials.get(material_id, 0)) - int(state.factory.materials.get(material_id, 0))
-			)
-		var has_material_gap := false
-		for amount in missing_materials.values():
-			has_material_gap = has_material_gap or int(amount) > 0
-		if missing_coin > 0 or has_material_gap:
+		var missing_xp := maxi(0, int(upgrade["xp_required"]) - int(upgrade["xp_current"]))
+		if missing_coin > 0 or missing_xp > 0:
 			result["action"] = "collect"
 			result["hero_id"] = String(upgrade["hero_id"])
-			result["title"] = "补足 %s 的升级资源" % String(upgrade["display_name"])
-			result["detail"] = "升到 L%d 预计 +%d 战力；还缺马桶币%d、陶瓷%d、零件%d、能源%d。" % [
+			result["title"] = "补足 %s 的升级条件" % String(upgrade["display_name"])
+			result["detail"] = "升到 L%d 预计 +%d 战力；还缺出战经验%d、金币%d。" % [
 				int(upgrade["target_level"]),
 				gain,
+				missing_xp,
 				missing_coin,
-				int(missing_materials["porcelain"]),
-				int(missing_materials["parts"]),
-				int(missing_materials["sludge"]),
 			]
 			result["estimated_gold_value"] = 0
-			result["estimate_label"] = "独立资源门禁，不折算固定金币价"
+			result["estimate_label"] = "出战经验与训练金币分别校验"
 			return result
 		result["action"] = "upgrade"
 		result["hero_id"] = String(upgrade["hero_id"])
-		result["title"] = "升级 %s" % String(upgrade["display_name"])
-		result["detail"] = "升到 L%d 预计 +%d 战力，消耗马桶币%d与工业资源 %d/%d/%d。" % [
+		result["title"] = "训练 %s" % String(upgrade["display_name"])
+		result["detail"] = "出战经验已达标；支付金币%d升到 L%d，预计 +%d 战力。" % [
+			coin_cost,
 			int(upgrade["target_level"]),
 			gain,
-			coin_cost,
-			int(materials["porcelain"]),
-			int(materials["parts"]),
-			int(materials["sludge"]),
 		]
 		result["estimated_gold_value"] = 0
-		result["estimate_label"] = "按马桶币与工业资源分别计价"
+		result["estimate_label"] = "等级成长不消耗工业材料"
 		return result
 	result["action"] = "collect"
 	result["title"] = "先获取永久成长资源"
@@ -139,12 +125,7 @@ static func _best_upgrade(state: RefCounted) -> Dictionary:
 		var preview: RefCounted = hero.deep_clone()
 		HeroProgressionScript.upgrade_to_level(preview, int(cost["target_level"]))
 		var gain := CombatPowerScript.hero_power(preview) - before
-		var materials := cost["materials"] as Dictionary
-		var tfa_milli := maxi(
-			int(materials["porcelain"]) * 1000 / 6,
-			maxi(int(materials["parts"]) * 1000 / 3, int(materials["sludge"]) * 1000 / 4)
-		)
-		var efficiency := int(gain * 1000000 / maxi(1, tfa_milli))
+		var efficiency := int(gain * 1000 / maxi(1, int(cost["coin_cost"])))
 		if efficiency > best_efficiency:
 			best_efficiency = efficiency
 			best = {
@@ -152,7 +133,8 @@ static func _best_upgrade(state: RefCounted) -> Dictionary:
 				"display_name": String(hero.display_name),
 				"power_gain": gain,
 				"coin_cost": int(cost["coin_cost"]),
-				"materials": materials.duplicate(true),
+				"xp_current": int(cost["xp_current"]),
+				"xp_required": int(cost["xp_required"]),
 				"target_level": int(cost["target_level"]),
 			}
 	return best

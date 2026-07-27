@@ -18,7 +18,7 @@ func _run() -> void:
 	await process_frame
 	var all_text := _collect_text(help)
 	_check(all_text.contains("1-4"), "help explains the first deliberate hurdle")
-	_check(all_text.contains("免费突破十连"), "help explains the research breakthrough reward")
+	_check(all_text.contains("信号招募") and all_text.contains("图纸") and all_text.contains("研究所逐张研发"), "help explains the signal-to-research role path")
 	_check(all_text.contains("冲锋二星") and all_text.contains("装甲二星"), "help compares both recovery routes")
 	_check(all_text.contains("完全恢复"), "help explains lossless battle recovery")
 	_check(all_text.contains("大目标、中目标、小目标"), "help points players to the objective ladder")

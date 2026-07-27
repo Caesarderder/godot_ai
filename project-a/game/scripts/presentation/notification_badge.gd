@@ -11,21 +11,21 @@ func _ready() -> void:
 	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	offset_left = -38.0
-	offset_top = -8.0
-	offset_right = 8.0
-	offset_bottom = 38.0
-	custom_minimum_size = Vector2(36, 36)
-	add_theme_font_size_override("font_size", 18)
+	offset_left = -22.0
+	offset_top = -6.0
+	offset_right = 6.0
+	offset_bottom = 22.0
+	custom_minimum_size = Vector2(28, 28)
+	add_theme_font_size_override("font_size", 13)
 	add_theme_color_override("font_color", BADGE_TEXT)
 	add_theme_constant_override("outline_size", 3)
 	add_theme_color_override("font_outline_color", Color(0.12, 0.02, 0.02, 0.9))
 	var style := StyleBoxFlat.new()
 	style.bg_color = BADGE_COLOR
-	style.corner_radius_top_left = 18
-	style.corner_radius_top_right = 18
-	style.corner_radius_bottom_left = 18
-	style.corner_radius_bottom_right = 18
+	style.corner_radius_top_left = 14
+	style.corner_radius_top_right = 14
+	style.corner_radius_bottom_left = 14
+	style.corner_radius_bottom_right = 14
 	style.border_width_left = 2
 	style.border_width_top = 2
 	style.border_width_right = 2

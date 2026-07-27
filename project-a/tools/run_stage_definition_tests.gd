@@ -10,11 +10,11 @@ func _init() -> void:
 	var validation_errors := StageDefinitionCatalogScript.validate_all()
 	_check(validation_errors.is_empty(), "typed stage definitions validate: %s" % ", ".join(validation_errors))
 	var expected := {
-		"stage_1_1": [1950, 6200, 10000],
-		"stage_1_2": [2000, 7200, 10000],
-		"stage_1_3": [2020, 8400, 13000],
-		"stage_1_4": [5700, 9000, 22000],
-		"stage_1_5": [6500, 10750, 10000],
+		"stage_1_1": [1650, 6200, 10000],
+		"stage_1_2": [1650, 7200, 10000],
+		"stage_1_3": [1650, 8400, 13000],
+		"stage_1_4": [5000, 9000, 22000],
+		"stage_1_5": [5400, 10750, 10000],
 	}
 	for stage_id in expected:
 		var definition: Resource = StageDefinitionCatalogScript.definition(stage_id)

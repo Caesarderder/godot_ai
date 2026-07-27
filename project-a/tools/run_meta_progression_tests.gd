@@ -5,6 +5,9 @@ const CommandExecutorScript := preload("res://game/scripts/commands/command_exec
 const MetaCatalogScript := preload("res://game/scripts/domain/meta/meta_catalog.gd")
 const MetaProgressionServiceScript := preload("res://game/scripts/domain/meta/meta_progression_service.gd")
 const SaveCodecScript := preload("res://game/scripts/persistence/save_codec.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const SignalRecruitServiceScript := preload("res://game/scripts/domain/recruitment/signal_recruit_service.gd")
+const QuestServiceScript := preload("res://game/scripts/domain/quest/quest_service.gd")
 
 var executor: RefCounted
 var failures: Array[String] = []
@@ -30,7 +33,7 @@ func _run() -> void:
 	var migrated := SaveCodecScript.decode(legacy_v6)
 	_ok(migrated.get("ok", false), "schema v6 save migrates without reset")
 	if migrated.get("ok", false):
-		_eq(int(migrated["state"].schema_version), 8, "migration writes schema v8")
+		_eq(int(migrated["state"].schema_version), 10, "migration writes schema v10")
 		_eq(int(migrated["state"].meta_progression.commander_xp), 0, "migration initializes safe meta defaults")
 	var legacy_v7 := GameStateScript.create_new(12, 1000).to_dict()
 	legacy_v7["schema_version"] = 7
@@ -83,48 +86,75 @@ func _run() -> void:
 	_ok(_command("claim_meta_achievement", {"achievement_id": "meta.campaign.first"}, "achievement-first").get("ok", false), "unlocked completed achievement claims")
 
 	executor.state.economy.recruit_tickets = 60
+	var roster_before_recruit: int = executor.state.roster.size()
 	var recruit := _command("signal_recruit", {"count": 10, "target_archetype": "parasite"}, "recruit-ten")
 	_ok(recruit.get("ok", false), "ten signal recruits succeed: %s" % str(recruit))
 	var results := (recruit.get("event", {}) as Dictionary).get("results", []) as Array
 	var has_a := false
 	for result in results:
-		has_a = has_a or String((result as Dictionary).get("rarity", "R")) in ["A", "S"]
+		has_a = has_a or String((result as Dictionary).get("rarity", "B")) in ["A", "S"]
 	_ok(has_a, "ten recruits guarantee A or above")
 	for batch in 5:
 		var batch_result := _command("signal_recruit", {"count": 10, "target_archetype": "parasite"}, "recruit-batch-%d" % batch)
 		_ok(batch_result.get("ok", false), "recruit batch succeeds: %s" % str(batch_result))
 	_eq(int(executor.state.meta_progression.recruit_s_pity), 0, "sixty pulls include hard-pity S and reset pity")
-	_ok(executor.state.roster.size() >= 4, "recruitment never removes permanent heroes")
-	var recruited_ids: Array[String] = executor.state.roster_ids()
-	var unique_recruited_ids: Dictionary = {}
-	for recruited_id in recruited_ids:
-		unique_recruited_ids[recruited_id] = true
-	_eq(unique_recruited_ids.size(), recruited_ids.size(), "interleaved recruitment keeps every permanent hero id unique")
-	_ok(int(executor.state.factory.next_hero_sequence) > executor.state.roster.size(), "recruitment keeps the monotonic hero sequence ahead of the roster")
-	var assault_hero: RefCounted = null
-	for hero in executor.state.roster:
-		if String(hero.archetype_id) == "assault":
-			assault_hero = hero
-			break
-	_ok(assault_hero != null, "test roster keeps an assault hero")
-	if assault_hero != null:
-		executor.state.meta_progression.hero_data["assault"] = 4
-		executor.state.economy.hero_shards = 0
-		executor.state.factory.grant({"porcelain": 100, "parts": 100, "sludge": 100})
-		var star_result := _command("upgrade_hero_star", {"hero_id": assault_hero.hero_id}, "assault-data-star")
-		_ok(star_result.get("ok", false), "hero-specific data can fund star upgrade")
-		_eq(int(executor.state.meta_progression.hero_data.get("assault", 0)), 0, "star upgrade consumes hero-specific data")
-		_eq(int(executor.state.economy.hero_shards), 0, "specific data avoids unnecessary universal shard spend")
+	_eq(executor.state.roster.size(), roster_before_recruit, "signal recruitment never creates a permanent hero")
+	_ok(
+		not executor.state.factory.discovered_blueprints.is_empty()
+			or int(executor.state.economy.hero_shards) > 0,
+		"sixty signals produce design blueprints or reusable legion data"
+	)
+	var duplicate_recipe_id := "ordinary.assault"
+	executor.state.factory.discovered_blueprints[duplicate_recipe_id] = true
+	var duplicate_legion_data_before := int(executor.state.economy.hero_shards)
+	var duplicate_design := SignalRecruitServiceScript.grant_design(
+		executor.state,
+		duplicate_recipe_id,
+		"B",
+		2
+	)
+	_eq(String(duplicate_design.get("kind", "")), "legion_data", "duplicate signal designs report the shared legion-data result kind")
+	_eq(int(duplicate_design.get("amount", 0)), 2, "B duplicate signal design grants two legion data")
+	_eq(int(executor.state.economy.hero_shards), duplicate_legion_data_before + 2, "duplicate signal design credits the shared hero-shard ledger")
+	_eq(int(executor.state.factory.blueprint_data.get(duplicate_recipe_id, 0)), 0, "duplicate signal design never writes blueprint data")
+	var research_recipe_id := ""
+	for recipe_id in executor.state.factory.discovered_blueprints:
+		research_recipe_id = String(recipe_id)
+		break
+	_ok(not research_recipe_id.is_empty(), "signal recruitment leaves at least one new design for research")
+	var researched_hero: RefCounted = null
+	if not research_recipe_id.is_empty():
+		_ok(_command("unlock_foundational_blueprint", {
+			"recipe_id": research_recipe_id, "now_unix": 1000,
+		}, "signal-design-research").get("ok", false), "research lab starts a signal-acquired design")
+		var research_claim := _command(
+			"claim_blueprint_research",
+			{"now_unix": 1045},
+			"signal-design-claim"
+		)
+		_ok(research_claim.get("ok", false), "research lab turns the design into one permanent hero")
+		researched_hero = executor.state.hero_by_id(
+			String((research_claim.get("event", {}) as Dictionary).get("hero_id", ""))
+		)
+	_ok(researched_hero != null, "researched signal design joins the roster")
+	if researched_hero != null:
+		var research_recipe := FactoryCatalogScript.recipe(research_recipe_id)
+		_eq(String(researched_hero.aptitude_id), String(research_recipe.get("rating", "B")), "researched hero inherits the B/A/S catalog rating")
+		executor.state.economy.hero_shards = 4
+		var star_result := _command("upgrade_hero_star", {"hero_id": researched_hero.hero_id}, "researched-data-star")
+		_ok(star_result.get("ok", false), "shared legion data can fund star upgrade: %s" % str(star_result))
+		_eq(int(executor.state.economy.hero_shards), 0, "star upgrade consumes the shared legion-data ledger")
+	_test_quest_blueprint_reward_conversion()
 	var reserve_hero: RefCounted = null
 	for hero in executor.state.roster:
 		if not executor.state.formation.hero_ids().has(String(hero.hero_id)):
 			reserve_hero = hero
 			break
-	_ok(reserve_hero != null, "recruitment creates at least one reserve hero")
+	_ok(reserve_hero != null, "research creates at least one reserve hero")
 	if reserve_hero != null:
 		var formation_result := _command("assign_formation_slot", {"slot": "troop_5", "hero_id": reserve_hero.hero_id})
-		_ok(formation_result.get("ok", false), "reserve recruit can be deployed into a selected slot")
-		_eq(String(executor.state.formation.slots["troop_5"]), String(reserve_hero.hero_id), "formation slot stores recruited permanent hero")
+		_ok(formation_result.get("ok", false), "researched reserve can be deployed into a selected slot")
+		_eq(String(executor.state.formation.slots["troop_5"]), String(reserve_hero.hero_id), "formation slot stores researched permanent hero")
 	executor.state.meta_progression.achievement_progress["meta.factory.claim_1"] = 1
 	executor.state.meta_progression.achievement_progress["meta.collection.five"] = 5
 	var claimable_before := MetaProgressionServiceScript.claimable_summary(executor.state)
@@ -138,12 +168,65 @@ func _run() -> void:
 
 	var decoded := SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(executor.state))
 	var final_xp := int(executor.state.meta_progression.commander_xp)
-	_ok(decoded.get("ok", false), "schema v8 meta state roundtrips")
+	_ok(decoded.get("ok", false), "schema v10 meta state roundtrips")
 	if decoded.get("ok", false):
 		_eq(int(decoded["state"].meta_progression.recruit_draw_count), 60, "recruit counter persists")
 		_eq(int(decoded["state"].meta_progression.commander_xp), final_xp, "commander xp persists")
 	_eq(MetaCatalogScript.commander_level(450), 6, "commander level curve reaches level six at 450 xp")
 	_run_cycle_rollover_tests()
+
+
+func _test_quest_blueprint_reward_conversion() -> void:
+	var first_state: RefCounted = GameStateScript.create_new(20260728, 1000, false)
+	(first_state.stage_progress["cleared_stages"] as Array).append("stage_1_5")
+	var first_refresh := QuestServiceScript.refresh_quests(first_state)
+	_ok(bool(first_refresh.get("ok", false)), "quest refresh exposes the first chapter blueprint reward")
+	var first_shards := int(first_state.economy.hero_shards)
+	var first_claim := QuestServiceScript.claim_quest(
+		first_state,
+		"major.stage_1_5",
+		0,
+		"quest-blueprint-first"
+	)
+	_ok(bool(first_claim.get("ok", false)), "first milestone blueprint reward claims: %s" % str(first_claim))
+	_ok(
+		bool(first_state.factory.discovered_blueprints.get("ordinary.sonic", false)),
+		"first milestone blueprint enters the research inventory"
+	)
+	_ok(
+		not bool(first_state.factory.blueprints.get("ordinary.sonic", false)),
+		"quest blueprint still requires research before becoming a permanent design"
+	)
+	_eq(int(first_state.economy.hero_shards), first_shards, "first blueprint does not grant legion data")
+	_eq(
+		int(first_state.factory.blueprint_data.get("ordinary.sonic", 0)),
+		0,
+		"first quest blueprint never writes the retired blueprint-data ledger"
+	)
+
+	var duplicate_state: RefCounted = GameStateScript.create_new(20260729, 1000, false)
+	duplicate_state.factory.discovered_blueprints["ordinary.sonic"] = true
+	(duplicate_state.stage_progress["cleared_stages"] as Array).append("stage_1_5")
+	var duplicate_refresh := QuestServiceScript.refresh_quests(duplicate_state)
+	_ok(bool(duplicate_refresh.get("ok", false)), "duplicate blueprint quest refresh succeeds")
+	var duplicate_shards := int(duplicate_state.economy.hero_shards)
+	var duplicate_claim := QuestServiceScript.claim_quest(
+		duplicate_state,
+		"major.stage_1_5",
+		0,
+		"quest-blueprint-duplicate"
+	)
+	_ok(bool(duplicate_claim.get("ok", false)), "duplicate milestone blueprint reward claims: %s" % str(duplicate_claim))
+	_eq(
+		int(duplicate_state.economy.hero_shards),
+		duplicate_shards + 10,
+		"duplicate quest blueprint converts to shared legion data"
+	)
+	_eq(
+		int(duplicate_state.factory.blueprint_data.get("ordinary.sonic", 0)),
+		0,
+		"duplicate quest blueprint never writes blueprint data"
+	)
 
 
 func _run_cycle_rollover_tests() -> void:

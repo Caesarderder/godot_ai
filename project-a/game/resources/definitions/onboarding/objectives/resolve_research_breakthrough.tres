@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1")
-objective_id = &"resolve_research_breakthrough"
-label = "完成研究突破十连"
-event_type = &"research_breakthrough_resolved"
-target = "research"
-cta_label = "启动免费十连"
+objective_id = &"resolve_foundational_signal"
+label = "在信号招募中接收首批十张设计图纸"
+event_type = &"foundational_signal_resolved"
+target = "legion"
+cta_label = "接收免费图纸十连"

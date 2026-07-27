@@ -15,7 +15,10 @@ const CombatPower := preload("res://game/scripts/domain/progression/combat_power
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const WarReadinessReport := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
 const CampaignObjectiveProjection := preload("res://game/scripts/domain/objectives/campaign_objective_projection.gd")
-const ResearchBreakthroughCatalog := preload("res://game/scripts/content/research_breakthrough_catalog.gd")
+const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
+const ResearchBreakthroughService := preload(
+	"res://game/scripts/domain/recruitment/research_breakthrough_service.gd"
+)
 const ActiveSkillCatalog := preload("res://game/scripts/content/active_skill_catalog.gd")
 const WarZoneScreenScene := preload("res://game/scenes/screens/war_zone_screen.tscn")
 const BattleResultScreenScene := preload("res://game/scenes/screens/battle_result_screen.tscn")
@@ -36,6 +39,9 @@ const LogisticsService := preload("res://game/scripts/domain/factory/logistics_s
 const AchievementCatalog := preload("res://game/scripts/domain/achievement/achievement_catalog.gd")
 const MetaCatalog := preload("res://game/scripts/domain/meta/meta_catalog.gd")
 const MetaProgressionService := preload("res://game/scripts/domain/meta/meta_progression_service.gd")
+const NewPlayerWelfareService := preload("res://game/scripts/domain/meta/new_player_welfare_service.gd")
+const NotificationBadgeScript := preload("res://game/scripts/presentation/notification_badge.gd")
+const NotificationSummaryScript := preload("res://game/scripts/presentation/notification_summary.gd")
 const BattleWorldScript := preload("res://game/scripts/presentation_3d/battle_world.gd")
 const SettingsStoreScript := preload("res://game/scripts/platform/settings_store.gd")
 const WebRuntimeScript := preload("res://game/scripts/platform/web_runtime.gd")
@@ -60,24 +66,24 @@ const GREEN := Color("#78b982")
 const EMBER := Color("#b65f35")
 const FACILITY_NAMES := {
 	"command_center": "指挥中心",
-	"porcelain_plant": "陶瓷厂",
-	"parts_workshop": "零件车间",
-	"energy_station": "能源站",
+	"porcelain_plant": "工业材料厂",
+	"parts_workshop": "材料加工车间",
+	"energy_station": "动力加工站",
 	"repair_center": "训练中心",
 	"research_lab": "研究所",
 }
 const FACILITY_COPY := {
 	"command_center": "决定全局等级与城区权限",
-	"porcelain_plant": "持续生产陶瓷，用于角色与设施升级",
-	"parts_workshop": "加工机械零件，用于角色与设施升级",
-	"energy_station": "产生污水能源，驱动培养与研究",
+	"porcelain_plant": "持续生产工业材料，用于设施建造与升级",
+	"parts_workshop": "提高工业材料加工效率",
+	"energy_station": "为工业材料产线提供动力",
 	"repair_center": "强化角色训练效率与成长规划",
-	"research_lab": "消耗工业技术，解锁技能与星级节点",
+	"research_lab": "以研究所等级解锁更高阶技能研究",
 }
 const FACTORY_RESOURCE_NAMES := {
-	"porcelain_plant": "陶瓷",
-	"parts_workshop": "机械零件",
-	"energy_station": "污水能源",
+	"porcelain_plant": "工业材料",
+	"parts_workshop": "工业材料",
+	"energy_station": "工业材料",
 }
 const FACTORY_BUILDING_POSITIONS := {
 	"command_center": Vector3(0.0, 0.0, -1.2),
@@ -119,12 +125,12 @@ var last_settlement: Dictionary = {}
 var command_serial: int = 0
 var goals_tab: String = "action"
 var legion_tab: String = "formation"
+var legion_selected_hero_id: String = ""
 var blueprint_branch: String = "ordinary"
 var factory_hud_panel: String = "mission"
 var ui_scroll_positions: Dictionary = {}
 var ui_rebuild_generation: int = 0
 var last_recruit_results: Array[Dictionary] = []
-var last_research_breakthrough_results: Array[Dictionary] = []
 var formation_edit_slot: String = ""
 var toast: Label
 var factory_camera: Camera3D
@@ -795,10 +801,32 @@ func _show_base() -> void:
 	_add_factory_world_labels.call_deferred()
 
 
+func _open_factory_navigation() -> void:
+	var notification_counts := NotificationSummaryScript.derive(
+		game.current_state(),
+		int(Time.get_unix_time_from_system())
+	)
+	if int(notification_counts.get("factory_work_ready", 0)) > 0:
+		factory_hud_panel = "facility"
+		var work := game.current_state().factory.facility_work as Dictionary
+		selected_facility_id = String(work.get("facility_id", selected_facility_id))
+	_show_base()
+
+
 func _refresh_factory_work_ui() -> void:
+	if game == null:
+		return
+	var notification_counts := NotificationSummaryScript.derive(
+		game.current_state(),
+		int(Time.get_unix_time_from_system())
+	)
+	var factory_badge := ui_root.find_child("TopNav工厂NotificationBadge", true, false)
+	if factory_badge is NotificationBadge:
+		(factory_badge as NotificationBadge).set_count(
+			int(notification_counts.get("factory_ready", 0))
+		)
 	if (
 		screen != Screen.BASE
-		or game == null
 		or active_factory_screen == null
 		or not is_instance_valid(active_factory_screen)
 		or game.current_state().factory.facility_work.is_empty()
@@ -815,57 +843,60 @@ func _factory_view() -> Dictionary:
 		and _onboarding_objective_id(onboarding) == "commission_resource_facility"
 	)
 	var now_unix := int(Time.get_unix_time_from_system())
-	var resources: Array[Dictionary] = []
-	for resource in [
-		{"id": "porcelain", "name": "陶瓷"},
-		{"id": "parts", "name": "零件"},
-		{"id": "sludge", "name": "能源"},
-	]:
-		var material_id := String(resource["id"])
-		var current := int(state.factory.materials.get(material_id, 0))
-		var capacity := int(state.factory.capacities.get(material_id, 0))
-		var full_seconds := LogisticsService.seconds_until_full(state, material_id)
-		resources.append({
-			"id": material_id,
-			"name": String(resource["name"]),
-			"current": current,
-			"capacity": capacity,
-			"rate": LogisticsService.rate_per_minute(state, material_id),
-			"status": "已满" if full_seconds == 0 else "%s 后存满" % _duration_copy(full_seconds),
-			"full": current >= capacity,
-		})
+	var industrial_current := int(state.factory.materials.get("porcelain", 0))
+	var industrial_capacity := int(state.factory.capacities.get("porcelain", 0))
+	var industrial_full_seconds := LogisticsService.seconds_until_full(state, "porcelain")
+	var resources: Array[Dictionary] = [{
+		"id": "porcelain",
+		"name": "工业材料",
+		"current": industrial_current,
+		"capacity": industrial_capacity,
+		"rate": LogisticsService.rate_per_minute(state, "porcelain"),
+		"status": (
+			"已满"
+			if industrial_full_seconds == 0
+			else "%s 后存满" % _duration_copy(industrial_full_seconds)
+		),
+		"full": industrial_current >= industrial_capacity,
+	}]
 	var construction_options: Array[Dictionary] = []
 	for facility_id in FACILITY_NAMES:
 		if facility_id == "command_center" or int(state.factory.facilities.get(facility_id, 0)) > 0:
 			continue
 		if growth_facility_choice and not FACTORY_RESOURCE_NAMES.has(facility_id):
 			continue
-		var cost := int(LogisticsService.FACILITY_BUILD_COSTS.get(facility_id, 0))
+		var cost := (
+			LogisticsService.FACILITY_BUILD_COSTS.get(facility_id, {}) as Dictionary
+		).duplicate(true)
 		var eligible: bool = facility_id != "research_lab" or bool(state.factory.eligible_facilities.get("research_lab", false))
-		var resource_id := String(LogisticsService.RESOURCE_BY_FACILITY.get(facility_id, ""))
-		var star_need := int((LogisticsService.STAR_COSTS[2]["materials"] as Dictionary).get(resource_id, 0))
 		construction_options.append({
 			"facility_id": facility_id,
 			"name": String(FACILITY_NAMES[facility_id]),
 			"cost": cost,
-			"copy": String(FACILITY_COPY[facility_id]) if eligible else "先挑战 1-4，让首败战报定位研究所方案。",
+			"cost_copy": _industrial_material_cost_copy(cost),
+			"copy": (
+				"%s · 建造仅需 %d 秒" % [
+					String(FACILITY_COPY[facility_id]),
+					int(LogisticsService.FACILITY_BUILD_SECONDS.get(facility_id, 5)),
+				]
+				if eligible else "先挑战 1-4，让首败战报定位研究所方案。"
+			),
+			"build_seconds": int(LogisticsService.FACILITY_BUILD_SECONDS.get(facility_id, 5)),
 			"growth_copy": (
-				"当前 %d · 二星升星需要 %d" % [
-					int(state.factory.materials.get(resource_id, 0)),
-					star_need,
+				"当前库存 %d · 建成后持续生产" % [
+					industrial_current,
 				]
 				if growth_facility_choice else ""
 			),
-			"disabled": int(state.economy.toilet_coins) < cost or not state.factory.facility_work.is_empty() or not eligible,
+			"disabled": not state.factory.can_spend(cost) or not state.factory.facility_work.is_empty() or not eligible,
 		})
 	var cell_selected := construction_cell.x != 999
 	var occupied := cell_selected and _is_factory_cell_occupied(construction_cell)
 	var facility := _factory_facility_view(state, selected_facility_id, now_unix)
 	return {
+		"notification_counts": NotificationSummaryScript.derive(state, now_unix),
 		"compact": _layout_profile() == "compact_landscape",
 		"panel": factory_hud_panel,
-		"coins": int(state.economy.toilet_coins),
-		"tech": int(state.economy.industrial_tech),
 		"resources": resources,
 		"task": onboarding,
 		"facility": facility,
@@ -875,7 +906,13 @@ func _factory_view() -> Dictionary:
 			"active_id": construction_facility_id,
 			"active_name": String(FACILITY_NAMES.get(construction_facility_id, "")),
 			"active_copy": String(FACILITY_COPY.get(construction_facility_id, "")),
-			"cost": int(LogisticsService.FACILITY_BUILD_COSTS.get(construction_facility_id, 0)),
+			"cost": (
+				LogisticsService.FACILITY_BUILD_COSTS.get(construction_facility_id, {}) as Dictionary
+			).duplicate(true),
+			"cost_copy": _industrial_material_cost_copy(
+				LogisticsService.FACILITY_BUILD_COSTS.get(construction_facility_id, {}) as Dictionary
+			),
+			"build_seconds": int(LogisticsService.FACILITY_BUILD_SECONDS.get(construction_facility_id, 5)),
 			"placement_copy": (
 				"下一步：轻点网格选址；单指旋转，双指缩放。"
 				if not cell_selected
@@ -901,19 +938,24 @@ func _factory_facility_view(state: RefCounted, facility_id: String, now_unix: in
 	var work: Dictionary = {}
 	if not facility_work.is_empty():
 		var work_facility_id := String(facility_work.get("facility_id", ""))
-		var remaining := maxi(0, int(facility_work.get("completes_at_unix", 0)) - now_unix)
+		var remaining := maxi(0, LogisticsService.facility_work_completes_at(facility_work) - now_unix)
 		var work_name := String(FACILITY_NAMES.get(work_facility_id, "设施"))
 		var work_copy := "正在建造" if String(facility_work.get("work_type", "")) == "construction" else "正在升级"
 		work = {
 			"status": "%s%s · %s" % [
 				work_name,
 				work_copy,
-				"可验收" if remaining == 0 else "剩余 %s" % _duration_copy(remaining),
+				"已完成，请点击下方“验收完成”"
+				if remaining == 0
+				else "还剩 %s；完成后点击下方验收" % _duration_copy(remaining),
 			],
 			"ready": remaining == 0,
+			"remaining_seconds": remaining,
 			"blocks_panel": work_facility_id == facility_id or level <= 0,
 		}
-	var build_cost := int(LogisticsService.FACILITY_BUILD_COSTS.get(facility_id, 0))
+	var build_cost := (
+		LogisticsService.FACILITY_BUILD_COSTS.get(facility_id, {}) as Dictionary
+	).duplicate(true)
 	var eligible: bool = facility_id != "research_lab" or bool(state.factory.eligible_facilities.get("research_lab", false))
 	var kind := "global"
 	var resource_name := ""
@@ -935,15 +977,14 @@ func _factory_facility_view(state: RefCounted, facility_id: String, now_unix: in
 		"eligible": eligible,
 		"eligibility_copy": "先带领 Gman 挑战 1-4；首败战报会指出研究所的援军方案。",
 		"build_cost": build_cost,
-		"enough_coins": int(state.economy.toilet_coins) >= build_cost,
-		"can_build": eligible and int(state.economy.toilet_coins) >= build_cost and facility_work.is_empty(),
+		"build_cost_copy": _industrial_material_cost_copy(build_cost),
+		"enough_materials": state.factory.can_spend(build_cost),
+		"can_build": eligible and state.factory.can_spend(build_cost) and facility_work.is_empty(),
 		"kind": kind,
 		"resource_name": resource_name,
 		"output": output,
 		"can_collect": output > 0,
-		"upgrade_cost_copy": "升级消耗：金币 %d · 技术 %d · 陶瓷 %d · 零件 %d · 能源 %d" % [
-			40 * level, 2 * level, 20 * level, 12 * level, 16 * level,
-		],
+		"upgrade_cost_copy": "升级消耗：工业材料 %d" % (40 * level),
 		"upgrade_preview": _facility_upgrade_preview(facility_id, level) if level > 0 else "",
 		"can_upgrade": level > 0 and level < 3 and facility_work.is_empty(),
 	}
@@ -999,9 +1040,17 @@ func _facility_upgrade_preview(facility_id: String, level: int) -> String:
 			return "升级收益：提高工厂全局等级与容量"
 
 
+func _industrial_material_cost_copy(cost: Dictionary) -> String:
+	if cost.is_empty():
+		return "无需工业材料"
+	return "工业材料 %d" % int(cost.get("porcelain", 0))
+
+
 func _duration_copy(seconds: int) -> String:
 	if seconds < 0:
 		return "暂停"
+	if seconds < 60:
+		return "%d秒" % seconds
 	var hours := seconds / 3600
 	var minutes := maxi(1, (seconds % 3600) / 60)
 	if hours > 0:
@@ -1114,6 +1163,12 @@ func _start_stage_battle(stage_id: String) -> void:
 func _on_map_preparation_requested(action_id: String) -> void:
 	if action_id == "research":
 		_open_research_lab()
+	elif action_id == "recruit":
+		legion_tab = "recruit"
+		_show_legion()
+	elif action_id == "formation":
+		legion_tab = "formation"
+		_show_legion()
 	else:
 		if action_id == "upgrade":
 			legion_tab = "roster"
@@ -1127,6 +1182,7 @@ func _show_legion() -> void:
 	var legion := LegionScreenScene.instantiate() as LegionScreen
 	legion.tab_selected.connect(func(_tab_id: String) -> void: _play_ui_click())
 	legion.tab_selected.connect(_set_legion_tab)
+	legion.hero_selected.connect(_set_legion_selected_hero)
 	legion.action_requested.connect(func(_action_id: String, _payload: Dictionary) -> void: _play_ui_click())
 	legion.action_requested.connect(_on_legion_action_requested)
 	shell.add_child(legion)
@@ -1136,6 +1192,10 @@ func _show_legion() -> void:
 
 func _legion_view() -> Dictionary:
 	var state: RefCounted = game.current_state()
+	var growth_balances := {
+		"toilet_coins": int(state.economy.toilet_coins),
+		"hero_shards": int(state.economy.hero_shards),
+	}
 	var onboarding := OnboardingService.snapshot(state)
 	var unlock_state := MetaCatalog.unlocks(state)
 	var stage_id := String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
@@ -1192,6 +1252,76 @@ func _legion_view() -> Dictionary:
 			state,
 			String(hero.hero_id)
 		)
+		var battle_stats := HeroProgression.derived_battle_stats(hero)
+		var next_level_xp := (
+			int(HeroProgression.LEVEL_XP[int(hero.level) + 1])
+			if int(hero.level) < 5
+			else int(HeroProgression.MAX_XP)
+		)
+		var level_cost := LogisticsService.hero_upgrade_cost(hero)
+		var level_resource_context := {}
+		if not level_cost.is_empty():
+			level_resource_context = _resource_context_view(
+				"LevelResources_%s" % String(hero.hero_id),
+				"升级至 Lv.%d · 当前/需要 → 操作后" % int(level_cost.get("target_level", int(hero.level) + 1)),
+				[
+					_resource_context_item("toilet_coins", "金币", "金币", int(growth_balances["toilet_coins"]), int(level_cost.get("coin_cost", 0))),
+				],
+				"等级训练只消耗金币；出战经验仅作为升级门槛。",
+				1
+			)
+		var star_resource_context := {}
+		var welfare_star_resource_context := {}
+		var normal_star_quote := LogisticsService.star_upgrade_quote(
+			state,
+			String(hero.hero_id)
+		)
+		if normal_star_quote.has("target_star"):
+			star_resource_context = _star_resource_context_from_quote(
+				normal_star_quote,
+				growth_balances,
+				"StarResources_%s" % String(hero.hero_id),
+				"普通升至 %d★ · 当前/需要 → 操作后" % int(normal_star_quote["target_star"]),
+				"升星只消耗军团数据。"
+			)
+			if (
+				int(NewPlayerWelfareService.item_balance(
+					state,
+					NewPlayerWelfareService.STAR_CORE_ITEM_ID
+				)) > 0
+				and int(normal_star_quote["target_star"]) == 2
+			):
+				var welfare_star_quote := LogisticsService.star_upgrade_quote(
+					state,
+					String(hero.hero_id),
+					true
+				)
+				welfare_star_resource_context = _star_resource_context_from_quote(
+					welfare_star_quote,
+					growth_balances,
+					"WelfareStarResources_%s" % String(hero.hero_id),
+					"黑金核心升至 2★ · 军团数据本次免除",
+					"核心替代本次军团数据；工业材料不参与升星。"
+				)
+		var skill_resource_context := {}
+		var skill_cost := skill_quote.get("cost", {}) as Dictionary
+		if not skill_cost.is_empty():
+			skill_resource_context = _resource_context_view(
+				"SkillResources_%s" % String(hero.hero_id),
+				"技能研究 Lv.%d · 当前/需要 → 研究后" % int(skill_quote.get("target_level", int(hero.active_skill_level) + 1)),
+				[
+					_resource_context_item("toilet_coins", "金币", "金币", int(growth_balances["toilet_coins"]), int(skill_cost.get("toilet_coins", 0))),
+					_resource_context_item(
+						"hero_shards",
+						"军团数据",
+						"军团数据",
+						int(growth_balances["hero_shards"]),
+						int(skill_cost.get("hero_shards", 0))
+					),
+				],
+				"技能研究消耗金币与军团数据；研究所等级决定可研究上限。",
+				2
+			)
 		var next_growth := "升级提高基础属性"
 		if int(hero.star) < 2:
 			next_growth = "升至 2★ 解锁职责被动"
@@ -1213,10 +1343,15 @@ func _legion_view() -> Dictionary:
 			"hero_id": String(hero.hero_id),
 			"display_name": String(hero.display_name),
 			"archetype_id": String(hero.archetype_id),
-			"role": _legion_role(String(hero.archetype_id)),
-			"level": int(hero.level),
-			"star": int(hero.star),
-			"power": power,
+				"role": _legion_role(String(hero.archetype_id)),
+				"class_id": String(hero.class_id),
+				"aptitude_id": String(hero.aptitude_id),
+				"level": int(hero.level),
+				"xp": int(hero.xp),
+				"next_level_xp": next_level_xp,
+				"star": int(hero.star),
+				"power": power,
+				"battle_stats": battle_stats.duplicate(true),
 			"skill_name": String(skill_view.get("display_name", "未知主动技能")),
 			"skill_role": String(skill_view.get("role_copy", "")),
 			"skill_effect": String(skill_view.get("effect_copy", "")),
@@ -1228,33 +1363,28 @@ func _legion_view() -> Dictionary:
 			),
 			"skill_research_error": String(skill_quote.get("error", "")),
 			"skill_research_affordable": bool(skill_quote.get("ok", false)),
-			"owned_data": int(state.meta_progression.hero_data.get(String(hero.archetype_id), 0)),
-			"next_star_data": 4 if int(hero.star) == 1 else 8,
-			"next_growth": next_growth,
+				"next_growth": next_growth,
 			"skill_research_allowed": (
 				String(skill_quote.get("error", "")) != "RESEARCH_LAB_LEVEL_TOO_LOW"
 			),
+			"level_resource_context": level_resource_context,
+			"star_resource_context": star_resource_context,
+			"welfare_star_resource_context": welfare_star_resource_context,
+			"skill_resource_context": skill_resource_context,
 			"specialty_id": specialty_id,
 			"specialty_name": String(FACILITY_NAMES.get(specialty_id, specialty_id)),
 			"specialty_assigned": String(hero.assigned_facility_id) == specialty_id,
 			"auto_skill": bool(hero.auto_skill_enabled),
+			"welfare_star_core_count": NewPlayerWelfareService.item_balance(
+				state,
+				NewPlayerWelfareService.STAR_CORE_ITEM_ID
+			),
 		})
 		if first_growth_active and String(hero.archetype_id) in ["assault", "armored"]:
 			var target_power := CombatPower.projected_hero_power_for_star(hero, 2)
-			var star_cost := LogisticsService.STAR_COSTS[2] as Dictionary
-			var material_cost := star_cost["materials"] as Dictionary
-			var owned_data := int(state.meta_progression.hero_data.get(String(hero.archetype_id), 0))
-			var data_cost := mini(int(star_cost["hero_shards"]), owned_data)
-			var universal_cost := int(star_cost["hero_shards"]) - data_cost
-			var affordable := (
-				int(hero.star) >= 2
-				or (
-					int(state.economy.hero_shards) >= universal_cost
-					and int(state.factory.materials.get("porcelain", 0)) >= int(material_cost["porcelain"])
-					and int(state.factory.materials.get("parts", 0)) >= int(material_cost["parts"])
-					and int(state.factory.materials.get("sludge", 0)) >= int(material_cost["sludge"])
-				)
-			)
+			var route_cost := normal_star_quote.get("cost", {}) as Dictionary
+			var legion_data_cost := int(route_cost.get("hero_shards", 0))
+			var affordable := int(hero.star) >= 2 or bool(normal_star_quote.get("ok", false))
 			growth_choices.append({
 				"hero_id": String(hero.hero_id),
 				"archetype_id": String(hero.archetype_id),
@@ -1272,17 +1402,10 @@ func _legion_view() -> Dictionary:
 				"power_before": power,
 				"power_after": target_power,
 				"power_gain": target_power - power,
-				"cost": "%s · 陶瓷 %d · 零件 %d · 能源 %d" % [
-					(
-						"专属数据 %d + 通用碎片 %d" % [data_cost, universal_cost]
-						if data_cost > 0 else "通用碎片 %d" % universal_cost
-					),
-					int(material_cost["porcelain"]),
-					int(material_cost["parts"]),
-					int(material_cost["sludge"]),
-				],
+				"cost": "军团数据 %d" % legion_data_cost,
 				"already_upgraded": int(hero.star) >= 2,
 				"affordable": affordable,
+				"resource_context": star_resource_context,
 			})
 		if (
 			boss_ready_active
@@ -1300,23 +1423,55 @@ func _legion_view() -> Dictionary:
 					else "保留护盾技能，在巨炮 5 秒预警内释放以格挡反震"
 				),
 			}
-	var data_parts: Array[String] = []
-	for archetype_id in state.meta_progression.hero_data:
-		data_parts.append("%s×%d" % [
-			HeroGenerator.archetype_display_name(String(archetype_id)),
-			int(state.meta_progression.hero_data[archetype_id]),
-		])
 	var recruit_results: Array[Dictionary] = []
 	for draw in last_recruit_results:
+		var draw_kind := String(draw.get("kind", "blueprint"))
 		recruit_results.append({
-			"rarity": String(draw.get("rarity", "R")),
-			"kind": String(draw.get("kind", "hero")),
+			"rarity": String(draw.get("rarity", "B")),
+			"kind": draw_kind,
 			"display_name": HeroGenerator.archetype_display_name(String(draw.get("archetype_id", ""))),
 			"amount": int(draw.get("amount", 0)),
 		})
+	var codex: Array[Dictionary] = []
+	var archetype_defs := FactoryCatalog.archetypes()
+	codex.append({
+		"recipe_id": "",
+		"archetype_id": "gman",
+		"display_name": "Gman",
+		"rating": "B",
+		"description": String((archetype_defs.get("gman", {}) as Dictionary).get("description", "")),
+		"status": "researched",
+		"status_copy": "初始指挥官 · 永久角色已入列",
+	})
+	for recipe in FactoryCatalog.recipes():
+		var recipe_id := String(recipe["recipe_id"])
+		var archetype_id := String(recipe["archetype_id"])
+		var researched := false
+		for hero in state.roster:
+			if String(hero.archetype_id) == archetype_id:
+				researched = true
+				break
+		var blueprint_owned := bool(state.factory.discovered_blueprints.get(recipe_id, false))
+		var status := "researched" if researched else ("blueprint_owned" if blueprint_owned else "undiscovered")
+		codex.append({
+			"recipe_id": recipe_id,
+			"archetype_id": archetype_id,
+			"display_name": String(recipe["display_name"]),
+			"rating": String(recipe.get("rating", "B")),
+			"description": String((archetype_defs.get(archetype_id, {}) as Dictionary).get("description", "")),
+			"status": status,
+			"status_copy": (
+				"已研发 · 永久角色已入列"
+				if researched
+				else ("已获得图纸 · 等待研究所研发" if blueprint_owned else "尚未获得设计图纸")
+			),
+		})
 	var cleared: Array = state.stage_progress.get("cleared_stages", [])
+	var foundational_claimed := ResearchBreakthroughService.is_claimed(state)
+	var foundational_unlocked := bool(state.factory.eligible_facilities.get("research_lab", false))
 	return {
 		"tab": legion_tab,
+		"selected_hero_id": legion_selected_hero_id,
 		"formation_edit_slot": formation_edit_slot,
 		"first_formation": {
 			"active": first_formation_active,
@@ -1359,6 +1514,11 @@ func _legion_view() -> Dictionary:
 		"target_stage_name": String(target_stage.get("display_name", stage_id)),
 		"recommended_power": int(target_stage.get("recommended_power", 0)),
 		"recruitment_unlocked": bool(unlock_state["recruitment"]),
+		"foundational_signal": {
+			"unlocked": foundational_unlocked,
+			"claimable": foundational_unlocked and not foundational_claimed,
+			"claimed": foundational_claimed,
+		},
 		"recruitment_progress": "解锁进度 · 指挥官 Lv%d/4 · 关卡 1-5 %s" % [
 			int(unlock_state["commander_level"]),
 			"已通关" if cleared.has("stage_1_5") else "未通关",
@@ -1366,9 +1526,92 @@ func _legion_view() -> Dictionary:
 		"recruit_tickets": int(state.economy.recruit_tickets),
 		"recruit_s_pity": int(state.meta_progression.recruit_s_pity),
 		"recruit_target_guaranteed": bool(state.meta_progression.recruit_target_guaranteed),
-		"hero_data_copy": "英雄数据：%s" % ("暂无（重复英雄将自动转化）" if data_parts.is_empty() else " · ".join(data_parts)),
 		"recruit_results": recruit_results,
+		"codex": codex,
 	}
+
+
+func _resource_context_item(
+	id: String,
+	display_name: String,
+	short_name: String,
+	current: int,
+	required: int = -1,
+	waived: bool = false
+) -> Dictionary:
+	var item := {
+		"id": id,
+		"name": display_name,
+		"short_name": short_name,
+		"current": current,
+	}
+	if required >= 0:
+		item["required"] = required
+	if waived:
+		item["waived"] = true
+	return item
+
+
+func _resource_context_view(
+	context_name: String,
+	title: String,
+	items: Array,
+	note: String = "",
+	columns: int = 3,
+	compact: bool = false
+) -> Dictionary:
+	return {
+		"name": context_name,
+		"title": title,
+		"items": items,
+		"note": note,
+		"columns": columns,
+		"compact": compact,
+	}
+
+
+func _global_core_resource_view() -> Dictionary:
+	var state: RefCounted = game.current_state()
+	if state == null:
+		return {}
+	var view := _resource_context_view(
+		"GlobalCoreResourceHUD",
+		"",
+		[
+			_resource_context_item("toilet_coins", "金币", "金币", int(state.economy.toilet_coins)),
+			_resource_context_item("hero_shards", "军团数据", "军团数据", int(state.economy.hero_shards)),
+			_resource_context_item("porcelain", "工业材料", "工业材料", int(state.factory.materials.get("porcelain", 0))),
+			_resource_context_item("recruit_tickets", "招募券", "招募券", int(state.economy.recruit_tickets)),
+		],
+		"",
+		4
+	)
+	view["item_min_width"] = 46
+	return view
+
+
+func _star_resource_context_from_quote(
+	quote: Dictionary,
+	balances: Dictionary,
+	context_name: String,
+	title: String,
+	note: String
+) -> Dictionary:
+	var cost := quote.get("cost", {}) as Dictionary
+	var waived_cost := quote.get("waived_cost", {}) as Dictionary
+	var required := int(cost.get("hero_shards", 0))
+	var waived_required := int(waived_cost.get("hero_shards", 0))
+	var items: Array[Dictionary] = [
+		_resource_context_item(
+			"hero_shards",
+			"军团数据",
+			"军团数据",
+			int(balances["hero_shards"]),
+			waived_required if not waived_cost.is_empty() else required,
+			not waived_cost.is_empty()
+		),
+	]
+	return _resource_context_view(context_name, title, items, note, 1)
 
 
 func _legion_role(archetype_id: String) -> String:
@@ -1398,10 +1641,14 @@ func _on_legion_action_requested(action_id: String, payload: Dictionary) -> void
 			_start_stage_battle(String(payload.get("stage_id", "stage_1_5")))
 		"recruit":
 			_signal_recruit(int(payload.get("count", 1)))
+		"claim_foundational_signal":
+			_claim_foundational_signal()
 		"upgrade":
 			_upgrade_hero(String(payload.get("hero_id", "")))
 		"star":
 			_upgrade_star(String(payload.get("hero_id", "")))
+		"welfare_star_core":
+			_use_welfare_star_core(String(payload.get("hero_id", "")))
 		"skill":
 			_research_active_skill(String(payload.get("hero_id", "")))
 		"specialist":
@@ -1415,6 +1662,10 @@ func _set_legion_tab(tab: String) -> void:
 		return
 	legion_tab = tab
 	_show_legion()
+
+
+func _set_legion_selected_hero(hero_id: String) -> void:
+	legion_selected_hero_id = hero_id
 
 
 func _show_blueprints() -> void:
@@ -1438,57 +1689,6 @@ func _blueprint_view() -> Dictionary:
 		"special": {"title": "支援枝", "recipes": ["special.repair", "special.parasite"]},
 	}
 	var branch_data := branches.get(blueprint_branch, branches["ordinary"]) as Dictionary
-	var claimed := (state.onboarding.get("claimed", {}) as Dictionary).has(
-		ResearchBreakthroughCatalog.CLAIM_KEY
-	)
-	var lab_built := int(state.factory.facilities.get("research_lab", 0)) > 0
-	var breakthrough := {
-		"claimable": lab_built and not claimed,
-		"copy": (
-			"跨过灰镜高墙后的研究突破：本次免费，不消耗招募券，不推进长期保底。"
-			if lab_built and not claimed
-			else ("研究突破十连已完成 · 冲锋与装甲永久入列" if claimed else "")
-		),
-	}
-	var result_views: Array[Dictionary] = []
-	var resource_names := {
-		"skill_chip": "技能芯片",
-		"porcelain": "陶瓷",
-		"parts": "零件",
-		"sludge": "能源",
-		"hero_data": "角色数据",
-	}
-	for item_value in last_research_breakthrough_results:
-		var item := item_value as Dictionary
-		var kind := String(item.get("kind", ""))
-		var result_view := {
-			"id": "%s_%d" % [kind, result_views.size()],
-			"rarity": String(item.get("rarity", "R")),
-			"kind": kind,
-			"title": "",
-			"subtitle": "",
-			"impact": "",
-		}
-		if kind == "hero":
-			var archetype_id := String(item.get("archetype_id", ""))
-			result_view["id"] = archetype_id
-			result_view["title"] = "%s · %s" % [
-				String(item.get("rarity", "A")),
-				HeroGenerator.archetype_display_name(archetype_id),
-			]
-			result_view["subtitle"] = _legion_role(archetype_id)
-			result_view["impact"] = (
-				"反攻：快速突破前线"
-				if archetype_id == "assault"
-				else "反攻：承伤保护队伍"
-			)
-		else:
-			result_view["title"] = "%s · %s" % [
-				String(item.get("rarity", "R")),
-				String(resource_names.get(kind, "研究资源")),
-			]
-			result_view["subtitle"] = "+%d" % int(item.get("amount", 0))
-		result_views.append(result_view)
 	var nodes: Array[Dictionary] = []
 	var active_research := state.factory.blueprint_research as Dictionary
 	var now := int(Time.get_unix_time_from_system())
@@ -1525,18 +1725,22 @@ func _blueprint_view() -> Dictionary:
 			node["disabled"] = not ready
 		elif available:
 			node["status_id"] = "available"
-			node["status_copy"] = "可研发 · 耗时45秒"
+			node["status_copy"] = "免费研发 · 仅耗时45秒 · 长期资源保持不变"
 			node["action_id"] = "start_research"
-			node["action_label"] = "开始研发%s" % String(recipe.get("display_name", "蓝图"))
+			node["action_label"] = "免费研发%s · 45秒" % String(recipe.get("display_name", "蓝图"))
 			node["action_name"] = "UnlockFoundationalBlueprint_%s" % recipe_id.replace(".", "_")
 		nodes.append(node)
 	return {
 		"branch": blueprint_branch,
 		"branch_title": String(branch_data.get("title", "研究分支")),
-		"core_status": "首败信号已解析 · 选择两条基础树枝",
-		"breakthrough": breakthrough,
-		"results": result_views,
-		"results_summary": "2 名永久援军 + 8 份研究物资 · 高墙反攻条件已经凑齐",
+		"core_status": (
+			"选择已获得的设计图纸 · 研发完成后永久角色入列"
+			if ResearchBreakthroughService.is_claimed(state)
+			else "尚无基础设计图纸 · 请先前往军团的信号招募"
+		),
+		"breakthrough": {},
+		"results": [],
+		"results_summary": "",
 		"reduced_motion": bool(settings_store.reduced_motion),
 		"nodes": nodes,
 	}
@@ -1545,8 +1749,6 @@ func _blueprint_view() -> Dictionary:
 func _on_blueprint_action_requested(action_id: String, payload: Dictionary) -> void:
 	_play_ui_click()
 	match action_id:
-		"claim_breakthrough":
-			_claim_research_breakthrough()
 		"open_legion":
 			_open_breakthrough_formation()
 		"start_research":
@@ -1598,20 +1800,26 @@ func _claim_foundational_blueprint() -> void:
 
 
 func _claim_research_breakthrough() -> void:
+	_claim_foundational_signal()
+
+
+func _claim_foundational_signal() -> void:
 	var result := _command(
-		"claim_research_breakthrough",
+		"claim_foundational_signal",
 		{},
-		"research-breakthrough-ten"
+		"foundational-signal-ten"
 	)
 	if not bool(result.get("ok", false)):
-		_notify(_error_copy(String(result.get("error", "研究突破失败"))))
+		_notify(_error_copy(String(result.get("error", "基础图纸信号接收失败"))))
 		return
-	last_research_breakthrough_results.clear()
+	last_recruit_results.clear()
 	for item in (result.get("event", {}) as Dictionary).get("results", []):
-		last_research_breakthrough_results.append((item as Dictionary).duplicate(true))
+		var draw := (item as Dictionary).duplicate(true)
+		last_recruit_results.append(draw.duplicate(true))
 	audio_director.play_cue(&"victory", -10.0)
-	_notify("研究突破完成：冲锋与装甲两名永久援军已入列")
-	_show_blueprints()
+	legion_tab = "recruit"
+	_notify("信号接收完成：冲锋与装甲设计图纸已入库，请到研究所研发")
+	_show_legion()
 
 
 func _show_goals() -> void:
@@ -1695,12 +1903,17 @@ func _goals_view(state: RefCounted) -> Dictionary:
 		if not state.meta_progression.commander_claimed_levels.has(str(reward_level)):
 			commander_claimable += 1
 	return {
+		"notification_counts": NotificationSummaryScript.derive(
+			state,
+			int(Time.get_unix_time_from_system())
+		),
 		"tab": goals_tab,
 		"hierarchy": hierarchy,
 		"campaign": {
 			"cleared": cleared.size(),
 			"chapters_copy": "  ·  ".join(chapter_parts),
 		},
+		"new_player_welfare": NewPlayerWelfareService.snapshot(state),
 		"missions_unlocked": bool(unlock_state["missions"]),
 		"weekly_unlocked": bool(unlock_state["weekly"]),
 		"missions": missions,
@@ -1779,6 +1992,13 @@ func _on_goals_action_requested(action_id: String, payload: Dictionary) -> void:
 			_claim_meta_achievement(String(payload.get("achievement_id", "")))
 		"claim_all_achievements":
 			_claim_all_meta_achievements()
+		"claim_new_player_welfare":
+			_claim_new_player_welfare()
+		"open_smuggled_logistics_case":
+			_open_smuggled_logistics_case()
+		"open_legion_for_welfare":
+			legion_tab = "roster"
+			_show_legion()
 
 
 func _ensure_meta_refreshed() -> void:
@@ -2147,18 +2367,29 @@ func _show_result() -> void:
 	var shell := _shell(result_title, "战果已结算，全员无损返回")
 	var reward := event.get("reward", {}) as Dictionary
 	var breakthrough := ""
-	if int(event.get("hero_shards", 0)) > 0 or int(event.get("skill_chips", 0)) > 0:
-		breakthrough = "突破战果：角色碎片 +%d  技能芯片 +%d" % [
-			int(event.get("hero_shards", 0)),
-			int(event.get("skill_chips", 0)),
-		]
+	var legion_data_gain := int(event.get("hero_shards", 0))
+	if legion_data_gain > 0:
+		breakthrough = "军团数据 +%d" % legion_data_gain
 	var unlocked_hero := event.get("unlocked_hero", {}) as Dictionary
+	var unlocked_blueprints := event.get("unlocked_blueprints", []) as Array
 	var unlocked_copy := ""
 	if not unlocked_hero.is_empty():
 		unlocked_copy = "新永久角色加入：%s%s" % [
 			String(unlocked_hero.get("display_name", "")),
 			"（已编入空槽）" if bool(unlocked_hero.get("assigned_to_formation", false)) else "",
 		]
+	elif not unlocked_blueprints.is_empty():
+		var blueprint_result := unlocked_blueprints[0] as Dictionary
+		var blueprint_recipe := FactoryCatalog.recipe(String(blueprint_result.get("recipe_id", "")))
+		if String(blueprint_result.get("kind", "blueprint")) == "blueprint":
+			unlocked_copy = "获得设计图纸：%s · 请到研究所研发永久角色" % String(
+				blueprint_recipe.get("display_name", "未知设计")
+			)
+		else:
+			unlocked_copy = "获得重复设计数据：%s +%d" % [
+				String(blueprint_recipe.get("display_name", "未知设计")),
+				int(blueprint_result.get("amount", 0)),
+			]
 	var combat_summary := ""
 	var debrief := ""
 	var contribution := ""
@@ -2191,6 +2422,10 @@ func _show_result() -> void:
 	if (event.get("eligible_facilities", []) as Array).has("research_lab"):
 		qualification = "已取得研究所建造资格"
 		primary_label = "返回基地建造研究所"
+		primary_action = "research_lab"
+	elif not unlocked_blueprints.is_empty():
+		qualification = "新设计图纸已入库，角色尚未研发"
+		primary_label = "前往研究所研发"
 		primary_action = "research_lab"
 	elif chapter_one_complete:
 		qualification = _chapter_one_unlock_copy(next_stage_id)
@@ -2228,17 +2463,13 @@ func _show_result() -> void:
 		"outcome_banner": (
 			"首章胜利 · 你的成长选择通过实战验证"
 			if chapter_one_complete
-			else ("胜利 · 工厂与军团获得成长" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
+			else ("胜利 · 获得军团成长战果" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
 		),
 		"outcome_color": "green" if won else ("gold" if outcome == "retreat" else "red"),
-		"reward_headline": "金币 +%d    工业技术 +%d" % [
-			int(reward.get("gold", 0)), int(event.get("industrial_tech", 0))
+		"reward_headline": "金币 +%d    军团数据 +%d" % [
+			int(reward.get("gold", 0)), legion_data_gain
 		],
-		"materials": "陶瓷 +%d  零件 +%d  能源 +%d" % [
-			int(reward.get("porcelain", 0)),
-			int(reward.get("parts", 0)),
-			int(reward.get("sludge", 0)),
-		],
+		"materials": "工业材料由工厂设施持续生产；攻城不直接掉落",
 		"mission_progress": _onboarding_settlement_copy(event, onboarding),
 		"breakthrough": breakthrough,
 		"unlocked_hero": unlocked_copy,
@@ -2433,10 +2664,8 @@ func _growth_opportunity_copy(event: Dictionary) -> String:
 	var reward := event.get("reward", {}) as Dictionary
 	if int(reward.get("gold", 0)) > 0:
 		gains.append("金币可用于角色升级")
-	if int(event.get("industrial_tech", 0)) > 0:
-		gains.append("工业技术可用于扩建或技能研究")
 	if int(event.get("hero_shards", 0)) > 0:
-		gains.append("英雄数据可用于升星")
+		gains.append("军团数据可用于升星与技能研究")
 	return "下一步成长：%s" % ("继续挑战或选择一项永久升级" if gains.is_empty() else "；".join(gains))
 
 
@@ -2508,8 +2737,8 @@ func _battle_snapshots() -> Array[Dictionary]:
 			"archetype_id": hero.archetype_id,
 			"class_id": hero.class_id,
 			"star": hero.star,
-			"max_hp": maxi(1, int(stats["max_hp"])),
-			"attack": maxi(1, maxi(int(stats["physical_atk"]), int(stats["magic_atk"]))),
+			"max_hp": maxi(1, int(stats["hp"])),
+			"attack": maxi(1, int(stats["attack"])),
 			"defense": int(stats["defense"]),
 			"speed_milli": int(stats["speed_milli"]),
 			"crit_bp": int(stats["crit_bp"]),
@@ -2595,6 +2824,14 @@ func _upgrade_star(hero_id: String) -> void:
 	_after_action(_command("upgrade_hero_star", {"hero_id": hero_id}), _show_legion)
 
 
+func _use_welfare_star_core(hero_id: String) -> void:
+	_after_action(_command(
+		"use_welfare_star_core",
+		{"hero_id": hero_id},
+		"new-player-welfare:star-core:%s" % hero_id
+	), _show_legion)
+
+
 func _research_active_skill(hero_id: String) -> void:
 	_after_action(_command("research_active_skill", {"hero_id": hero_id}), _show_legion)
 
@@ -2675,6 +2912,22 @@ func _claim_meta_achievement(achievement_id: String) -> void:
 	_after_action(_command("claim_meta_achievement", {"achievement_id": achievement_id}, "meta-achievement:%s" % achievement_id), _show_goals)
 
 
+func _claim_new_player_welfare() -> void:
+	_after_action(_command(
+		"claim_new_player_welfare",
+		{},
+		"new-player-welfare:claim:v1"
+	), _show_goals)
+
+
+func _open_smuggled_logistics_case() -> void:
+	_after_action(_command(
+		"open_smuggled_logistics_case",
+		{},
+		"new-player-welfare:logistics-case:v1"
+	), _show_goals)
+
+
 func _select_formation_slot(slot: String) -> void:
 	formation_edit_slot = slot
 	_show_legion()
@@ -2729,8 +2982,11 @@ func _signal_recruit(count: int) -> void:
 		for item in results:
 			var draw := item as Dictionary
 			last_recruit_results.append(draw.duplicate(true))
-			summaries.append("%s %s" % [String(draw.get("rarity", "R")), HeroGenerator.archetype_display_name(String(draw.get("archetype_id", "")))])
-		_notify("招募完成：%s" % "、".join(summaries))
+			summaries.append("%s 级%s图纸" % [
+				String(draw.get("rarity", "B")),
+				HeroGenerator.archetype_display_name(String(draw.get("archetype_id", ""))),
+			])
+		_notify("图纸信号接收完成：%s" % "、".join(summaries))
 		_show_legion()
 	else:
 		_notify(_error_copy(String(result.get("error", "招募失败"))))
@@ -2741,6 +2997,9 @@ func _follow_task(target: String, stage_id: String = "") -> void:
 		"factory", "repair":
 			_open_factory_task_context() if target == "factory" else _show_legion()
 		"legion", "formation":
+			var onboarding := OnboardingService.snapshot(game.current_state())
+			if _onboarding_objective_id(onboarding) == "resolve_foundational_signal":
+				legion_tab = "recruit"
 			_show_legion()
 		"research":
 			_open_research_lab()
@@ -2793,15 +3052,12 @@ func _onboarding_objective_id(onboarding: Dictionary) -> String:
 func _reward_text(reward: Dictionary) -> String:
 	var labels := {
 		"toilet_coins": "金币",
-		"industrial_tech": "技术",
-		"porcelain": "陶瓷",
-		"parts": "零件",
-		"sludge": "能源",
-		"hero_shards": "碎片",
-		"skill_chips": "芯片",
+		"porcelain": "工业材料",
+		"hero_shards": "军团数据",
+		"recruit_tickets": "招募券",
 	}
 	var values: Array[String] = []
-	for key in ["toilet_coins", "industrial_tech", "porcelain", "parts", "sludge", "hero_shards", "skill_chips"]:
+	for key in ["toilet_coins", "hero_shards", "porcelain", "recruit_tickets"]:
 		if int(reward.get(key, 0)) > 0:
 			values.append("%s +%d" % [labels[key], int(reward[key])])
 	return "  ".join(values)
@@ -2842,14 +3098,31 @@ func _success_copy(result: Dictionary) -> String:
 				"设施"
 			)
 		"facility_work_started":
-			return "%s已进入%s队列，请等待完成" % [
-				FACILITY_NAMES.get(String(event.get("facility_id", "")), "设施"),
-				"建造" if String(event.get("work_type", "")) == "construction" else "升级",
-			]
+			if String(event.get("work_type", "")) == "construction":
+				return "%s开始建造，仅需 %d 秒；完成后点击“验收完成”" % [
+					FACILITY_NAMES.get(String(event.get("facility_id", "")), "设施"),
+					int(event.get("duration_seconds", 5)),
+				]
+			return "%s已进入升级队列，请等待完成" % FACILITY_NAMES.get(
+				String(event.get("facility_id", "")),
+				"设施"
+			)
 		"blueprint_research_started":
 			return "角色研发已开始，完成后可领取"
 		"hero_upgraded":
 			return "角色已升至 Lv.%d，战力提升" % int(event.get("level", 1))
+		"hero_star_upgraded":
+			if String(event.get("source", "")) == "new_player_welfare":
+				var waived := event.get("waived_cost", {}) as Dictionary
+				return "黑金核心生效：升至 %d★，免除军团数据 %d" % [
+					int(event.get("star", 2)),
+					int(waived.get("hero_shards", 0)),
+				]
+			return "角色已升至 %d★" % int(event.get("star", 1))
+		"new_player_welfare_claimed":
+			return "黑市援助已到账：黑金升星核心 ×1、走私后勤箱 ×1"
+		"smuggled_logistics_case_opened":
+			return "走私后勤箱已开启：工业材料 +25"
 		"hero_repaired":
 			return "维修完成，战备恢复至 %d%%" % int(event.get("readiness", 100))
 		"onboarding_task_claimed":
@@ -2912,18 +3185,27 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	var titles := VBoxContainer.new()
 	titles.add_theme_constant_override("separation", -2)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	titles.custom_minimum_size.x = 112
 	header.add_child(titles)
 	var title_label := _label(title_text, 21, TEXT)
+	title_label.clip_text = true
 	title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.add_theme_constant_override("outline_size", 2)
 	title_label.add_theme_color_override("font_outline_color", Color(BG, 0.85))
 	titles.add_child(title_label)
 	var subtitle_label := _label(subtitle, 12, Color(MUTED, 0.9))
+	subtitle_label.clip_text = true
 	subtitle_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	titles.add_child(subtitle_label)
 	if screen not in [Screen.TITLE, Screen.SETTINGS, Screen.BATTLE, Screen.HELP]:
+		var global_resources := ResourceContextHudScript.new() as Control
+		global_resources.name = "GlobalCoreResourceHUD"
+		global_resources.custom_minimum_size.x = 222
+		global_resources.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		global_resources.call("configure", _global_core_resource_view())
+		header.add_child(global_resources)
 		var settings := _button("≡", Callable(self, "_show_settings").bind(screen), false)
 		settings.name = "TopBarSettingsButton"
 		settings.tooltip_text = "设置"
@@ -3334,23 +3616,39 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 	nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shell.add_child(nav)
 	var entries: Array = [
-		["工厂", Screen.BASE, _show_base],
+		["工厂", Screen.BASE, _open_factory_navigation],
 		["战区", Screen.MAP, _show_map],
 		["军团", Screen.LEGION, _show_legion],
 		["行动", Screen.GOALS, _show_goals],
 	]
-	var goal_claimable := int(MetaProgressionService.claimable_summary(game.current_state())["total"])
+	var notification_counts := NotificationSummaryScript.derive(
+		game.current_state(),
+		int(Time.get_unix_time_from_system())
+	)
 	for entry in entries:
-		var label := String(entry[0])
-		if int(entry[1]) == Screen.GOALS and goal_claimable > 0:
-			label = "%s  %d" % [label, goal_claimable]
-		var button := _button(label, entry[2], int(entry[1]) == active)
+		var button := _button(String(entry[0]), entry[2], int(entry[1]) == active)
 		button.name = "TopNav%sButton" % String(entry[0])
-		if int(entry[1]) == Screen.GOALS:
-			button.tooltip_text = "%d 份战报待确认" % goal_claimable if goal_claimable > 0 else "暂无新战报"
+		var badge_count := 0
+		if int(entry[1]) == Screen.BASE:
+			badge_count = int(notification_counts.get("factory_ready", 0))
+			button.tooltip_text = (
+				"%d 项工厂事务已完成" % badge_count
+				if badge_count > 0 else "暂无已完成的工厂事务"
+			)
+		elif int(entry[1]) == Screen.GOALS:
+			badge_count = int(notification_counts.get("goal_claimable", 0))
+			button.tooltip_text = (
+				"%d 项奖励待领取" % badge_count
+				if badge_count > 0 else "暂无待领取奖励"
+			)
 		button.custom_minimum_size = Vector2(0, 46)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		nav.add_child(button)
+		if int(entry[1]) in [Screen.BASE, Screen.GOALS]:
+			var badge := NotificationBadgeScript.new() as NotificationBadge
+			badge.name = "TopNav%sNotificationBadge" % String(entry[0])
+			button.add_child(badge)
+			badge.set_count(badge_count)
 
 
 func _panel_vbox(title_text: String, separation: int) -> VBoxContainer:
@@ -3770,19 +4068,21 @@ func _error_copy(code: String) -> String:
 		"NOT_ENOUGH_FACTORY_MATERIALS": "后勤材料不足，先收取工厂产出",
 		"NOT_ENOUGH_REPAIR_MATERIALS": "维修材料不足，等待工厂生产",
 		"NOT_ENOUGH_HERO_SHARDS": "角色碎片不足，推进至 1-2 或章节 Boss",
-		"NOT_ENOUGH_SKILL_CHIPS": "技能芯片不足，击败章节 Boss 后获得",
+		"NOT_ENOUGH_SKILL_CHIPS": "军团数据不足，可通过战斗与重复图纸获得",
 		"HERO_STAR_CAP_REACHED": "当前角色已经达到三星上限",
 		"SPECIALTY_REQUIRES_TWO_STARS": "角色达到二星后才能派驻工厂",
 		"REPAIR_SLOTS_FULL": "维修槽已满，升级维修中心可开放第二槽",
 		"HERO_ALREADY_IN_REPAIR": "该角色已经进入等待维修",
 		"NO_REPAIRS_READY": "还没有完成的等待维修",
-		"NOT_ENOUGH_INDUSTRIAL_TECH": "工业技术不足，先攻占新城镇",
+		"NOT_ENOUGH_INDUSTRIAL_TECH": "工业材料不足，先收取工厂产出",
 		"RESEARCH_LAB_LEVEL_TOO_LOW": "研究所等级不足，升级至 Lv.2 可研究技能Ⅲ",
 		"META_MISSIONS_LOCKED": "通关 1-1 且指挥官达到 Lv2 后开放行动任务",
 		"META_WEEKLY_LOCKED": "指挥官达到 Lv10 后开放周任务",
 		"META_PASS_LOCKED": "通关 1-5 且指挥官达到 Lv5 后开放战令",
 		"META_ACHIEVEMENTS_LOCKED": "通关 1-2 且指挥官达到 Lv3 后开放成就",
-		"SIGNAL_RECRUIT_LOCKED": "通关 1-3 且指挥官达到 Lv4 后开放信号招募",
+		"SIGNAL_RECRUIT_LOCKED": "通关 1-5 且指挥官达到 Lv4 后开放长期信号招募",
+		"FOUNDATIONAL_SIGNAL_NOT_DETECTED": "先完成 1-4 首次高墙侦察，截获基础设计信号",
+		"FOUNDATIONAL_SIGNAL_ALREADY_CLAIMED": "基础图纸十连已经接收",
 		"PASS_NO_CLAIMABLE_REWARDS": "当前没有可领取的战令奖励",
 		"COMMANDER_NO_CLAIMABLE_REWARDS": "当前没有可领取的指挥官等级奖励",
 		"ACHIEVEMENT_NO_CLAIMABLE_REWARDS": "当前没有可领取的成就奖励",
@@ -3800,5 +4100,13 @@ func _error_copy(code: String) -> String:
 		"BLUEPRINT_RESEARCH_NOT_READY": "角色研发还未完成",
 		"SAVE_UNAVAILABLE": "本次操作未生效：存档服务不可用，请打开设置并下载备份",
 		"SAVE_FAILED": "本次操作未生效：浏览器存储写入失败，请打开设置下载备份后再重试",
+		"NEW_PLAYER_WELFARE_LOCKED": "完成第一章 1-5 后才能领取黑市援助",
+		"NEW_PLAYER_WELFARE_ALREADY_CLAIMED": "黑市援助已经领取",
+		"NEW_PLAYER_WELFARE_NOT_CLAIMED": "请先领取黑市援助",
+		"SMUGGLED_LOGISTICS_CASE_ALREADY_OPENED": "走私后勤箱已经开启",
+		"NO_SMUGGLED_LOGISTICS_CASE": "当前没有可开启的走私后勤箱",
+		"SMUGGLED_LOGISTICS_CASE_STORAGE_FULL": "工业仓库空间不足，先完成一次成长消费再开箱",
+		"NO_CONTRABAND_STAR_CORE": "当前没有可使用的黑金升星核心",
+		"CONTRABAND_CORE_REQUIRES_ONE_STAR": "黑金核心只能帮助一星角色升至二星",
 	}
 	return String(known.get(code, code))

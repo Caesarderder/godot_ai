@@ -68,7 +68,7 @@ text = "卡关不是惩罚"
 
 [node name="HurdleBody" type="Label" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards/HurdleCard/Margin/Content"]
 layout_mode = 2
-text = "1-4 的首次失败会解锁研究所资格。建成研究所后领取一次免费突破十连，固定获得冲锋与装甲永久援军；失败后角色完全恢复，不会阵亡或等待维修。"
+text = "1-4 的首次失败会截获一批基础设计信号，并解锁研究所资格。先在信号招募接收冲锋与装甲图纸，再建造研究所逐张研发成永久援军；失败后角色完全恢复，不会阵亡或等待维修。"
 autowrap_mode = 2
 
 [node name="GrowthCard" type="PanelContainer" parent="HelpLandscapeColumns/HelpGameplayScroll/GameplayCards"]

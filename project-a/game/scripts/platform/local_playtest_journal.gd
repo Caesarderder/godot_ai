@@ -28,8 +28,8 @@ const FIRST_SESSION_MILESTONES: Array[String] = [
 	"first_city_captured",
 	"pressure_stage_cleared",
 	"high_wall_failed",
+	"foundational_signal",
 	"research_lab_constructed",
-	"research_breakthrough",
 	"counterattack_formation_ready",
 	"counterattack_won",
 	"resource_facility_constructed",
@@ -251,14 +251,14 @@ func _derive_first_session_metrics() -> Dictionary:
 			if (
 				command_type == "construct_facility"
 				and completed.has("high_wall_failed")
-				and not completed.has("research_breakthrough")
+				and not completed.has("research_lab_constructed")
 			):
 				_mark_milestone("research_lab_constructed", elapsed, completed, milestone_seconds)
 			elif (
-				command_type == "claim_research_breakthrough"
-				and completed.has("research_lab_constructed")
+				command_type == "claim_foundational_signal"
+				and completed.has("high_wall_failed")
 			):
-				_mark_milestone("research_breakthrough", elapsed, completed, milestone_seconds)
+				_mark_milestone("foundational_signal", elapsed, completed, milestone_seconds)
 			elif (
 				command_type == "construct_facility"
 				and completed.has("counterattack_won")

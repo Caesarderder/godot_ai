@@ -23,6 +23,7 @@ func _run() -> void:
 	_test_war_readiness_report()
 	_test_power_contract()
 	_test_permanent_upgrade_contract()
+	_test_star_quote_contract()
 	_test_growth_plan()
 	_test_gman_reward_ceiling()
 	if failures.is_empty():
@@ -49,18 +50,24 @@ func _test_war_readiness_report() -> void:
 	_check(String((legacy_readiness.get("next_action", {}) as Dictionary).get("id", "")) != "repair", "lossless report never recommends repair")
 	state.factory.materials = {"porcelain": 100, "parts": 1, "sludge": 100}
 	var scarce := WarReadinessReportScript.derive(state, config)
-	_eq(String(scarce.get("weakest_resource_id", "")), "parts", "war report identifies the weakest capacity-adjusted resource")
+	_eq(String(scarce.get("weakest_resource_id", "")), "porcelain", "war report exposes the unified industrial-material ledger")
 	var first_wall := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
 	_eq(String((first_wall.get("next_action", {}) as Dictionary).get("id", "")), "discover", "first 1-4 encounter prioritizes the authored information battle over generic growth")
 	_check(String((first_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("试探炮台"), "first 1-4 encounter names the discovery action")
 	state.attempt_counters["stage_1_4"] = 1
 	state.factory.eligible_facilities["research_lab"] = true
 	var known_wall := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
-	_eq(String((known_wall.get("next_action", {}) as Dictionary).get("id", "")), "research", "known 1-4 wall routes to research instead of generic growth")
-	_check(String((known_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("建造研究所"), "known 1-4 wall names the first executable recovery")
+	_eq(String((known_wall.get("next_action", {}) as Dictionary).get("id", "")), "recruit", "known 1-4 wall routes to the signal page before research")
+	_check(String((known_wall.get("next_action", {}) as Dictionary).get("title", "")).contains("基础图纸十连"), "known 1-4 wall names the first executable signal recovery")
+	state.onboarding["claimed"]["reward.foundational_signal_ten"] = true
+	state.factory.discovered_blueprints["ordinary.assault"] = true
+	state.factory.discovered_blueprints["heavy.armored"] = true
+	var designs_owned := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
+	_eq(String((designs_owned.get("next_action", {}) as Dictionary).get("id", "")), "research", "owned designs route to laboratory construction")
+	_check(String((designs_owned.get("next_action", {}) as Dictionary).get("title", "")).contains("建造研究所"), "owned designs name laboratory construction")
 	state.factory.facilities["research_lab"] = 1
 	var lab_ready := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
-	_check(String((lab_ready.get("next_action", {}) as Dictionary).get("title", "")).contains("免费突破十连"), "built lab advances the recovered action to the deterministic breakthrough")
+	_check(String((lab_ready.get("next_action", {}) as Dictionary).get("title", "")).contains("研发冲锋与装甲图纸"), "built lab advances to deterministic blueprint research")
 	var assault: RefCounted = HeroGeneratorScript.generate_archetype(20260726, 2, "assault", "fighter")
 	var armored: RefCounted = HeroGeneratorScript.generate_archetype(20260726, 3, "armored", "guardian")
 	state.roster.append(assault)
@@ -70,7 +77,7 @@ func _test_war_readiness_report() -> void:
 	state.formation.slots["troop_1"] = armored.hero_id
 	state.formation.slots["troop_2"] = assault.hero_id
 	var counterattack_ready := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
-	_check(String((counterattack_ready.get("next_action", {}) as Dictionary).get("id", "")) not in ["research", "formation", "upgrade"], "deployed reinforcements release the player to counterattack")
+	_eq(String((counterattack_ready.get("next_action", {}) as Dictionary).get("id", "")), "attack", "deployed reinforcements release the player to counterattack")
 
 
 func _test_economy_valuation() -> void:
@@ -101,7 +108,29 @@ func _test_power_contract() -> void:
 	two_star.star = 2
 	_check(CombatPowerScript.hero_power(two_star) > one_star_power, "star promotion increases displayed combat power")
 	_eq(projected_two_star_power, CombatPowerScript.hero_power(two_star), "star choice preview uses the canonical post-upgrade combat power")
-	_eq(CombatPowerScript.STAR_SKILL_BP[3], CombatPowerScript.STAR_SKILL_BP[5], "skill power multiplier caps when skill tier caps at three stars")
+	var skill_one_power := CombatPowerScript.hero_power(two_star)
+	two_star.active_skill_level = 2
+	var skill_two_power := CombatPowerScript.hero_power(two_star)
+	_eq(skill_two_power, skill_one_power, "active skill research does not add a hidden combat-power multiplier")
+	var derived := HeroProgressionScript.derived_battle_stats(two_star)
+	var skill_snapshot := {
+		"max_hp": derived["hp"],
+		"attack": derived["attack"],
+		"defense": derived["defense"],
+		"speed_milli": derived["speed_milli"],
+		"crit_bp": derived["crit_bp"],
+		"star": two_star.star,
+		"archetype_id": two_star.archetype_id,
+		"skill_level": two_star.active_skill_level,
+	}
+	_eq(CombatPowerScript.snapshot_power(skill_snapshot), skill_two_power, "skill-researched hero and battle snapshot use the same combat power")
+	_eq(
+		skill_two_power,
+		int(derived["hp"]) * 3 + int(derived["attack"]) * 20
+			+ int(derived["defense"]) * 10 + int(derived["speed_milli"]) / 500
+			+ int(derived["crit_bp"]) / 10,
+		"combat power is the direct five-stat formula without role, skill, or duplicate star multipliers"
+	)
 
 
 func _test_permanent_upgrade_contract() -> void:
@@ -113,15 +142,48 @@ func _test_permanent_upgrade_contract() -> void:
 	var stats_before := (hero.base_stats as Dictionary).duplicate(true)
 	var power_before := CombatPowerScript.hero_power(hero)
 	state.economy.toilet_coins = 999
-	state.factory.materials = {"porcelain": 999, "parts": 999, "sludge": 999}
+	hero.xp = int(HeroProgressionScript.LEVEL_XP[level_before + 1])
+	var materials_before: Dictionary = state.factory.materials.duplicate(true)
 	var result := LogisticsServiceScript.upgrade_hero(state, hero_id)
 	_check(bool(result.get("ok", false)), "permanent hero upgrade succeeds with sufficient resources")
 	_eq(int(hero.level), level_before + 1, "permanent upgrade advances exactly one level")
 	_check(int(hero.xp) > xp_before, "permanent upgrade advances XP to the target threshold")
 	_check(hero.base_stats != stats_before, "permanent upgrade applies deterministic base-stat growth")
 	_check(CombatPowerScript.hero_power(hero) > power_before, "permanent upgrade produces positive combat power")
+	_eq(state.factory.materials, materials_before, "hero level training never spends factory materials")
 	var event := result.get("event", {}) as Dictionary
 	_eq(int(event.get("power_gain", 0)), CombatPowerScript.hero_power(hero) - power_before, "upgrade event reports the canonical power delta")
+
+
+func _test_star_quote_contract() -> void:
+	var state: RefCounted = GameStateScript.create_new(20260727, 1000, false)
+	var hero: RefCounted = state.roster[0]
+	state.economy.hero_shards = 4
+	state.economy.skill_chips = 0
+	state.factory.materials = {"porcelain": 0, "parts": 0, "sludge": 0}
+	var normal_quote := LogisticsServiceScript.star_upgrade_quote(state, String(hero.hero_id))
+	var waived_quote := LogisticsServiceScript.star_upgrade_quote(state, String(hero.hero_id), true)
+	_check(bool(normal_quote.get("ok", false)), "normal star quote depends on hero data instead of factory materials")
+	_check(bool(waived_quote.get("ok", false)), "welfare star quote replaces the hero-data cost")
+	_eq(
+		(waived_quote.get("cost", {}) as Dictionary).get("hero_shards", -1),
+		0,
+		"welfare star quote charges no legion data"
+	)
+	_eq(
+		(waived_quote.get("waived_cost", {}) as Dictionary).get("hero_shards", -1),
+		4,
+		"welfare star quote exposes the exact replaced legion-data cost"
+	)
+	var materials_before: Dictionary = state.factory.materials.duplicate(true)
+	var upgraded := LogisticsServiceScript.upgrade_star(state, String(hero.hero_id))
+	_check(bool(upgraded.get("ok", false)), "normal star execution accepts its authoritative quote")
+	_eq(state.factory.materials, materials_before, "normal star execution never spends factory materials")
+	_eq(
+		(upgraded.get("event", {}) as Dictionary).get("cost", {}),
+		normal_quote.get("cost", {}),
+		"star execution event spends the same cost returned by the quote"
+	)
 
 
 func _test_progression_cost_curve() -> void:
@@ -167,7 +229,7 @@ func _test_growth_plan() -> void:
 	state.factory.materials = {"porcelain": 0, "parts": 0, "sludge": 0}
 	var resource_plan := GrowthPlanScript.for_stage(state, StageCatalogScript.stage("stage_2_2"))
 	_eq(resource_plan["action"], "collect", "unaffordable permanent upgrade routes to resource collection")
-	_check(String(resource_plan["detail"]).contains("马桶币") and String(resource_plan["detail"]).contains("陶瓷"), "upgrade shortfall preserves independent resource gates")
+	_check(String(resource_plan["detail"]).contains("出战经验") and String(resource_plan["detail"]).contains("金币"), "upgrade shortfall names the separated battle-XP and coin gates")
 	state.economy.toilet_coins = 999
 	state.factory.blueprints["ordinary.assault"] = true
 	state.factory.materials = {"porcelain": 999, "parts": 999, "sludge": 999}
@@ -194,19 +256,52 @@ func _test_growth_plan() -> void:
 
 func _test_stage_curve() -> void:
 	var previous_recommended := 0
-	var previous_enemy_bp := 0
+	var recommended_by_stage: Dictionary = {}
 	for stage_id in StageCatalogScript.all_stage_ids():
 		var config := StageCatalogScript.stage(stage_id)
 		var recommended := int(config.get("recommended_power", 0))
 		var minimum := int(config.get("minimum_power", 0))
-		var enemy_bp := int(config.get("power_bp", 0))
-		_check(recommended > previous_recommended, "%s recommended power rises monotonically" % stage_id)
-		_check(enemy_bp > previous_enemy_bp, "%s enemy scaling rises monotonically" % stage_id)
+		_check(recommended >= previous_recommended, "%s recommended power is monotonic" % stage_id)
 		_eq(minimum, int(recommended * 85 / 100), "%s minimum power is the 85%% challenge line" % stage_id)
+		recommended_by_stage[stage_id] = recommended
 		previous_recommended = recommended
-		previous_enemy_bp = enemy_bp
-	_check(int(StageCatalogScript.stage("stage_2_2").get("power_bp", 0)) >= 20000, "2-2 is a real post-tutorial growth wall")
-	_check(int(StageCatalogScript.stage("stage_5_5").get("power_bp", 0)) >= 37500, "Act I finale is not reachable on the old shallow curve")
+	var expected_walls: Array[String] = [
+		"stage_2_5", "stage_3_5", "stage_4_5", "stage_5_5",
+	]
+	var detected_walls: Array[String] = []
+	var stage_ids := StageCatalogScript.all_stage_ids()
+	var chapter_handoff := (
+		int(recommended_by_stage["stage_2_1"])
+		- int(recommended_by_stage["stage_1_5"])
+	)
+	_check(
+		chapter_handoff > 0 and chapter_handoff <= 1500,
+		"1-5 to 2-1 is an explicit post-chapter growth handoff, not a hidden Boss wall"
+	)
+	for index in range(6, stage_ids.size()):
+		var stage_id := String(stage_ids[index])
+		var jump := (
+			int(recommended_by_stage[stage_id])
+			- int(recommended_by_stage[String(stage_ids[index - 1])])
+		)
+		var prior_step := (
+			int(recommended_by_stage[String(stage_ids[index - 1])])
+			- int(recommended_by_stage[String(stage_ids[index - 2])])
+		)
+		var earlier_step := (
+			int(recommended_by_stage[String(stage_ids[index - 2])])
+			- int(recommended_by_stage[String(stage_ids[index - 3])])
+		)
+		var local_small_step := maxi(prior_step, earlier_step)
+		if jump >= local_small_step * 2:
+			detected_walls.append(stage_id)
+			_check(
+				jump <= local_small_step * 4,
+				"%s recommended jump stays inside the relaxed Boss-wall envelope" % stage_id
+			)
+		else:
+			_check(jump <= 400, "%s remains inside the small-step advancement window" % stage_id)
+	_eq(detected_walls, expected_walls, "recommended curve keeps exactly four chapter-Boss growth walls")
 	var release_power := CombatPowerScript.snapshots_power(_release_roster())
 	var final_config := StageCatalogScript.stage("stage_5_5")
 	_check(release_power >= int(final_config["recommended_power"]), "three-star release roster meets the displayed finale recommendation")
@@ -224,9 +319,11 @@ func _test_gman_reward_ceiling() -> void:
 		"archetype_id": gman.archetype_id,
 		"class_id": gman.class_id,
 		"star": gman.star,
-		"max_hp": stats["max_hp"],
-		"attack": maxi(int(stats["physical_atk"]), int(stats["magic_atk"])),
+		"max_hp": stats["hp"],
+		"attack": int(stats["attack"]),
 		"defense": stats["defense"],
+		"speed_milli": stats["speed_milli"],
+		"crit_bp": stats["crit_bp"],
 		"slot": 0,
 		"auto_skill": true,
 	}

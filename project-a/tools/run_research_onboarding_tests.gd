@@ -35,7 +35,12 @@ func _init() -> void:
 	_check(bool(defeat.get("ok", false)), "首次战败应成功结算：%s" % str(defeat))
 	_check(int(executor.state.factory.facilities["research_lab"]) == 0, "首次战败只应开放资格，不得自动建立研究所")
 	_check((defeat.get("event", {}) as Dictionary).get("eligible_facilities", []).has("research_lab"), "1-4 首败应开放研究所建造资格")
-	_check(executor.state.factory.discovered_blueprints.is_empty(), "研究所建成前不得提前开放基础蓝图")
+	_check(executor.state.factory.discovered_blueprints.is_empty(), "信号接收前不得提前开放基础蓝图")
+	var signal_result := _execute(executor, "signal:foundational-ten", "claim_foundational_signal", {})
+	_check(bool(signal_result.get("ok", false)), "首败信号应允许接收免费基础图纸十连")
+	_check(executor.state.roster.size() == 1, "信号十连只给图纸，不直接授予角色")
+	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "信号十连应提供冲锋基础图纸")
+	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "信号十连应提供装甲基础图纸")
 	var construct := _execute(executor, "construct:research-lab", "construct_facility", {
 		"facility_id": "research_lab",
 		"now_unix": 1000,
@@ -44,11 +49,11 @@ func _init() -> void:
 	})
 	_check(bool(construct.get("ok", false)), "玩家应能在首败后主动建立研究所：%s" % str(construct))
 	_check(int(executor.state.factory.facilities["research_lab"]) == 0, "建造命令只开始施工，不应立即落成")
-	_check(not bool(_execute(executor, "construct:research-lab:early", "claim_facility_work", {"now_unix": 1074}).get("ok", false)), "研究所不得提前验收")
-	_check(bool(_execute(executor, "construct:research-lab:claim", "claim_facility_work", {"now_unix": 1075}).get("ok", false)), "研究所到时后应可验收")
+	_check(not bool(_execute(executor, "construct:research-lab:early", "claim_facility_work", {"now_unix": 1004}).get("ok", false)), "研究所四秒时不得提前验收")
+	_check(bool(_execute(executor, "construct:research-lab:claim", "claim_facility_work", {"now_unix": 1005}).get("ok", false)), "研究所五秒到时后应可验收")
 	_check(int(executor.state.factory.facilities["research_lab"]) == 1, "验收完成后研究所才应落成")
-	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "研究所建成后应提供冲锋基础蓝图")
-	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "研究所建成后应提供装甲基础蓝图")
+	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "研究所建成不改变已入库的冲锋图纸")
+	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "研究所建成不改变已入库的装甲图纸")
 	_check(FactoryCatalog.recipes().size() == 8, "科技蓝图应列出全部八种马桶人")
 
 	var roster_before: int = executor.state.roster.size()

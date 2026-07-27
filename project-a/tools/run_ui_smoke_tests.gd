@@ -66,6 +66,24 @@ func _run() -> void:
 		await process_frame
 	_ok(instance.find_child("CampSettingsButton", true, false) != null, "camp actions expose settings entry")
 	_ok(instance.find_child("TopBarSettingsButton", true, false) != null, "camp top bar exposes settings entry")
+	var global_resources := instance.find_child("GlobalCoreResourceHUD", true, false) as Control
+	_ok(global_resources != null and global_resources.is_visible_in_tree(), "management screens keep core resources visible in the global top bar")
+	_ok(
+		global_resources != null and global_resources.get_global_rect().get_center().x > root.size.x * 0.5,
+		"global core resources stay in the right half of the header"
+	)
+	for resource_id in ["toilet_coins", "hero_shards", "porcelain", "recruit_tickets"]:
+		_ok(
+			global_resources != null
+				and global_resources.find_child("Resource_%s" % resource_id, true, false) != null,
+			"global top bar exposes core resource %s" % resource_id
+		)
+	for retired_id in ["industrial_tech", "skill_chips", "parts", "sludge"]:
+		_ok(
+			global_resources == null
+				or global_resources.find_child("Resource_%s" % retired_id, true, false) == null,
+			"global top bar does not project retired resource %s" % retired_id
+		)
 	var tutorial_step := instance.find_child("TutorialStepLabel", true, false) as Label
 	var tutorial_hint := instance.find_child("TutorialHintLabel", true, false) as Label
 	var tutorial_progress := instance.find_child("TutorialProgressBar", true, false) as ProgressBar
@@ -663,7 +681,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(help_gameplay_scroll != null and help_info_scroll != null, "both help columns scroll independently on short screens")
 	_ok(_tree_has_text(instance, "选择建筑") and _tree_has_text(instance, "100%"), "help explains construction and manual battle skills")
 	_ok(
-		_tree_has_text(instance, "免费突破十连")
+		_tree_has_text(instance, "信号招募接收冲锋与装甲图纸")
 			and _tree_has_text(instance, "冲锋二星")
 			and _tree_has_text(instance, "装甲二星")
 			and _tree_has_text(instance, "完全恢复"),
@@ -864,7 +882,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(int(game_autoload.current_state().factory.facilities.get("porcelain_plant", 0)) == 1, "construction command persists the new level-one facility")
 	_ok(game_autoload.current_state().factory.facility_placements.get("porcelain_plant", []) == [-1, 0], "confirmed grid coordinates persist with the facility")
 	_ok(instance.find_child("ClaimFactoryOutputButton", true, false) != null, "factory screen exposes its primary collect action")
-	_ok(instance.find_child("ResourceMeter_陶瓷", true, false) != null, "factory inventory uses a scannable capacity meter")
+	_ok(instance.find_child("ResourceMeter_工业材料", true, false) != null, "factory inventory uses one scannable industrial-material meter")
 	game_autoload.current_state().factory.facility_work = {
 		"work_type": "upgrade",
 		"facility_id": "porcelain_plant",
@@ -937,6 +955,12 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(_tree_has_button(instance, "进入科技蓝图"), "research lab routes to the blueprint tree")
 	instance.call("_show_blueprints")
 	await _wait_frames(3)
+	var blueprint_local_resources := instance.find_child("BlueprintResourceContext", true, false) as Control
+	_ok(
+		blueprint_local_resources != null and not blueprint_local_resources.is_visible_in_tree(),
+		"blueprint page does not duplicate the globally visible core-resource balance"
+	)
+	_ok(instance.find_child("GlobalCoreResourceHUD", true, false) != null, "blueprint page retains the global top-right resource bar")
 	_ok(instance.find_child("BlueprintTree", true, false) != null, "research lab opens a dedicated blueprint tree UI")
 	_ok(instance.find_child("BlueprintTreeRoot", true, false) != null, "blueprint tree exposes a visible research trunk")
 	var blueprint_branch_count := 0
@@ -986,9 +1010,9 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_select_stage_card", "stage_1_4")
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "fourth town clearly marks the first growth wall")
-	_ok(_tree_has_text(instance, "免费突破十连"), "first wall reconnaissance names the actual recovery action")
-	_ok(_tree_has_text(instance, "永久获得的装甲与冲锋援军"), "first wall reconnaissance connects permanent roles to the counterattack")
-	_ok(not _tree_has_text(instance, "冲锋与装甲蓝图"), "first wall reconnaissance hides the retired blueprint path")
+	_ok(_tree_has_text(instance, "信号招募接收基础图纸"), "first wall reconnaissance names the actual signal recovery action")
+	_ok(_tree_has_text(instance, "两名永久援军"), "first wall reconnaissance connects researched permanent roles to the counterattack")
+	_ok(_tree_has_text(instance, "图纸") and _tree_has_text(instance, "研究所"), "first wall reconnaissance explains the blueprint research path")
 	_ok(_tree_has_text(instance, "下一步 · 先试探炮台防线"), "first wall reconnaissance prioritizes discovery over premature growth")
 	var wall_attack: Button = null
 	var visible_growth := false
@@ -1012,11 +1036,15 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		if (candidate as Button).is_visible_in_tree():
 			known_wall_preparation = candidate as Button
 			break
-	_ok(known_wall_preparation != null and known_wall_preparation.text == "建造研究所", "known first wall advances to the exact research recovery")
+	_ok(known_wall_preparation != null and known_wall_preparation.text == "接收免费基础图纸十连", "known first wall advances to the signal recruitment recovery")
 	if known_wall_preparation != null:
 		known_wall_preparation.pressed.emit()
 		await _wait_frames(3)
-	_ok(String(instance.get("selected_facility_id")) == "research_lab", "map recovery action opens the research facility instead of generic legion growth")
+	_ok(
+		String(instance.get("legion_tab")) == "recruit"
+			and instance.find_child("LegionScreen", true, false) != null,
+		"map recovery action opens signal recruitment before laboratory construction"
+	)
 	instance.call("_show_map")
 	await _wait_frames(2)
 	instance.call("_select_stage_card", "stage_1_5")
@@ -1076,7 +1104,55 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 			"goals rebuild preserves the player's position in a long reward list"
 		)
 	var top_goal_nav := instance.find_child("TopNav行动Button", true, false) as Button
-	_ok(top_goal_nav != null and top_goal_nav.text.begins_with("行动"), "top navigation exposes pending reports without developer-style punctuation")
+	var top_goal_badge := instance.find_child(
+		"TopNav行动NotificationBadge", true, false
+	) as Label
+	var pass_badge := instance.find_child("PassNotificationBadge", true, false) as Label
+	_ok(top_goal_nav != null and top_goal_nav.text == "行动", "top navigation keeps the destination label stable")
+	_ok(
+		top_goal_badge != null and top_goal_badge.visible and int(top_goal_badge.text) > 0,
+		"top navigation renders pending rewards as a real notification badge"
+	)
+	_ok(
+		pass_badge != null and pass_badge.visible and int(pass_badge.text) > 0,
+		"goal tabs lead the player to the exact reward category"
+	)
+	var notification_now := int(Time.get_unix_time_from_system())
+	game_autoload.current_state().factory.facility_work = {
+		"work_type": "upgrade",
+		"facility_id": "command_center",
+		"started_at_unix": notification_now,
+		"completes_at_unix": notification_now + 100,
+		"target_level": 2,
+	}
+	instance.call("_show_map")
+	await _wait_frames(3)
+	var top_factory_badge := instance.find_child(
+		"TopNav工厂NotificationBadge", true, false
+	) as Label
+	_ok(
+		top_factory_badge != null and not top_factory_badge.visible,
+		"unfinished factory work stays dark outside the factory"
+	)
+	game_autoload.current_state().factory.facility_work["completes_at_unix"] = notification_now - 1
+	instance.call("_refresh_factory_work_ui")
+	await _wait_frames(2)
+	_ok(
+		top_factory_badge != null and top_factory_badge.visible and top_factory_badge.text == "1",
+		"completed factory work lights the destination without leaving the current screen"
+	)
+	var top_factory_nav := instance.find_child("TopNav工厂Button", true, false) as Button
+	if top_factory_nav != null:
+		top_factory_nav.pressed.emit()
+		await _wait_frames(3)
+	var ready_facility_tab := instance.find_child(
+		"FactoryHudFacilityTab", true, false
+	) as Button
+	_ok(
+		ready_facility_tab != null and ready_facility_tab.button_pressed,
+		"clicking the lit factory destination opens the exact claim panel"
+	)
+	game_autoload.current_state().factory.facility_work = {}
 	instance.call("_set_goals_tab", "action")
 	instance.call("_show_map")
 	await _wait_frames(3)
@@ -1090,6 +1166,8 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(instance.find_child("LegionFormationTab", true, false) != null, "legion uses fixed task tabs above its detail region")
 	instance.call("_set_legion_tab", "roster")
 	await _wait_frames(3)
+	_ok(instance.find_child("RosterResourceContext", true, false) == null, "roster no longer spends scroll space on the global resource balance")
+	_ok(instance.find_child("GlobalCoreResourceHUD", true, false) != null, "roster retains the top-right core-resource bar")
 	_ok(_tree_has_button(instance, "升星"), "legion screen exposes star progression")
 	_ok(_tree_has_button(instance, "研究技能 Lv.2"), "legion screen exposes active-skill research")
 	_ok(_tree_has_text(instance, "无损可出征"), "legion screen exposes lossless permanent heroes")
@@ -1142,7 +1220,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	)
 	_ok(_tree_has_text(instance, "核心贡献"), "result celebrates a contribution measured by the battle session")
 	_ok(_tree_has_text(instance, "下一步成长"), "result maps rewards to the next growth action")
-	_ok(_tree_has_text(instance, "突破战果"), "boss result exposes breakthrough rewards")
+	_ok(_tree_has_text(instance, "军团数据 +"), "boss result exposes the unified legion-data reward")
 	_ok(_tree_has_text(instance, "路线验证"), "boss result closes the chosen growth mastery loop")
 	_ok(_tree_has_text(instance, "首章解锁 · 第2章战线"), "boss result exposes the actual next campaign unlock")
 	_ok(_tree_has_button(instance, "开启第2章 · 侦察 2-1"), "boss result exposes one next-chapter CTA")

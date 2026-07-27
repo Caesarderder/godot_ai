@@ -56,6 +56,6 @@ static func validate_all() -> PackedStringArray:
 			objective_ids[objective_id] = true
 	if FIRST_CHAPTER.size() != 7:
 		errors.append("first chapter must contain exactly seven onboarding tasks")
-	if objective_count != 10:
-		errors.append("first chapter must contain exactly ten onboarding objectives")
+	if objective_count != 12:
+		errors.append("first chapter must contain exactly twelve onboarding objectives")
 	return errors

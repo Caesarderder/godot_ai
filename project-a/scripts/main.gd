@@ -2390,10 +2390,10 @@ func _build_training_panel() -> Control:
 	training_power_label.name = "TrainingPowerLabel"
 	detail.add_child(training_power_label)
 	detail.add_child(_label("HP %d→%d  攻 %d→%d  防 %d→%d" % [
-		int(stats_before["max_hp"]),
-		int(stats_after["max_hp"]),
-		maxi(int(stats_before["physical_atk"]), int(stats_before["magic_atk"])),
-		maxi(int(stats_after["physical_atk"]), int(stats_after["magic_atk"])),
+		int(stats_before["hp"]),
+		int(stats_after["hp"]),
+		int(stats_before["attack"]),
+		int(stats_after["attack"]),
 		int(stats_before["defense"]),
 		int(stats_after["defense"]),
 	], 13, COLOR_MUTED))
@@ -3368,8 +3368,8 @@ func _build_battle_snapshots() -> Array[Dictionary]:
 			"archetype_id": hero.archetype_id,
 			"class_id": hero.class_id,
 			"star": hero.star,
-			"max_hp": int(stats["max_hp"]),
-			"attack": maxi(int(stats["physical_atk"]), int(stats["magic_atk"])),
+			"max_hp": int(stats["hp"]),
+			"attack": int(stats["attack"]),
 			"defense": int(stats["defense"]),
 			"speed_milli": int(stats["speed_milli"]),
 			"crit_bp": int(stats["crit_bp"]),

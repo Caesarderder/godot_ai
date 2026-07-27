@@ -58,6 +58,10 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	clock += int(wall.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(wall.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_4 first attempt", wall, "defeat")
+	var foundational_signal := _command(executor, "claim_foundational_signal", {}, clock)
+	_expect_ok(run_seed, foundational_signal, "foundational signal stores ten design cards")
+	_check(run_seed, executor.state.roster.size() == 1, "signal reception does not create heroes")
+	clock += INTERACTION_SECONDS
 
 	var construction := _command(executor, "construct_facility", {
 		"facility_id": "research_lab",
@@ -71,17 +75,25 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	_expect_ok(run_seed, _command(executor, "claim_facility_work", {"now_unix": clock}, clock), "research lab completes")
 	clock += INTERACTION_SECONDS
 
-	var breakthrough := _command(executor, "claim_research_breakthrough", {}, clock)
-	_expect_ok(run_seed, breakthrough, "research breakthrough ten-pull resolves exactly once")
 	var researched_hero_ids: Dictionary = {}
-	for item_value in (breakthrough.get("event", {}) as Dictionary).get("results", []):
-		var item := item_value as Dictionary
-		if String(item.get("kind", "")) != "hero":
-			continue
-		var recipe_id := String(item.get("recipe_id", ""))
-		if not recipe_id.is_empty():
-			researched_hero_ids[recipe_id] = String(item.get("hero_id", ""))
-	clock += INTERACTION_SECONDS
+	for recipe_id in ["ordinary.assault", "heavy.armored"]:
+		var research_start := _command(executor, "unlock_foundational_blueprint", {
+			"recipe_id": recipe_id,
+			"now_unix": clock,
+		}, clock)
+		_expect_ok(run_seed, research_start, "%s design research starts" % recipe_id)
+		clock = int((research_start.get("event", {}) as Dictionary).get("completes_at_unix", clock))
+		var research_claim := _command(
+			executor,
+			"claim_blueprint_research",
+			{"now_unix": clock},
+			clock
+		)
+		_expect_ok(run_seed, research_claim, "%s design research creates one permanent hero" % recipe_id)
+		researched_hero_ids[recipe_id] = String(
+			(research_claim.get("event", {}) as Dictionary).get("hero_id", "")
+		)
+		clock += INTERACTION_SECONDS
 
 	_expect_ok(run_seed, _command(executor, "assign_formation_slot", {
 		"slot": "troop_1",
@@ -98,6 +110,11 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	clock += int(revenge.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(revenge.get("seconds", 0))
 	_expect_outcome(run_seed, "stage_1_4 revenge", revenge, "victory")
+
+	var growth_hero_id := String(researched_hero_ids.get(growth_route, ""))
+	var star_upgrade := _command(executor, "upgrade_hero_star", {"hero_id": growth_hero_id}, clock)
+	_expect_ok(run_seed, star_upgrade, "%s two-star route is affordable from battle-earned hero data" % growth_route)
+	clock += INTERACTION_SECONDS
 
 	var support_facility := "porcelain_plant" if growth_route == "ordinary.assault" else "energy_station"
 	var support_construction := _command(executor, "construct_facility", {
@@ -129,11 +146,6 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	)
 	clock += INTERACTION_SECONDS
 
-	var growth_hero_id := String(researched_hero_ids.get(growth_route, ""))
-	var star_upgrade := _command(executor, "upgrade_hero_star", {"hero_id": growth_hero_id}, clock)
-	_expect_ok(run_seed, star_upgrade, "%s two-star route is affordable from the real ledger" % growth_route)
-	clock += INTERACTION_SECONDS
-
 	var boss := _battle_and_settle(executor, "stage_1_5", clock)
 	clock += int(boss.get("seconds", 0)) + INTERACTION_SECONDS
 	battle_seconds += int(boss.get("seconds", 0))
@@ -150,12 +162,12 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	_check(
 		run_seed,
 		bool(skill_quote.get("ok", false)),
-		"Boss settlement converts the saved chip into an immediately affordable skill-II choice"
+		"Boss settlement leaves an immediately affordable skill-II choice"
 	)
 	_check(
 		run_seed,
-		int((skill_quote.get("cost", {}) as Dictionary).get("skill_chips", 0)) == 1,
-		"post-chapter skill quote consumes exactly the one-chip first research tier"
+		int((skill_quote.get("cost", {}) as Dictionary).get("hero_shards", 0)) == 4,
+		"post-chapter skill quote consumes exactly four legion data"
 	)
 
 	var snapshot := OnboardingServiceScript.snapshot(executor.state)
@@ -258,8 +270,8 @@ func _snapshots(state: RefCounted) -> Array[Dictionary]:
 			"archetype_id": hero.archetype_id,
 			"class_id": hero.class_id,
 			"star": hero.star,
-			"max_hp": int(stats["max_hp"]),
-			"attack": maxi(int(stats["physical_atk"]), int(stats["magic_atk"])),
+			"max_hp": int(stats["hp"]),
+			"attack": int(stats["attack"]),
 			"defense": int(stats["defense"]),
 			"speed_milli": int(stats["speed_milli"]),
 			"crit_bp": int(stats["crit_bp"]),

@@ -2,8 +2,8 @@ class_name OnboardingService
 extends RefCounted
 
 const OnboardingCatalogScript := preload("res://game/scripts/domain/onboarding/onboarding_catalog.gd")
-const ResearchBreakthroughCatalogScript := preload(
-	"res://game/scripts/content/research_breakthrough_catalog.gd"
+const ResearchBreakthroughServiceScript := preload(
+	"res://game/scripts/domain/recruitment/research_breakthrough_service.gd"
 )
 
 
@@ -283,10 +283,8 @@ static func _objective_satisfied_by_state(state: RefCounted, objective: Dictiona
 		"foundational_blueprint_unlocked":
 			var recipe_id := String(objective.get("recipe_id", ""))
 			return not recipe_id.is_empty() and bool(state.factory.blueprints.get(recipe_id, false))
-		"research_breakthrough_resolved":
-			return (state.onboarding.get("claimed", {}) as Dictionary).has(
-				ResearchBreakthroughCatalogScript.CLAIM_KEY
-			)
+		"foundational_signal_resolved":
+			return ResearchBreakthroughServiceScript.is_claimed(state)
 	return false
 
 
@@ -315,9 +313,9 @@ static func _grant_reward(state: RefCounted, reward: Dictionary) -> void:
 	var material_reward: Dictionary = {}
 	for key in reward.keys():
 		var amount := int(reward[key])
-		if ["toilet_coins", "toilet_gems", "gold", "industrial_tech", "skill_chips", "hero_shards"].has(String(key)):
+		if ["toilet_coins", "recruit_tickets", "hero_shards"].has(String(key)):
 			economy_reward[key] = amount
-		elif ["porcelain", "parts", "sludge"].has(String(key)):
+		elif String(key) == "porcelain":
 			material_reward[key] = amount
 	state.economy.grant(economy_reward)
 	state.factory.grant(material_reward)

@@ -183,8 +183,8 @@ static func unlock_foundational_blueprint(
 ) -> Dictionary:
 	if int(state.factory.facilities.get("research_lab", 0)) <= 0:
 		return {"ok": false, "error": "RESEARCH_LAB_LOCKED"}
-	if not FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS.has(recipe_id):
-		return {"ok": false, "error": "BLUEPRINT_NOT_FOUNDATIONAL"}
+	if not FactoryCatalogScript.has_recipe(recipe_id):
+		return {"ok": false, "error": "RECIPE_NOT_FOUND"}
 	if not bool(state.factory.discovered_blueprints.get(recipe_id, false)):
 		return {"ok": false, "error": "BLUEPRINT_NOT_DISCOVERED"}
 	if bool(state.factory.blueprints.get(recipe_id, false)):
@@ -210,29 +210,45 @@ static func claim_foundational_blueprint(state: RefCounted, now_unix: int) -> Di
 	if now_unix < int(state.factory.blueprint_research.get("completes_at_unix", 0)):
 		return {"ok": false, "error": "BLUEPRINT_RESEARCH_NOT_READY"}
 	var recipe_id := String(state.factory.blueprint_research.get("recipe_id", ""))
-	if not FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS.has(recipe_id):
-		return claim_blueprint_research(state, now_unix)
+	var recipe := FactoryCatalogScript.recipe(recipe_id)
+	if recipe.is_empty():
+		return {"ok": false, "error": "RECIPE_NOT_FOUND"}
 	state.factory.blueprint_research = {}
 	state.factory.blueprints[recipe_id] = true
 	state.factory.discovered_blueprints.erase(recipe_id)
 	state.factory.model_tech_stars[recipe_id] = 1
-	var recipe := FactoryCatalogScript.recipe(recipe_id)
-	var hero_index: int = state.allocate_hero_index()
-	var hero: RefCounted = HeroGenerator.generate_archetype(
-		state.run_seed,
-		hero_index,
-		String(recipe["archetype_id"]),
-		String(recipe["class_id"])
-	)
-	hero.aptitude_id = "B"
-	hero.display_name = String(recipe["display_name"])
-	state.roster.append(hero)
+	var hero: RefCounted = _hero_for_archetype(state, String(recipe["archetype_id"]))
+	var newly_researched := hero == null
+	if newly_researched:
+		var hero_index: int = state.allocate_hero_index()
+		hero = HeroGenerator.generate_archetype(
+			state.run_seed,
+			hero_index,
+			String(recipe["archetype_id"]),
+			String(recipe["class_id"])
+		)
+		hero.aptitude_id = String(recipe.get("rating", "B"))
+		hero.display_name = String(recipe["display_name"])
+		state.roster.append(hero)
 	return {"ok": true, "event": {
-		"type": "foundational_blueprint_unlocked",
+		"type": (
+			"foundational_blueprint_unlocked"
+			if FactoryStateScript.FOUNDATIONAL_BLUEPRINT_IDS.has(recipe_id)
+			else "blueprint_research_claimed"
+		),
 		"recipe_id": recipe_id,
 		"hero_id": hero.hero_id,
 		"display_name": hero.display_name,
+		"rating": String(recipe.get("rating", "B")),
+		"newly_researched": newly_researched,
 	}}
+
+
+static func _hero_for_archetype(state: RefCounted, archetype_id: String) -> RefCounted:
+	for hero in state.roster:
+		if String(hero.archetype_id) == archetype_id:
+			return hero
+	return null
 
 
 static func _first_free_facility_cell(state: RefCounted) -> Array[int]:

@@ -15,13 +15,9 @@ const EXPECTED_TASK_IDS: Array[String] = [
 	"operation.chapter_boss",
 ]
 const EXPECTED_REWARD_TOTALS := {
-	"toilet_coins": 180,
-	"industrial_tech": 8,
-	"hero_shards": 8,
-	"skill_chips": 1,
-	"porcelain": 18,
-	"parts": 10,
-	"sludge": 8,
+	"toilet_coins": 60,
+	"hero_shards": 12,
+	"porcelain": 24,
 }
 
 var failures: Array[String] = []
@@ -55,8 +51,8 @@ func _run() -> void:
 			)
 		for key in (view.get("reward", {}) as Dictionary):
 			reward_totals[key] = int(reward_totals.get(key, 0)) + int(view["reward"][key])
-	_check(objective_count == 10, "seven tasks compose exactly ten granular objectives")
-	_check(reward_totals == EXPECTED_REWARD_TOTALS, "task reward budget remains unchanged")
+	_check(objective_count == 12, "seven tasks compose exactly twelve granular objectives")
+	_check(reward_totals == EXPECTED_REWARD_TOTALS, "task rewards fund battle growth without duplicating factory output")
 
 	var high_wall := Catalog.task_view("operation.high_wall")
 	_check(
@@ -65,13 +61,22 @@ func _run() -> void:
 	)
 	var research := Catalog.task_view("operation.research_reinforcements")
 	_check(
-		String((research["objectives"] as Array)[0].get("target", "")) == "research",
-		"forced loss still routes directly into the free ten-pull recovery"
+		String((research["objectives"] as Array)[0].get("target", "")) == "legion",
+		"forced loss routes to the foundational signal before research"
+	)
+	_check(
+		(research["objectives"] as Array).size() == 3,
+		"signal reception and two deterministic blueprint researches are distinct goals"
 	)
 	var growth := Catalog.task_view("operation.choose_growth")
 	_check(
 		(growth.get("objectives", []) as Array).size() == 3,
-		"industrial preparation keeps build, collect and choose-growth micro goals"
+		"dual-track growth keeps star, build and collect micro goals"
+	)
+	_check(
+		(((growth.get("objectives", []) as Array)[0] as Dictionary).get("event_types", []) as Array)
+			.has("hero_star_upgraded"),
+		"battle-earned hero growth happens before the independent factory expansion"
 	)
 	high_wall["title"] = "mutated"
 	(high_wall["objectives"] as Array)[0]["label"] = "mutated"

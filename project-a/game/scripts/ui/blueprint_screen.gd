@@ -5,6 +5,7 @@ signal branch_selected(branch_id: String)
 signal action_requested(action_id: String, payload: Dictionary)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
 const BG := Color("#090d10")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
@@ -25,6 +26,7 @@ const BRANCHES := [
 @onready var tabs: HBoxContainer = %BlueprintTabs
 @onready var core_panel: PanelContainer = %BlueprintTreeRoot
 @onready var core_status: Label = %BlueprintCoreStatus
+@onready var resource_context_slot: VBoxContainer = %BlueprintResourceContext
 @onready var breakthrough_copy: Label = %BlueprintBreakthroughCopy
 @onready var breakthrough_button: Button = %ClaimResearchBreakthroughTen
 @onready var results_panel: PanelContainer = %ResearchBreakthroughResults
@@ -38,10 +40,15 @@ const BRANCHES := [
 
 var _view: Dictionary = {}
 var _reveal_tween: Tween
+var _resource_context: Control
 
 
 func _ready() -> void:
 	_apply_theme()
+	_resource_context = ResourceContextHudScript.new() as Control
+	_resource_context.name = "BlueprintResearchResourceHUD"
+	_resource_context.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	resource_context_slot.add_child(_resource_context)
 	for entry in BRANCHES:
 		var id := String(entry[0])
 		var button := tabs.get_node("Blueprint%sTab" % id.capitalize()) as Button
@@ -68,6 +75,9 @@ func _apply_view() -> void:
 		var button := tabs.get_node("Blueprint%sTab" % id.capitalize()) as Button
 		button.button_pressed = id == selected
 	core_status.text = String(_view.get("core_status", "首败信号尚未解析"))
+	var resource_context := _view.get("resource_context", {}) as Dictionary
+	_resource_context.call("configure", resource_context)
+	resource_context_slot.visible = not resource_context.is_empty()
 	var breakthrough := _view.get("breakthrough", {}) as Dictionary
 	breakthrough_copy.text = String(breakthrough.get("copy", ""))
 	breakthrough_copy.visible = not breakthrough_copy.text.is_empty()

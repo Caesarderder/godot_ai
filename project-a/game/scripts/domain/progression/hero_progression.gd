@@ -10,10 +10,10 @@ const LEVEL_XP: Array[int] = [0, 0, 40, 100, 200, 320]
 const GOLD_PER_BOOK_BY_LEVEL: Array[int] = [0, 20, 35, 55, 80, 0]
 const APTITUDE_BP: Dictionary = {"C": 8500, "B": 10000, "A": 11500, "S": 13000}
 const CLASS_GROWTH_MILLI: Dictionary = {
-	"guardian": {"vig": 2000, "str": 800, "agi": 400, "int": 200},
-	"fighter": {"vig": 1000, "str": 1800, "agi": 800, "int": 200},
-	"ranger": {"vig": 600, "str": 800, "agi": 2000, "int": 400},
-	"arcanist": {"vig": 500, "str": 300, "agi": 700, "int": 2100},
+	"guardian": {"hp": 20000, "attack": 2400, "defense": 4000, "speed_milli": 1600000, "crit_bp": 20000},
+	"fighter": {"hp": 10000, "attack": 5400, "defense": 2000, "speed_milli": 3200000, "crit_bp": 40000},
+	"ranger": {"hp": 6000, "attack": 2400, "defense": 1200, "speed_milli": 8000000, "crit_bp": 100000},
+	"arcanist": {"hp": 5000, "attack": 6300, "defense": 1000, "speed_milli": 2800000, "crit_bp": 35000},
 }
 static func train_with_books(hero: RefCounted, book_count: int) -> void:
 	if book_count <= 0:
@@ -77,18 +77,14 @@ static func level_for_xp(xp: int) -> int:
 
 
 static func derived_battle_stats(hero: RefCounted) -> Dictionary:
-	var vig := int(hero.base_stats["vig"])
-	var str_stat := int(hero.base_stats["str"])
-	var agi := int(hero.base_stats["agi"])
-	var int_stat := int(hero.base_stats["int"])
-	var star_bp := 10000 + (int(hero.star) - 1) * 2500
+	var star_index := clampi(int(hero.star), 1, 3)
+	var star_bp: int = [0, 10000, 13000, 16000][star_index]
 	return {
-		"max_hp": int((50 + vig * 10) * star_bp / 10000),
-		"defense": int((class_armor(hero.class_id) + vig * 2) * star_bp / 10000),
-		"physical_atk": int(str_stat * 3 * star_bp / 10000),
-		"magic_atk": int(int_stat * 3 * star_bp / 10000),
-		"speed_milli": 60000 + agi * 4000,
-		"crit_bp": clampi(500 + agi * 50, 0, 5000),
+		"hp": int(int(hero.base_stats["hp"]) * star_bp / 10000),
+		"attack": int(int(hero.base_stats["attack"]) * star_bp / 10000),
+		"defense": int(int(hero.base_stats["defense"]) * star_bp / 10000),
+		"speed_milli": int(hero.base_stats["speed_milli"]),
+		"crit_bp": clampi(int(hero.base_stats["crit_bp"]), 0, 5000),
 	}
 
 
@@ -98,20 +94,6 @@ static func active_skill_id(hero: RefCounted) -> String:
 
 static func skill_tier(hero: RefCounted) -> int:
 	return clampi(int(hero.star), 1, 3)
-
-
-static func class_armor(class_id: String) -> int:
-	match class_id:
-		"guardian":
-			return 12
-		"fighter":
-			return 8
-		"ranger":
-			return 5
-		"arcanist":
-			return 3
-		_:
-			return 0
 
 
 static func _apply_level_growth(hero: RefCounted, _level_value: int) -> void:

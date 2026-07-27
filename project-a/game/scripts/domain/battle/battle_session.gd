@@ -3,6 +3,7 @@ extends RefCounted
 
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const CombatPowerScript := preload("res://game/scripts/domain/progression/combat_power.gd")
 
 const TICKS_PER_SECOND: int = 5
 const TEAM_ALLY: int = 0
@@ -12,6 +13,8 @@ const STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地�
 const ROAD_END: int = 1000
 const SKILL_COST: int = 100
 const CANNON_FUSE_TICKS: int = 7
+const DEFAULT_BOSS_CANNON_DAMAGE: int = 46
+const DEFAULT_BOSS_CANNON_PERIOD_TICKS: int = 42
 const CANNON_SUPPRESSED_CONFIRM_TICKS: int = 3
 const DAMAGE_ENERGY_PER_MAX_HP_PERCENT: int = 1
 const DAMAGE_ENERGY_PER_HIT_CAP: int = 10
@@ -34,6 +37,12 @@ var _warnings: Array[Dictionary] = []
 var _suppressible_cannon: bool = false
 var _cannon_suppression_target: int = 0
 var _cannon_warning_ticks: int = CANNON_FUSE_TICKS
+var _boss_cannon_damage: int = DEFAULT_BOSS_CANNON_DAMAGE
+var _boss_cannon_period_ticks: int = DEFAULT_BOSS_CANNON_PERIOD_TICKS
+var _boss_core_enrage_ticks: int = 0
+var _boss_core_engaged_tick: int = -1
+var _boss_core_required_power: int = 0
+var _formation_power: int = 0
 var _cannons_suppressed: int = 0
 var _cannon_impacts: int = 0
 var _cannon_impacts_guarded: int = 0
@@ -67,6 +76,21 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_suppressible_cannon = bool(_stage_config.get("suppressible_cannon", false))
 	_cannon_suppression_target = maxi(0, int(_stage_config.get("cannon_suppression_target", 0)))
 	_cannon_warning_ticks = int(_stage_config.get("cannon_warning_ticks", CANNON_FUSE_TICKS))
+	_boss_cannon_damage = maxi(
+		1,
+		int(_stage_config.get("boss_cannon_damage", DEFAULT_BOSS_CANNON_DAMAGE))
+	)
+	_boss_cannon_period_ticks = maxi(
+		1,
+		int(_stage_config.get("boss_cannon_period_ticks", DEFAULT_BOSS_CANNON_PERIOD_TICKS))
+	)
+	_boss_core_enrage_ticks = maxi(0, int(_stage_config.get("boss_core_enrage_ticks", 0)))
+	_boss_core_engaged_tick = -1
+	_boss_core_required_power = maxi(0, int(_stage_config.get("boss_core_required_power", 0)))
+	var typed_snapshots: Array[Dictionary] = []
+	for snapshot_value in hero_snapshots:
+		typed_snapshots.append(snapshot_value as Dictionary)
+	_formation_power = CombatPowerScript.snapshots_power(typed_snapshots)
 	_solo_pressure_bp = maxi(10000, int(_stage_config.get("solo_pressure_bp", 10000)))
 	if _cannon_warning_ticks <= 0:
 		_cannon_warning_ticks = CANNON_FUSE_TICKS
@@ -156,7 +180,22 @@ func advance_tick() -> Array[Dictionary]:
 	_run_enemies(events)
 	_run_allies(events)
 	_update_stage(events)
+	var final_structure := _structure_by_id(_final_structure_id)
+	if (
+		_boss_core_enrage_ticks > 0
+		and (_boss_core_required_power <= 0 or _formation_power < _boss_core_required_power)
+		and _boss_core_engaged_tick < 0
+		and _is_structure_attackable(final_structure)
+	):
+		_boss_core_engaged_tick = tick_index
 	_resolve_battle(events)
+	if (
+		not is_finished
+		and _boss_core_engaged_tick >= 0
+		and tick_index - _boss_core_engaged_tick >= _boss_core_enrage_ticks
+	):
+		is_finished = true
+		result = _finish_result(false, "boss_core_enrage")
 	return events
 
 
@@ -241,11 +280,24 @@ func _run_allies(events: Array[Dictionary]) -> void:
 			continue
 		if int(unit["cooldown_ticks"]) > 0:
 			continue
-		_damage_target(target, maxi(2, int(unit["attack"]) - _effective_defense(target)), unit_id, false, events)
+		var attack := int(unit["attack"])
+		unit["crit_meter"] = int(unit.get("crit_meter", 0)) + int(unit.get("crit_bp", 0))
+		var is_critical := int(unit["crit_meter"]) >= 10000
+		if is_critical:
+			unit["crit_meter"] = int(unit["crit_meter"]) - 10000
+			attack = int(attack * 150 / 100)
+		_damage_target(target, maxi(2, attack - _effective_defense(target)), unit_id, false, events)
 		unit["cooldown_ticks"] = int(unit["attack_period_ticks"])
 		var old_energy := int(unit["energy"])
 		unit["energy"] = mini(SKILL_COST, old_energy + int(unit["energy_per_attack"]))
-		events.append({"type": &"attack_started", "tick": tick_index, "unit_id": unit_id, "target_id": _target_id(target), "is_skill": false})
+		events.append({
+			"type": &"attack_started",
+			"tick": tick_index,
+			"unit_id": unit_id,
+			"target_id": _target_id(target),
+			"is_skill": false,
+			"is_critical": is_critical,
+		})
 		if old_energy < SKILL_COST and int(unit["energy"]) == SKILL_COST:
 			events.append({"type": &"skill_ready", "tick": tick_index, "unit_id": unit_id})
 
@@ -295,7 +347,7 @@ func _run_structure_defenses(events: Array[Dictionary]) -> void:
 			_apply_unit_damage(_select_defense_target(int(structure["lane"])), int(structure["attack"]), structure["structure_id"], false, events)
 		elif kind == "core" and _stage_index == _stage_names.size() - 1:
 			var living_batteries := _living_structure_count(["battery"])
-			var period := 42 - living_batteries * 6
+			var period := maxi(1, _boss_cannon_period_ticks - living_batteries * 6)
 			if tick_index % period == 0:
 				var lane := int(tick_index / period) % 3
 				var is_suppressible := _is_suppressible_cannon_active()
@@ -304,7 +356,7 @@ func _run_structure_defenses(events: Array[Dictionary]) -> void:
 					"warning_id": "shell_%d" % tick_index,
 					"impact_tick": tick_index + warning_ticks,
 					"lane": lane,
-					"damage": 46 + living_batteries * 9,
+					"damage": _boss_cannon_damage + living_batteries * 9,
 					"suppressible": is_suppressible,
 				}
 				if is_suppressible:
@@ -956,8 +1008,9 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 	var archetype_id := String(hero.get("archetype_id", class_id))
 	var star := clampi(int(hero.get("star", 1)), 1, 5)
 	var skill_id := _skill_for_archetype(archetype_id)
-	var max_hp := maxi(90, int(hero.get("max_hp", 155)) + (star - 1) * 18)
-	var attack := maxi(18, int(hero.get("attack", 38)) + (star - 1) * 5)
+	var max_hp := maxi(1, int(hero.get("max_hp", 155)))
+	var attack := maxi(1, int(hero.get("attack", 38)))
+	var speed_milli := maxi(1, int(hero.get("speed_milli", 92000)))
 	var attack_range := _range_for_archetype(archetype_id, class_id)
 	return {
 		"unit_id": StringName(String(hero.get("hero_id", "ally_%02d" % slot))),
@@ -978,8 +1031,11 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"attack": attack,
 		"defense": maxi(4, int(hero.get("defense", 14))),
 		"range": attack_range,
-		"move_per_tick": 10 if class_id != "guardian" else 8,
-		"attack_period_ticks": 5 if class_id in ["ranger", "fighter"] else 6,
+		"speed_milli": speed_milli,
+		"crit_bp": clampi(int(hero.get("crit_bp", 0)), 0, 5000),
+		"crit_meter": 0,
+		"move_per_tick": _ally_move_per_tick(speed_milli),
+		"attack_period_ticks": _ally_attack_period_ticks(speed_milli),
 		"cooldown_ticks": 1 + slot % 3,
 		"energy": clampi(int(hero.get("starting_energy", 0)), 0, SKILL_COST),
 		"energy_per_attack": 20,
@@ -997,6 +1053,20 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"temporary": false,
 		"alive": true,
 	}
+
+
+static func _ally_move_per_tick(speed_milli: int) -> int:
+	return clampi(8 + _rounded_ratio(speed_milli - 84000, 14000), 6, 12)
+
+
+static func _ally_attack_period_ticks(speed_milli: int) -> int:
+	return clampi(6 - _rounded_ratio(speed_milli - 84000, 28000), 4, 7)
+
+
+static func _rounded_ratio(value: int, divisor: int) -> int:
+	if value >= 0:
+		return int((value + divisor / 2) / divisor)
+	return -int((-value + divisor / 2) / divisor)
 
 
 func _make_summon(owner: Dictionary, serial: int, display_name: String = "寄生幼体") -> Dictionary:

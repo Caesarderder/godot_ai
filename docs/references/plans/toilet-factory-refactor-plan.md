@@ -67,8 +67,9 @@ related:
 - 三资源设施独立产速、容量、离线锚和 exact-once 领取；
 - 六座设施具备 locked/eligible/built、等级与 5×5 有界放置；
 - 选择建筑、选择空格、二次确认后才原子扣款；
-- 1-4 首败只授予研究所资格，玩家主动建成后开放一次免费突破十连；
-- 十连固定含冲锋与装甲永久援军，不消耗招募券、不推进长期保底且不可重复。
+- 1-4 首败授予研究所资格并开放信号招募页的一次免费基础图纸十连；
+- 十连只含冲锋/装甲设计图纸及重复设计数据，不直接发角色，不消耗招募券、不推进长期保底且不可重复；
+- 玩家主动建成研究所并逐张研发后，冲锋与装甲才成为永久援军。
 
 退出证据：`run_grid_construction_tests.gd`、`run_research_onboarding_tests.gd`、
 `run_research_breakthrough_tests.gd`、`run_factory_screen_tests.gd`。

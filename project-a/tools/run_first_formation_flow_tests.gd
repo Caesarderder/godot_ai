@@ -19,9 +19,10 @@ func _run() -> void:
 	game.reset_game(20260727, 1000)
 	var state: RefCounted = game.current_state()
 	state.onboarding["active_index"] = 3
+	state.factory.eligible_facilities["research_lab"] = true
 	state.factory.facilities["research_lab"] = 1
 	state.factory.facility_placements["research_lab"] = [2, 1]
-	main.call("_claim_research_breakthrough")
+	_seed_foundational_research(main)
 	await _wait_frames(4)
 	state = game.current_state()
 	main.call("_open_breakthrough_formation")
@@ -83,6 +84,15 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 		if String(hero.archetype_id) == archetype_id:
 			return hero
 	return null
+
+
+func _seed_foundational_research(main: Node) -> void:
+	main.call("_command", "claim_foundational_signal", {})
+	for entry in [["ordinary.assault", 1000, 1045], ["heavy.armored", 1045, 1090]]:
+		main.call("_command", "unlock_foundational_blueprint", {
+			"recipe_id": String(entry[0]), "now_unix": int(entry[1]),
+		})
+		main.call("_command", "claim_blueprint_research", {"now_unix": int(entry[2])})
 
 
 func _wait_frames(count: int) -> void:

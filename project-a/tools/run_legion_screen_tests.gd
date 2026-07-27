@@ -63,10 +63,14 @@ func _run() -> void:
 	var candidate := legion.find_child("FormationCandidate_hero_armored", true, false) as Button
 	_check(candidate != null and not candidate.disabled, "a replacement candidate is actionable")
 	var request := {"action": "", "hero_id": "", "stage_id": ""}
+	var selection := {"hero_id": ""}
 	legion.action_requested.connect(func(action_id: String, payload: Dictionary) -> void:
 		request["action"] = action_id
 		request["hero_id"] = String(payload.get("hero_id", ""))
 		request["stage_id"] = String(payload.get("stage_id", ""))
+	)
+	legion.hero_selected.connect(func(hero_id: String) -> void:
+		selection["hero_id"] = hero_id
 	)
 	if candidate != null:
 		candidate.pressed.emit()
@@ -97,9 +101,333 @@ func _run() -> void:
 		"tab": "recruit",
 		"recruitment_unlocked": false,
 		"recruitment_progress": "指挥官 Lv2/4 · 关卡 1-5 未通关",
+		"foundational_signal": {
+			"unlocked": true,
+			"claimable": true,
+			"claimed": false,
+		},
 	})
 	await process_frame
-	_check(_tree_has_text(legion, "随机招募不会卡住首章"), "locked recruitment protects deterministic onboarding")
+	_check(_tree_has_text(legion, "所有信号结果只包含设计图纸"), "locked long-term recruitment preserves the blueprint-only contract")
+	var foundational_signal := legion.find_child("FoundationalSignalTenButton", true, false) as Button
+	_check(foundational_signal != null, "first-wall recovery exposes the free blueprint ten-pull in signal recruitment")
+	legion.configure({
+		"tab": "recruit",
+		"recruitment_unlocked": true,
+		"recruit_tickets": 10,
+		"recruit_s_pity": 0,
+		"recruit_target_guaranteed": false,
+		"blueprint_data_copy": "重复图纸将自动转化为军团数据",
+		"recruit_results": [{
+			"rarity": "B",
+			"kind": "legion_data",
+			"display_name": "冲锋马桶人",
+			"amount": 2,
+		}],
+	})
+	await process_frame
+	_check(_tree_has_text(legion, "军团数据 +2"), "duplicate signal result projects the unified legion data")
+	_check(not _tree_has_text(legion, "设计数据"), "recruitment no longer projects blueprint data as a resource")
+	legion.configure({
+		"tab": "codex",
+		"first_formation": {"active": false},
+		"first_growth_choice": {"active": false},
+		"boss_ready": {"active": false},
+		"codex": [
+			{
+				"archetype_id": "gman",
+				"display_name": "Gman",
+				"rating": "S",
+				"description": "初始指挥官",
+				"status": "researched",
+				"status_copy": "初始指挥官 · 永久角色已入列",
+			},
+			{
+				"archetype_id": "assault",
+				"display_name": "冲锋马桶人",
+				"rating": "B",
+				"description": "快速接敌",
+				"status": "blueprint_owned",
+				"status_copy": "已获得图纸 · 等待研究所研发",
+			},
+			{
+				"archetype_id": "parasite",
+				"display_name": "寄生母体马桶人",
+				"rating": "S",
+				"description": "召唤寄生幼体",
+				"status": "undiscovered",
+				"status_copy": "尚未获得设计图纸",
+			},
+		],
+	})
+	await process_frame
+	_check(legion.find_child("ToiletRoleCodex", true, false) != null, "legion exposes a dedicated toilet-role codex")
+	_check(_tree_has_text(legion, "B 评级 · 冲锋马桶人"), "codex displays the B rating")
+	_check(_tree_has_text(legion, "S 评级 · 寄生母体马桶人"), "codex displays the S rating")
+	_check(_tree_has_text(legion, "已获得图纸 · 等待研究所研发"), "codex distinguishes blueprint-owned from researched")
+	# The App Shell leaves roughly 238 px for LegionScreen at the 844x390 target:
+	# 48 px task tabs plus about 190 px of page content above the persistent nav.
+	legion.size = Vector2(820, 238)
+	legion.configure({
+		"tab": "roster",
+		"first_formation": {"active": false},
+		"first_growth_choice": {"active": false},
+		"boss_ready": {"active": false},
+		"roster": [{
+			"hero_id": "hero_armored",
+			"display_name": "装甲马桶人",
+			"archetype_id": "armored",
+			"class_id": "guardian",
+			"aptitude_id": "A",
+			"role": "重装 · 承伤保护",
+			"level": 1,
+			"xp": 20,
+			"next_level_xp": 40,
+			"star": 1,
+			"power": 2000,
+			"battle_stats": {
+				"hp": 190,
+				"attack": 21,
+				"defense": 40,
+				"speed_milli": 84000,
+				"crit_bp": 800,
+			},
+			"skill_name": "装甲护盾",
+			"skill_level": 1,
+			"skill_role": "前排保护",
+			"skill_effect": "为全队建立吸收伤害的装甲屏障",
+			"skill_timing": "敌方集火前释放",
+			"next_growth": "升至 2★ 解锁职责被动",
+			"welfare_star_core_count": 1,
+			"auto_skill": false,
+			"level_resource_context": {
+				"name": "LevelResources_hero_armored",
+				"title": "升级至 Lv.2 · 当前/需要 → 操作后",
+				"items": [
+					{"id": "toilet_coins", "name": "金币", "current": 120, "required": 60},
+				],
+			},
+				"star_resource_context": {
+					"name": "StarResources_hero_armored",
+					"title": "普通升至 2★ · 当前/需要 → 操作后",
+					"items": [
+						{"id": "hero_shards", "name": "军团数据", "short_name": "军团数据", "current": 1, "required": 4},
+					],
+				},
+				"welfare_star_resource_context": {
+					"name": "WelfareStarResources_hero_armored",
+					"title": "黑金核心升至 2★ · 军团数据本次免除",
+					"items": [
+						{"id": "hero_shards", "name": "军团数据", "short_name": "军团数据", "current": 1, "required": 4, "waived": true},
+					],
+					"note": "核心替代本次军团数据；工业材料不参与升星。",
+				},
+			"skill_resource_context": {
+				"name": "SkillResources_hero_armored",
+					"title": "技能研究 Lv.2 · 当前/需要 → 研究后",
+					"items": [
+						{"id": "toilet_coins", "name": "金币", "current": 120, "required": 80},
+						{"id": "hero_shards", "name": "军团数据", "current": 1, "required": 1},
+				],
+			},
+			"skill_research_cost": {"toilet_coins": 80, "hero_shards": 1},
+		}, {
+			"hero_id": "hero_assault",
+			"display_name": "冲锋马桶人",
+			"archetype_id": "assault",
+			"class_id": "fighter",
+			"aptitude_id": "B",
+			"role": "突击 · 快速压制",
+			"level": 2,
+			"xp": 55,
+			"next_level_xp": 100,
+			"star": 2,
+			"power": 2300,
+			"battle_stats": {
+				"hp": 200,
+				"attack": 52,
+				"defense": 37,
+				"speed_milli": 96000,
+				"crit_bp": 950,
+			},
+			"skill_name": "冲锋爆破",
+			"skill_level": 3,
+			"skill_role": "单体突破",
+			"skill_effect": "快速压低核心耐久",
+			"skill_timing": "核心暴露时释放",
+			"next_growth": "升级提高基础属性",
+			"specialty_name": "材料加工车间",
+			"specialty_assigned": false,
+			"auto_skill": true,
+		}],
+	})
+	await process_frame
+	var roster_split := legion.find_child("RosterSplitView", true, false) as Control
+	_check(roster_split != null, "roster uses a left-list and right-detail split view")
+	_check(
+		roster_split != null
+			and roster_split.size.y <= 190.0
+			and roster_split.position.y + roster_split.size.y <= legion.size.y + 0.5,
+		"roster split yields to the App Shell content height so persistent navigation stays visible"
+	)
+	_check(legion.find_child("RosterHeroListScroll", true, false) != null, "the permanent-hero list scrolls independently")
+	_check(
+		legion.find_child("RosterDetailScroll", true, false) == null,
+		"selected hero detail uses a fixed two-dimensional board instead of a long scroll"
+	)
+	var identity_strip := legion.find_child("RosterIdentityStrip", true, false) as Control
+	var data_board := legion.find_child("RosterDataBoard", true, false) as Control
+	var cultivation_bar := legion.find_child("RosterCultivationBar", true, false) as Control
+	_check(identity_strip != null, "roster keeps identity, role, power and XP in a compact top strip")
+	_check(
+		data_board != null
+			and legion.find_child("RosterStatBoard", true, false) != null
+			and legion.find_child("RosterSkillBoard", true, false) != null,
+		"base stats, battle stats and active-skill responsibilities share one visible data board"
+	)
+	_check(cultivation_bar != null, "primary cultivation decisions share one horizontal bottom bar")
+	for fixed_region in [identity_strip, data_board, cultivation_bar]:
+		_check(
+			fixed_region != null
+				and fixed_region.get_global_rect().position.y
+					>= roster_split.get_global_rect().position.y - 0.5
+				and fixed_region.get_global_rect().end.y
+					<= roster_split.get_global_rect().end.y + 0.5,
+			"fixed roster region remains inside the 190 px first-frame detail board"
+		)
+	var skill_detail := legion.find_child("RosterSkillDetail", true, false) as Label
+	var skill_timing := legion.find_child("RosterSkillTiming", true, false) as Label
+	_check(
+		skill_detail != null
+			and skill_detail.text.contains("职责：前排保护")
+			and skill_detail.text.contains("效果：为全队建立吸收伤害的装甲屏障")
+			and skill_detail.text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING,
+		"touch-first skill board renders responsibility and effect as untrimmed first-frame text"
+	)
+	_check(
+		skill_timing != null
+			and skill_timing.text.contains("最佳时机：敌方集火前释放")
+			and skill_timing.text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING,
+		"touch-first skill board renders best timing without relying on hover"
+	)
+	_check(_tree_has_text(legion, "守卫 · A评级"), "detail projects class and aptitude")
+	_check(_tree_has_text(legion, "经验 20/40"), "detail projects current and next-level XP")
+	_check(not _tree_has_text(legion, "体魄"), "detail removes the retired source attributes")
+	_check(_tree_has_text(legion, "生命") and _tree_has_text(legion, "190"), "detail projects HP")
+	_check(_tree_has_text(legion, "攻击") and _tree_has_text(legion, "21"), "detail projects the single attack stat")
+	_check(not _tree_has_text(legion, "物理攻击"), "detail removes split physical attack")
+	_check(not _tree_has_text(legion, "术能攻击"), "detail removes split magic attack")
+	_check(_tree_has_text(legion, "防御") and _tree_has_text(legion, "40"), "detail projects defense")
+	_check(_tree_has_text(legion, "速度") and _tree_has_text(legion, "84.0"), "detail projects speed")
+	_check(_tree_has_text(legion, "暴击") and _tree_has_text(legion, "8.0%"), "detail projects crit chance")
+	_check(not _tree_has_text(legion, "战备"), "detail does not expose the retired readiness field")
+	_check(not _tree_has_text(legion, "伤势"), "detail does not expose the retired injury field")
+	_check(
+		legion.find_child("RosterResourceContext", true, false) == null,
+		"roster leaves the fixed core-resource summary to the App Shell top bar"
+	)
+	_check(_tree_has_text(legion, "金币 120/60 → 60"), "level context projects the post-upgrade balance")
+	_check(_tree_has_text(legion, "军团数据 1/4 · 缺3"), "star context exposes the exact resource shortage")
+	_check(_tree_has_text(legion, "军团数据 1/4 · 免"), "welfare star path marks the data cost as replaced")
+	_check(
+		not _tree_has_text(legion, "所有马桶人共用"),
+		"hero detail does not duplicate quote-derived star cost with a hardcoded summary"
+	)
+	_check(_tree_has_text(legion, "工业材料不参与升星"), "welfare path reinforces the separated resource roles")
+	_check(_tree_has_text(legion, "军团数据 1/1 → 0"), "skill research context exposes the post-research balance")
+	_check(not _tree_has_text(legion, "技能芯片"), "hero growth omits the retired skill-chip resource")
+	_check(not _tree_has_text(legion, "专属数据"), "hero growth omits the retired per-role data resource")
+	_check(not _tree_has_text(legion, "陶瓷"), "hero growth omits factory materials")
+	_check(not _tree_has_text(legion, "招募券"), "roster omits resources unrelated to growth decisions")
+	var welfare_core := legion.find_child("WelfareStarCore_hero_armored", true, false) as Button
+	_check(
+		welfare_core != null and welfare_core.text.contains("本次军团数据全免"),
+		"one-star hero card exposes the contraband data-waiver action"
+	)
+	for action_spec in [
+		["upgrade", "CultivationAction_upgrade"],
+		["star", "CultivationAction_star"],
+		["welfare_star_core", "WelfareStarCore_hero_armored"],
+		["skill", "ResearchSkill_armored"],
+	]:
+		var action_id := String(action_spec[0])
+		var cultivation_action := legion.find_child(String(action_spec[1]), true, false) as Button
+		_check(
+			cultivation_action != null
+				and cultivation_action.get_global_rect().end.y
+					<= roster_split.get_global_rect().end.y + 0.5,
+			"cultivation action %s is visible without scrolling" % action_id
+		)
+	for action_node in cultivation_bar.find_children("*", "Button", true, false):
+		var touch_action := action_node as Button
+		_check(
+			touch_action.size.y >= 48.0
+				and touch_action.get_global_rect().end.y
+					<= roster_split.get_global_rect().end.y + 0.5,
+			"every roster detail action is a 48 px first-frame touch target: %s" % touch_action.name
+		)
+	for quote_node in cultivation_bar.find_children("CultivationQuote_*", "Label", true, false):
+		var quote_label := quote_node as Label
+		_check(
+			quote_label.get_theme_font_size("font_size") >= 9,
+			"cultivation quote remains readable at 9 px or larger: %s" % quote_label.name
+		)
+	if welfare_core != null:
+		welfare_core.pressed.emit()
+	_check(
+		request["action"] == "welfare_star_core" and request["hero_id"] == "hero_armored",
+		"contraband core button emits the exact semantic hero request"
+	)
+	var assault_entry := legion.find_child("RosterHero_hero_assault", true, false) as Button
+	_check(assault_entry != null, "left roster exposes every permanent hero")
+	if assault_entry != null:
+		assault_entry.pressed.emit()
+	await process_frame
+	await process_frame
+	_check(selection["hero_id"] == "hero_assault", "hero selection emits the App Shell persistence key")
+	_check(
+		legion.find_child("RosterHeroDetail_hero_assault", true, false) != null,
+		"selecting a left-list hero replaces the right-side detail"
+	)
+	_check(
+		root.gui_get_focus_owner() == legion.find_child("RosterHero_hero_assault", true, false),
+		"roster rebuild restores focus to the selected hero"
+	)
+	_check(_tree_has_text(legion, "战士 · B评级"), "selected detail updates class and aptitude")
+	_check(_tree_has_text(legion, "经验 55/100"), "selected detail updates XP without changing domain state")
+	for secondary_name in ["RosterSecondaryAction_specialist", "RosterSecondaryAction_auto"]:
+		var secondary_action := legion.find_child(secondary_name, true, false) as Button
+		var secondary_visible := (
+			secondary_action != null
+		)
+		if secondary_visible:
+			secondary_visible = (
+				secondary_action.size.y >= 48.0
+				and secondary_action.get_global_rect().end.y
+					<= legion.get_global_rect().end.y + 0.5
+			)
+		_check(
+			secondary_visible,
+			"selected hero secondary action is a visible 48 px touch target: %s" % secondary_name
+		)
+	var rebuild_view := (legion.get("_view") as Dictionary).duplicate(true)
+	rebuild_view["selected_hero_id"] = String(selection["hero_id"])
+	legion.queue_free()
+	await process_frame
+	legion = LEGION_SCENE.instantiate() as LegionScreen
+	legion.size = Vector2(820, 238)
+	root.add_child(legion)
+	legion.configure(rebuild_view)
+	await process_frame
+	await process_frame
+	_check(
+		legion.find_child("RosterHeroDetail_hero_assault", true, false) != null,
+		"App Shell selection projection survives a full LegionScreen recreation after cultivation"
+	)
+	_check(
+		root.gui_get_focus_owner() == legion.find_child("RosterHero_hero_assault", true, false),
+		"full LegionScreen recreation restores focus to the persisted hero"
+	)
 	legion.queue_free()
 	await process_frame
 	if failures.is_empty():

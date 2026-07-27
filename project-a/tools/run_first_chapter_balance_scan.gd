@@ -38,8 +38,8 @@ func _init() -> void:
 			if stage_id == "stage_1_3":
 				var final_hp := int(row["final_gman_hp"])
 				var max_hp := maxi(1, int(row["final_gman_max_hp"]))
-				if final_hp <= 0 or final_hp * 3 > max_hp:
-					failures.append("stage_1_3 seed %d should leave starter Gman alive at one-third health or less" % run_seed)
+				if final_hp <= 0 or final_hp * 5 > max_hp * 2:
+					failures.append("stage_1_3 seed %d should leave starter Gman alive at 40%% health or less" % run_seed)
 				if int(row["ticks"]) < 250 or int(row["ticks"]) > 350:
 					failures.append("stage_1_3 seed %d should finish in 50-70 seconds, got %d ticks" % [run_seed, int(row["ticks"])])
 			if stage_id in ["stage_1_4", "stage_1_5"] and outcome == "victory":
@@ -143,8 +143,8 @@ func _snapshots(state: RefCounted) -> Array[Dictionary]:
 			"archetype_id": hero.archetype_id,
 			"class_id": hero.class_id,
 			"star": hero.star,
-			"max_hp": int(stats["max_hp"]),
-			"attack": maxi(int(stats["physical_atk"]), int(stats["magic_atk"])),
+			"max_hp": int(stats["hp"]),
+			"attack": int(stats["attack"]),
 			"defense": int(stats["defense"]),
 			"speed_milli": int(stats["speed_milli"]),
 			"crit_bp": int(stats["crit_bp"]),

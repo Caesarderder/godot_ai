@@ -8,11 +8,11 @@ const MAX_RANK: int = 30
 const MINOR_SLOT_COUNT: int = 3
 
 const MINOR_TEMPLATES: Array[Dictionary] = [
-	{"template_id": "battle_settled_once", "event_type": "battle_settled", "target": 1, "reward": {"merit": 10, "toilet_coins": 8, "toilet_gems": 0}, "title": "完成一场战斗"},
-	{"template_id": "victory_once", "event_type": "battle_settled", "outcome": "victory", "target": 1, "reward": {"merit": 15, "toilet_coins": 15, "toilet_gems": 1}, "title": "赢下一场攻城"},
-	{"template_id": "production_started_once", "event_type": "production_started", "target": 1, "reward": {"merit": 8, "toilet_coins": 6, "toilet_gems": 0}, "title": "启动一次生产"},
-	{"template_id": "production_claimed_once", "event_type": "production_claimed", "target": 1, "reward": {"merit": 10, "toilet_coins": 8, "toilet_gems": 0}, "title": "领取一个单位"},
-	{"template_id": "model_tech_upgraded_once", "event_type": "model_tech_upgraded", "target": 1, "reward": {"merit": 20, "toilet_coins": 20, "toilet_gems": 2}, "title": "升级一次型号科技"},
+	{"template_id": "battle_settled_once", "event_type": "battle_settled", "target": 1, "reward": {"merit": 10, "toilet_coins": 8}, "title": "完成一场战斗"},
+	{"template_id": "victory_once", "event_type": "battle_settled", "outcome": "victory", "target": 1, "reward": {"merit": 15, "toilet_coins": 15}, "title": "赢下一场攻城"},
+	{"template_id": "production_started_once", "event_type": "production_started", "target": 1, "reward": {"merit": 8, "toilet_coins": 6}, "title": "启动一次生产"},
+	{"template_id": "production_claimed_once", "event_type": "production_claimed", "target": 1, "reward": {"merit": 10, "toilet_coins": 8}, "title": "领取工业材料"},
+	{"template_id": "model_tech_upgraded_once", "event_type": "model_tech_upgraded", "target": 1, "reward": {"merit": 20, "toilet_coins": 20}, "title": "升级一次设施"},
 ]
 
 
@@ -47,7 +47,7 @@ static func _major_reward(stage_id: String, is_boss: bool) -> Dictionary:
 	var reward := {
 		"merit": 120 if is_boss else 40,
 		"toilet_coins": 30 if is_boss else 10,
-		"toilet_gems": 10 if is_boss else 0,
+		"recruit_tickets": 1 if is_boss else 0,
 	}
 	var milestone_blueprints := {
 		"stage_1_5": "ordinary.sonic",
@@ -125,7 +125,7 @@ static func _validate_reward(value: Variant, label: String) -> Array[String]:
 		return ["%s reward must be dictionary" % label]
 	var reward := value as Dictionary
 	for key in reward.keys():
-		if typeof(key) != TYPE_STRING or not ["merit", "toilet_coins", "toilet_gems", "blueprint_id"].has(String(key)):
+		if typeof(key) != TYPE_STRING or not ["merit", "toilet_coins", "recruit_tickets", "blueprint_id"].has(String(key)):
 			errors.append("%s reward has unknown key %s" % [label, str(key)])
 			continue
 		if String(key) == "blueprint_id":

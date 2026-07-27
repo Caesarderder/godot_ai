@@ -3,7 +3,8 @@ extends Resource
 
 const VALID_EVENT_TYPES: Array[String] = [
 	"battle_settled",
-	"research_breakthrough_resolved",
+	"foundational_signal_resolved",
+	"foundational_blueprint_unlocked",
 	"facility_constructed",
 	"factory_output_claimed",
 	"hero_star_upgraded",

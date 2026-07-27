@@ -5,6 +5,9 @@ signal panel_selected(panel_id: String)
 signal action_requested(action_id: String, payload: Dictionary)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const NotificationBadgeScript := preload(
+	"res://game/scripts/presentation/notification_badge.gd"
+)
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
@@ -24,9 +27,13 @@ const GREEN := Color("#78b982")
 @onready var build_tab: Button = %FactoryHudBuildTab
 
 var _view: Dictionary = {}
+var _facility_badge: NotificationBadge
 
 
 func _ready() -> void:
+	_facility_badge = NotificationBadgeScript.new() as NotificationBadge
+	_facility_badge.name = "FactoryFacilityNotificationBadge"
+	facility_tab.add_child(_facility_badge)
 	mission_tab.pressed.connect(panel_selected.emit.bind("mission"))
 	facility_tab.pressed.connect(panel_selected.emit.bind("facility"))
 	build_tab.pressed.connect(panel_selected.emit.bind("build"))
@@ -38,6 +45,8 @@ func _ready() -> void:
 func configure(view: Dictionary) -> void:
 	_view = view.duplicate(true)
 	if is_node_ready():
+		var notification_counts := _view.get("notification_counts", {}) as Dictionary
+		_facility_badge.set_count(int(notification_counts.get("factory_work_ready", 0)))
 		_rebuild()
 
 
@@ -74,24 +83,6 @@ func _build_resources(compact: bool) -> void:
 	resource_row.add_child(heading)
 	for resource_value in _view.get("resources", []):
 		resource_row.add_child(_resource_meter(resource_value as Dictionary, compact))
-	var economy := VBoxContainer.new()
-	economy.custom_minimum_size.x = 64 if compact else 90
-	economy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var coins_label := _label(
-		"%s%d" % ["金 " if compact else "金币  ", int(_view.get("coins", 0))],
-		12 if compact else 13,
-		GOLD
-	)
-	coins_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	economy.add_child(coins_label)
-	var tech_label := _label(
-		"%s%d" % ["技 " if compact else "技术  ", int(_view.get("tech", 0))],
-		11 if compact else 12,
-		CYAN
-	)
-	tech_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	economy.add_child(tech_label)
-	resource_row.add_child(economy)
 	var claim := _button("收取" if compact else "全部收取", true)
 	claim.name = "ClaimFactoryOutputButton"
 	claim.custom_minimum_size = Vector2(76 if compact else 112, 48)
@@ -196,9 +187,10 @@ func _construction_panel() -> Control:
 		for option_value in construction.get("options", []):
 			var option := option_value as Dictionary
 			var choose := _button(
-				"%s · %d金币%s" % [
+				"%s · %s · %d秒%s" % [
 					String(option.get("name", "")),
-					int(option.get("cost", 0)),
+					String(option.get("cost_copy", "")),
+					int(option.get("build_seconds", 5)),
 					"\n%s" % String(option.get("growth_copy", "")) if focused_growth else "",
 				],
 				false
@@ -219,7 +211,14 @@ func _construction_panel() -> Control:
 		return panel
 	panel.add_child(_label("正在放置：%s" % String(construction.get("active_name", "")), 13, CYAN))
 	panel.add_child(_label(String(construction.get("active_copy", "")), 12, TEXT))
-	panel.add_child(_label("建造费用：%d 金币（确认后扣除）" % int(construction.get("cost", 0)), 12, GOLD))
+	panel.add_child(_label(
+		"建造费用：%s · 耗时 %d 秒（确认后扣除）" % [
+			String(construction.get("cost_copy", "")),
+			int(construction.get("build_seconds", 5)),
+		],
+		12,
+		GOLD
+	))
 	panel.add_child(_label(String(construction.get("placement_copy", "")), 12, TEXT))
 	var actions := HBoxContainer.new()
 	actions.name = "ConstructionActions"
@@ -251,7 +250,12 @@ func _facility_panel() -> Control:
 	var work := facility.get("work", {}) as Dictionary
 	if not work.is_empty():
 		panel.add_child(_label(String(work.get("status", "")), 12, CYAN))
-		var claim := _button("验收完成" if bool(work.get("ready", false)) else "施工中…", true)
+		var claim := _button(
+			"验收完成"
+			if bool(work.get("ready", false))
+			else "施工中 · %d秒" % int(work.get("remaining_seconds", 0)),
+			true
+		)
 		claim.name = "ClaimFacilityWork"
 		claim.disabled = not bool(work.get("ready", false))
 		claim.pressed.connect(action_requested.emit.bind("claim_work", {}))
@@ -264,7 +268,7 @@ func _facility_panel() -> Control:
 		if not eligible:
 			panel.add_child(_label(String(facility.get("eligibility_copy", "")), 13, TEXT))
 			return panel
-		panel.add_child(_label("建造费用：金币 %d" % int(facility.get("build_cost", 0)), 14, GOLD))
+		panel.add_child(_label("建造费用：%s" % String(facility.get("build_cost_copy", "")), 14, GOLD))
 		var construct := _button("选择%s并放置" % String(facility.get("name", "")), true)
 		construct.name = "ConstructFacility_%s" % String(facility.get("facility_id", ""))
 		construct.disabled = not bool(facility.get("can_build", false))
@@ -272,8 +276,8 @@ func _facility_panel() -> Control:
 			"facility_id": String(facility.get("facility_id", "")),
 		}))
 		panel.add_child(construct)
-		if not bool(facility.get("enough_coins", false)):
-			panel.add_child(_label("金币不足；攻占城镇可获得建造资金。", 12, RED))
+		if not bool(facility.get("enough_materials", false)):
+			panel.add_child(_label("工业材料不足；先收取对应资源设施产出。", 12, RED))
 		return panel
 	var kind := String(facility.get("kind", "global"))
 	match kind:

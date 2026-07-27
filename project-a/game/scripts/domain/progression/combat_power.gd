@@ -3,32 +3,16 @@ extends RefCounted
 
 const HeroProgressionScript := preload("res://game/scripts/domain/progression/hero_progression.gd")
 
-const STAR_SKILL_BP: Array[int] = [0, 10000, 11800, 14000, 14000, 14000]
-const ROLE_UTILITY: Dictionary = {
-	"gman": 320,
-	"assault": 120,
-	"sonic": 220,
-	"rocket": 180,
-	"bomber": 150,
-	"armored": 260,
-	"saw": 170,
-	"repair": 300,
-	"parasite": 280,
-}
-
-
 static func hero_power(hero: RefCounted) -> int:
 	if hero == null:
 		return 0
 	var stats := HeroProgressionScript.derived_battle_stats(hero)
 	return stats_power(
-		int(stats["max_hp"]),
-		maxi(int(stats["physical_atk"]), int(stats["magic_atk"])),
+		int(stats["hp"]),
+		int(stats["attack"]),
 		int(stats["defense"]),
 		int(stats["speed_milli"]),
-		int(stats["crit_bp"]),
-		int(hero.star),
-		String(hero.archetype_id)
+		int(stats["crit_bp"])
 	)
 
 
@@ -46,9 +30,7 @@ static func snapshot_power(snapshot: Dictionary) -> int:
 		int(snapshot.get("attack", 0)),
 		int(snapshot.get("defense", 0)),
 		int(snapshot.get("speed_milli", 80000)),
-		int(snapshot.get("crit_bp", 1000)),
-		int(snapshot.get("star", 1)),
-		String(snapshot.get("archetype_id", "assault"))
+		int(snapshot.get("crit_bp", 1000))
 	)
 
 
@@ -57,20 +39,15 @@ static func stats_power(
 	attack: int,
 	defense: int,
 	speed_milli: int,
-	crit_bp: int,
-	star: int,
-	archetype_id: String
+	crit_bp: int
 ) -> int:
-	var base := (
+	return (
 		maxi(0, max_hp) * 3
 		+ maxi(0, attack) * 20
 		+ maxi(0, defense) * 10
 		+ maxi(0, speed_milli) / 500
 		+ maxi(0, crit_bp) / 10
-		+ int(ROLE_UTILITY.get(archetype_id, 100))
 	)
-	var star_index := clampi(star, 1, STAR_SKILL_BP.size() - 1)
-	return int(base * STAR_SKILL_BP[star_index] / 10000)
 
 
 static func formation_power(state: RefCounted) -> int:

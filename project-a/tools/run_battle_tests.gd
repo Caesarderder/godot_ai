@@ -13,10 +13,12 @@ func _init() -> void:
 	_test_three_layer_siege_with_enemy_contact()
 	_test_manual_and_auto_skill_contract()
 	_test_damage_energy_normalization()
+	_test_five_stat_runtime_controls()
 	_test_eight_archetype_skill_families()
 	_test_star_tiers_change_skill_output()
 	_test_active_skill_research_scales_skill_output()
 	_test_core_cannon_and_destruction_feedback()
+	_test_configurable_boss_cannon_defaults()
 	_test_opening_warning_turret_teaches_the_signal()
 	_test_boss_cannon_suppression_window()
 	_test_boss_cannon_suppression_high_output()
@@ -61,6 +63,63 @@ func _test_damage_energy_normalization() -> void:
 			int(energy_by_second[second]) <= BattleSessionScript.DAMAGE_ENERGY_PER_SECOND_CAP,
 			"damage energy respects the per-second anti-multihit cap"
 		)
+
+
+func _test_five_stat_runtime_controls() -> void:
+	var probe: RefCounted = BattleSessionScript.new()
+	var slow: Dictionary = probe._make_ally({
+		"hero_id": "slow",
+		"class_id": "fighter",
+		"archetype_id": "assault",
+		"star": 1,
+		"max_hp": 150,
+		"attack": 36,
+		"defense": 28,
+		"speed_milli": 84000,
+		"crit_bp": 0,
+	}, 0)
+	var fast: Dictionary = probe._make_ally({
+		"hero_id": "fast",
+		"class_id": "fighter",
+		"archetype_id": "assault",
+		"star": 1,
+		"max_hp": 150,
+		"attack": 36,
+		"defense": 28,
+		"speed_milli": 112000,
+		"crit_bp": 0,
+	}, 0)
+	_check(int(fast["move_per_tick"]) > int(slow["move_per_tick"]), "higher speed increases actual allied movement")
+	_check(int(fast["attack_period_ticks"]) < int(slow["attack_period_ticks"]), "higher speed shortens the actual normal-attack period")
+	var starred: Dictionary = probe._make_ally({
+		"hero_id": "starred",
+		"class_id": "fighter",
+		"archetype_id": "assault",
+		"star": 3,
+		"max_hp": 150,
+		"attack": 36,
+		"defense": 28,
+		"speed_milli": 92000,
+		"crit_bp": 0,
+	}, 0)
+	_check(int(starred["max_hp"]) == 150, "battle session does not multiply snapshot HP by star twice")
+	_check(int(starred["attack"]) == 36, "battle session does not multiply snapshot attack by star twice")
+
+	var crit_session: RefCounted = BattleSessionScript.new()
+	var crit_hero := _siege_heroes()[0].duplicate(true)
+	crit_hero["crit_bp"] = 5000
+	crit_hero["auto_skill"] = false
+	crit_session.start([crit_hero], "stage_1_1", StageCatalogScript.stage("stage_1_1"))
+	var crit_sequence: Array[bool] = []
+	var safety := 0
+	while not crit_session.is_finished and crit_sequence.size() < 4 and safety < 1000:
+		safety += 1
+		for event in crit_session.advance_tick():
+			if event.get("type") == &"attack_started" and not bool(event.get("is_skill", false)):
+				crit_sequence.append(bool(event.get("is_critical", false)))
+	_check(crit_sequence.size() >= 4, "crit probe observes four deterministic normal attacks")
+	if crit_sequence.size() >= 4:
+		_check(crit_sequence.slice(0, 4) == [false, true, false, true], "5000bp crit meter deterministically crits every second normal attack")
 
 
 func _test_requires_one_to_seven_known_archetypes() -> void:
@@ -305,6 +364,31 @@ func _test_core_cannon_and_destruction_feedback() -> void:
 	_check(impact_seen, "core cannon warning resolves into an impact")
 	_check(explosion_seen, "destruction and cannon impacts emit lightweight explosion events")
 	_check(structure_damage_seen, "structure damage is exposed as presentation events")
+
+
+func _test_configurable_boss_cannon_defaults() -> void:
+	var default_session: RefCounted = BattleSessionScript.new()
+	var default_config := StageCatalogScript.stage("stage_1_5")
+	default_session.start(_siege_heroes(), "stage_1_5", default_config)
+	_check(
+		int(default_session._boss_cannon_damage) == BattleSessionScript.DEFAULT_BOSS_CANNON_DAMAGE,
+		"unconfigured stages keep the legacy 46-point boss cannon"
+	)
+	_check(
+		int(default_session._boss_cannon_period_ticks) == BattleSessionScript.DEFAULT_BOSS_CANNON_PERIOD_TICKS,
+		"unconfigured stages keep the legacy 42-tick boss cannon period"
+	)
+	_check(int(default_session._boss_core_enrage_ticks) == 0, "unconfigured stages have no boss-core enrage")
+	var configured_session: RefCounted = BattleSessionScript.new()
+	var configured := default_config.duplicate(true)
+	configured["boss_cannon_damage"] = 123
+	configured["boss_cannon_period_ticks"] = 17
+	configured["boss_core_enrage_ticks"] = 61
+	configured["boss_core_required_power"] = 999999
+	configured_session.start(_siege_heroes(), "stage_1_5", configured)
+	_check(int(configured_session._boss_cannon_damage) == 123, "stage config overrides boss cannon damage")
+	_check(int(configured_session._boss_cannon_period_ticks) == 17, "stage config overrides boss cannon period")
+	_check(int(configured_session._boss_core_enrage_ticks) == 61, "stage config enables boss-core enrage")
 
 
 func _test_opening_warning_turret_teaches_the_signal() -> void:

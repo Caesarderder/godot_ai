@@ -56,15 +56,15 @@ related:
 | `project-a/game/scripts/state/**` | domain-kernel | 可序列化 schema v4 GameState、英雄、六槽编队、经济、工厂、任务与成就状态 | present / Meta headless tests |
 | `project-a/game/scripts/commands/**` | application | CommandExecutor、fingerprint、幂等、revision 与事务编排 | present / Meta headless tests |
 | `project-a/game/scripts/domain/recruitment/**` | domain-kernel | 固定 seed 英雄生成 | present / Meta headless tests |
-| `project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd` | domain-kernel | 研究所落成后一次性免费十连、两名确定性援军和长期保底隔离 | present / focused breakthrough tests |
+| `project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd` | domain-kernel | 1-4 首败后一次性基础信号十连、确定性图纸入库和长期保底隔离；不创建角色 | present / focused breakthrough tests |
 | `project-a/game/scripts/domain/progression/**` | domain-kernel | L1-L5 培养与派生属性 | present / Meta headless tests |
 | `project-a/game/scripts/domain/factory/**` | domain-kernel | 三材料八配方、生产队列、领取生成英雄、同原型同星 3 合 1 | present / Meta headless tests |
 | `project-a/game/scripts/domain/formation/**` | domain-kernel | 固定六槽 2×3 编队校验 | present / Meta headless tests |
 | `project-a/game/scripts/domain/battle/**` | domain-kernel | 5Hz 三阶段攻城、六人推进、技能、核心巨炮与胜负 | present / battle headless tests |
 | `project-a/game/scripts/domain/quest/**` | domain-kernel | 25 大战役任务、3 槽循环小任务、战功等级、任务领取 | present / Meta + UI smoke |
 | `project-a/game/scripts/content/objective_hurdle_*.gd`、`project-a/game/resources/definitions/objectives/hurdles/**` | authored-content | 首章大小卡点 typed 定义、固定索引与内容校验；不持有运行进度 | present / definition + projection tests |
-| `project-a/game/scripts/content/onboarding_*_definition.gd`、`project-a/game/scripts/content/onboarding_definition_catalog.gd`、`project-a/game/resources/definitions/onboarding/**` | authored-content | 首章七任务、十目标、CTA 与奖励预算的 typed 定义和固定索引；不持有进度或执行发奖 | present / onboarding definition + journey tests |
-| `project-a/game/scripts/content/research_breakthrough_*.gd`、`project-a/game/resources/definitions/research/breakthrough/**` | authored-content | 免费突破十连十卡配方、援军/资源预算与内容校验；不执行发奖 | present / breakthrough + first-formation tests |
+| `project-a/game/scripts/content/onboarding_*_definition.gd`、`project-a/game/scripts/content/onboarding_definition_catalog.gd`、`project-a/game/resources/definitions/onboarding/**` | authored-content | 首章七任务、十二目标、CTA 与奖励预算的 typed 定义和固定索引；不持有进度或执行发奖 | present / onboarding definition + journey tests |
+| `project-a/game/scripts/content/research_breakthrough_*.gd`、`project-a/game/resources/definitions/research/breakthrough/**` | authored-content | 基础信号十连的十张图纸卡、重复设计数据与内容校验；不执行发奖或角色生成 | present / breakthrough + first-formation tests |
 | `project-a/game/scripts/content/active_skill_*.gd`、`project-a/game/resources/definitions/skills/active/**` | authored-content | 九个主动技能的稳定 ID、中文名称、职责、真实效果与释放时机；不持有战斗运行态 | present / active-skill definition + battle HUD tests |
 | `project-a/game/scripts/domain/achievement/**` | domain-kernel | 24 个永久一次性成就、可靠回填、event key 去重、成就领取 | present / Meta + UI smoke |
 | `project-a/game/scripts/domain/{equipment,idle}/**` | domain-kernel | 装备、离线规则 | absent / deferred |
@@ -76,6 +76,7 @@ related:
 | `project-a/game/{scenes/presentation,scripts/presentation}/music_director.*` | audio-presentation | 双 Stream 播放器、可取消淡化、路线音乐状态、后台暂停与独立音量 | present / MusicDirector + UI + Web smoke |
 | `project-a/game/scenes/actors/ally_models/**` | asset-integration | 八个项目自有 GLB wrapper，隔离导入器子树与运行时变换 | present / asset 3D tests |
 | `project-a/game/scripts/ui/**` | presentation | 可复用独立 UI 场景/组件 | 战前面板、战区、战斗 HUD、结算、军团、工厂与目标中心 present；其余主要 UI 仍在 App Shell |
+| `project-a/game/scripts/ui/resource_context_hud.gd` | presentation | App Shell 右上角常驻七项核心余额，并在具体操作附近投影需要、剩余或缺口；只读，不执行扣费 | 全局顶栏、军团培养与研究蓝图 present / focused screen tests |
 | `project-a/game/scenes/**` | presentation | app、battle_3d、screens、dialogs、ui | 战前面板、完整战区、战斗 HUD、结算、军团、工厂与目标 screen present；其余 planned |
 | `project-a/tools/run_meta_tests.gd` | independent-verifier | Meta、命令、存档、任务、成就和 bootstrap headless tests | present / passing |
 | `project-a/tools/run_battle_tests.gd` | independent-verifier | 六人三阶段攻城、技能、核心炮、结构事件、确定性、超时与 result-once | present / passing |

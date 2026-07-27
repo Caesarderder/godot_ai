@@ -69,7 +69,7 @@ func _test_second_chapter_growth_projection() -> void:
 func _test_second_chapter_reconnaissance_projection() -> void:
 	var state := _chapter_two_state()
 	var hero: RefCounted = state.roster[0]
-	hero.base_stats = {"vig": 1200, "str": 1200, "agi": 1200, "int": 1200}
+	hero.base_stats = {"hp": 1200, "attack": 1200, "defense": 1200, "speed_milli": 120000, "crit_bp": 1200}
 	hero.star = 5
 	var projection := CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	var title := projection.get("title", {}) as Dictionary

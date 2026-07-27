@@ -4,14 +4,14 @@ extends RefCounted
 const MATERIAL_KEYS: Array[String] = ["porcelain", "parts", "sludge"]
 
 const _RECIPES: Array[Dictionary] = [
-	{"recipe_id": "ordinary.assault", "display_name": "冲锋马桶人", "workshop": "ordinary", "rarity": "common", "archetype_id": "assault", "class_id": "fighter", "duration_seconds": 5, "cost": {"porcelain": 20, "parts": 8, "sludge": 4}},
-	{"recipe_id": "ordinary.sonic", "display_name": "音波马桶人", "workshop": "ordinary", "rarity": "common", "archetype_id": "sonic", "class_id": "arcanist", "duration_seconds": 7, "cost": {"porcelain": 16, "parts": 14, "sludge": 10}},
-	{"recipe_id": "flying.rocket", "display_name": "火箭飞行马桶人", "workshop": "flying", "rarity": "rare", "archetype_id": "rocket", "class_id": "ranger", "duration_seconds": 10, "cost": {"porcelain": 10, "parts": 24, "sludge": 18}},
-	{"recipe_id": "flying.bomber", "display_name": "自爆飞行马桶人", "workshop": "flying", "rarity": "rare", "archetype_id": "bomber", "class_id": "ranger", "duration_seconds": 8, "cost": {"porcelain": 12, "parts": 18, "sludge": 22}},
-	{"recipe_id": "heavy.armored", "display_name": "装甲冲城马桶人", "workshop": "heavy", "rarity": "rare", "archetype_id": "armored", "class_id": "guardian", "duration_seconds": 12, "cost": {"porcelain": 30, "parts": 28, "sludge": 12}},
-	{"recipe_id": "heavy.saw", "display_name": "双锯重装马桶人", "workshop": "heavy", "rarity": "epic", "archetype_id": "saw", "class_id": "fighter", "duration_seconds": 14, "cost": {"porcelain": 26, "parts": 34, "sludge": 14}},
-	{"recipe_id": "special.repair", "display_name": "维修马桶人", "workshop": "special", "rarity": "epic", "archetype_id": "repair", "class_id": "guardian", "duration_seconds": 15, "cost": {"porcelain": 18, "parts": 20, "sludge": 26}},
-	{"recipe_id": "special.parasite", "display_name": "寄生母体马桶人", "workshop": "special", "rarity": "legendary", "archetype_id": "parasite", "class_id": "arcanist", "duration_seconds": 18, "cost": {"porcelain": 16, "parts": 18, "sludge": 30}},
+	{"recipe_id": "ordinary.assault", "display_name": "冲锋马桶人", "workshop": "ordinary", "rarity": "common", "rating": "B", "archetype_id": "assault", "class_id": "fighter", "duration_seconds": 5, "cost": {"porcelain": 20, "parts": 8, "sludge": 4}},
+	{"recipe_id": "ordinary.sonic", "display_name": "音波马桶人", "workshop": "ordinary", "rarity": "rare", "rating": "A", "archetype_id": "sonic", "class_id": "arcanist", "duration_seconds": 7, "cost": {"porcelain": 16, "parts": 14, "sludge": 10}},
+	{"recipe_id": "flying.rocket", "display_name": "火箭飞行马桶人", "workshop": "flying", "rarity": "common", "rating": "B", "archetype_id": "rocket", "class_id": "ranger", "duration_seconds": 10, "cost": {"porcelain": 10, "parts": 24, "sludge": 18}},
+	{"recipe_id": "flying.bomber", "display_name": "自爆飞行马桶人", "workshop": "flying", "rarity": "rare", "rating": "A", "archetype_id": "bomber", "class_id": "ranger", "duration_seconds": 8, "cost": {"porcelain": 12, "parts": 18, "sludge": 22}},
+	{"recipe_id": "heavy.armored", "display_name": "装甲冲城马桶人", "workshop": "heavy", "rarity": "rare", "rating": "A", "archetype_id": "armored", "class_id": "guardian", "duration_seconds": 12, "cost": {"porcelain": 30, "parts": 28, "sludge": 12}},
+	{"recipe_id": "heavy.saw", "display_name": "双锯重装马桶人", "workshop": "heavy", "rarity": "legendary", "rating": "S", "archetype_id": "saw", "class_id": "fighter", "duration_seconds": 14, "cost": {"porcelain": 26, "parts": 34, "sludge": 14}},
+	{"recipe_id": "special.repair", "display_name": "维修马桶人", "workshop": "special", "rarity": "common", "rating": "B", "archetype_id": "repair", "class_id": "guardian", "duration_seconds": 15, "cost": {"porcelain": 18, "parts": 20, "sludge": 26}},
+	{"recipe_id": "special.parasite", "display_name": "寄生母体马桶人", "workshop": "special", "rarity": "legendary", "rating": "S", "archetype_id": "parasite", "class_id": "arcanist", "duration_seconds": 18, "cost": {"porcelain": 16, "parts": 18, "sludge": 30}},
 ]
 
 const _ARCHETYPES: Dictionary = {

@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="OnboardingTaskDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="OnboardingTaskDefinition" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://game/scripts/content/onboarding_task_definition.gd" id="1"]
 [ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/resolve_research_breakthrough.tres" id="2"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/research_assault_blueprint.tres" id="3"]
+[ext_resource type="Resource" path="res://game/resources/definitions/onboarding/objectives/research_armored_blueprint.tres" id="4"]
 
 [resource]
 script = ExtResource("1")
 task_id = &"operation.research_reinforcements"
-title = "行动四：研究突破"
-lesson = "启动一次免费的研究突破十连，确定获得冲锋与装甲两名永久援军。"
-objectives = Array[Resource]([ExtResource("2")])
+title = "行动四：截获图纸并研发"
+lesson = "先在信号招募接收设计图纸，再到研究所把冲锋与装甲图纸研发成永久援军。"
+objectives = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4")])

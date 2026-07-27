@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-card_id = &"breakthrough.armored"
+card_id = &"signal.design.armored"
 rarity = "A"
-kind = "hero"
+kind = "blueprint"
 recipe_id = &"heavy.armored"
 archetype_id = &"armored"
 class_id = &"guardian"
