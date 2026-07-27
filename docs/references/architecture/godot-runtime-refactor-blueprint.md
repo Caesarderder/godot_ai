@@ -359,6 +359,12 @@ console error 与网络失败，并保存少量关键转折截图。当前 Chrom
 它不得修改 `facility_work`、自动验收、重建 3D 世界或新增 Autoload；到点后只把既有语义按钮
 从“施工中”切换为“验收完成”，最终状态仍由 `claim_facility_work` 命令提交。
 
+首次编队完成后的破坎按钮只拥有一条语义链：
+`LegionScreen.action_requested("counterattack", stage_id)` → App Shell
+`_start_stage_battle(stage_id)` → 真实 `BattleSession`。它直接开始精确的 1-4 反攻，不插入
+隐藏的战区二次确认，不合成结算，也不允许 Web 验证脚本写存档。连续浏览器证据必须点击已渲染
+的 `FormationCounterattackButton`，随后从 IndexedDB 观察第二次 1-4 尝试与真实胜利。
+
 该旅程证明真实 Web UI 的连续可达性与保存链，不证明玩家理解、乐趣、20–30 分钟节奏或移动
 设备表现；这些仍由目标玩家盲测和真机门禁负责。
 

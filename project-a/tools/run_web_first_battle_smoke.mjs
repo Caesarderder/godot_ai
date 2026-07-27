@@ -216,8 +216,7 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 	};
 })`;
 
-async function continueBattle(cdp, stageId, completion, evidenceName) {
-	await touch(cdp, 650, 210);
+async function finishActiveBattle(cdp, stageId, completion, evidenceName) {
 	await new Promise((accept) => setTimeout(accept, 2200));
 	let skillTouches = 0;
 	const skillInput = setInterval(() => {
@@ -235,6 +234,11 @@ async function continueBattle(cdp, stageId, completion, evidenceName) {
 	} finally {
 		clearInterval(skillInput);
 	}
+}
+
+async function continueBattle(cdp, stageId, completion, evidenceName) {
+	await touch(cdp, 650, 210);
+	return finishActiveBattle(cdp, stageId, completion, evidenceName);
 }
 
 async function main() {
@@ -476,6 +480,14 @@ async function main() {
 		);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-formation-complete-844x390.png");
+		await touch(cdp, 420, 187);
+		const counterattack = await finishActiveBattle(
+			cdp,
+			"stage_1_4 counterattack",
+			(save) => Number(save.attempts?.stage_1_4 ?? 0) === 2
+				&& save.clearedStages?.includes("stage_1_4"),
+			"browser-first-wall-counterattack-victory-844x390.png",
+		);
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
@@ -490,7 +502,7 @@ async function main() {
 			})}`);
 		}
 		const browserVersion = await cdp.send("Browser.getVersion");
-		console.log("WEB_FIRST_REINFORCEMENT_SMOKE_PASS");
+		console.log("WEB_FIRST_WALL_RECOVERY_SMOKE_PASS");
 		console.log(JSON.stringify({
 			candidate: {
 				revision: candidate.revision,
@@ -499,7 +511,7 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through research breakthrough and first formation",
+			journey: "fresh profile through research breakthrough, first formation, and 1-4 counterattack victory",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
@@ -511,11 +523,14 @@ async function main() {
 			breakthroughClaimed: true,
 			guaranteedReinforcements: ["assault", "armored"],
 			firstFormation: firstFormation.formation,
-			clearedStages: firstWall.save.clearedStages,
+			counterattackOutcome: "victory",
+			counterattackAttempts: counterattack.save.attempts.stage_1_4,
+			clearedStages: counterattack.save.clearedStages,
 			skillCardTouchInputs: skillTouches
 				+ stage12.skillTouches
 				+ stage13.skillTouches
-				+ firstWall.skillTouches,
+				+ firstWall.skillTouches
+				+ counterattack.skillTouches,
 			elapsedMs: Date.now() - startedAt,
 			runtimeExceptions: exceptions.length,
 			unexpectedConsoleErrors: unexpectedConsoleErrors.length,
@@ -534,6 +549,7 @@ async function main() {
 				"artifacts/browser-research-breakthrough-result-844x390.png",
 				"artifacts/browser-first-formation-step-one-844x390.png",
 				"artifacts/browser-first-formation-complete-844x390.png",
+				"artifacts/browser-first-wall-counterattack-victory-844x390.png",
 			],
 		}, null, 2));
 	} finally {
