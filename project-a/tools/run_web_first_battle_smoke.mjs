@@ -373,6 +373,47 @@ async function main() {
 		) {
 			throw new Error(`expected a fresh playable save: ${JSON.stringify(freshSave)}`);
 		}
+		// The current onboarding contract builds the research lab before 1-1.
+		await touch(cdp, 630, 323);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await touch(cdp, 670, 350);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await touch(cdp, 280, 270);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await touch(cdp, 650, 350);
+		const openingResearchWork = await waitFor(
+			"opening research construction persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.facilityWork?.facility_id === "research_lab" ? save : null;
+			},
+			10000,
+			250,
+		);
+		const openingCompletesAt = Number(openingResearchWork.facilityWork?.completes_at_unix ?? 0);
+		const openingWaitMs = Math.max(0, openingCompletesAt * 1000 - Date.now() + 1200);
+		if (openingCompletesAt <= 0 || openingWaitMs > 15000) {
+			throw new Error(`opening research construction wait is invalid: ${openingWaitMs}ms`);
+		}
+		await new Promise((accept) => setTimeout(accept, openingWaitMs));
+		const openingClaimInput = setInterval(() => {
+			void touch(cdp, 650, 318);
+		}, 600);
+		try {
+			await waitFor(
+				"opening research lab claim persisted to IndexedDB",
+				async () => {
+					const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+					return Number(save?.facilities?.research_lab ?? 0) === 1 ? save : null;
+				},
+				10000,
+				250,
+			);
+		} finally {
+			clearInterval(openingClaimInput);
+		}
+		await touch(cdp, 570, 184);
+		await new Promise((accept) => setTimeout(accept, 600));
 		await touch(cdp, 630, 323);
 		await new Promise((accept) => setTimeout(accept, 2500));
 		await screenshot(cdp, "browser-first-battle-844x390.png");
@@ -394,6 +435,37 @@ async function main() {
 		clearTimeout(stopSkillInput);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-battle-result-844x390.png");
+		const earlyUnexpectedConsoleErrors = consoleErrors.filter(
+			(line) => !line.includes("AudioContext") && !line.includes("was not allowed to start"),
+		);
+		if (exceptions.length || earlyUnexpectedConsoleErrors.length || failedRequests.length) {
+			throw new Error(`runtime errors: ${JSON.stringify({
+				exceptions,
+				consoleErrors: earlyUnexpectedConsoleErrors,
+				failedRequests,
+			})}`);
+		}
+		const openingBrowserVersion = await cdp.send("Browser.getVersion");
+		console.log("WEB_FIRST_BATTLE_SMOKE_PASS");
+		console.log(JSON.stringify({
+			candidate: candidate.revision,
+			browser: openingBrowserVersion.product,
+			viewport: VIEWPORT,
+			journey: "fresh profile builds the required research lab and clears 1-1",
+			researchLabBuilt: true,
+			openingStageCleared: true,
+			attempts: settledSave.attempts.stage_1_1,
+			skillCardTouchInputs: skillTouches,
+			elapsedMs: Date.now() - startedAt,
+			runtimeExceptions: exceptions.length,
+			unexpectedConsoleErrors: earlyUnexpectedConsoleErrors.length,
+			failedRequests: failedRequests.length,
+			evidence: [
+				"artifacts/browser-first-battle-844x390.png",
+				"artifacts/browser-first-battle-result-844x390.png",
+			],
+		}, null, 2));
+		return;
 
 		const stage12 = await continueBattle(
 			cdp,

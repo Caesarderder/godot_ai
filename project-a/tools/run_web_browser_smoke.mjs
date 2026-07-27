@@ -410,7 +410,10 @@ async function main() {
 		}, 10000);
 		const downloadedText = await readFile(downloadedSave, "utf8");
 		const downloadedJson = JSON.parse(downloadedText);
-		if (downloadedJson.schema_version !== 8 || downloadedJson.content_version !== "toilet-factory-slg-v2") {
+		if (
+			downloadedJson.schema_version !== 11
+				|| downloadedJson.content_version !== "toilet-factory-slg-v3-factions"
+		) {
 			throw new Error("downloaded save backup does not match the active schema/content contract");
 		}
 		await cdp.send("Page.setInterceptFileChooserDialog", { enabled: true });
