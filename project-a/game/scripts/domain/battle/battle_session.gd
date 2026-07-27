@@ -259,7 +259,11 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 		var weakness_ticks := int(_stage_config.get("resonance_weakness_ticks", 8))
 		for ally in _living_main_allies():
 			var energy_before := int(ally["energy"])
-			ally["energy"] = maxi(0, energy_before - energy_drain)
+			# An accepted manual command belongs to this tick. Preserve its
+			# energy so the later ally phase can resolve the promised skill
+			# instead of silently cancelling player input at the pulse boundary.
+			if not _pending_skills.has(ally["unit_id"]):
+				ally["energy"] = maxi(0, energy_before - energy_drain)
 			energy_drained += energy_before - int(ally["energy"])
 			ally["weakness_ticks"] = maxi(int(ally.get("weakness_ticks", 0)), weakness_ticks)
 			affected += 1

@@ -965,7 +965,7 @@ static func _shape_chapter_two_gate(config: Dictionary) -> void:
 	for structure in config.get("structures", []):
 		if String(structure.get("structure_id", "")) != final_structure_id:
 			continue
-		structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 75 / 100))
+		structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 40 / 100))
 		structure["hp"] = int(structure["max_hp"])
 
 

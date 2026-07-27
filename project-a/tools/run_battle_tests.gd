@@ -457,6 +457,29 @@ func _test_chapter_two_resonance_learning_curve() -> void:
 	for unit in session._living_main_allies():
 		energy_after += int(unit.get("energy", 0))
 	_check(energy_after < energy_before, "resonance pulse changes the real allied skill economy")
+	var manual_session: RefCounted = BattleSessionScript.new()
+	manual_session.start(_siege_heroes(), "stage_2_1", opening)
+	var manual_unit := manual_session._living_main_allies()[0] as Dictionary
+	manual_unit["energy"] = BattleSessionScript.SKILL_COST
+	manual_session.tick_index = 54
+	_check(
+		manual_session.request_skill(StringName(String(manual_unit["unit_id"]))),
+		"manual skill request is accepted immediately before a resonance pulse"
+	)
+	var boundary_events: Array[Dictionary] = manual_session.advance_tick()
+	_check(
+		not _first_event(boundary_events, &"skill_used").is_empty(),
+		"accepted manual skill still resolves on the resonance boundary tick"
+	)
+	var boundary_pulse := _first_event(boundary_events, &"resonance_pulse")
+	_check(
+		int(boundary_pulse.get("energy_drained", -1)) == 0,
+		"resonance does not silently consume energy already committed to an accepted skill"
+	)
+	_check(
+		int(manual_unit.get("weakness_ticks", 0)) > 0,
+		"timely manual release preserves the skill but does not avoid resonance weakness"
+	)
 
 
 func _test_chapter_two_encounter_escalation() -> void:

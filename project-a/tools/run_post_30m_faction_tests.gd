@@ -25,11 +25,16 @@ const POST_CHAPTER_SESSION_CEILING_SECONDS := 1200
 var failures: Array[String] = []
 var executor: RefCounted
 var serial: int = 0
+var late_wall_routes: int = 0
 
 
 func _init() -> void:
 	for run_seed in RUN_SEEDS:
 		_run_seed(run_seed)
+	_ok(
+		late_wall_routes >= RUN_SEEDS.size() - 1,
+		"at least six of seven faction routes retain the authored growth wall while one perfect manual route may earn a skill shortcut"
+	)
 	_test_s_one_star_value()
 	_test_free_ten_hard_pity_edge()
 	if failures.is_empty():
@@ -225,11 +230,12 @@ func _run_seed(run_seed: int) -> void:
 			"victory",
 			"seed %d one-star faction core establishes value through 2-%d" % [run_seed, stage_index + 1]
 		)
-	_ok(
+	var hit_late_wall := (
 		String((one_star_chapter[3] as Dictionary).get("outcome", "")) == "defeat"
-			or String((one_star_chapter[4] as Dictionary).get("outcome", "")) == "defeat",
-		"seed %d one-star route meets a visible late-chapter growth wall" % run_seed
+		or String((one_star_chapter[4] as Dictionary).get("outcome", "")) == "defeat"
 	)
+	if hit_late_wall:
+		late_wall_routes += 1
 	_eq(
 		String(grown_gate.get("outcome", "")),
 		"victory",
@@ -248,19 +254,31 @@ func _run_seed(run_seed: int) -> void:
 		int(grown_gate.get("ticks", 10001)) <= 900,
 		"seed %d mastered 2-4 gate resolves within the same three-minute attention ceiling" % run_seed
 	)
-	var first_wall_index := 3
+	_ok(
+		int(grown_gate.get("manual_skill_uses", 0)) > 0
+			and int(grown_boss.get("manual_skill_uses", 0)) > 0,
+		"seed %d default manual route resolves real player skill requests" % run_seed
+	)
+	var first_wall_index := -1
 	for stage_index in one_star_chapter.size():
 		if String((one_star_chapter[stage_index] as Dictionary).get("outcome", "")) == "defeat":
 			first_wall_index = stage_index
 			break
-	var journey_battle_ticks := int(grown_boss.get("ticks", 0))
-	if first_wall_index <= 3:
-		journey_battle_ticks += int(grown_gate.get("ticks", 0))
-	for stage_index in range(first_wall_index + 1):
-		journey_battle_ticks += int(
-			(one_star_chapter[stage_index] as Dictionary).get("ticks", 0)
-		)
-	var modeled_interactions := 10 + first_wall_index + 1
+	var journey_battle_ticks := 0
+	var modeled_interactions := 10
+	if first_wall_index < 0:
+		for row in one_star_chapter:
+			journey_battle_ticks += int((row as Dictionary).get("ticks", 0))
+		modeled_interactions += one_star_chapter.size()
+	else:
+		journey_battle_ticks = int(grown_boss.get("ticks", 0))
+		if first_wall_index <= 3:
+			journey_battle_ticks += int(grown_gate.get("ticks", 0))
+		for stage_index in range(first_wall_index + 1):
+			journey_battle_ticks += int(
+				(one_star_chapter[stage_index] as Dictionary).get("ticks", 0)
+			)
+		modeled_interactions += first_wall_index + 1
 	var modeled_journey_seconds := int(ceil(
 		float(journey_battle_ticks) / float(TICKS_PER_SECOND)
 	)) + modeled_interactions * INTERACTION_SECONDS + 5
@@ -275,7 +293,11 @@ func _run_seed(run_seed: int) -> void:
 		"two_star": two_star_chapter,
 		"grown_gate": grown_gate,
 		"grown_boss": grown_boss,
-		"first_wall_stage": "stage_2_%d" % (first_wall_index + 1),
+		"first_wall_stage": (
+			"none_manual_skill_shortcut"
+			if first_wall_index < 0
+			else "stage_2_%d" % (first_wall_index + 1)
+		),
 		"modeled_journey_seconds": modeled_journey_seconds,
 	}))
 
@@ -373,17 +395,36 @@ func _simulate_stage(state: RefCounted, stage_id: String) -> Dictionary:
 			"slot": slot,
 			"skill_id": FactoryCatalogScript.active_skill_for_archetype(hero.archetype_id),
 			"skill_level": int(hero.active_skill_level),
-			"auto_skill": true,
+			"auto_skill": false,
 		})
 	var session: RefCounted = BattleSessionScript.new()
 	session.start(snapshots, stage_id, StageCatalogScript.stage(stage_id))
 	var safety := 0
+	var manual_skill_uses := 0
 	while not session.is_finished and safety < 10000:
-		session.advance_tick()
+		var snapshot := session.snapshot() as Dictionary
+		for unit_value in snapshot.get("units", []):
+			var unit := unit_value as Dictionary
+			if (
+				not bool(unit.get("temporary", false))
+				and bool(unit.get("alive", false))
+				and int(unit.get("energy", 0)) >= BattleSessionScript.SKILL_COST
+			):
+				session.request_skill(StringName(String(unit.get("unit_id", ""))))
+		var events: Array = session.advance_tick()
+		for event_value in events:
+			if String((event_value as Dictionary).get("type", "")) == "skill_used":
+				manual_skill_uses += 1
 		safety += 1
 	var row: Dictionary = session.result.duplicate(true)
 	row["outcome"] = String(session.result.get("outcome", ""))
 	row["ticks"] = int(session.result.get("ticks", safety))
+	row["manual_skill_uses"] = manual_skill_uses
+	for structure in session._structures:
+		if String(structure.get("structure_id", "")) == "alliance_core":
+			row["final_core_hp"] = int(structure.get("hp", 0))
+			row["final_core_max_hp"] = int(structure.get("max_hp", 0))
+			break
 	return row
 
 
