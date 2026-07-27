@@ -389,7 +389,7 @@ async function main() {
 		const playtestJson = JSON.parse(await readFile(downloadedPlaytest, "utf8"));
 		if (
 			playtestJson.schema_version !== 1
-				|| playtestJson.product_version !== "0.11.0-audio-feedback.1"
+				|| playtestJson.product_version !== releaseCandidate.version
 				|| playtestJson.event_count < 2
 				|| !Array.isArray(playtestJson.events)
 				|| typeof playtestJson.first_session_metrics !== "object"

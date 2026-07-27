@@ -365,8 +365,8 @@ async function main() {
 		const freshSave = await evaluate(cdp, READ_SAVE_EXPRESSION);
 		if (
 			!freshSave
-				|| freshSave.schemaVersion !== 8
-				|| freshSave.contentVersion !== "toilet-factory-slg-v2"
+				|| freshSave.schemaVersion !== 11
+				|| freshSave.contentVersion !== "toilet-factory-slg-v3-factions"
 				|| !Array.isArray(freshSave.clearedStages)
 				|| freshSave.clearedStages.length !== 0
 				|| typeof freshSave.attempts !== "object"
