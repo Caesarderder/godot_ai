@@ -180,9 +180,12 @@ func _mission_panel() -> Control:
 func _construction_panel() -> Control:
 	var construction := _view.get("construction", {}) as Dictionary
 	var focused_growth := bool(construction.get("focused_growth", false))
-	var panel := _panel("选择首座资源设施" if focused_growth else "网格建造")
-	panel.name = "ConstructionPanel"
 	var active_id := String(construction.get("active_id", ""))
+	var panel_title := "选择首座资源设施" if focused_growth else "网格建造"
+	# Placement already has an active Build tab and a three-step guide. Avoiding
+	# a repeated title keeps its primary confirmation inside the 390 px viewport.
+	var panel := _panel("" if not active_id.is_empty() else panel_title)
+	panel.name = "ConstructionPanel"
 	var guide := _label("① 选建筑  →  ② 点地图格子  →  ③ 确认", 11, MUTED if active_id.is_empty() else CYAN)
 	guide.name = "ConstructionStepGuide"
 	panel.add_child(guide)
@@ -218,17 +221,23 @@ func _construction_panel() -> Control:
 	panel.add_child(_label(String(construction.get("active_copy", "")), 12, TEXT))
 	panel.add_child(_label("建造费用：%d 金币（确认后扣除）" % int(construction.get("cost", 0)), 12, GOLD))
 	panel.add_child(_label(String(construction.get("placement_copy", "")), 12, TEXT))
+	var actions := HBoxContainer.new()
+	actions.name = "ConstructionActions"
+	actions.add_theme_constant_override("separation", 6)
 	var confirm := _button("确认建造", true)
 	confirm.name = "ConfirmFacilityConstruction"
+	confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	confirm.disabled = not bool(construction.get("can_confirm", false))
 	confirm.pressed.connect(action_requested.emit.bind("confirm_construction", {}))
-	panel.add_child(confirm)
-	if bool(construction.get("occupied", false)):
-		panel.add_child(_label("该格子已有建筑，请换一个位置。", 12, RED))
+	actions.add_child(confirm)
 	var cancel := _button("取消", false)
 	cancel.name = "CancelFacilityConstruction"
+	cancel.custom_minimum_size.x = 76
 	cancel.pressed.connect(action_requested.emit.bind("cancel_construction", {}))
-	panel.add_child(cancel)
+	actions.add_child(cancel)
+	panel.add_child(actions)
+	if bool(construction.get("occupied", false)):
+		panel.add_child(_label("该格子已有建筑，请换一个位置。", 12, RED))
 	return panel
 
 

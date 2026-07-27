@@ -171,6 +171,8 @@ var orientation_gate_active: bool = false
 var orientation_paused_battle: bool = false
 var active_layout_profile: String = ""
 var last_storage_access_state: String = "checking"
+var active_factory_screen: FactoryScreen
+var factory_work_refresh_timer: Timer
 
 
 func _ready() -> void:
@@ -203,6 +205,12 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(mobile_viewport.refresh)
 	mobile_viewport.refresh(true)
 	_refresh_orientation_gate()
+	factory_work_refresh_timer = Timer.new()
+	factory_work_refresh_timer.name = "FactoryWorkRefreshTimer"
+	factory_work_refresh_timer.wait_time = 1.0
+	factory_work_refresh_timer.autostart = true
+	factory_work_refresh_timer.timeout.connect(_refresh_factory_work_ui)
+	add_child(factory_work_refresh_timer)
 	if game == null:
 		_show_fatal("游戏服务未加载")
 		return
@@ -776,6 +784,7 @@ func _show_base() -> void:
 	_build_factory_world()
 	var shell := _shell("灰镜地下工厂", "战火仍在地表燃烧", true)
 	var factory := FactoryScreenScene.instantiate() as FactoryScreen
+	active_factory_screen = factory
 	factory.panel_selected.connect(func(_panel_id: String) -> void: _play_ui_click())
 	factory.panel_selected.connect(_set_factory_hud_panel)
 	factory.action_requested.connect(func(_action_id: String, _payload: Dictionary) -> void: _play_ui_click())
@@ -784,6 +793,18 @@ func _show_base() -> void:
 	factory.configure(_factory_view())
 	_add_nav(shell, Screen.BASE)
 	_add_factory_world_labels.call_deferred()
+
+
+func _refresh_factory_work_ui() -> void:
+	if (
+		screen != Screen.BASE
+		or game == null
+		or active_factory_screen == null
+		or not is_instance_valid(active_factory_screen)
+		or game.current_state().factory.facility_work.is_empty()
+	):
+		return
+	active_factory_screen.configure(_factory_view())
 
 
 func _factory_view() -> Dictionary:

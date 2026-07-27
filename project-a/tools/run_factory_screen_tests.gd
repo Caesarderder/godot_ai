@@ -53,6 +53,16 @@ func _run() -> void:
 	_check(_tree_has_text(factory, "确认后才扣除资源"), "placement makes the transaction boundary explicit")
 	var confirm := factory.find_child("ConfirmFacilityConstruction", true, false) as Button
 	_check(confirm != null and not confirm.disabled, "valid placement exposes a single confirmation action")
+	var cancel := factory.find_child("CancelFacilityConstruction", true, false) as Button
+	_check(
+		confirm != null and cancel != null and confirm.get_parent() == cancel.get_parent(),
+		"construction keeps confirm and cancel in one compact decision row"
+	)
+	_check(
+		confirm != null and confirm.custom_minimum_size.y >= 44.0
+			and cancel != null and cancel.custom_minimum_size.y >= 44.0,
+		"both construction decisions retain touch-sized controls"
+	)
 	var action_request := {"id": ""}
 	factory.action_requested.connect(func(action_id: String, _payload: Dictionary) -> void: action_request["id"] = action_id)
 	if confirm != null:

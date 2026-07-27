@@ -843,6 +843,17 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(music_director.current_state() == &"base", "factory route selects the low-priority industrial ambience")
 	var confirm_porcelain := instance.find_child("ConfirmFacilityConstruction", true, false) as Button
 	_ok(confirm_porcelain != null and not confirm_porcelain.disabled, "an empty grid cell enables explicit construction confirmation")
+	var cancel_construction := instance.find_child("CancelFacilityConstruction", true, false) as Button
+	_ok(
+		confirm_porcelain != null and cancel_construction != null
+			and confirm_porcelain.get_parent() == cancel_construction.get_parent(),
+		"construction confirmation and cancellation share one compact action row"
+	)
+	_ok(
+		confirm_porcelain != null
+			and confirm_porcelain.get_global_rect().end.y <= instance.get_viewport().get_visible_rect().end.y + 0.5,
+		"844x390 keeps the full construction confirmation inside the visible viewport"
+	)
 	if confirm_porcelain != null:
 		confirm_porcelain.pressed.emit()
 		await _wait_frames(5)
@@ -854,6 +865,29 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(game_autoload.current_state().factory.facility_placements.get("porcelain_plant", []) == [-1, 0], "confirmed grid coordinates persist with the facility")
 	_ok(instance.find_child("ClaimFactoryOutputButton", true, false) != null, "factory screen exposes its primary collect action")
 	_ok(instance.find_child("ResourceMeter_陶瓷", true, false) != null, "factory inventory uses a scannable capacity meter")
+	game_autoload.current_state().factory.facility_work = {
+		"work_type": "upgrade",
+		"facility_id": "porcelain_plant",
+		"started_at_unix": int(Time.get_unix_time_from_system()) - 2,
+		"completes_at_unix": int(Time.get_unix_time_from_system()) - 1,
+		"target_level": 2,
+		"grid_x": 0,
+		"grid_z": 0,
+	}
+	instance.set("selected_facility_id", "porcelain_plant")
+	instance.set("factory_hud_panel", "facility")
+	instance.call("_show_base")
+	await _wait_frames(3)
+	var ready_claim := instance.find_child("ClaimFacilityWork", true, false) as Button
+	_ok(ready_claim != null and not ready_claim.disabled, "factory shows ready work before timed refresh")
+	ready_claim.disabled = true
+	instance.call("_refresh_factory_work_ui")
+	await _wait_frames(3)
+	ready_claim = instance.find_child("ClaimFacilityWork", true, false) as Button
+	_ok(ready_claim != null and not ready_claim.disabled, "local factory timer refresh restores the ready claim without navigation")
+	game_autoload.current_state().factory.facility_work = {}
+	instance.call("_show_base")
+	await _wait_frames(3)
 	var factory_resource_hud := instance.find_child("FactoryResourceHUD", true, false) as Control
 	_ok(factory_resource_hud != null and not (factory_resource_hud.get_parent() is ScrollContainer), "factory resources remain fixed outside scrolling detail")
 	_ok(instance.find_child("FactoryDetailScroll", true, false) == null, "factory detail remains scroll-free after construction refreshes")
