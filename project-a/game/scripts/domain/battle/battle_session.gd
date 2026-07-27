@@ -71,6 +71,12 @@ var _alliance_purge_count: int = 0
 var _alliance_purged_units: int = 0
 var _alliance_purge_damage: int = 0
 var _alliance_shield_count: int = 0
+var _finale_warning_count: int = 0
+var _finale_impact_count: int = 0
+var _finale_damage_dealt: int = 0
+var _finale_armor_count: int = 0
+var _finale_support_count: int = 0
+var _finale_pending_impacts: Array[Dictionary] = []
 var _started_solo: bool = false
 var _solo_pressure_bp: int = 10000
 
@@ -142,6 +148,12 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_alliance_purged_units = 0
 	_alliance_purge_damage = 0
 	_alliance_shield_count = 0
+	_finale_warning_count = 0
+	_finale_impact_count = 0
+	_finale_damage_dealt = 0
+	_finale_armor_count = 0
+	_finale_support_count = 0
+	_finale_pending_impacts.clear()
 	_started_solo = false
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
@@ -267,7 +279,9 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 		_run_tv_mechanics(events)
 	elif chapter == 4:
 		_run_alliance_mechanics(events)
-	elif chapter >= 5 and tick_index % 30 == 0:
+	elif chapter == 5:
+		_run_finale_mechanics(events)
+	elif chapter >= 6 and tick_index % 30 == 0:
 		var shielded := 0
 		for enemy in _living_stage_enemies():
 			if bool(enemy.get("elite", false)):
@@ -276,6 +290,113 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 				shielded += 1
 		if shielded > 0:
 			events.append({"type": &"alliance_coordination", "tick": tick_index, "shielded": shielded})
+
+
+func _run_finale_mechanics(events: Array[Dictionary]) -> void:
+	_resolve_finale_impacts(events)
+	var mode := String(_stage_config.get("finale_mode", ""))
+	var period := int(_stage_config.get("finale_period_ticks", 0))
+	var limit := int(_stage_config.get("finale_limit", 0))
+	if mode.is_empty() or period <= 0 or limit <= 0:
+		return
+	if (
+		int(_stage_config.get("finale_support_tick", 0)) > 0
+		and tick_index >= int(_stage_config["finale_support_tick"])
+		and _finale_support_count == 0
+	):
+		var target := _first_living_enemy()
+		if not target.is_empty():
+			var before := int(target.get("hp", 0))
+			_apply_unit_damage(
+				target,
+				int(_stage_config.get("finale_support_damage", 180)),
+				&"g_toilet_support",
+				true,
+				events
+			)
+			_finale_support_count = 1
+			events.append({
+				"type": &"finale_support",
+				"tick": tick_index,
+				"damage": before - int(target.get("hp", 0)),
+				"target_id": target.get("unit_id", &""),
+			})
+	if tick_index % period != 0:
+		return
+	var beat := _finale_warning_count + _finale_armor_count
+	if beat >= limit:
+		return
+	var use_armor := mode == "armor" or (mode in ["combined", "final_exam"] and beat % 2 == 1)
+	if use_armor:
+		var shielded := 0
+		var amount := int(_stage_config.get("finale_armor_amount", 30))
+		for enemy in _living_stage_enemies():
+			if bool(enemy.get("elite", false)):
+				enemy["shield"] = mini(100, int(enemy.get("shield", 0)) + amount)
+				enemy["shield_ticks"] = 20
+				shielded += 1
+		if shielded > 0:
+			_finale_armor_count += 1
+			events.append({
+				"type": &"finale_armor",
+				"tick": tick_index,
+				"shielded": shielded,
+				"amount": amount,
+				"layer": _finale_armor_count,
+			})
+		return
+	var lane := _finale_warning_count % 3
+	var warning_ticks := int(_stage_config.get("finale_warning_ticks", 10))
+	var kind := "titan" if mode in ["titan", "combined", "final_exam"] else "artillery"
+	_finale_warning_count += 1
+	_finale_pending_impacts.append({
+		"impact_tick": tick_index + warning_ticks,
+		"lane": lane,
+		"damage": int(_stage_config.get("finale_damage", 24)),
+		"kind": kind,
+	})
+	events.append({
+		"type": &"finale_warning",
+		"tick": tick_index,
+		"impact_tick": tick_index + warning_ticks,
+		"lane": lane,
+		"kind": kind,
+		"warning": _finale_warning_count,
+	})
+
+
+func _resolve_finale_impacts(events: Array[Dictionary]) -> void:
+	var remaining: Array[Dictionary] = []
+	for warning in _finale_pending_impacts:
+		if tick_index < int(warning.get("impact_tick", 0)):
+			remaining.append(warning)
+			continue
+		var affected := 0
+		var effective := 0
+		for ally in _living_main_allies():
+			if int(ally.get("lane", 1)) != int(warning.get("lane", 1)):
+				continue
+			var before := int(ally.get("hp", 0))
+			_apply_unit_damage(
+				ally,
+				int(warning.get("damage", 24)),
+				&"titan_aftershock" if String(warning.get("kind", "")) == "titan" else &"finale_artillery",
+				false,
+				events
+			)
+			effective += before - int(ally.get("hp", 0))
+			affected += 1
+		_finale_impact_count += 1
+		_finale_damage_dealt += effective
+		events.append({
+			"type": &"finale_impact",
+			"tick": tick_index,
+			"lane": warning.get("lane", 1),
+			"kind": warning.get("kind", "artillery"),
+			"affected": affected,
+			"damage": effective,
+		})
+	_finale_pending_impacts = remaining
 
 
 func _run_alliance_mechanics(events: Array[Dictionary]) -> void:
@@ -1346,6 +1467,11 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"alliance_purged_units": _alliance_purged_units,
 		"alliance_purge_damage": _alliance_purge_damage,
 		"alliance_shield_count": _alliance_shield_count,
+		"finale_warning_count": _finale_warning_count,
+		"finale_impact_count": _finale_impact_count,
+		"finale_damage_dealt": _finale_damage_dealt,
+		"finale_armor_count": _finale_armor_count,
+		"finale_support_count": _finale_support_count,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,
 		"gman_max_hp": gman_max_hp,

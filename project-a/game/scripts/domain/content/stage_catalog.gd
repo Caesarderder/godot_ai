@@ -233,6 +233,7 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 	var encounter := _chapter_two_encounter_profile(chapter, stage_in_chapter)
 	var tv_encounter := _chapter_three_encounter_profile(chapter, stage_in_chapter)
 	var alliance_encounter := _chapter_four_encounter_profile(chapter, stage_in_chapter)
+	var finale_encounter := _chapter_five_encounter_profile(chapter, stage_in_chapter)
 	return {
 		"stage_id": stage_id,
 		"act": 1,
@@ -302,6 +303,14 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"alliance_shield_period_ticks": int(alliance_encounter.get("shield_period_ticks", 0)),
 		"alliance_shield_amount": int(alliance_encounter.get("shield_amount", 0)),
 		"alliance_shield_limit": int(alliance_encounter.get("shield_limit", 0)),
+		"finale_mode": String(finale_encounter.get("mode", "")),
+		"finale_period_ticks": int(finale_encounter.get("period_ticks", 0)),
+		"finale_warning_ticks": int(finale_encounter.get("warning_ticks", 0)),
+		"finale_damage": int(finale_encounter.get("damage", 0)),
+		"finale_limit": int(finale_encounter.get("limit", 0)),
+		"finale_armor_amount": int(finale_encounter.get("armor_amount", 0)),
+		"finale_support_tick": int(finale_encounter.get("support_tick", 0)),
+		"finale_support_damage": int(finale_encounter.get("support_damage", 0)),
 		"power_bp": power_bp,
 		"minimum_power": int(recommended_power * 85 / 100),
 		"recommended_power": recommended_power,
@@ -440,6 +449,22 @@ static func _chapter_four_encounter_profile(
 			"shield_amount": 28,
 			"shield_limit": 6,
 		},
+	}
+	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
+
+
+static func _chapter_five_encounter_profile(
+	chapter: int,
+	stage_in_chapter: int
+) -> Dictionary:
+	if chapter != 5:
+		return {}
+	var beats := {
+		1: {"mode": "retreat", "period_ticks": 55, "warning_ticks": 10, "damage": 20, "limit": 3},
+		2: {"mode": "armor", "period_ticks": 50, "armor_amount": 34, "limit": 4},
+		3: {"mode": "titan", "period_ticks": 60, "warning_ticks": 10, "damage": 26, "limit": 3},
+		4: {"mode": "combined", "period_ticks": 55, "warning_ticks": 10, "damage": 24, "armor_amount": 30, "limit": 4, "support_tick": 85, "support_damage": 180},
+		5: {"mode": "final_exam", "period_ticks": 50, "warning_ticks": 10, "damage": 28, "armor_amount": 34, "limit": 6, "support_tick": 100, "support_damage": 220},
 	}
 	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
 

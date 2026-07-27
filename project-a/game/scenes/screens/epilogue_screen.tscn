@@ -37,13 +37,13 @@ autowrap_mode = 2
 
 [node name="Rescue" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
 layout_mode = 2
-text = "G-Man 与永久军团守住了工厂，也为被围困的马桶人打开了地表通道。"
+text = "G-Man 与永久军团完整返回；角色、碎片、科技与工厂资源全部保留。"
 autowrap_mode = 2
 
 [node name="CampaignEpilogueFuture" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "战争并未消失：城市边界之外，新的联盟防线正在重组。"
+text = "回收核心仍在发送隐藏信标：工厂坐标可能已经泄露，新的联盟防线正在重组。"
 autowrap_mode = 2
 
 [node name="CampaignReplayPromise" type="Label" parent="CampaignEpilogueStory/Margin/Content"]

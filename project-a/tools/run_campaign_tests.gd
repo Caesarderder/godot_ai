@@ -107,6 +107,15 @@ func _run() -> void:
 	_test_opening_defense_curve()
 	_test_unlock_previews()
 	_check(StageCatalogScript.next_stage_id("stage_5_5") == "endless_1", "Act I finale continues into the endless frontier")
+	var finale_modes: Array[String] = []
+	for stage_number in range(1, 6):
+		var finale_config := StageCatalogScript.stage("stage_5_%d" % stage_number)
+		finale_modes.append(String(finale_config.get("finale_mode", "")))
+		_check(int(finale_config.get("finale_limit", 0)) > 0, "finale stage %d has a finite authored mechanic cap" % stage_number)
+	_check(
+		finale_modes == ["retreat", "armor", "titan", "combined", "final_exam"],
+		"the final chapter escalates through five distinct observable encounter jobs"
+	)
 	var undertrained: RefCounted = BattleSessionScript.new()
 	undertrained.start(_undertrained_roster(), "stage_5_5", StageCatalogScript.stage("stage_5_5"))
 	while not undertrained.is_finished:

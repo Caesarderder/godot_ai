@@ -202,6 +202,36 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 			]
 			_chapter_feedback_updates = 8
 			_chapter_feedback_danger = false
+		elif event_type == &"finale_warning":
+			var is_titan := String(event.get("kind", "")) == "titan"
+			_chapter_feedback_copy = (
+				"泰坦足迹余波 · 2秒后冲击%d号战线 · 这是环境威胁，不可锁定"
+				if is_titan
+				else "空城诱敌炮击 · 2秒后覆盖%d号战线 · 保留护盾与治疗"
+			) % (int(event.get("lane", 0)) + 1)
+			_chapter_feedback_updates = 10
+			_chapter_feedback_danger = false
+		elif event_type == &"finale_impact":
+			_chapter_feedback_copy = "%s · 命中%d名成员，造成%d伤害" % [
+				"泰坦余波" if String(event.get("kind", "")) == "titan" else "诱敌炮击",
+				int(event.get("affected", 0)),
+				int(event.get("damage", 0)),
+			]
+			_chapter_feedback_updates = 7
+			_chapter_feedback_danger = true
+		elif event_type == &"finale_armor":
+			_chapter_feedback_copy = "仓库诱饵装甲 · %d名精英获得%d护盾 · 集中破甲，不追逐战利品信号" % [
+				int(event.get("shielded", 0)),
+				int(event.get("amount", 0)),
+			]
+			_chapter_feedback_updates = 8
+			_chapter_feedback_danger = false
+		elif event_type == &"finale_support":
+			_chapter_feedback_copy = "剧情支援 · G-Toilet命中当前目标，造成%d伤害 · 抓住窗口推进" % int(
+				event.get("damage", 0)
+			)
+			_chapter_feedback_updates = 10
+			_chapter_feedback_danger = false
 	if not _skill_feedback_queue.is_empty():
 		_skill_confirmation_updates = 0
 	_start_next_skill_feedback()

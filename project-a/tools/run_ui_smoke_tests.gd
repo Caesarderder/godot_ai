@@ -687,7 +687,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 			and _tree_has_text(instance, "完全恢复"),
 		"help explains the first hurdle, both recovery routes, and lossless failure"
 	)
-	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.13.11-alliance-encounters.1"), "help exposes local-data privacy and the running product version")
+	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.13.12-final-act.1"), "help exposes local-data privacy and the running product version")
 	_ok(help_back != null and help_back.custom_minimum_size.y >= 48.0, "help exposes a touch-sized return path")
 	if help_back != null:
 		help_back.pressed.emit()

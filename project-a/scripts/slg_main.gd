@@ -2942,6 +2942,13 @@ func _battle_debrief_copy(
 	)
 	if not chapter_four_mechanic.is_empty():
 		return chapter_four_mechanic
+	var chapter_five_mechanic := _chapter_five_mechanic_debrief(
+		runtime_result,
+		outcome,
+		stage_id
+	)
+	if not chapter_five_mechanic.is_empty():
+		return chapter_five_mechanic
 	var resonance_pulses := int(runtime_result.get("resonance_pulse_count", 0))
 	if (
 		resonance_pulses > 0
@@ -3067,6 +3074,29 @@ func _chapter_four_mechanic_debrief(
 			shields,
 		]
 	return ""
+
+
+func _chapter_five_mechanic_debrief(
+	runtime_result: Dictionary,
+	outcome: String,
+	stage_id: String
+) -> String:
+	if not stage_id.begins_with("stage_5_"):
+		return ""
+	var impacts := int(runtime_result.get("finale_impact_count", 0))
+	var damage := int(runtime_result.get("finale_damage_dealt", 0))
+	var armor := int(runtime_result.get("finale_armor_count", 0))
+	var support := int(runtime_result.get("finale_support_count", 0))
+	if impacts + armor + support <= 0:
+		return ""
+	var prefix := "终章复盘" if outcome == "victory" else "失败归因"
+	return "%s · 识别环境冲击%d次（%d伤害）/诱饵装甲%d层/剧情支援%d次；终局考验的是预警、破甲与续航配合。" % [
+		prefix,
+		impacts,
+		damage,
+		armor,
+		support,
+	]
 
 
 func _resonance_debrief_copy(runtime_result: Dictionary, outcome: String) -> String:

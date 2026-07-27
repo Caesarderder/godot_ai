@@ -615,6 +615,24 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			has_hud_event = true
 			_play_audio(&"shield", -13.0, 1.0)
 			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#78bfd9"), 3.8)
+		elif event_type == &"finale_warning":
+			has_hud_event = true
+			_play_audio(&"warning", -11.0, 0.65 if String(event.get("kind", "")) == "titan" else 1.05)
+			_spawn_warning(int(event.get("lane", 1)), int(event.get("impact_tick", 0)))
+		elif event_type == &"finale_impact":
+			has_hud_event = true
+			_play_audio(&"collapse", -9.0, 0.58 if String(event.get("kind", "")) == "titan" else 0.82)
+			_add_camera_shake(0.22, 0.18)
+			_spawn_pulse_ring(Vector3(0.0, 0.1, 0.0), Color("#e5a84b"), 6.2)
+		elif event_type == &"finale_armor":
+			has_hud_event = true
+			_play_audio(&"shield", -12.0, 0.9)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#dfad62"), 4.2)
+		elif event_type == &"finale_support":
+			has_hud_event = true
+			_play_audio(&"skill", -8.0, 0.72)
+			_add_camera_shake(0.26, 0.18)
+			_spawn_pulse_ring(Vector3(0.0, 0.12, 0.0), Color("#ffcf70"), 7.0)
 		elif event_type in [&"unit_healed", &"unit_revived"]:
 			_play_audio(&"heal", -13.0, 1.0)
 		elif event_type == &"unit_shielded":
