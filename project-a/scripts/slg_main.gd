@@ -2771,11 +2771,7 @@ func _show_result() -> void:
 		"primary_label": primary_label,
 		"primary_action": primary_action,
 		"primary_payload": primary_payload,
-		"show_factory_action": not (
-			not won
-			and cleared_stage_id == "stage_1_5"
-			and primary_action == "next_stage"
-		),
+		"show_factory_action": false,
 	})
 	result_screen.action_requested.connect(_on_result_action_requested)
 	shell.add_child(result_screen)

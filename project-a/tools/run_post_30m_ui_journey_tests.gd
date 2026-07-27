@@ -170,9 +170,14 @@ func _run() -> void:
 		"one-star probe result turns the actual failed run into a named qualitative growth reason"
 	)
 	var result_growth := main.find_child("PrimaryAction", true, false) as Button
+	var result_factory := main.find_child("FactoryAction", true, false) as Button
 	_check(
 		result_growth != null and result_growth.text.contains("升至2★"),
 		"one-star probe result exposes the exact faction-core star action instead of generic cultivation"
+	)
+	_check(
+		result_factory != null and not result_factory.visible,
+		"one-star probe result hides the unrelated factory branch from the exact growth recovery"
 	)
 	if result_growth != null:
 		result_growth.pressed.emit()
@@ -378,6 +383,11 @@ func _run() -> void:
 	)
 	var next_chapter := main.find_child("PrimaryAction", true, false) as Button
 	_check(next_chapter != null and next_chapter.text.contains("第3章新战线"), "chapter transition offers one reorientation action instead of blind auto-battle")
+	result_factory = main.find_child("FactoryAction", true, false) as Button
+	_check(
+		result_factory != null and not result_factory.visible,
+		"chapter transition does not compete with a generic factory upgrade action"
+	)
 	_check(
 		next_chapter != null
 			and next_chapter.get_global_rect().end.x <= float(root.size.x)

@@ -28,6 +28,10 @@ func _run() -> void:
 	_check(primary != null and primary.text == "选择工业支援", "result promotes the next onboarding action")
 	_check(primary != null and primary.visible, "next onboarding action remains visible")
 	_check(fallback_factory != null and not fallback_factory.visible, "generic factory fallback is hidden when factory is primary")
+	_check(
+		result_screen.base_action.text.contains("稍后继续"),
+		"result preserves a clearly secondary safe exit without presenting another growth recommendation"
+	)
 	_check(_tree_has_text(result_screen, "单人首战失败 → 三人反攻成功"), "result presents the hurdle before-after proof")
 	_check(_tree_has_text(result_screen, "68% 承伤") and _tree_has_text(result_screen, "52% 输出"), "result projects real reinforcement contribution channels")
 	_check(
@@ -47,10 +51,12 @@ func _run() -> void:
 		"primary_label": "掌握巨炮时机 · 再战 1-5",
 		"primary_action": "next_stage",
 		"primary_payload": {"stage_id": "stage_1_5"},
-		"show_factory_action": false,
 	})
 	await process_frame
-	_check(not result_screen.factory_action.visible, "timing recovery hides the unrelated factory branch")
+	_check(
+		not result_screen.factory_action.visible,
+		"result hides unrelated factory navigation by default during a specific recovery"
+	)
 	result_screen.queue_free()
 	await process_frame
 	if failures.is_empty():

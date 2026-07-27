@@ -137,4 +137,4 @@ text = "升级工厂"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-text = "返回基地"
+text = "返回基地 · 稍后继续"
