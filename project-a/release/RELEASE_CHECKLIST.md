@@ -54,7 +54,8 @@ State labels:
   (`node tools/run_web_browser_smoke.mjs`).
 - [x] Chrome fresh-profile reinforcement smoke uses only exported Canvas input to clear 1-1/1-2/1-3, reach the
   authored 1-4 defeat, place/wait/claim the research lab, resolve the free ten-pull, and assign both guaranteed
-  reinforcements; IndexedDB proves each durable fact with no runtime, console, or network failures
+  reinforcements, then clicks the rendered counterattack CTA and operates all three hero cards until the second
+  1-4 attempt wins; IndexedDB proves each durable fact with no runtime, console, or network failures
   (`node tools/run_web_first_battle_smoke.mjs`).
 - [ ] Firefox desktop smoke.
 - [ ] Chrome Android real-device smoke.

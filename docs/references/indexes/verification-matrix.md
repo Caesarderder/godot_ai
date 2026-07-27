@@ -206,11 +206,15 @@ related:
   0 非预期 console error、0 网络失败。首战与 `browser-first-wall-defeat-844x390.png` 保留
   战斗目标、逐关成长和“返回基地建造研究所”证据；重复触控本身不冒充真人主动技能理解证据，
   同一旅程随后在真实 844×390 网格放置研究所、等待并原页验收 75 秒施工，完成 claim-once
-  免费十连并把装甲/冲锋两个具体永久 hero ID 写入 `troop_1/2`；候选 `1f036f1d11a7` 用时
-  266.7 秒到达三人反攻编队。`browser-research-placement-ready-844x390.png`、
+  免费十连并把装甲/冲锋两个具体永久 hero ID 写入 `troop_1/2`；候选 `0b3cc8542623` 用时
+  356.3 秒继续点击真实反攻 CTA、轮询三张英雄技能卡并取得第二次 1-4 尝试胜利。存档的
+  `cleared_stages` 精确新增 1-4，且运行期仍为 0 异常、0 非预期 console error、0 网络失败。
+  `browser-research-placement-ready-844x390.png`、
   `browser-research-ready-to-claim-844x390.png`、`browser-research-breakthrough-result-844x390.png`
-  和 `browser-first-formation-complete-844x390.png` 保存关键转折。真实 1-4 反攻结算及其后的
-  工业成长/Boss 连续路径仍待扩展。
+  和 `browser-first-formation-complete-844x390.png` 保存恢复链转折；
+  `browser-first-wall-counterattack-started-844x390.png` 与
+  `browser-first-wall-counterattack-victory-844x390.png` 证明援军开场提示、胜利、单人失败到
+  三人反攻的因果复盘，以及唯一“选择工业支援”出口。工业成长/Boss 连续路径仍待扩展。
   候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
   legacy `scripts/main.gd` 并加入正式品牌启动图后，revision `127323a` 的当前 PCK 为
   `18.92 MiB`，gzip-9 初始 payload 为 `27.62 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB
