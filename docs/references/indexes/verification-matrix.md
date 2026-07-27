@@ -205,7 +205,12 @@ related:
   记录 1-1/1-2/1-3 通关、1-4 一次尝试且未通关、onboarding 进入研究突破，全程 0 运行时异常、
   0 非预期 console error、0 网络失败。首战与 `browser-first-wall-defeat-844x390.png` 保留
   战斗目标、逐关成长和“返回基地建造研究所”证据；重复触控本身不冒充真人主动技能理解证据，
-  后半章研究/编队/成长/Boss 的连续 Web UI 旅程仍待扩展。
+  同一旅程随后在真实 844×390 网格放置研究所、等待并原页验收 75 秒施工，完成 claim-once
+  免费十连并把装甲/冲锋两个具体永久 hero ID 写入 `troop_1/2`；候选 `1f036f1d11a7` 用时
+  266.7 秒到达三人反攻编队。`browser-research-placement-ready-844x390.png`、
+  `browser-research-ready-to-claim-844x390.png`、`browser-research-breakthrough-result-844x390.png`
+  和 `browser-first-formation-complete-844x390.png` 保存关键转折。真实 1-4 反攻结算及其后的
+  工业成长/Boss 连续路径仍待扩展。
   候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
   legacy `scripts/main.gd` 并加入正式品牌启动图后，revision `127323a` 的当前 PCK 为
   `18.92 MiB`，gzip-9 初始 payload 为 `27.62 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB

@@ -197,6 +197,15 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 						clearedStages: parsed.stage_progress?.cleared_stages,
 						attempts: parsed.attempt_counters,
 						onboardingActiveIndex: parsed.onboarding?.active_index,
+						facilities: parsed.factory?.facilities,
+						facilityPlacements: parsed.factory?.facility_placements,
+						facilityWork: parsed.factory?.facility_work,
+						formation: parsed.formation,
+						roster: (parsed.roster ?? []).map((hero) => ({
+							heroId: hero.hero_id,
+							archetypeId: hero.archetype_id,
+						})),
+						onboardingClaimed: parsed.onboarding?.claimed,
 					});
 				} catch (error) {
 					database.close();
@@ -370,6 +379,103 @@ async function main() {
 				&& Number(save.onboardingActiveIndex ?? -1) >= 3,
 			"browser-first-wall-defeat-844x390.png",
 		);
+		await touch(cdp, 650, 240);
+		await new Promise((accept) => setTimeout(accept, 1000));
+		await touch(cdp, 670, 350);
+		await new Promise((accept) => setTimeout(accept, 600));
+		await touch(cdp, 280, 270);
+		await new Promise((accept) => setTimeout(accept, 600));
+		await screenshot(cdp, "browser-research-placement-ready-844x390.png");
+		await touch(cdp, 650, 365);
+		const researchConstruction = await waitFor(
+			"research lab construction persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.facilityWork?.facility_id === "research_lab"
+					&& save?.facilityWork?.work_type === "construction"
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await screenshot(cdp, "browser-research-construction-started-844x390.png");
+		const completesAtUnix = Number(researchConstruction.facilityWork?.completes_at_unix ?? 0);
+		if (completesAtUnix <= 0) throw new Error("research construction has no completion time");
+		const waitForConstructionMs = Math.max(0, completesAtUnix * 1000 - Date.now() + 1200);
+		if (waitForConstructionMs > 90000) {
+			throw new Error(`research construction wait is unexpectedly long: ${waitForConstructionMs}ms`);
+		}
+		await new Promise((accept) => setTimeout(accept, waitForConstructionMs));
+		await screenshot(cdp, "browser-research-ready-to-claim-844x390.png");
+		await touch(cdp, 650, 300);
+		const researchBuilt = await waitFor(
+			"completed research lab persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return Number(save?.facilities?.research_lab ?? 0) === 1
+					&& Object.keys(save?.facilityWork ?? {}).length === 0
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await screenshot(cdp, "browser-research-lab-built-844x390.png");
+		await touch(cdp, 650, 320);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-research-breakthrough-ready-844x390.png");
+		await touch(cdp, 420, 257);
+		const breakthrough = await waitFor(
+			"research breakthrough ten-pull persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const archetypes = (save?.roster ?? []).map((hero) => hero.archetypeId);
+				return save?.onboardingClaimed?.["reward.research_breakthrough_ten"]
+					&& archetypes.includes("assault")
+					&& archetypes.includes("armored")
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-research-breakthrough-result-844x390.png");
+		await touch(cdp, 420, 300);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-first-formation-step-one-844x390.png");
+		const armoredHero = breakthrough.roster.find((hero) => hero.archetypeId === "armored");
+		const assaultHero = breakthrough.roster.find((hero) => hero.archetypeId === "assault");
+		if (!armoredHero || !assaultHero) throw new Error("breakthrough roster lacks guaranteed heroes");
+		await touch(cdp, 570, 260);
+		await waitFor(
+			"armored reinforcement assignment persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.formation?.troop_1 === armoredHero.heroId ? save : null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await touch(cdp, 350, 260);
+		const firstFormation = await waitFor(
+			"assault reinforcement assignment persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.formation?.troop_1 === armoredHero.heroId
+					&& save?.formation?.troop_2 === assaultHero.heroId
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-first-formation-complete-844x390.png");
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
@@ -384,7 +490,7 @@ async function main() {
 			})}`);
 		}
 		const browserVersion = await cdp.send("Browser.getVersion");
-		console.log("WEB_FIRST_WALL_SMOKE_PASS");
+		console.log("WEB_FIRST_REINFORCEMENT_SMOKE_PASS");
 		console.log(JSON.stringify({
 			candidate: {
 				revision: candidate.revision,
@@ -393,12 +499,18 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through first stage_1_4 defeat",
+			journey: "fresh profile through research breakthrough and first formation",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
 			firstWallOutcome: "defeat",
 			firstWallAttempts: firstWall.save.attempts.stage_1_4,
+			researchConstructionStarted: true,
+			researchLabBuilt: Number(researchBuilt.facilities?.research_lab) === 1,
+			researchPlacement: researchBuilt.facilityPlacements?.research_lab,
+			breakthroughClaimed: true,
+			guaranteedReinforcements: ["assault", "armored"],
+			firstFormation: firstFormation.formation,
 			clearedStages: firstWall.save.clearedStages,
 			skillCardTouchInputs: skillTouches
 				+ stage12.skillTouches
@@ -414,6 +526,14 @@ async function main() {
 				"artifacts/browser-first-session-stage-1-2-result-844x390.png",
 				"artifacts/browser-first-session-stage-1-3-result-844x390.png",
 				"artifacts/browser-first-wall-defeat-844x390.png",
+				"artifacts/browser-research-placement-ready-844x390.png",
+				"artifacts/browser-research-construction-started-844x390.png",
+				"artifacts/browser-research-ready-to-claim-844x390.png",
+				"artifacts/browser-research-lab-built-844x390.png",
+				"artifacts/browser-research-breakthrough-ready-844x390.png",
+				"artifacts/browser-research-breakthrough-result-844x390.png",
+				"artifacts/browser-first-formation-step-one-844x390.png",
+				"artifacts/browser-first-formation-complete-844x390.png",
 			],
 		}, null, 2));
 	} finally {
@@ -432,7 +552,7 @@ async function main() {
 }
 
 main().catch((error) => {
-	console.error("WEB_FIRST_WALL_SMOKE_FAIL");
+	console.error("WEB_FIRST_REINFORCEMENT_SMOKE_FAIL");
 	console.error(error?.stack ?? String(error));
 	process.exitCode = 1;
 });
