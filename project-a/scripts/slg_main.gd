@@ -2935,6 +2935,13 @@ func _battle_debrief_copy(
 	)
 	if not chapter_three_mechanic.is_empty():
 		return chapter_three_mechanic
+	var chapter_four_mechanic := _chapter_four_mechanic_debrief(
+		runtime_result,
+		outcome,
+		stage_id
+	)
+	if not chapter_four_mechanic.is_empty():
+		return chapter_four_mechanic
 	var resonance_pulses := int(runtime_result.get("resonance_pulse_count", 0))
 	if (
 		resonance_pulses > 0
@@ -3023,6 +3030,41 @@ func _chapter_three_mechanic_debrief(
 		return "%s · 关键成员被短暂停火 %d 次；保留其他成员技能维持推进。" % [
 			prefix,
 			control_count,
+		]
+	return ""
+
+
+func _chapter_four_mechanic_debrief(
+	runtime_result: Dictionary,
+	outcome: String,
+	stage_id: String
+) -> String:
+	if not stage_id.begins_with("stage_4_") or stage_id == "stage_4_5":
+		return ""
+	var marks := int(runtime_result.get("alliance_mark_count", 0))
+	var anti_air := int(runtime_result.get("alliance_anti_air_count", 0))
+	var purges := int(runtime_result.get("alliance_purge_count", 0))
+	var purged_units := int(runtime_result.get("alliance_purged_units", 0))
+	var purge_damage := int(runtime_result.get("alliance_purge_damage", 0))
+	var shields := int(runtime_result.get("alliance_shield_count", 0))
+	if stage_id == "stage_4_1" and marks > 0:
+		return "联合标记复盘 · 主力被集火标记 %d 次；装甲、护盾和治疗可以分担这段压力。" % marks
+	if stage_id == "stage_4_2" and anti_air > 0:
+		return "禁飞复盘 · 防空扫描 %d 次；减少飞行位或用地面成员维持拆塔输出。" % anti_air
+	if stage_id == "stage_4_3" and purges > 0:
+		return "净化复盘 · %d 次脉冲命中 %d 个临时单位、造成 %d 伤害；永久主队不受影响。" % [
+			purges,
+			purged_units,
+			purge_damage,
+		]
+	if stage_id == "stage_4_4" and marks + anti_air + purges + shields > 0:
+		var prefix := "轮换复盘" if outcome == "victory" else "失败归因"
+		return "%s · 标记 %d / 防空 %d / 净化 %d / 护盾 %d；按当前战斗阶段保留对应解法。" % [
+			prefix,
+			marks,
+			anti_air,
+			purges,
+			shields,
 		]
 	return ""
 

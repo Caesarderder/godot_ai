@@ -65,6 +65,12 @@ var _tv_teleport_count: int = 0
 var _tv_control_count: int = 0
 var _tv_shield_count: int = 0
 var _tv_signal_returns: Dictionary = {}
+var _alliance_mark_count: int = 0
+var _alliance_anti_air_count: int = 0
+var _alliance_purge_count: int = 0
+var _alliance_purged_units: int = 0
+var _alliance_purge_damage: int = 0
+var _alliance_shield_count: int = 0
 var _started_solo: bool = false
 var _solo_pressure_bp: int = 10000
 
@@ -130,6 +136,12 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_tv_control_count = 0
 	_tv_shield_count = 0
 	_tv_signal_returns = {}
+	_alliance_mark_count = 0
+	_alliance_anti_air_count = 0
+	_alliance_purge_count = 0
+	_alliance_purged_units = 0
+	_alliance_purge_damage = 0
+	_alliance_shield_count = 0
 	_started_solo = false
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
@@ -253,7 +265,9 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 		_run_speaker_echo(events)
 	elif chapter == 3:
 		_run_tv_mechanics(events)
-	elif chapter >= 4 and tick_index % 30 == 0:
+	elif chapter == 4:
+		_run_alliance_mechanics(events)
+	elif chapter >= 5 and tick_index % 30 == 0:
 		var shielded := 0
 		for enemy in _living_stage_enemies():
 			if bool(enemy.get("elite", false)):
@@ -262,6 +276,188 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 				shielded += 1
 		if shielded > 0:
 			events.append({"type": &"alliance_coordination", "tick": tick_index, "shielded": shielded})
+
+
+func _run_alliance_mechanics(events: Array[Dictionary]) -> void:
+	var mode := String(_stage_config.get("alliance_module_mode", ""))
+	if mode.is_empty():
+		_run_alliance_mark(events, int(_stage_config.get("alliance_mark_period_ticks", 0)))
+		_run_alliance_anti_air(events, int(_stage_config.get("alliance_anti_air_period_ticks", 0)))
+		_run_alliance_purge(events, int(_stage_config.get("alliance_purge_period_ticks", 0)))
+		_run_alliance_shield(events, int(_stage_config.get("alliance_shield_period_ticks", 0)))
+		return
+	var period := int(_stage_config.get("alliance_module_period_ticks", 0))
+	if period <= 0 or tick_index <= 0 or tick_index % period != 0:
+		return
+	var module_index := (
+		_stage_index % 3
+		if mode == "stage"
+		else (int(tick_index / period) - 1) % 3
+	)
+	match module_index:
+		0:
+			_run_alliance_mark(events, period, true)
+		1:
+			_run_alliance_anti_air(events, period, true)
+		2:
+			_run_alliance_purge(events, period, true)
+			_run_alliance_shield(events, period, true)
+
+
+func _run_alliance_mark(
+	events: Array[Dictionary],
+	period: int,
+	forced: bool = false
+) -> void:
+	var duration := int(_stage_config.get("alliance_mark_duration_ticks", 0))
+	var limit := int(_stage_config.get("alliance_mark_limit", 0))
+	if (
+		period <= 0
+		or duration <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or (not forced and tick_index % period != 0)
+		or _alliance_mark_count >= limit
+	):
+		return
+	var target := _highest_attack_main_ally()
+	if target.is_empty():
+		return
+	target["alliance_mark_ticks"] = maxi(
+		int(target.get("alliance_mark_ticks", 0)),
+		duration
+	)
+	_alliance_mark_count += 1
+	events.append({
+		"type": &"alliance_mark",
+		"tick": tick_index,
+		"unit_id": target["unit_id"],
+		"duration_ticks": duration,
+		"mark": _alliance_mark_count,
+		"mark_limit": limit,
+	})
+
+
+func _run_alliance_anti_air(
+	events: Array[Dictionary],
+	period: int,
+	forced: bool = false
+) -> void:
+	var duration := int(_stage_config.get("alliance_anti_air_duration_ticks", 0))
+	var limit := int(_stage_config.get("alliance_anti_air_limit", 0))
+	if (
+		period <= 0
+		or duration <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or (not forced and tick_index % period != 0)
+		or _alliance_anti_air_count >= limit
+	):
+		return
+	var targets: Array[Dictionary] = []
+	for ally in _living_main_allies():
+		if String(ally.get("archetype_id", "")) in ["rocket", "bomber"]:
+			targets.append(ally)
+	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a.get("attack", 0)) > int(b.get("attack", 0))
+	)
+	if not targets.is_empty():
+		targets[0]["stun_ticks"] = maxi(
+			int(targets[0].get("stun_ticks", 0)),
+			duration
+		)
+	_alliance_anti_air_count += 1
+	events.append({
+		"type": &"alliance_anti_air",
+		"tick": tick_index,
+		"unit_id": targets[0]["unit_id"] if not targets.is_empty() else &"",
+		"locked": not targets.is_empty(),
+		"duration_ticks": duration,
+		"scan": _alliance_anti_air_count,
+		"scan_limit": limit,
+	})
+
+
+func _run_alliance_purge(
+	events: Array[Dictionary],
+	period: int,
+	forced: bool = false
+) -> void:
+	var damage := int(_stage_config.get("alliance_purge_damage", 0))
+	var limit := int(_stage_config.get("alliance_purge_limit", 0))
+	if (
+		period <= 0
+		or damage <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or (not forced and tick_index % period != 0)
+		or _alliance_purge_count >= limit
+	):
+		return
+	var targets: Array[Dictionary] = []
+	for ally in _living_allies():
+		if bool(ally.get("temporary", false)):
+			targets.append(ally)
+	var effective_damage := 0
+	for target in targets:
+		var hp_before := int(target.get("hp", 0))
+		_apply_unit_damage(
+			target,
+			damage,
+			&"alliance_purification_array",
+			false,
+			events
+		)
+		effective_damage += maxi(0, hp_before - int(target.get("hp", 0)))
+	_alliance_purge_count += 1
+	_alliance_purged_units += targets.size()
+	_alliance_purge_damage += effective_damage
+	events.append({
+		"type": &"alliance_purge",
+		"tick": tick_index,
+		"purged": targets.size(),
+		"damage": effective_damage,
+		"pulse": _alliance_purge_count,
+		"pulse_limit": limit,
+	})
+
+
+func _run_alliance_shield(
+	events: Array[Dictionary],
+	period: int,
+	forced: bool = false
+) -> void:
+	var amount := int(_stage_config.get("alliance_shield_amount", 0))
+	var limit := int(_stage_config.get("alliance_shield_limit", 0))
+	if (
+		period <= 0
+		or amount <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or (not forced and tick_index % period != 0)
+		or _alliance_shield_count >= limit
+	):
+		return
+	var shielded := 0
+	for enemy in _living_stage_enemies():
+		if not bool(enemy.get("elite", false)):
+			continue
+		enemy["shield"] = mini(90, int(enemy.get("shield", 0)) + amount)
+		enemy["shield_ticks"] = 20
+		shielded += 1
+		if shielded >= 2:
+			break
+	if shielded <= 0:
+		return
+	_alliance_shield_count += 1
+	events.append({
+		"type": &"alliance_coordination",
+		"tick": tick_index,
+		"shielded": shielded,
+		"amount": amount,
+		"shield": _alliance_shield_count,
+		"shield_limit": limit,
+	})
 
 
 func _run_tv_mechanics(events: Array[Dictionary]) -> void:
@@ -1144,6 +1340,12 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"tv_teleport_count": _tv_teleport_count,
 		"tv_control_count": _tv_control_count,
 		"tv_shield_count": _tv_shield_count,
+		"alliance_mark_count": _alliance_mark_count,
+		"alliance_anti_air_count": _alliance_anti_air_count,
+		"alliance_purge_count": _alliance_purge_count,
+		"alliance_purged_units": _alliance_purged_units,
+		"alliance_purge_damage": _alliance_purge_damage,
+		"alliance_shield_count": _alliance_shield_count,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,
 		"gman_max_hp": gman_max_hp,
@@ -1264,6 +1466,14 @@ func _lowest_hp_ally() -> Dictionary:
 	return target
 
 
+func _highest_attack_main_ally() -> Dictionary:
+	var target: Dictionary = {}
+	for ally in _living_main_allies():
+		if target.is_empty() or int(ally.get("attack", 0)) > int(target.get("attack", 0)):
+			target = ally
+	return target
+
+
 func _select_enemy_target(enemy: Dictionary) -> Dictionary:
 	if int(enemy.get("taunt_ticks", 0)) > 0:
 		var taunt_target := _unit_by_id(StringName(String(enemy.get("taunt_target_id", ""))))
@@ -1279,6 +1489,8 @@ func _select_enemy_target(enemy: Dictionary) -> Dictionary:
 			score += 2000
 		if not bool(unit["temporary"]):
 			score += 600
+		if int(unit.get("alliance_mark_ticks", 0)) > 0:
+			score += 100000
 		if best.is_empty() or score > best_score:
 			best = unit
 			best_score = score
@@ -1326,6 +1538,10 @@ func _tick_status_effects() -> void:
 		unit["cannon_guard_ticks"] = maxi(0, int(unit.get("cannon_guard_ticks", 0)) - 1)
 		unit["stun_ticks"] = maxi(0, int(unit.get("stun_ticks", 0)) - 1)
 		unit["phase_ticks"] = maxi(0, int(unit.get("phase_ticks", 0)) - 1)
+		unit["alliance_mark_ticks"] = maxi(
+			0,
+			int(unit.get("alliance_mark_ticks", 0)) - 1
+		)
 		unit["taunt_ticks"] = maxi(0, int(unit.get("taunt_ticks", 0)) - 1)
 		if int(unit["taunt_ticks"]) == 0:
 			unit["taunt_target_id"] = &""
@@ -1400,6 +1616,7 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"weakness_ticks": 0,
 		"stun_ticks": 0,
 		"phase_ticks": 0,
+		"alliance_mark_ticks": 0,
 		"taunt_ticks": 0,
 		"taunt_target_id": &"",
 		"auto_skill": bool(hero.get("auto_skill", hero.get("auto_skill_enabled", false))),
@@ -1452,6 +1669,7 @@ func _make_summon(owner: Dictionary, serial: int, display_name: String = "寄生
 		"weakness_ticks": 0,
 		"stun_ticks": 0,
 		"phase_ticks": 0,
+		"alliance_mark_ticks": 0,
 		"taunt_ticks": 0,
 		"taunt_target_id": &"",
 		"auto_skill": false,
@@ -1510,6 +1728,7 @@ func _enemy(id: String, label: String, class_id: String, stage: int, road_positi
 		"weakness_ticks": 0,
 		"stun_ticks": 0,
 		"phase_ticks": 0,
+		"alliance_mark_ticks": 0,
 		"taunt_ticks": 0,
 		"taunt_target_id": &"",
 		"auto_skill": false,

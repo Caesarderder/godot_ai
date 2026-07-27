@@ -165,6 +165,43 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 			]
 			_chapter_feedback_updates = 8
 			_chapter_feedback_danger = false
+		elif event_type == &"alliance_mark":
+			_chapter_feedback_copy = "联合标记 · %s被锁定 %0.1f秒 · 开盾或治疗分担集火" % [
+				_unit_display_name(String(event.get("unit_id", ""))),
+				float(int(event.get("duration_ticks", 15))) / 5.0,
+			]
+			_chapter_feedback_updates = 10
+			_chapter_feedback_danger = true
+		elif event_type == &"alliance_anti_air":
+			if bool(event.get("locked", false)):
+				_chapter_feedback_copy = "防空锁定 · %s停火 %0.1f秒 · 地面成员继续拆塔" % [
+					_unit_display_name(String(event.get("unit_id", ""))),
+					float(int(event.get("duration_ticks", 5))) / 5.0,
+				]
+				_chapter_feedback_danger = true
+			else:
+				_chapter_feedback_copy = "防空扫描 · 当前无飞行单位 · 地面编队成功规避"
+				_chapter_feedback_danger = false
+			_chapter_feedback_updates = 8
+		elif event_type == &"alliance_purge":
+			var purged := int(event.get("purged", 0))
+			if purged > 0:
+				_chapter_feedback_copy = "净化脉冲 · %d个临时单位承受 %d 伤害 · 保护永久主队" % [
+					purged,
+					int(event.get("damage", 0)),
+				]
+				_chapter_feedback_danger = true
+			else:
+				_chapter_feedback_copy = "净化脉冲 · 当前无召唤物 · 主队不受影响"
+				_chapter_feedback_danger = false
+			_chapter_feedback_updates = 8
+		elif event_type == &"alliance_coordination":
+			_chapter_feedback_copy = "联合护盾 · %d名精英获得 %d 护盾 · 集中火力逐个击穿" % [
+				int(event.get("shielded", 0)),
+				int(event.get("amount", 28)),
+			]
+			_chapter_feedback_updates = 8
+			_chapter_feedback_danger = false
 	if not _skill_feedback_queue.is_empty():
 		_skill_confirmation_updates = 0
 	_start_next_skill_feedback()

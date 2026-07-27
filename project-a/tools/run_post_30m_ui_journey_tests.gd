@@ -211,6 +211,17 @@ func _run() -> void:
 			and tv_debrief.contains("先击穿护盾"),
 		"stage 3-4 result explains its combined TV modules and next target priority"
 	)
+	var alliance_debrief := String(main.call("_battle_debrief_copy", {
+		"alliance_mark_count": 2,
+		"alliance_anti_air_count": 2,
+		"alliance_purge_count": 2,
+		"alliance_shield_count": 2,
+	}, "defeat", "stage_4_4"))
+	_check(
+		alliance_debrief.contains("标记 2 / 防空 2 / 净化 2 / 护盾 2")
+			and alliance_debrief.contains("按当前战斗阶段"),
+		"stage 4-4 result debriefs the visible module rotation instead of reporting generic power failure"
+	)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"

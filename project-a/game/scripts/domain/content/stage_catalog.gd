@@ -232,6 +232,7 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 	var resonance := _resonance_profile(chapter, stage_in_chapter)
 	var encounter := _chapter_two_encounter_profile(chapter, stage_in_chapter)
 	var tv_encounter := _chapter_three_encounter_profile(chapter, stage_in_chapter)
+	var alliance_encounter := _chapter_four_encounter_profile(chapter, stage_in_chapter)
 	return {
 		"stage_id": stage_id,
 		"act": 1,
@@ -287,6 +288,20 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"tv_shield_period_ticks": int(tv_encounter.get("shield_period_ticks", 0)),
 		"tv_shield_amount": int(tv_encounter.get("shield_amount", 0)),
 		"tv_shield_limit": int(tv_encounter.get("shield_limit", 0)),
+		"alliance_module_mode": String(alliance_encounter.get("module_mode", "")),
+		"alliance_module_period_ticks": int(alliance_encounter.get("module_period_ticks", 0)),
+		"alliance_mark_period_ticks": int(alliance_encounter.get("mark_period_ticks", 0)),
+		"alliance_mark_duration_ticks": int(alliance_encounter.get("mark_duration_ticks", 0)),
+		"alliance_mark_limit": int(alliance_encounter.get("mark_limit", 0)),
+		"alliance_anti_air_period_ticks": int(alliance_encounter.get("anti_air_period_ticks", 0)),
+		"alliance_anti_air_duration_ticks": int(alliance_encounter.get("anti_air_duration_ticks", 0)),
+		"alliance_anti_air_limit": int(alliance_encounter.get("anti_air_limit", 0)),
+		"alliance_purge_period_ticks": int(alliance_encounter.get("purge_period_ticks", 0)),
+		"alliance_purge_damage": int(alliance_encounter.get("purge_damage", 0)),
+		"alliance_purge_limit": int(alliance_encounter.get("purge_limit", 0)),
+		"alliance_shield_period_ticks": int(alliance_encounter.get("shield_period_ticks", 0)),
+		"alliance_shield_amount": int(alliance_encounter.get("shield_amount", 0)),
+		"alliance_shield_limit": int(alliance_encounter.get("shield_limit", 0)),
 		"power_bp": power_bp,
 		"minimum_power": int(recommended_power * 85 / 100),
 		"recommended_power": recommended_power,
@@ -372,6 +387,56 @@ static func _chapter_three_encounter_profile(
 			"control_duration_ticks": 8,
 			"control_limit": 6,
 			"shield_period_ticks": 120,
+			"shield_amount": 28,
+			"shield_limit": 6,
+		},
+	}
+	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
+
+
+static func _chapter_four_encounter_profile(
+	chapter: int,
+	stage_in_chapter: int
+) -> Dictionary:
+	if chapter != 4:
+		return {}
+	var beats := {
+		1: {
+			"mark_period_ticks": 50,
+			"mark_duration_ticks": 15,
+			"mark_limit": 4,
+		},
+		2: {
+			"anti_air_period_ticks": 50,
+			"anti_air_duration_ticks": 5,
+			"anti_air_limit": 4,
+		},
+		3: {
+			"purge_period_ticks": 50,
+			"purge_damage": 32,
+			"purge_limit": 4,
+		},
+		4: {
+			"module_mode": "stage",
+			"module_period_ticks": 50,
+			"mark_duration_ticks": 15,
+			"mark_limit": 4,
+			"anti_air_duration_ticks": 5,
+			"anti_air_limit": 4,
+			"purge_damage": 32,
+			"purge_limit": 4,
+			"shield_amount": 24,
+			"shield_limit": 4,
+		},
+		5: {
+			"module_mode": "cycle",
+			"module_period_ticks": 45,
+			"mark_duration_ticks": 15,
+			"mark_limit": 6,
+			"anti_air_duration_ticks": 5,
+			"anti_air_limit": 6,
+			"purge_damage": 36,
+			"purge_limit": 6,
 			"shield_amount": 28,
 			"shield_limit": 6,
 		},
@@ -549,14 +614,14 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 			"reason": "联合部队精英护盾增多，寄生分散仇恨，装甲承接集火。",
 		},
 		"stage_4_2": {
-			"recommended": ["flying.rocket", "ordinary.sonic"],
+			"recommended": ["ordinary.sonic", "heavy.armored"],
 			"fallback": ["special.repair"],
-			"reason": "火箭针对结构与护甲，音波削弱联合守军输出。",
+			"reason": "地面音波与装甲不会被防空锁定，维修可维持飞行位停火期间的推进。",
 		},
 		"stage_4_3": {
 			"recommended": ["flying.rocket", "special.repair"],
-			"fallback": ["heavy.saw"],
-			"reason": "维修抗持续伤害，火箭拆模块；双锯作为本关后的精英反制。",
+			"fallback": ["ordinary.sonic"],
+			"reason": "净化只处理召唤物；火箭、维修和音波都能用永久主队稳定拆模块。",
 		},
 		"stage_4_4": {
 			"recommended": ["heavy.saw", "special.repair"],
@@ -693,6 +758,26 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		"stage_3_5": {
 			"threat": "本关是章节 Boss：黑屏中继塔错峰轮换传送、屏幕控制与精英护盾，并启用核心巨炮。",
 			"counter": "Boss 战先识别当前模块；传送后重锁目标、控制时分散技能、护盾期集中爆发，巨炮预警仍优先处理。",
+		},
+		"stage_4_1": {
+			"threat": "Camera 会标记当前最高攻击主力，Speaker 守军随后集中攻击该目标。",
+			"counter": "用装甲承压、维修续航或召唤物分担战线；红色标记期间优先开盾与治疗。",
+		},
+		"stage_4_2": {
+			"threat": "防空扫描会让一名火箭或自爆飞行角色短暂停火，但不会伤害永久角色。",
+			"counter": "减少纯飞行编队，加入音波、装甲或维修等地面成员维持拆塔输出。",
+		},
+		"stage_4_3": {
+			"threat": "净化装置只会伤害寄生幼体与被策反单位；永久角色完全不受净化伤害。",
+			"counter": "用永久主队输出，或把召唤技能错开净化脉冲；火箭、维修和音波都是可用替代。",
+		},
+		"stage_4_4": {
+			"threat": "三段战场依次启用联合标记、防空扫描、净化与精英护盾。",
+			"counter": "根据当前阶段保留承压、地面输出与破盾技能，不需要为单一模块牺牲整支阵容。",
+		},
+		"stage_4_5": {
+			"threat": "本关是章节 Boss：三联军械库按固定顺序轮换标记、防空、净化护盾，并启用核心巨炮。",
+			"counter": "Boss 战读取顶部模块反馈，依次用承压、地面输出和集中破盾应对；巨炮预警始终优先。",
 		},
 	}
 	if encounter_readability.has(stage_id):

@@ -91,6 +91,20 @@ func _run() -> void:
 			and StringName((received[0] as Dictionary).get("type", &"")) == &"tv_teleport",
 		"TV repositioning preserves its stable event identity"
 	)
+	var alliance_events: Array[Dictionary] = [{
+		"type": &"alliance_mark",
+		"tick": 50,
+		"unit_id": &"hero_marked",
+		"duration_ticks": 15,
+	}]
+	world.call("_apply_events", alliance_events)
+	received = holder.get("events", []) as Array
+	_check(int(holder["emissions"]) == 5, "Alliance focus mark crosses the presentation-to-HUD boundary")
+	_check(
+		received.size() == 1
+			and StringName((received[0] as Dictionary).get("type", &"")) == &"alliance_mark",
+		"Alliance focus mark preserves its stable event identity"
+	)
 	world.queue_free()
 	await process_frame
 	await _check_real_skill_request_pipeline()

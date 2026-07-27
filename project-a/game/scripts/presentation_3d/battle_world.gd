@@ -596,6 +596,25 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			has_hud_event = true
 			_play_audio(&"shield", -13.0, 1.12)
 			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#7edbd0"), 3.8)
+		elif event_type == &"alliance_mark":
+			has_hud_event = true
+			_play_audio(&"warning", -13.0, 1.08)
+			_add_camera_shake(0.06, 0.06)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#ff6c61"), 4.2)
+		elif event_type == &"alliance_anti_air":
+			has_hud_event = true
+			_play_audio(&"warning", -14.0, 1.5 if bool(event.get("locked", false)) else 1.2)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#efb554"), 3.4)
+		elif event_type == &"alliance_purge":
+			has_hud_event = true
+			_play_audio(&"hit", -13.0, 0.82)
+			if int(event.get("purged", 0)) > 0:
+				_add_camera_shake(0.1, 0.08)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#8fd8f1"), 5.2)
+		elif event_type == &"alliance_coordination":
+			has_hud_event = true
+			_play_audio(&"shield", -13.0, 1.0)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#78bfd9"), 3.8)
 		elif event_type in [&"unit_healed", &"unit_revived"]:
 			_play_audio(&"heal", -13.0, 1.0)
 		elif event_type == &"unit_shielded":

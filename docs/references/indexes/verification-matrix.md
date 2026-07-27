@@ -74,6 +74,10 @@ related:
   3-5 三模块配置；`run_battle_hud_screen_tests.gd` 和 `run_battle_event_feedback_tests.gd`
   覆盖 HUD/3D 事件边界，`run_progression_cycle_scan.gd` 保持 7-seed 成长路线。844×390
   Compatibility 证据覆盖 3-1 信号消失与 3-4 监军护盾；真人是否能快速重锁目标仍待盲测。
+- 第四章遭遇：`run_battle_tests.gd` 覆盖标记索敌、防空锁定/规避、净化临时单位、永久角色免伤、
+  4-4 分段教学和 4-5 时间轮换；同一测试以飞行混编、地面混编、寄生混编和永久主队验证没有
+  单一硬锁。HUD/3D 边界及战报由对应 focused tests 覆盖，844×390 Compatibility 证据显示
+  4-1 标记倒计时和 4-2 地面规避反馈。真人是否愿意主动换阵仍待盲测。
 - M0.5：`run_first_chapter_balance_scan.gd` 使用 7 个新档种子扫描真实 `BattleSession`，
   验证同一 Gman 在前三关开局属性一致、前三关稳定胜利、1-4 单人必败及三人基础编队稳定反攻。
   五项战力口径下新档 Gman CP 为 `1603–1683`，前三关推荐线统一为 `1650`；

@@ -439,6 +439,60 @@ func _run() -> void:
 			and hud.status_label.text.contains("集中爆发击穿"),
 		"stage 3-4 HUD quantifies overseer protection and its response"
 	)
+	hud.apply_battle_events([{
+		"type": &"alliance_anti_air",
+		"locked": false,
+		"duration_ticks": 5,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 0,
+		"stage_count": 3,
+		"stage_name": "禁飞走廊",
+		"road_progress": 440,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("当前无飞行单位")
+			and hud.status_label.text.contains("成功规避"),
+		"stage 4-2 explicitly rewards a ground formation instead of showing an empty hazard"
+	)
+	hud.apply_battle_events([{
+		"type": &"alliance_purge",
+		"purged": 2,
+		"damage": 64,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "反寄生实验区",
+		"road_progress": 530,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("2个临时单位承受 64 伤害")
+			and hud.status_label.text.contains("保护永久主队"),
+		"stage 4-3 identifies the exact disposable targets and reassures permanent-roster safety"
+	)
+	hud.apply_battle_events([{
+		"type": &"alliance_mark",
+		"unit_id": &"hero_unknown",
+		"duration_ticks": 15,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 0,
+		"stage_count": 3,
+		"stage_name": "联合标记",
+		"road_progress": 420,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("被锁定 3.0秒")
+			and hud.status_label.text.contains("开盾或治疗"),
+		"stage 4-1 turns focus fire into a timed defensive decision"
+	)
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

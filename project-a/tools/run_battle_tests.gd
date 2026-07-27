@@ -31,6 +31,7 @@ func _init() -> void:
 	_test_chapter_two_resonance_learning_curve()
 	_test_chapter_two_encounter_escalation()
 	_test_chapter_three_encounter_learning_curve()
+	_test_chapter_four_counterplay_ladder()
 	_test_act_one_stage_catalog_and_config_start()
 	if failures.is_empty():
 		print("BATTLE TESTS PASS")
@@ -631,6 +632,115 @@ func _test_chapter_three_encounter_learning_curve() -> void:
 	)
 
 
+func _test_chapter_four_counterplay_ladder() -> void:
+	var mark_config := StageCatalogScript.stage("stage_4_1")
+	_check(
+		int(mark_config.get("alliance_mark_limit", 0)) == 4,
+		"stage 4-1 introduces four finite combined-fire marks"
+	)
+	var mark_session: RefCounted = BattleSessionScript.new()
+	mark_session.start(_siege_heroes(), "stage_4_1", mark_config)
+	mark_session.tick_index = 50
+	var mark_events: Array[Dictionary] = []
+	mark_session._run_chapter_mechanics(mark_events)
+	var mark := _first_event(mark_events, &"alliance_mark")
+	var marked_unit: Dictionary = mark_session._unit_by_id(
+		StringName(String(mark.get("unit_id", "")))
+	)
+	_check(
+		not mark.is_empty()
+			and int(marked_unit.get("alliance_mark_ticks", 0)) == 15,
+		"stage 4-1 applies a visible focus-fire state to one real main ally"
+	)
+	var first_enemy: Dictionary = mark_session._first_living_enemy()
+	_check(
+		mark_session._select_enemy_target(first_enemy).get("unit_id", &"")
+			== marked_unit.get("unit_id", &""),
+		"combined Alliance fire actually prioritizes the marked target"
+	)
+	var anti_air_config := StageCatalogScript.stage("stage_4_2")
+	var anti_air_session: RefCounted = BattleSessionScript.new()
+	anti_air_session.start(_mechanic_heroes("rocket", 2), "stage_4_2", anti_air_config)
+	anti_air_session.tick_index = 50
+	var anti_air_events: Array[Dictionary] = []
+	anti_air_session._run_chapter_mechanics(anti_air_events)
+	var anti_air := _first_event(anti_air_events, &"alliance_anti_air")
+	_check(
+		not anti_air.is_empty()
+			and bool(anti_air.get("locked", false))
+			and int(anti_air.get("duration_ticks", 0)) == 5,
+		"stage 4-2 visibly pauses one flying attacker for one second"
+	)
+	var ground_session: RefCounted = BattleSessionScript.new()
+	ground_session.start(_six_of("armored", 2), "stage_4_2", anti_air_config)
+	ground_session.tick_index = 50
+	var ground_events: Array[Dictionary] = []
+	ground_session._run_chapter_mechanics(ground_events)
+	var ground_scan := _first_event(ground_events, &"alliance_anti_air")
+	_check(
+		not ground_scan.is_empty() and not bool(ground_scan.get("locked", true)),
+		"ground formation receives an explicit anti-air avoidance fact"
+	)
+	var purge_config := StageCatalogScript.stage("stage_4_3")
+	var purge_session: RefCounted = BattleSessionScript.new()
+	purge_session.start(_mechanic_heroes("parasite", 2), "stage_4_3", purge_config)
+	var parasite_owner: Dictionary = purge_session._living_main_allies()[0]
+	var summon_events: Array[Dictionary] = []
+	purge_session._summon_parasites(parasite_owner, 2, summon_events)
+	purge_session.tick_index = 50
+	var purge_events: Array[Dictionary] = []
+	purge_session._run_chapter_mechanics(purge_events)
+	var purge := _first_event(purge_events, &"alliance_purge")
+	_check(
+		not purge.is_empty()
+			and int(purge.get("purged", 0)) == 2
+			and int(purge.get("damage", 0)) > 0,
+		"stage 4-3 purification damages temporary summons but reports the exact consequence"
+	)
+	var main_hp_unchanged := true
+	for ally in purge_session._living_main_allies():
+		main_hp_unchanged = (
+			main_hp_unchanged
+			and int(ally.get("hp", 0)) == int(ally.get("max_hp", 0))
+		)
+	_check(main_hp_unchanged, "purification never secretly damages permanent heroes")
+	var rotation := StageCatalogScript.stage("stage_4_4")
+	var finale := StageCatalogScript.stage("stage_4_5")
+	_check(
+		String(rotation.get("alliance_module_mode", "")) == "stage"
+			and String(finale.get("alliance_module_mode", "")) == "cycle",
+		"stage 4-4 teaches modules by battle phase before 4-5 rotates them by time"
+	)
+	var flying_result := _simulate_test_battle(
+		_counter_roster(["rocket", "rocket", "armored", "repair", "saw", "sonic"]),
+		"stage_4_2"
+	)
+	var ground_result := _simulate_test_battle(
+		_counter_roster(["armored", "assault", "repair", "saw", "sonic", "sonic"]),
+		"stage_4_2"
+	)
+	_check(
+		String(flying_result.get("outcome", "")) == "victory"
+			and String(ground_result.get("outcome", "")) == "victory",
+		"anti-air creates a roster tradeoff without turning either flying or ground teams into a hard lock"
+	)
+	var parasite_result := _simulate_test_battle(
+		_counter_roster(["parasite", "armored", "repair", "saw", "rocket", "sonic"]),
+		"stage_4_3"
+	)
+	var permanent_result := _simulate_test_battle(
+		_counter_roster(["assault", "armored", "repair", "saw", "rocket", "sonic"]),
+		"stage_4_3"
+	)
+	_check(
+		String(parasite_result.get("outcome", "")) == "victory"
+			and int(parasite_result.get("alliance_purge_damage", 0)) > 0
+			and String(permanent_result.get("outcome", "")) == "victory"
+			and int(permanent_result.get("alliance_purge_damage", 0)) == 0,
+		"purification makes summons situational while preserving a clear permanent-roster alternative"
+	)
+
+
 func _test_act_one_stage_catalog_and_config_start() -> void:
 	_check(StageCatalogScript.all_stage_ids().size() == 25, "act one catalog exposes twenty-five stages")
 	_check(StageCatalogScript.has_stage("stage_5_5"), "act one catalog includes final 5-5")
@@ -646,6 +756,47 @@ func _test_act_one_stage_catalog_and_config_start() -> void:
 	_check(not snapshot.has("max_ticks"), "battle snapshot remains free of hidden time limits")
 	_check((snapshot.get("enemies", []) as Array).size() == (config.get("enemies", []) as Array).size(), "battle enemies come from stage config")
 	_check((snapshot.get("structures", []) as Array).size() == (config.get("structures", []) as Array).size(), "battle structures come from stage config")
+
+
+func _simulate_test_battle(
+	heroes: Array[Dictionary],
+	stage_id: String
+) -> Dictionary:
+	var session: RefCounted = BattleSessionScript.new()
+	session.start(heroes, stage_id, StageCatalogScript.stage(stage_id))
+	var safety := 0
+	while not session.is_finished and safety < TEST_SAFETY_TICKS:
+		session.advance_tick()
+		safety += 1
+	return session.result.duplicate(true)
+
+
+func _counter_roster(archetype_ids: Array[String]) -> Array[Dictionary]:
+	var class_by_archetype := {
+		"armored": "guardian",
+		"repair": "guardian",
+		"assault": "fighter",
+		"saw": "fighter",
+		"rocket": "ranger",
+		"bomber": "ranger",
+		"sonic": "arcanist",
+		"parasite": "arcanist",
+	}
+	var values: Array[Dictionary] = []
+	for slot in archetype_ids.size():
+		var archetype_id := archetype_ids[slot]
+		var hero := _hero(
+			slot,
+			archetype_id,
+			String(class_by_archetype[archetype_id]),
+			3,
+			340,
+			96,
+			30
+		)
+		hero["auto_skill"] = true
+		values.append(hero)
+	return values
 
 
 func _test_boss_cannon_suppression_window() -> void:
