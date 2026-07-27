@@ -23,6 +23,7 @@ const COMMAND_CLASSES: Dictionary = {
 	"construct_facility": DURABLE_VALUE,
 	"claim_facility_work": DURABLE_VALUE,
 	"claim_onboarding_task": DURABLE_VALUE,
+	"claim_starter_gift": DURABLE_VALUE,
 	"claim_new_player_welfare": DURABLE_VALUE,
 	"open_smuggled_logistics_case": DURABLE_VALUE,
 	"use_welfare_star_core": DURABLE_VALUE,

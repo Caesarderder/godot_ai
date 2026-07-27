@@ -91,6 +91,7 @@ func _rebuild() -> void:
 
 func _build_action() -> void:
 	content.add_child(_goal_hierarchy(_view.get("hierarchy", {}) as Dictionary))
+	content.add_child(_starter_gifts_panel(_view.get("starter_gifts", {}) as Dictionary))
 	content.add_child(_new_player_welfare_panel(
 		_view.get("new_player_welfare", {}) as Dictionary
 	))
@@ -101,8 +102,39 @@ func _build_action() -> void:
 		content.add_child(_lock_panel(_view.get("mission_lock", {}) as Dictionary))
 
 
+func _starter_gifts_panel(view: Dictionary) -> Control:
+	var panel := _panel("限时补给 · 分段解锁")
+	panel.name = "StarterGiftsPanel"
+	for gift_value in view.get("gifts", []):
+		var gift := gift_value as Dictionary
+		var gift_id := String(gift.get("gift_id", ""))
+		panel.add_child(_label(
+			"%s · %s\n%s" % [
+				String(gift.get("title", "")),
+				String(gift.get("reward_copy", "")),
+				String(gift.get("reason_copy", "")),
+			],
+			13,
+			GOLD if bool(gift.get("claimable", false)) else MUTED
+		))
+		var button_copy := "已领取"
+		if not bool(gift.get("unlocked", false)):
+			button_copy = String(gift.get("unlock_copy", "尚未解锁"))
+		elif bool(gift.get("claimable", false)):
+			button_copy = "立即领取"
+		var claim := _button(button_copy, bool(gift.get("claimable", false)))
+		claim.name = "StarterGift_%s" % gift_id
+		claim.disabled = not bool(gift.get("claimable", false))
+		claim.pressed.connect(action_requested.emit.bind(
+			"claim_starter_gift",
+			{"gift_id": gift_id}
+		))
+		panel.add_child(claim)
+	return panel
+
+
 func _new_player_welfare_panel(view: Dictionary) -> Control:
-	var panel := _panel("新游福利 · 黑市援助")
+	var panel := _panel("开服庆典礼包 · 黑市援助")
 	panel.name = "NewPlayerWelfarePanel"
 	if not bool(view.get("unlocked", false)):
 		panel.add_child(_label("完成第一章 1-5 后解锁 · 不提前跳过新兵训练", 13, MUTED))
@@ -117,7 +149,7 @@ func _new_player_welfare_panel(view: Dictionary) -> Control:
 			13,
 			GOLD
 		))
-		var claim := _button("领取黑市援助", true)
+		var claim := _button("领取开服庆典礼包", true)
 		claim.name = "NewPlayerWelfareClaimButton"
 		claim.pressed.connect(action_requested.emit.bind("claim_new_player_welfare", {}))
 		panel.add_child(claim)

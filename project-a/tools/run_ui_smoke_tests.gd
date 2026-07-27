@@ -687,7 +687,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 			and _tree_has_text(instance, "完全恢复"),
 		"help explains the first hurdle, both recovery routes, and lossless failure"
 	)
-	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.12.0-faction-progression.1"), "help exposes local-data privacy and the running product version")
+	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.12.1-staged-gifts.1"), "help exposes local-data privacy and the running product version")
 	_ok(help_back != null and help_back.custom_minimum_size.y >= 48.0, "help exposes a touch-sized return path")
 	if help_back != null:
 		help_back.pressed.emit()
@@ -850,6 +850,9 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(not bool(instance.get("factory_pinch_active")), "releasing both fingers ends pinch without triggering a tap")
 	_ok(int(game_autoload.current_state().factory.facilities.get("porcelain_plant", -1)) == 0, "fresh campaign starts with an empty porcelain plot")
 	game_autoload.current_state().economy.toilet_coins = 10000
+	# The remainder of this smoke test exercises every facility panel, not the
+	# clean-save economy route covered by run_first_30m_journey_tests.gd.
+	game_autoload.current_state().factory.materials["porcelain"] = 200
 	var mission_tab := instance.find_child("FactoryHudMissionTab", true, false) as Button
 	var facility_tab := instance.find_child("FactoryHudFacilityTab", true, false) as Button
 	var build_tab := instance.find_child("FactoryHudBuildTab", true, false) as Button

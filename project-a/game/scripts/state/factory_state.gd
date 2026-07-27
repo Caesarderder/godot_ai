@@ -63,8 +63,9 @@ static func create_starting(include_built_facilities: bool = true) -> FactorySta
 		factory.facility_placements = {"command_center": [0, -1]}
 	# 新档先建设研究所；首批两张设计图纸分别由 1-2、1-3 首通获得。
 	factory.eligible_facilities = {"research_lab": true}
+	# 新档工业材料刚好只够建造研究所；后续设施预算由分阶段礼包和生产循环提供。
 	# v9 将工业库存归并到 porcelain 兼容槽；parts/sludge 只保留旧存档结构。
-	factory.materials = {"porcelain": 112, "parts": 0, "sludge": 0}
+	factory.materials = {"porcelain": 30, "parts": 0, "sludge": 0}
 	factory.discovered_blueprints = {}
 	factory.blueprints = (
 		{"ordinary.assault": true, "flying.rocket": true, "heavy.armored": true, "special.repair": true}

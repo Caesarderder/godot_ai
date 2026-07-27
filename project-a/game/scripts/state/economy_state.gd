@@ -16,7 +16,8 @@ var hero_shards: int = 0
 
 static func create_starting() -> EconomyState:
 	var economy := EconomyState.new()
-	economy.toilet_coins = 250
+	# 新档只保留一笔象征性零钱；主要获得感由分阶段礼包和战斗结算承接。
+	economy.toilet_coins = 20
 	economy.recruit_tickets = 0
 	# Schema v9 keeps only the four active ledgers non-zero. Legacy fields remain
 	# serialized so older call sites can be retired without corrupting saves.

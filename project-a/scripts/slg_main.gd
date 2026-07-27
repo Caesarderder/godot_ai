@@ -44,6 +44,7 @@ const AchievementCatalog := preload("res://game/scripts/domain/achievement/achie
 const MetaCatalog := preload("res://game/scripts/domain/meta/meta_catalog.gd")
 const MetaProgressionService := preload("res://game/scripts/domain/meta/meta_progression_service.gd")
 const NewPlayerWelfareService := preload("res://game/scripts/domain/meta/new_player_welfare_service.gd")
+const StarterGiftService := preload("res://game/scripts/domain/meta/starter_gift_service.gd")
 const NotificationBadgeScript := preload("res://game/scripts/presentation/notification_badge.gd")
 const NotificationSummaryScript := preload("res://game/scripts/presentation/notification_summary.gd")
 const BattleWorldScript := preload("res://game/scripts/presentation_3d/battle_world.gd")
@@ -2056,6 +2057,7 @@ func _goals_view(state: RefCounted) -> Dictionary:
 			"chapters_copy": "  ·  ".join(chapter_parts),
 		},
 		"new_player_welfare": NewPlayerWelfareService.snapshot(state),
+		"starter_gifts": StarterGiftService.snapshot(state),
 		"missions_unlocked": bool(unlock_state["missions"]),
 		"weekly_unlocked": bool(unlock_state["weekly"]),
 		"missions": missions,
@@ -2136,6 +2138,8 @@ func _on_goals_action_requested(action_id: String, payload: Dictionary) -> void:
 			_claim_all_meta_achievements()
 		"claim_new_player_welfare":
 			_claim_new_player_welfare()
+		"claim_starter_gift":
+			_claim_starter_gift(String(payload.get("gift_id", "")))
 		"open_smuggled_logistics_case":
 			_open_smuggled_logistics_case()
 		"open_legion_for_welfare":
@@ -3061,6 +3065,14 @@ func _claim_new_player_welfare() -> void:
 		"claim_new_player_welfare",
 		{},
 		"new-player-welfare:claim:v1"
+	), _show_goals)
+
+
+func _claim_starter_gift(gift_id: String) -> void:
+	_after_action(_command(
+		"claim_starter_gift",
+		{"gift_id": gift_id},
+		StarterGiftService.business_key(gift_id)
 	), _show_goals)
 
 

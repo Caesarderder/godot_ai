@@ -31,6 +31,11 @@ func _run() -> void:
 		cta.pressed.emit()
 	_check(action_request["id"] == "follow_task", "primary CTA emits a semantic follow request")
 	_check(action_request["stage_id"] == "stage_1_4", "primary CTA preserves the exact stage target")
+	var rookie_gift := goals.find_child("StarterGift_rookie_departure_v1", true, false) as Button
+	_check(rookie_gift != null and not rookie_gift.disabled, "completed research lab gift is visibly claimable")
+	if rookie_gift != null:
+		rookie_gift.pressed.emit()
+	_check(action_request["id"] == "claim_starter_gift", "starter gift emits its semantic command request")
 	var locked_welfare := goals.find_child("NewPlayerWelfareClaimButton", true, false) as Button
 	_check(locked_welfare != null and locked_welfare.disabled, "welfare card is visible but locked before 1-5")
 	var welfare_view := _action_view()
@@ -127,6 +132,31 @@ func _action_view() -> Dictionary:
 			"unlocked": false,
 			"claimable": false,
 			"claimed": false,
+		},
+		"starter_gifts": {
+			"claimable_count": 1,
+			"gifts": [
+				{
+					"gift_id": "rookie_departure_v1",
+					"title": "新手启程礼包",
+					"reward_copy": "金币 ×30",
+					"reason_copy": "第一座设施落成奖励",
+					"unlock_copy": "研究所落成后解锁",
+					"unlocked": true,
+					"claimable": true,
+					"claimed": false,
+				},
+				{
+					"gift_id": "new_game_supply_v1",
+					"title": "新游补给礼包",
+					"reward_copy": "金币 ×50 · 工业材料 ×30",
+					"reason_copy": "下一座工业设施启动资金",
+					"unlock_copy": "首次通关 1-3 后解锁",
+					"unlocked": false,
+					"claimable": false,
+					"claimed": false,
+				},
+			],
 		},
 		"missions_unlocked": false,
 		"mission_lock": {

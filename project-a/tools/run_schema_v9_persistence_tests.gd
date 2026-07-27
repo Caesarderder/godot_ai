@@ -34,7 +34,7 @@ func _test_new_save_contract() -> void:
 	_eq(encoded["meta_progression"]["hero_fragments"], {}, "new saves start with an empty archetype-fragment ledger")
 	_eq(
 		encoded["factory"]["materials"],
-		{"porcelain": 112, "parts": 0, "sludge": 0},
+		{"porcelain": 30, "parts": 0, "sludge": 0},
 		"new saves start with 112 consolidated industrial materials"
 	)
 	for key in ["toilet_gems", "gold", "xp_books", "forge_stones", "industrial_tech", "skill_chips"]:

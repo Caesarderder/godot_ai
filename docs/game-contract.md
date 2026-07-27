@@ -71,9 +71,9 @@ related:
 - owner: game-design
 - status: accepted
 - accepted_intent: 工厂以进度事件逐步取得建筑资格，所有资源产线统一生产工业材料；研究所把信号图纸转化为确定性永久援军和角色研究，不生产或消耗库存单位。
-- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；新档直接取得研究所建造资格，但必须由玩家主动选址、施工和验收；1-2、1-3 首通分别固定入库冲锋与装甲图纸，不直接授予角色；研究所消费已拥有图纸和时间，研发完成后才授予对应唯一永久角色；重复图纸转为该型号专属碎片，供已解锁角色升星。免费十连位于信号招募页，且只有信号招募正式解锁后开放，并推进同一长期保底。调试阶段所有设施建造、设施升级和蓝图研发统一为 5 秒；资源生产、建造、研发、升级和领取 exact-once。
-- implementation_reference: project-a/game/scripts/domain/factory/logistics_service.gd, project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd, project-a/scripts/slg_main.gd
-- verification_evidence: project-a/tools/run_slg_loop_tests.gd, project-a/tools/run_research_breakthrough_tests.gd
+- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；新档直接取得研究所建造资格，但必须由玩家主动选址、施工和验收；初始 20 金币与 30 工业材料只支持研究所开工，后续资源按研究所落成、1-3 首通、1-5 首通三个里程碑通过手动礼包领取；1-2、1-3 首通分别固定入库冲锋与装甲图纸，不直接授予角色；研究所消费已拥有图纸和时间，研发完成后才授予对应唯一永久角色；重复图纸转为该型号专属碎片，供已解锁角色升星。免费十连位于信号招募页，且只有信号招募正式解锁后开放，并推进同一长期保底。调试阶段所有设施建造、设施升级和蓝图研发统一为 5 秒；资源生产、建造、研发、升级和礼包领取 exact-once。
+- implementation_reference: project-a/game/scripts/domain/factory/logistics_service.gd, project-a/game/scripts/domain/meta/starter_gift_service.gd, project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd, project-a/scripts/slg_main.gd
+- verification_evidence: project-a/tools/run_slg_loop_tests.gd, project-a/tools/run_research_breakthrough_tests.gd, project-a/tools/run_starter_gift_tests.gd
 - conflict_references: project-a/game/scripts/domain/factory/factory_service.gd, project-a/game/scripts/state/factory_state.gd
 - handoffs: GC-004, GC-005
 - handoff_from: game-design
@@ -84,7 +84,7 @@ related:
 - deviation: 新入口已实现六座可点击 3D 建筑、5×5 有界放置和后勤服务；研究所已接通 eligible、built 状态并在新档开放建造，
   1-2、1-3 首通确定性入库冲锋/装甲图纸，研究所逐张研发后两名永久角色才入列。免费十连与长期信号招募统一在招募功能解锁后出现；
   信号只产 B/A/S 图纸；长期重复图纸目标改为型号专属碎片，当前代码尚待本轮迁移完成。量产兵和单位订单属于已取消旧方向。
-- last_updated: 2026-07-27
+- last_updated: 2026-07-28
 - last_verified: —
 
 ## GC-004: 城镇攻坚与无损结算
@@ -128,9 +128,9 @@ related:
 - owner: producer
 - status: accepted
 - accepted_intent: 第一切片用“先建研究所—Gman 推进—1-2/1-3 获取角色图纸—研究所定向研发—1-4 撞墙—永久援军编队反攻—自主升星—资源设施投产—1-5 Boss—解锁信号招募免费十连”证明确定性主线角色与长期招募彼此分离。
-- acceptance_criteria: 新档只有 Gman并可立即主动建设研究所；单人稳定通过 1-1 至 1-3，1-2、1-3 首通分别获得冲锋与装甲图纸；研究所完成两张图纸后形成三人编队并稳定攻克 1-4；玩家再选择并建成一种资源设施、收取首批真实后勤，在至少两条经济可达成长路线中选择其一并稳定攻克 1-5；信号招募解锁后才出现免费十连；不得用强制挂机等待首批产出；模型时间不超过 30 分钟，844×390 下目标、门禁、阵位、炮击机制和恢复路径可读。
-- implementation_reference: project-a/scripts/slg_main.gd
-- verification_evidence: project-a/tools/run_first_chapter_balance_scan.gd, project-a/tools/run_first_30m_journey_tests.gd, project-a/tools/run_research_breakthrough_tests.gd, project-a/tools/run_ui_smoke_tests.gd
+- acceptance_criteria: 新档只有 Gman、20 金币与刚好可建研究所的 30 工业材料；单人稳定通过 1-1 至 1-3，研究所落成与 1-3 首通分别解锁可手动领取的新手/新游礼包；1-2、1-3 首通分别获得冲锋与装甲图纸；研究所完成两张图纸后形成三人编队并稳定攻克 1-4；玩家再选择并建成一种资源设施、收取首批真实后勤，在至少两条经济可达成长路线中选择其一并稳定攻克 1-5，随后解锁开服庆典礼包；信号招募解锁后才出现免费十连；不得用强制挂机等待首批产出；模型时间不超过 30 分钟，844×390 下目标、礼包、门禁、阵位、炮击机制和恢复路径可读。
+- implementation_reference: project-a/scripts/slg_main.gd, project-a/game/scripts/domain/meta/starter_gift_service.gd
+- verification_evidence: project-a/tools/run_first_30m_journey_tests.gd, project-a/tools/run_starter_gift_tests.gd, project-a/tools/run_research_breakthrough_tests.gd, project-a/tools/run_ui_smoke_tests.gd
 - conflict_references: project-a/scripts/main.gd, project-a/scenes/screens/main.tscn
 - handoffs: GC-001, GC-002, GC-003, GC-004, GC-005
 - handoff_from: producer

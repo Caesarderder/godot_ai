@@ -61,6 +61,9 @@ func _run_contract() -> void:
 	_expect_task("operation.keep_advancing", false, 1)
 	_expect_ok(_settle("stage_1_3", "victory", permanent_ids), "third town settles")
 	_expect_task("operation.high_wall", false, 0)
+	_expect_ok(_command("claim_starter_gift", {
+		"gift_id": "new_game_supply_v1",
+	}), "1-3 supply gift funds the next industrial choice")
 
 	var high_wall_defeat := _settle("stage_1_4", "defeat", permanent_ids)
 	_expect_ok(high_wall_defeat, "Gman first high-wall attempt settles as defeat")

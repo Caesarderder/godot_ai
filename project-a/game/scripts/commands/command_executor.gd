@@ -26,6 +26,7 @@ const MetaProgressionServiceScript := preload("res://game/scripts/domain/meta/me
 const SignalRecruitServiceScript := preload("res://game/scripts/domain/recruitment/signal_recruit_service.gd")
 const ResearchBreakthroughServiceScript := preload("res://game/scripts/domain/recruitment/research_breakthrough_service.gd")
 const NewPlayerWelfareServiceScript := preload("res://game/scripts/domain/meta/new_player_welfare_service.gd")
+const StarterGiftServiceScript := preload("res://game/scripts/domain/meta/starter_gift_service.gd")
 
 var state: RefCounted = GameStateScript.create_new()
 var save_callback: Callable = Callable()
@@ -230,6 +231,8 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			return LogisticsServiceScript.claim_facility_work(candidate, int(data["now_unix"]))
 		"claim_onboarding_task":
 			return OnboardingServiceScript.claim_current(candidate, String(data["task_id"]))
+		"claim_starter_gift":
+			return StarterGiftServiceScript.claim(candidate, String(data["gift_id"]))
 		"claim_new_player_welfare":
 			return NewPlayerWelfareServiceScript.claim(candidate)
 		"open_smuggled_logistics_case":
@@ -511,6 +514,13 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 				return onboarding_error
 			if typeof(data["task_id"]) != TYPE_STRING or String(data["task_id"]).is_empty():
 				return "claim_onboarding_task.task_id must be non-empty string"
+			return ""
+		"claim_starter_gift":
+			var starter_gift_error := _exact_keys(data, ["gift_id"], "claim_starter_gift")
+			if not starter_gift_error.is_empty():
+				return starter_gift_error
+			if typeof(data["gift_id"]) != TYPE_STRING or String(data["gift_id"]).is_empty():
+				return "claim_starter_gift.gift_id must be non-empty string"
 			return ""
 		"claim_new_player_welfare":
 			return _exact_keys(data, [], "claim_new_player_welfare")

@@ -16,6 +16,9 @@ const LogisticsServiceScript := preload(
 const NewPlayerWelfareServiceScript := preload(
 	"res://game/scripts/domain/meta/new_player_welfare_service.gd"
 )
+const StarterGiftServiceScript := preload(
+	"res://game/scripts/domain/meta/starter_gift_service.gd"
+)
 
 var failures: Array[String] = []
 
@@ -27,15 +30,15 @@ func _init() -> void:
 func _run() -> void:
 	var state := GameStateScript.create_new(20260727, 100)
 	var empty := NotificationSummaryScript.derive(state, 100)
-	_eq(int(empty["total"]), 0, "new state starts without notification work")
+	_eq(int(empty["total"]), 1, "built-base fixtures expose exactly one newcomer gift")
 
 	state.quests["completed"]["legacy.quest"] = true
 	state.achievements["completed"]["legacy.achievement"] = true
 	var legacy := NotificationSummaryScript.derive(state, 100)
 	_eq(
 		int(legacy["goal_claimable"]),
-		0,
-		"legacy buckets do not create dots without a reachable claim screen"
+		1,
+		"legacy buckets add no dots beyond the reachable newcomer gift"
 	)
 
 	state.stage_progress["cleared_stages"] = [
@@ -72,6 +75,14 @@ func _run() -> void:
 	_ok(
 		bool(NewPlayerWelfareServiceScript.open_logistics_case(state).get("ok", false)),
 		"opened welfare case clears its actionable notification"
+	)
+	_ok(
+		bool(StarterGiftServiceScript.claim(state, "rookie_departure_v1").get("ok", false)),
+		"research milestone gift can be claimed through its real domain path"
+	)
+	_ok(
+		bool(StarterGiftServiceScript.claim(state, "new_game_supply_v1").get("ok", false)),
+		"1-3 gift can be claimed through its real domain path"
 	)
 	_eq(
 		int(NotificationSummaryScript.derive(state, 100)["goals_action"]),

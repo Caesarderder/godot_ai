@@ -7,6 +7,9 @@ const MetaProgressionServiceScript := preload(
 const NewPlayerWelfareServiceScript := preload(
 	"res://game/scripts/domain/meta/new_player_welfare_service.gd"
 )
+const StarterGiftServiceScript := preload(
+	"res://game/scripts/domain/meta/starter_gift_service.gd"
+)
 const LogisticsServiceScript := preload(
 	"res://game/scripts/domain/factory/logistics_service.gd"
 )
@@ -33,6 +36,7 @@ static func derive(state: RefCounted, now_unix: int) -> Dictionary:
 	var achievement_claimable := _unclaimed_count(state.get("achievements"))
 	var meta := MetaProgressionServiceScript.claimable_summary(state)
 	var welfare := NewPlayerWelfareServiceScript.snapshot(state)
+	var starter_gifts := StarterGiftServiceScript.snapshot(state)
 	var welfare_claimable := (
 		int(bool(welfare.get("claimable", false)))
 		+ int(bool(welfare.get("case_openable", false)))
@@ -40,6 +44,7 @@ static func derive(state: RefCounted, now_unix: int) -> Dictionary:
 	var action_claimable := (
 		int(meta.get("missions", 0))
 		+ welfare_claimable
+		+ int(starter_gifts.get("claimable_count", 0))
 	)
 	var pass_claimable := int(meta.get("pass", 0)) + int(meta.get("commander", 0))
 	var goals_achievement_claimable := (
@@ -56,6 +61,7 @@ static func derive(state: RefCounted, now_unix: int) -> Dictionary:
 		"quest_claimable": quest_claimable,
 		"achievement_claimable": achievement_claimable,
 		"welfare_claimable": welfare_claimable,
+		"starter_gift_claimable": int(starter_gifts.get("claimable_count", 0)),
 		"goals_action": action_claimable,
 		"goals_pass": pass_claimable,
 		"goals_achievements": goals_achievement_claimable,
@@ -85,6 +91,7 @@ static func _empty() -> Dictionary:
 		"quest_claimable": 0,
 		"achievement_claimable": 0,
 		"welfare_claimable": 0,
+		"starter_gift_claimable": 0,
 		"goals_action": 0,
 		"goals_pass": 0,
 		"goals_achievements": 0,

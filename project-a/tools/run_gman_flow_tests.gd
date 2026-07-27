@@ -14,7 +14,7 @@ func _init() -> void:
 	_check(String(state.roster[0].archetype_id) == "gman", "starter legion is led by permanent G-Man")
 	_check(state.roster.size() == 1, "new campaign starts with G-Man as its only unlocked hero")
 	_check(state.factory.blueprints.size() == 4, "hidden compatibility data preserves four baseline model blueprints")
-	_check(int(state.economy.toilet_coins) == 250 and int(state.economy.toilet_gems) == 0, "new campaign exposes no premium starting currency")
+	_check(int(state.economy.toilet_coins) == 20 and int(state.economy.toilet_gems) == 0, "new campaign starts scarce and exposes no premium currency")
 	_check(state.formation.hero_ids() == state.roster_ids(), "new campaign deploys only G-Man")
 	for removed_command in ["recruit_hero", "train_hero", "merge_heroes", "exchange_salvage", "purchase_gold_shop", "start_blueprint_research"]:
 		_check(not CommandClassRegistryScript.has_command(removed_command), "%s remains removed from command authority" % removed_command)

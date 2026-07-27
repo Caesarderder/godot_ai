@@ -42,6 +42,8 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	var executor: RefCounted = CommandExecutorScript.new(state, manager.save_state)
 	var clock := 1000
 	var battle_seconds := 0
+	_check(run_seed, int(state.economy.toilet_coins) == 20, "new campaign starts with only symbolic pocket money")
+	_check(run_seed, int(state.factory.materials.get("porcelain", -1)) == 30, "opening stock funds exactly one research lab")
 
 	var construction := _command(executor, "construct_facility", {
 		"facility_id": "research_lab",
@@ -53,6 +55,10 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	var construction_done := int((construction.get("event", {}) as Dictionary).get("completes_at_unix", clock))
 	clock = construction_done
 	_expect_ok(run_seed, _command(executor, "claim_facility_work", {"now_unix": clock}, clock), "opening research lab completes")
+	_check(run_seed, int(executor.state.factory.materials.get("porcelain", -1)) == 0, "research lab exhausts opening industrial stock")
+	_expect_ok(run_seed, _command(executor, "claim_starter_gift", {
+		"gift_id": "rookie_departure_v1",
+	}, clock), "research lab unlocks the explicit newcomer gift")
 	clock += INTERACTION_SECONDS
 
 	var opening := _battle_and_settle(executor, "stage_1_1", clock)
@@ -65,6 +71,10 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 		clock += int(result.get("seconds", 0)) + INTERACTION_SECONDS
 		battle_seconds += int(result.get("seconds", 0))
 		_expect_outcome(run_seed, stage_id, result, "victory")
+	_expect_ok(run_seed, _command(executor, "claim_starter_gift", {
+		"gift_id": "new_game_supply_v1",
+	}, clock), "1-3 unlocks the explicit new-game supply gift")
+	_check(run_seed, int(executor.state.factory.materials.get("porcelain", -1)) == 30, "new-game gift funds exactly one next industrial facility")
 
 	var wall := _battle_and_settle(executor, "stage_1_4", clock)
 	clock += int(wall.get("seconds", 0)) + INTERACTION_SECONDS
