@@ -83,6 +83,11 @@ func _run() -> void:
 		false
 	) as Button
 	_check(
+		_tree_has_text(core_choice_panel, "已有搭档：Gman")
+			and _tree_has_text(core_choice_panel, "阵容变化：补足后排拆塔"),
+		"candidate cards explain whether the choice deepens the roster or opens a missing tactic"
+	)
+	_check(
 		first_choice != null
 			and second_choice != null
 			and first_choice.text.contains(" · ")

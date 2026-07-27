@@ -379,13 +379,8 @@ func _recruit_panel() -> Control:
 		)
 		result_panel.name = "SignalRecruitResultPanel"
 		if not core_choices.is_empty():
-			var choice_panel := _panel("选择长期阵营核心 · 选择后永久保留")
+			var choice_panel := _panel("同评级二选一 · 选择后永久保留")
 			choice_panel.name = "RecruitFactionCoreChoice"
-			choice_panel.add_child(_label(
-				"同评级、不同打法；两名候选都已备齐2★碎片。",
-				11,
-				CYAN
-			))
 			var choice_grid := GridContainer.new()
 			choice_grid.columns = 2
 			choice_grid.add_theme_constant_override("h_separation", 8)
@@ -395,10 +390,11 @@ func _recruit_panel() -> Control:
 				var card := _panel("")
 				card.custom_minimum_size.x = 350
 				card.add_child(_label(
-					"%s级 · %s · %s\n2★：%s · 碎片%d已满足" % [
+					"%s级 · %s · %s\n%s\n2★：%s · 碎片%d已满足" % [
 						String(choice.get("rating", "B")),
 						String(choice.get("display_name", "")),
 						String(choice.get("faction", "")),
+						String(choice.get("synergy_summary", "")),
 						String(choice.get("next_star_effect", "")),
 						int(choice.get("fragments", 0)),
 					],

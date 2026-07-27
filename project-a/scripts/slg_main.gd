@@ -1524,6 +1524,10 @@ func _legion_view() -> Dictionary:
 				"rating": String(candidate_recipe.get("rating", "B")),
 				"faction": FactionCatalog.faction_for(candidate_archetype),
 				"playstyle": FactionCatalog.playstyle_for(candidate_archetype),
+				"synergy_summary": _faction_core_synergy_summary(
+					state,
+					candidate_archetype
+				),
 				"fragments": int(
 					state.meta_progression.hero_fragments.get(candidate_archetype, 0)
 				),
@@ -2073,6 +2077,24 @@ func _claim_faction_signal() -> void:
 	_show_legion()
 
 
+func _faction_core_synergy_summary(
+	state: RefCounted,
+	candidate_archetype: String
+) -> String:
+	var candidate_faction := FactionCatalog.faction_for(candidate_archetype)
+	var allies: Array[String] = []
+	for hero in state.roster:
+		var ally_archetype := String(hero.archetype_id)
+		if (
+			ally_archetype != candidate_archetype
+			and FactionCatalog.faction_for(ally_archetype) == candidate_faction
+		):
+			allies.append(HeroGenerator.archetype_display_name(ally_archetype))
+	if not allies.is_empty():
+		return "已有搭档：%s" % "、".join(allies)
+	return "阵容变化：补足%s" % FactionCatalog.playstyle_for(candidate_archetype)
+
+
 func _choose_faction_core(archetype_id: String) -> void:
 	var result := _command(
 		"choose_faction_core",
@@ -2083,7 +2105,10 @@ func _choose_faction_core(archetype_id: String) -> void:
 		_notify(_error_copy(String(result.get("error", "FACTION_CORE_INVALID"))))
 		return
 	var role_name := HeroGenerator.archetype_display_name(archetype_id)
-	_notify("阵营核心已确定 · %s的选择将贯穿后续科技与关卡" % role_name)
+	_notify("阵营核心已确定 · %s · %s路线开启" % [
+		role_name,
+		FactionCatalog.playstyle_for(archetype_id),
+	])
 	_open_blueprint_for_archetype(archetype_id)
 
 
