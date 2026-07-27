@@ -1136,6 +1136,10 @@ func _show_map() -> void:
 		})
 	var selected_config := StageCatalog.stage(selected_stage_id)
 	var selected_unlocked: bool = selected_stage_id == StageCatalog.DEFAULT_STAGE_ID or cleared.has(selected_stage_id) or selected_stage_id == highest
+	var selected_report := WarReadinessReport.derive(state, selected_config)
+	var faction_proof := _faction_proof_stage_context(state, selected_stage_id)
+	if not faction_proof.is_empty():
+		selected_report["faction_proof"] = faction_proof
 	var war_zone := WarZoneScreenScene.instantiate()
 	war_zone.configure(
 		highest_chapter,
@@ -1143,7 +1147,7 @@ func _show_map() -> void:
 		selected_stage_id,
 		stage_rows,
 		selected_config,
-		WarReadinessReport.derive(state, selected_config),
+		selected_report,
 		selected_unlocked,
 		cleared.has(selected_stage_id),
 		_estimated_damage(selected_config)
@@ -1154,6 +1158,34 @@ func _show_map() -> void:
 	war_zone.preparation_requested.connect(_on_map_preparation_requested)
 	shell.add_child(war_zone)
 	_add_nav(shell, Screen.MAP)
+
+
+func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictionary:
+	var objective := CampaignObjectiveProjection.derive(
+		state,
+		OnboardingService.snapshot(state)
+	)
+	var hierarchy := objective.get("hierarchy", {}) as Dictionary
+	var proof_focus := String(hierarchy.get("proof_focus", ""))
+	if (
+		proof_focus.is_empty()
+		or String(hierarchy.get("target", "")) != "map"
+		or String(hierarchy.get("stage_id", "")) != stage_id
+	):
+		return {}
+	var hero: RefCounted = state.hero_by_id(String(hierarchy.get("hero_id", "")))
+	if hero == null:
+		return {}
+	var archetype_id := String(hero.archetype_id)
+	return {
+		"headline": "阵营验证 · %s核心已上阵 · %s" % [
+			String(hero.display_name),
+			FactionCatalog.playstyle_for(archetype_id),
+		],
+		"focus": proof_focus,
+		"attack_label": "验证%s核心" % String(hero.display_name),
+		"hero_id": String(hero.hero_id),
+	}
 
 
 func _select_chapter(chapter: int) -> void:
@@ -2759,8 +2791,21 @@ func _show_result() -> void:
 	var faction_result_hierarchy := (
 		campaign_objective.get("hierarchy", {}) as Dictionary
 	)
+	var faction_proof_stage := cleared_stage_id in [
+		"stage_2_1", "stage_2_2", "stage_2_3",
+	]
+	var faction_proof_progress := _chapter_two_opening_clear_count(
+		game.current_state()
+	)
+	var faction_proof_advanced := (
+		faction_proof_stage
+		and won
+		and bool(event.get("first_victory", false))
+	)
 	var has_faction_result_action := (
-		cleared_stage_id in ["stage_2_4", "stage_2_5"]
+		cleared_stage_id in [
+			"stage_2_1", "stage_2_2", "stage_2_3", "stage_2_4", "stage_2_5",
+		]
 		and String(faction_result_hierarchy.get("archetype_id", "")) != ""
 		and String(faction_result_hierarchy.get("target", "")) in ["map", "legion"]
 	)
@@ -2789,10 +2834,22 @@ func _show_result() -> void:
 		primary_label = "选择 Tier 2 科技方向"
 		primary_action = "faction_doctrine"
 	elif has_faction_result_action:
-		qualification = String(
-			(faction_result_hierarchy.get("hurdle", {}) as Dictionary).get(
-				"recovery",
-				"根据本局事实继续阵营成长。"
+		qualification = (
+			"本场战果已计入阵营成长\n下一步：%s" % [
+				String(faction_result_hierarchy.get("small", "继续验证核心打法")),
+			]
+			if faction_proof_advanced
+			else (
+				"本关已完成，重复胜利不增加证明进度\n下一步：%s" % String(
+					faction_result_hierarchy.get("small", "继续验证核心打法")
+				)
+				if faction_proof_stage and won
+				else String(
+					(faction_result_hierarchy.get("hurdle", {}) as Dictionary).get(
+						"recovery",
+						"根据本局事实继续阵营成长。"
+					)
+				)
 			)
 		)
 		primary_label = String(faction_result_hierarchy.get("cta_label", "继续阵营成长"))
@@ -2843,15 +2900,26 @@ func _show_result() -> void:
 		primary_label = "培养角色"
 		primary_action = "legion"
 	var protocol_growth := _faction_protocol_result_copy(last_battle_runtime_result)
+	if faction_proof_stage:
+		hurdle_proof = _faction_opening_proof_copy(
+			last_battle_runtime_result,
+			faction_proof_progress,
+			won,
+			faction_proof_advanced
+		)
 	var result_screen := BattleResultScreenScene.instantiate()
 	result_screen.configure({
 		"outcome_banner": (
 			"首章胜利 · 你的成长选择通过实战验证"
 			if chapter_one_complete
 			else (
-				"第%d章胜利 · 阵营打法通过实战验证" % completed_chapter
-				if chapter_boss_complete
-				else ("胜利 · 获得军团成长战果" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
+				"阵营实战证明 %d/3 · 核心打法正在成形" % faction_proof_progress
+				if faction_proof_advanced
+				else (
+					"第%d章胜利 · 阵营打法通过实战验证" % completed_chapter
+					if chapter_boss_complete
+					else ("胜利 · 获得军团成长战果" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
+				)
 			)
 		),
 		"outcome_color": "green" if won else ("gold" if outcome == "retreat" else "red"),
@@ -2889,6 +2957,54 @@ func _show_result() -> void:
 	})
 	result_screen.action_requested.connect(_on_result_action_requested)
 	shell.add_child(result_screen)
+
+
+func _chapter_two_opening_clear_count(state: RefCounted) -> int:
+	var cleared := state.stage_progress.get("cleared_stages", []) as Array
+	var count := 0
+	for stage_id in ["stage_2_1", "stage_2_2", "stage_2_3"]:
+		if cleared.has(stage_id):
+			count += 1
+	return count
+
+
+func _faction_opening_proof_copy(
+	runtime_result: Dictionary,
+	progress: int,
+	won: bool,
+	advanced: bool
+) -> String:
+	var state: RefCounted = game.current_state()
+	var archetype_id := RecruitmentResultProjection.selected_faction_core(state)
+	var hero: RefCounted = null
+	for roster_hero in state.roster:
+		if String(roster_hero.archetype_id) == archetype_id:
+			hero = roster_hero
+			break
+	if hero == null:
+		return ""
+	var damage_by_unit := runtime_result.get(
+		"ally_damage_dealt_by_unit",
+		{}
+	) as Dictionary
+	var hero_damage := int(damage_by_unit.get(String(hero.hero_id), 0))
+	if not won:
+		return "%s核心已安全返回 · 调整技能时机后继续验证%s" % [
+			String(hero.display_name),
+			FactionCatalog.playstyle_for(archetype_id),
+		]
+	if not advanced:
+		return "实战证明仍为 %d/3 · 本关已验证，请推进下一座未占领城" % progress
+	return "实战证明 %d/3 · %s核心贡献 %d 伤害 · %s" % [
+		progress,
+		String(hero.display_name),
+		hero_damage,
+		(
+			"三场基础验证完成，下一步试探后段压力"
+			if progress >= 3
+			else "下一场继续观察%s" % FactionCatalog.playstyle_for(archetype_id)
+		),
+	]
 
 
 func _onboarding_settlement_copy(event: Dictionary, next_task: Dictionary) -> String:

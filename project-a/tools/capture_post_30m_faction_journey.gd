@@ -104,6 +104,38 @@ func _capture() -> void:
 	await _wait_frames(5)
 	if not _save("res://artifacts/ui-faction-proof-zero-844x390.png"):
 		return
+	var proof_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	if proof_cta == null:
+		_fail("first faction proof action unavailable")
+		return
+	proof_cta.pressed.emit()
+	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-proof-recon-844x390.png"):
+		return
+	state = game.current_state()
+	main.set("last_battle_runtime_result", {
+		"ticks": 310,
+		"structures_destroyed": 3,
+		"enemies_defeated": 5,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 740},
+	})
+	var first_proof_settlement := main.call("_command", "settle_battle", {
+		"battle_id": "capture-faction-proof-2-1",
+		"stage_id": "stage_2_1",
+		"outcome": "victory",
+		"ticks": 310,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"dead_unit_ids": [],
+	}) as Dictionary
+	if not bool(first_proof_settlement.get("ok", false)):
+		_fail("first faction proof settlement unavailable")
+		return
+	main.set("last_settlement", first_proof_settlement)
+	main.call("_show_result")
+	await _wait_frames(7)
+	if not _save("res://artifacts/ui-faction-proof-one-844x390.png"):
+		return
 	state = game.current_state()
 	state.stage_progress["cleared_stages"] = [
 		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5",

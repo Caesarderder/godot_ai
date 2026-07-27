@@ -71,8 +71,15 @@ func _apply_configuration() -> void:
 	status_label.text = status
 	status_label.add_theme_color_override("font_color", GREEN if _cleared else GOLD)
 	threat_summary.text = String(_config.get("threat_summary", "联盟守军正在集结。"))
+	var faction_proof := _report.get("faction_proof", {}) as Dictionary
 	var formation_plan := _report.get("formation_plan", {}) as Dictionary
-	if formation_plan.is_empty():
+	if not faction_proof.is_empty():
+		decision_hint.text = "%s\n%s" % [
+			String(faction_proof.get("headline", "阵营验证")),
+			String(faction_proof.get("focus", "")),
+		]
+		decision_hint.add_theme_color_override("font_color", CYAN)
+	elif formation_plan.is_empty():
 		decision_hint.text = "反制选择：%s" % String(
 			_config.get("counter_hint", "观察敌方结构和阵容职责后再决定成长路线。")
 		)
@@ -124,7 +131,7 @@ func _apply_configuration() -> void:
 	else:
 		growth_button.text = String(action.get("title", "建造研究所")) if needs_preparation else "先培养军团"
 	attack_button.disabled = not _unlocked
-	attack_button.text = (
+	attack_button.text = String(faction_proof.get("attack_label", "")) if not faction_proof.is_empty() else (
 		"再次夺取"
 		if _cleared
 		else (

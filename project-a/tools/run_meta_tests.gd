@@ -304,6 +304,7 @@ func _test_battle_settlement() -> void:
 	_eq(executor.state.economy.xp_books, books_before, "opening victory does not accelerate Gman with a training book")
 	_eq(victory["event"]["hero_xp_each"], 30, "victory reports the exact per-hero battle experience")
 	_eq(victory["event"]["hero_xp_recipients"], 1, "victory reports how many deployed heroes gained experience")
+	_ok(bool(victory["event"]["first_victory"]), "first clear is explicit in the durable settlement event")
 	_eq(
 		int(executor.state.hero_by_id(opening_hero_id).xp),
 		opening_xp_before + 30,
@@ -328,6 +329,7 @@ func _test_battle_settlement() -> void:
 		"battle:battle-win-repeat"
 	)
 	_eq(repeat_victory["event"]["reward_tier"], "repeat_victory", "cleared-stage farming is labeled as repeat victory")
+	_ok(not bool(repeat_victory["event"]["first_victory"]), "repeat clear cannot masquerade as a new proof milestone")
 	_eq(repeat_victory["event"]["reward"], {"gold": 24, "xp_books": 0, "porcelain": 7, "parts": 4, "sludge": 3}, "repeat victory grants only thirty-percent materials and no books")
 	var timeout_rejected := executor.execute(_env(
 		"battle-timeout-rejected",

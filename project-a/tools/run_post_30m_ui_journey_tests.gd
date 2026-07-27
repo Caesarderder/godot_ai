@@ -198,6 +198,45 @@ func _run() -> void:
 		proof_cta.pressed.emit()
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_2_1", "proof action focuses the exact next second-chapter stage")
+	_check(_tree_has_text(main, "阵营验证"), "2-1 reconnaissance preserves the faction-proof identity")
+	_check(_tree_has_text(main, String(faction_hero.display_name) + "核心已上阵"), "reconnaissance names the deployed core")
+	_check(_tree_has_text(main, "首战观察"), "reconnaissance preserves the route-specific learning goal")
+	var proof_attack: Button = _button_with_text(
+		main,
+		"验证%s核心" % String(faction_hero.display_name)
+	)
+	_check(proof_attack != null and proof_attack.is_visible_in_tree(), "reconnaissance keeps one core-specific battle action visible")
+	main.set("last_battle_runtime_result", {
+		"ticks": 310,
+		"structures_destroyed": 3,
+		"enemies_defeated": 5,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 740},
+	})
+	var first_proof_settlement := main.call("_command", "settle_battle", {
+		"battle_id": "post-30m-ui-proof-2-1",
+		"stage_id": "stage_2_1",
+		"outcome": "victory",
+		"ticks": 310,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"dead_unit_ids": [],
+	}) as Dictionary
+	_check(
+		bool(first_proof_settlement.get("ok", false))
+			and bool((first_proof_settlement.get("event", {}) as Dictionary).get("first_victory", false)),
+		"first proof settlement durably records the first 2-1 victory"
+	)
+	main.set("last_settlement", first_proof_settlement)
+	main.call("_show_result")
+	await _wait_frames(5)
+	_check(_tree_has_text(main, "阵营实战证明 1/3"), "first proof victory celebrates visible one-of-three progress")
+	_check(_tree_has_text(main, String(faction_hero.display_name) + "核心贡献 740 伤害"), "proof result attributes factual contribution to the selected core")
+	var second_proof := _button_with_text(main, "开始第2场验证")
+	_check(second_proof != null and second_proof.is_visible_in_tree(), "proof result exposes one explicit second validation action")
+	if second_proof != null:
+		second_proof.pressed.emit()
+		await _wait_frames(4)
+	_check(String(main.get("selected_stage_id")) == "stage_2_2", "proof result hands off through reconnaissance to exact 2-2")
 
 	state = game.current_state()
 	state.stage_progress["cleared_stages"] = [
@@ -651,6 +690,16 @@ func _tree_has_text(node: Node, fragment: String) -> bool:
 		if _tree_has_text(child, fragment):
 			return true
 	return false
+
+
+func _button_with_text(node: Node, fragment: String) -> Button:
+	if node is Button and (node as Button).text.contains(fragment):
+		return node as Button
+	for child in node.get_children():
+		var match_button := _button_with_text(child, fragment)
+		if match_button != null:
+			return match_button
+	return null
 
 
 func _wait_frames(count: int) -> void:

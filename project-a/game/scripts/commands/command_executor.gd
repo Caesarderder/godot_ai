@@ -207,6 +207,7 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 					"hero_xp_recipients": hero_xp_recipients,
 					"hero_shards": int(StageCatalogScript.breakthrough_reward(stage_id, already_cleared).get("hero_shards", 0)) if outcome == "victory" else 0,
 					"unlocked_hero": {},
+					"first_victory": was_first_victory,
 					"campaign_completed": outcome == "victory" and stage_id == "stage_5_5",
 					"first_campaign_completion": outcome == "victory" and stage_id == "stage_5_5" and was_first_victory,
 				},
