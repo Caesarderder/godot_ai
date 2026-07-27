@@ -63,7 +63,11 @@ State labels:
   domain commands separately reject synchronous save failures atomically.
 - [x] Web UI treats engine persistence capability conservatively and directs players to download a backup
   instead of presenting a private/session-only IndexedDB write as guaranteed retention.
-- [ ] Accessibility review: focus visibility, readable/scalable text, non-color cues, reduced motion where needed, critical-audio alternatives.
-- [ ] `run_ui_focus_tests.gd` proves every authored and dynamic screen action is focusable and has a non-empty visible focus style.
+- [x] Local accessibility review: focus visibility, runtime font coverage, 48 CSS-pixel target scaling,
+  non-color combat/status copy, reduced-motion semantics, and silent alternatives for critical audio all
+  have independent automated evidence; screen-reader/assistive-technology behavior remains a real-device gate.
+- [x] `run_ui_focus_tests.gd` audits 12 authored screens plus `StageDetailPanel`, dynamic actions and every
+  `BaseButton / Slider / LineEdit / TextEdit`; `ui-settings-slider-focus-844x390.png` proves the Slider
+  keyboard/gamepad highlight in a Compatibility render.
 - [ ] Final legal review for font notice, fan-content/IP risk, store copy, and every asset license.
 - [ ] Monitoring, incident owner, rollback artifact, rollback trigger, and rollback rehearsal.

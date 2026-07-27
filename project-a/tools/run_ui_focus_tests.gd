@@ -31,13 +31,13 @@ func _run() -> void:
 		await process_frame
 		await process_frame
 		await process_frame
-		var buttons: Array[Button] = []
-		_collect_buttons(instance, buttons)
+		var controls: Array[Control] = []
+		_collect_interactive_controls(instance, controls)
 		if scene_index != 0:
-			_check(not buttons.is_empty(), "%s exposes no authored focus targets" % instance.name)
-		for button in buttons:
-			_assert_focus_contract(button, "%s/%s" % [instance.name, button.name])
-		var first_enabled := _first_enabled(buttons)
+			_check(not controls.is_empty(), "%s exposes no authored focus targets" % instance.name)
+		for control in controls:
+			_assert_interactive_focus_contract(control, "%s/%s" % [instance.name, control.name])
+		var first_enabled := _first_enabled(controls)
 		if first_enabled != null:
 			first_enabled.grab_focus()
 			await process_frame
@@ -45,6 +45,12 @@ func _run() -> void:
 				root.gui_get_focus_owner() == first_enabled,
 				"%s cannot acquire keyboard focus" % first_enabled.name
 			)
+			if _enabled_count(controls) > 1:
+				var next_focus := first_enabled.find_next_valid_focus()
+				_check(
+					next_focus != null and next_focus != first_enabled,
+					"%s has no forward keyboard/gamepad focus route" % instance.name
+				)
 		instance.queue_free()
 		await process_frame
 
@@ -93,18 +99,54 @@ func _run() -> void:
 	quit(1)
 
 
-func _collect_buttons(node: Node, output: Array[Button]) -> void:
-	if node is Button:
-		output.append(node as Button)
+func _collect_interactive_controls(node: Node, output: Array[Control]) -> void:
+	if node is BaseButton or node is Slider or node is LineEdit or node is TextEdit:
+		output.append(node as Control)
 	for child in node.get_children():
-		_collect_buttons(child, output)
+		_collect_interactive_controls(child, output)
 
 
-func _first_enabled(buttons: Array[Button]) -> Button:
-	for button in buttons:
-		if not button.disabled:
-			return button
+func _first_enabled(controls: Array[Control]) -> Control:
+	for control in controls:
+		if _is_enabled(control):
+			return control
 	return null
+
+
+func _enabled_count(controls: Array[Control]) -> int:
+	var count := 0
+	for control in controls:
+		if _is_enabled(control):
+			count += 1
+	return count
+
+
+func _is_enabled(control: Control) -> bool:
+	if control is BaseButton:
+		return not (control as BaseButton).disabled
+	if control is Slider:
+		return (control as Slider).editable
+	if control is LineEdit:
+		return (control as LineEdit).editable
+	if control is TextEdit:
+		return (control as TextEdit).editable
+	return false
+
+
+func _assert_interactive_focus_contract(control: Control, context: String) -> void:
+	_check(control.focus_mode == Control.FOCUS_ALL, "%s is not keyboard/gamepad focusable" % context)
+	if control is Slider:
+		_check(
+			control.has_theme_stylebox_override("grabber_area_highlight"),
+			"%s has no visible focused/hovered slider track" % context
+		)
+		var highlight := control.get_theme_stylebox("grabber_area_highlight")
+		_check(
+			highlight != null and not highlight is StyleBoxEmpty,
+			"%s slider focus highlight is invisible" % context
+		)
+		return
+	_assert_focus_style(control, context)
 
 
 func _assert_focus_contract(button: Button, context: String) -> void:
@@ -112,8 +154,12 @@ func _assert_focus_contract(button: Button, context: String) -> void:
 	if button == null:
 		return
 	_check(button.focus_mode == Control.FOCUS_ALL, "%s is not keyboard/gamepad focusable" % context)
-	_check(button.has_theme_stylebox_override("focus"), "%s has no explicit focus style" % context)
-	var focus_style := button.get_theme_stylebox("focus")
+	_assert_focus_style(button, context)
+
+
+func _assert_focus_style(control: Control, context: String) -> void:
+	_check(control.has_theme_stylebox_override("focus"), "%s has no explicit focus style" % context)
+	var focus_style := control.get_theme_stylebox("focus")
 	_check(focus_style != null and not focus_style is StyleBoxEmpty, "%s focus style is invisible" % context)
 
 

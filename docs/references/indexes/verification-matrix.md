@@ -87,8 +87,10 @@ related:
   `run_font_coverage_tests.gd` 扫描实际运行时脚本、场景、Resource 与项目配置，并通过导入后的
   `FontFile.has_char()` 阻断中文、ASCII 或界面符号漏字；tools、截图证据与零入口 legacy Shell
   不计入玩家字符集。
-  `run_ui_focus_tests.gd` 逐一实例化七个 authored UI scene，验证静态按钮、动态 CTA、阵位、关卡
-  与战斗技能覆盖层均为 `FOCUS_ALL`、可取得焦点且具有非空白高对比 focus style。
+  `run_ui_focus_tests.gd` 逐一实例化 12 个 authored screen 与 `StageDetailPanel`，递归验证
+  `BaseButton / Slider / LineEdit / TextEdit`、动态 CTA、阵位、关卡与战斗技能覆盖层均为
+  `FOCUS_ALL`、可取得焦点且具有对应 Godot 控件的高对比可见状态；多控件页面还必须存在向前
+  键盘/手柄导航路径。
 - M4：`run_ui_smoke_tests.gd` 已迁移到新四入口 App Shell；目标页刷新并呈现新合同里程碑；
   标题、设置、全局自动技能、主动暂停和失焦暂停已接入实际入口；第五章胜利进入独立尾声并可继续
   无尽前线；指挥情报页已展示当前编队 `CombatPower`、能力比、风险、紧缺资源和行动建议；
@@ -233,8 +235,10 @@ related:
 - 可访问性本地基线：`run_ui_focus_tests.gd` 验证作者场景和动态按钮均可聚焦且有高对比焦点样式；
   `run_font_coverage_tests.gd` 扫描运行时中文字符覆盖；`run_presentation_tests.gd` 验证“减少动态”
   会即时清除镜头震动，并关闭单位呼吸摆动、受击缩放和技能前冲，同时保留血条、状态颜色、
-  炮击文字倒计时、技能结果和胜负结算等静音可读反馈。屏幕阅读器语义仍须在真实浏览器/设备验证，
-  自动测试不能替代该项。
+  炮击文字倒计时、技能结果和胜负结算等静音可读反馈。设置页两个 `HSlider` 使用 Godot 4.6
+  `grabber_area_highlight` 提供真实焦点轨道，`ui-settings-slider-focus-844x390.png` 的
+  Compatibility 截图证明聚焦主音量为金色白边、未聚焦音乐音量保持青色。屏幕阅读器语义仍须在
+  真实浏览器/设备验证，自动测试不能替代该项。
 - 音乐表现基线：`run_music_director_tests.gd` 锁定标题静音、基地/战斗/Boss 状态、任意连续或
   中断淡化后只有一个 Stream voice、后台暂停/恢复和清理；Platform/Settings 测试覆盖默认值、
   旧配置回退、持久化、归一化与语义 UI 事件，UI smoke 锁定 App Shell 的标题、基地和普通战斗

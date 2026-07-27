@@ -145,6 +145,8 @@ func _apply_theme() -> void:
 		(control as Control).add_theme_font_override("font", CJK_FONT)
 	for button in find_children("*", "Button", true, false):
 		_style_button(button as Button, button == save_button)
+	for slider in [volume, music_volume]:
+		_style_slider(slider)
 	import_preview.add_theme_color_override("font_color", GOLD)
 	playtest_status.add_theme_color_override("font_color", GREEN)
 	volume_value.add_theme_color_override("font_color", CYAN)
@@ -161,6 +163,34 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("focus", _button_style(Color(GOLD, 0.22), Color.WHITE))
 	button.add_theme_color_override("font_color", BG if primary else TEXT)
 	button.add_theme_color_override("font_hover_color", BG if primary else TEXT)
+
+
+func _style_slider(slider: HSlider) -> void:
+	slider.focus_mode = Control.FOCUS_ALL
+	slider.add_theme_stylebox_override(
+		"slider",
+		_slider_style(Color("#0b1115"), Color(LINE, 0.9), 1)
+	)
+	slider.add_theme_stylebox_override(
+		"grabber_area",
+		_slider_style(Color(CYAN, 0.72), Color(CYAN, 0.9), 1)
+	)
+	# Godot 4.6 renders this state for both hover and keyboard/gamepad focus.
+	slider.add_theme_stylebox_override(
+		"grabber_area_highlight",
+		_slider_style(Color(GOLD, 0.9), Color.WHITE, 2)
+	)
+
+
+func _slider_style(color: Color, border: Color, border_width: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.border_color = border
+	style.set_border_width_all(border_width)
+	style.set_corner_radius_all(4)
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	return style
 
 
 func _button_style(color: Color, border: Color) -> StyleBoxFlat:

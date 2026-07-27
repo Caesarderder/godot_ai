@@ -280,6 +280,24 @@ App Shell ----------------display fields----------> LegionScreen / BattleHudScre
 解释“做什么、何时用”。此切片不新增场景或 Autoload：现有 App Shell 是定义查询与 screen view
 组装 owner，screen 重建时只消费 detached Dictionary，因此没有新增信号或重复连接生命周期。
 
+## 本地无障碍与焦点合同
+
+当前玩家 UI 的可交互集合按 Godot 类型定义，不按控件命名或某几个已知页面硬编码：
+
+- `BaseButton`、`Slider`、`LineEdit` 与 `TextEdit` 必须使用 `FOCUS_ALL`；
+- authored scene 与运行时生成控件必须各自拥有可见焦点反馈。按钮使用高对比 `focus`
+  StyleBox；Slider 依据 Godot 4.6 的真实主题合同使用 `grabber_area_highlight`，使键盘/手柄焦点
+  不只依赖默认 grabber 纹理或颜色猜测；
+- 页面打开后把焦点交给当前主行动；自动空间导航至少能从当前控件移动到另一个可用控件，
+  不允许焦点卡死在隐藏、禁用或已释放节点；
+- 风险、胜负、能量、炮击与资源不足必须同时提供文字、图形或数值语义，不能只靠红/绿颜色；
+- “减少动态”只移除脉动、位移和震屏，保留命中、预警、技能结果和结算文字；
+- 屏幕阅读器语义与浏览器辅助技术仍是外部真机门禁，本地焦点、字体覆盖和静音可读不能冒充它。
+
+验证清单由 `game/scenes/screens/*.tscn` 加 `StageDetailPanel` 的固定 preload 构成；新增 authored
+screen 时必须同步加入。测试需递归审计所有交互类型和动态 CTA，而不是以旧的“七个场景”数量
+宣称覆盖。焦点、字体、减少动态与 48 CSS 像素触控目标是四条独立证据。
+
 ## 资产治理
 
 - 全局字体、共享 UI 主题放 `assets/fonts`、未来 `game/ui/themes`；feature-only 资产随 feature；
