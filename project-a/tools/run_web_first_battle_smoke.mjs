@@ -620,7 +620,7 @@ async function main() {
 			})}`);
 		}
 		const browserVersion = await cdp.send("Browser.getVersion");
-		console.log("WEB_FIRST_WALL_RECOVERY_SMOKE_PASS");
+		console.log("WEB_FIRST_GROWTH_SMOKE_PASS");
 		console.log(JSON.stringify({
 			candidate: {
 				revision: candidate.revision,

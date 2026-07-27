@@ -68,6 +68,38 @@ func _run() -> void:
 	if confirm != null:
 		confirm.pressed.emit()
 	_check(action_request["id"] == "confirm_construction", "screen emits a semantic construction request")
+	var empty_resource_view := _base_view()
+	empty_resource_view["panel"] = "facility"
+	empty_resource_view["facility"] = {
+		"facility_id": "porcelain_plant",
+		"name": "陶瓷厂",
+		"copy": "持续生产陶瓷",
+		"level": 1,
+		"work": {},
+		"kind": "resource",
+		"resource_name": "陶瓷",
+		"output": 0,
+		"can_collect": false,
+		"upgrade_cost_copy": "升级消耗：金币 40",
+		"upgrade_preview": "提高产速",
+		"can_upgrade": true,
+	}
+	factory.configure(empty_resource_view)
+	await process_frame
+	var empty_collect := factory.find_child("Collect_porcelain_plant", true, false) as Button
+	_check(
+		empty_collect != null and empty_collect.disabled and empty_collect.text == "暂无可收取",
+		"zero stored output cannot advertise a guaranteed-error collection action"
+	)
+	(empty_resource_view["facility"] as Dictionary)["output"] = 6
+	(empty_resource_view["facility"] as Dictionary)["can_collect"] = true
+	factory.configure(empty_resource_view)
+	await process_frame
+	var ready_collect := factory.find_child("Collect_porcelain_plant", true, false) as Button
+	_check(
+		ready_collect != null and not ready_collect.disabled and ready_collect.text == "收取陶瓷",
+		"positive stored output exposes the exact resource collection action"
+	)
 	factory.queue_free()
 	await process_frame
 	if failures.is_empty():

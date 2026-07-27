@@ -940,6 +940,7 @@ func _factory_facility_view(state: RefCounted, facility_id: String, now_unix: in
 		"kind": kind,
 		"resource_name": resource_name,
 		"output": output,
+		"can_collect": output > 0,
 		"upgrade_cost_copy": "升级消耗：金币 %d · 技术 %d · 陶瓷 %d · 零件 %d · 能源 %d" % [
 			40 * level, 2 * level, 20 * level, 12 * level, 16 * level,
 		],

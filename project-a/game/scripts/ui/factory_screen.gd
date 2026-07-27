@@ -283,8 +283,15 @@ func _facility_panel() -> Control:
 				15,
 				GOLD
 			))
-			var collect := _button("收取%s" % String(facility.get("resource_name", "")), true)
+			var can_collect := bool(facility.get("can_collect", int(facility.get("output", 0)) > 0))
+			var collect := _button(
+				"收取%s" % String(facility.get("resource_name", ""))
+				if can_collect
+				else "暂无可收取",
+				can_collect
+			)
 			collect.name = "Collect_%s" % String(facility.get("facility_id", ""))
+			collect.disabled = not can_collect
 			collect.pressed.connect(action_requested.emit.bind("claim_facility_output", {
 				"facility_id": String(facility.get("facility_id", "")),
 			}))
