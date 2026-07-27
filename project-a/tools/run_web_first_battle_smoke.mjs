@@ -223,6 +223,8 @@ async function finishActiveBattle(
 	evidenceName,
 	skillCardXs = [420],
 	skillCardY = 306,
+	skillInputIntervalMs = 900,
+	settlementTimeoutMs = 90000,
 ) {
 	await new Promise((accept) => setTimeout(accept, 2200));
 	let skillTouches = 0;
@@ -232,12 +234,12 @@ async function finishActiveBattle(
 		const x = skillCardXs[skillCardIndex % skillCardXs.length];
 		skillCardIndex += 1;
 		void touch(cdp, x, skillCardY);
-	}, 900);
+	}, skillInputIntervalMs);
 	try {
 		const settledSave = await waitFor(`${stageId} settlement persisted to IndexedDB`, async () => {
 			const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
 			return save && completion(save) ? save : null;
-		}, 90000, 400);
+		}, settlementTimeoutMs, 400);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, evidenceName);
 		return { save: settledSave, skillTouches };
@@ -511,6 +513,8 @@ async function main() {
 				"browser-first-wall-counterattack-victory-844x390.png",
 				[145, 420, 700],
 				330,
+				300,
+				120000,
 			);
 		} catch (error) {
 			await screenshot(cdp, "browser-first-wall-counterattack-timeout-844x390.png");
