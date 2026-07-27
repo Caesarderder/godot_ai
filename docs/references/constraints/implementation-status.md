@@ -224,6 +224,11 @@ related:
   `web/` 根与链接拒绝。revision `92426358ffa2` 的 16 文件归档连续两次得到相同 SHA256
   `4f43f9418145bb7417212ac73fcd7ed9f139e655ef30b707101f70ec38b59ec8`，并在隔离目录恢复、
   逐文件复核后重新通过 `release_audit.py`。这不代表生产监控、具名负责人或托管/CDN 回滚已完成。
+- Chrome 新 profile 的真实 Canvas 输入旅程已从首战扩展到首次高墙：依次通关 1-1、1-2、1-3，
+  再在 1-4 按设计首败。revision `ad440bbdc459` 的本机运行耗时 181.5 秒；IndexedDB 精确记录
+  前三关通关、1-4 一次尝试且未通关、onboarding 进入研究突破，运行期异常、意外 console error
+  与网络失败均为 0。`browser-first-wall-defeat-844x390.png` 证明首败主路径指向建造研究所。
+  后半章真实 Web UI 连续旅程尚未完成，领域旅程不能替代它。
 
 ## 新合同状态
 

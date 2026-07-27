@@ -342,6 +342,21 @@ headless `FileAccess` 失败测试代替真实 Web 结论。测试工具属于 `
 - 回滚只切换静态候选，不降级或改写玩家存档。若新版本已写入不可逆 schema，必须先证明旧版本
   能读取该 schema；否则停止流量而不是盲目回滚。
 
+### 首章真实 Web UI 旅程合同
+
+领域层 14 条首章旅程只证明规则、经济和确定性结果，不能证明导出后的玩家页面能连续走通。
+Web 候选还需要一条逐步扩展的真实输入旅程：从空白浏览器 profile 开始，只通过导出 Canvas
+接收的键盘、鼠标或触控完成首章，不改 IndexedDB、不调用 GDScript 测试入口、不加速引擎。
+
+每个阶段必须以持久化事实作为到达条件，而不是只等待固定秒数或凭截图猜测：关卡胜利读取
+`cleared_stages`，高墙首败读取尝试次数与 onboarding 前进，研究/建造/编队/成长读取各自
+schema 字段，Boss 结束读取首章完成状态。脚本同时监听首次加载后的 JavaScript 异常、意外
+console error 与网络失败，并保存少量关键转折截图。当前 Chrome 首战 smoke 是这条旅程的
+第一个切片；扩展时必须保留现有首战门禁，不能用领域命令替代难点页面。
+
+该旅程证明真实 Web UI 的连续可达性与保存链，不证明玩家理解、乐趣、20–30 分钟节奏或移动
+设备表现；这些仍由目标玩家盲测和真机门禁负责。
+
 当前八个马桶人 GLB 均由 `game/scenes/actors/ally_models/*_model.tscn` 包装，
 `ToiletUnitView` 只 preload wrapper。`artifacts/` 与 runtime 路径的反向搜索为空。
 

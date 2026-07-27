@@ -52,6 +52,9 @@ State labels:
 - [x] Google Chrome desktop HTTP smoke, including keyboard `Enter` on the focused title CTA, touch input,
   online reload, server shutdown, offline PWA restart, and IndexedDB save identity
   (`node tools/run_web_browser_smoke.mjs`).
+- [x] Chrome fresh-profile first-wall smoke uses only exported Canvas input to clear 1-1/1-2/1-3 and reach the
+  authored 1-4 defeat; IndexedDB proves exact stage/attempt/onboarding facts with no runtime, console, or network
+  failures (`node tools/run_web_first_battle_smoke.mjs`).
 - [ ] Firefox desktop smoke.
 - [ ] Chrome Android real-device smoke.
 - [ ] Safari iOS real-device smoke.

@@ -196,6 +196,7 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 						contentVersion: parsed.content_version,
 						clearedStages: parsed.stage_progress?.cleared_stages,
 						attempts: parsed.attempt_counters,
+						onboardingActiveIndex: parsed.onboarding?.active_index,
 					});
 				} catch (error) {
 					database.close();
@@ -205,6 +206,27 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 		};
 	};
 })`;
+
+async function continueBattle(cdp, stageId, completion, evidenceName) {
+	await touch(cdp, 650, 210);
+	await new Promise((accept) => setTimeout(accept, 2200));
+	let skillTouches = 0;
+	const skillInput = setInterval(() => {
+		skillTouches += 1;
+		void touch(cdp, 420, 306);
+	}, 900);
+	try {
+		const settledSave = await waitFor(`${stageId} settlement persisted to IndexedDB`, async () => {
+			const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+			return save && completion(save) ? save : null;
+		}, 90000, 400);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, evidenceName);
+		return { save: settledSave, skillTouches };
+	} finally {
+		clearInterval(skillInput);
+	}
+}
 
 async function main() {
 	for (const file of ["index.html", "index.js", "index.wasm", "index.pck"]) {
@@ -328,6 +350,27 @@ async function main() {
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-battle-result-844x390.png");
 
+		const stage12 = await continueBattle(
+			cdp,
+			"stage_1_2",
+			(save) => save.clearedStages?.includes("stage_1_2"),
+			"browser-first-session-stage-1-2-result-844x390.png",
+		);
+		const stage13 = await continueBattle(
+			cdp,
+			"stage_1_3",
+			(save) => save.clearedStages?.includes("stage_1_3"),
+			"browser-first-session-stage-1-3-result-844x390.png",
+		);
+		const firstWall = await continueBattle(
+			cdp,
+			"stage_1_4",
+			(save) => Number(save.attempts?.stage_1_4 ?? 0) === 1
+				&& !save.clearedStages?.includes("stage_1_4")
+				&& Number(save.onboardingActiveIndex ?? -1) >= 3,
+			"browser-first-wall-defeat-844x390.png",
+		);
+
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
 			"   at: can_process (scene/main/node.cpp:902)",
@@ -341,7 +384,7 @@ async function main() {
 			})}`);
 		}
 		const browserVersion = await cdp.send("Browser.getVersion");
-		console.log("WEB_FIRST_BATTLE_SMOKE_PASS");
+		console.log("WEB_FIRST_WALL_SMOKE_PASS");
 		console.log(JSON.stringify({
 			candidate: {
 				revision: candidate.revision,
@@ -350,10 +393,17 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			stage: "stage_1_1",
-			stageCleared: true,
+			journey: "fresh profile through first stage_1_4 defeat",
+			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
-			skillCardTouchInputs: skillTouches,
+			firstWallReached: true,
+			firstWallOutcome: "defeat",
+			firstWallAttempts: firstWall.save.attempts.stage_1_4,
+			clearedStages: firstWall.save.clearedStages,
+			skillCardTouchInputs: skillTouches
+				+ stage12.skillTouches
+				+ stage13.skillTouches
+				+ firstWall.skillTouches,
 			elapsedMs: Date.now() - startedAt,
 			runtimeExceptions: exceptions.length,
 			unexpectedConsoleErrors: unexpectedConsoleErrors.length,
@@ -361,6 +411,9 @@ async function main() {
 			evidence: [
 				"artifacts/browser-first-battle-844x390.png",
 				"artifacts/browser-first-battle-result-844x390.png",
+				"artifacts/browser-first-session-stage-1-2-result-844x390.png",
+				"artifacts/browser-first-session-stage-1-3-result-844x390.png",
+				"artifacts/browser-first-wall-defeat-844x390.png",
 			],
 		}, null, 2));
 	} finally {
@@ -379,7 +432,7 @@ async function main() {
 }
 
 main().catch((error) => {
-	console.error("WEB_FIRST_BATTLE_SMOKE_FAIL");
+	console.error("WEB_FIRST_WALL_SMOKE_FAIL");
 	console.error(error?.stack ?? String(error));
 	process.exitCode = 1;
 });
