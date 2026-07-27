@@ -1920,9 +1920,9 @@ func _request_battle_skill(unit_id: String) -> void:
 	if accepted:
 		if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
 			battle_hud_screen.confirm_skill_requested()
-		_notify("已下达技能指令")
 	else:
-		_notify("技能尚未就绪")
+		if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
+			battle_hud_screen.show_skill_unavailable()
 	_refresh_battle_hud_once()
 
 

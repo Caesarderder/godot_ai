@@ -31,6 +31,7 @@ var _skill_confirmation_updates := 0
 var _skill_feedback_updates := 0
 var _skill_feedback_copy := ""
 var _skill_feedback_queue: Array[String] = []
+var _skill_unavailable_updates := 0
 var _reinforcement_rally_updates := 0
 var _unit_hud: Dictionary = {}
 var _skill_buttons: Dictionary = {}
@@ -56,6 +57,7 @@ func configure(
 	_skill_feedback_updates = 0
 	_skill_feedback_copy = ""
 	_skill_feedback_queue.clear()
+	_skill_unavailable_updates = 0
 	_reinforcement_rally_updates = 10 if reinforcement_rally else 0
 	_warning_tactic = _warning_tactic_for(snapshots)
 	skill_mode_button.text = "技能：手动" if _manual_skills else "技能：自动"
@@ -79,6 +81,10 @@ func confirm_skill_requested() -> void:
 		return
 	_first_skill_confirmed = true
 	_skill_confirmation_updates = 5
+
+
+func show_skill_unavailable() -> void:
+	_skill_unavailable_updates = 3
 
 
 func apply_battle_events(events: Array[Dictionary]) -> void:
@@ -133,7 +139,11 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	status_label.add_theme_color_override("font_color", RED if not warnings.is_empty() else GOLD)
 	if not warnings.is_empty():
 		return
-	if _skill_feedback_updates > 0:
+	if _skill_unavailable_updates > 0:
+		status_label.text = "技能尚未就绪 · 等待能量充满"
+		status_label.add_theme_color_override("font_color", MUTED)
+		_skill_unavailable_updates -= 1
+	elif _skill_feedback_updates > 0:
 		status_label.text = _skill_feedback_copy
 		status_label.add_theme_color_override("font_color", GREEN)
 		_skill_feedback_updates -= 1

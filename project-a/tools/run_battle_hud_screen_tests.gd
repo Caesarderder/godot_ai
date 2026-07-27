@@ -218,6 +218,45 @@ func _run() -> void:
 		hud.status_label.text.contains("炮击 1.8秒") and not hud.status_label.text.contains("造成 40 伤害"),
 		"boss warning keeps priority over general skill feedback"
 	)
+	hud.show_skill_unavailable()
+	hud.apply_snapshot({
+		"stage_index": 2,
+		"stage_count": 3,
+		"stage_name": "核心巨炮",
+		"road_progress": 800,
+		"warnings": [{"remaining_ticks": 8}],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 0,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		hud.status_label.text.contains("炮击 1.6秒") and not hud.status_label.text.contains("技能尚未就绪"),
+		"boss warning also keeps priority over a rejected skill order"
+	)
+	hud.apply_snapshot({
+		"stage_index": 2,
+		"stage_count": 3,
+		"stage_name": "核心巨炮",
+		"road_progress": 800,
+		"warnings": [],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 0,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		hud.status_label.text.contains("技能尚未就绪 · 等待能量充满"),
+		"rejected skill order uses the local HUD after the cannon warning clears"
+	)
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

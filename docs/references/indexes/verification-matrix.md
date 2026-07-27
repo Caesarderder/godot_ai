@@ -279,6 +279,10 @@ related:
   “突破/摧毁 + 名称 + 耐久”，并在路障死亡后切换到城市；表现、UI 与 battle 回归证明它没有
   改变领域结果。`ui-first-skill-tutorial-844x390.png` 使用真实 1-1 单阶段配置证明目标前缀与
   技能教学、三个战斗操作按钮在基准横屏内共存。
+- 战斗反馈所有权：App Shell 不再为接受或拒绝的技能请求显示全局顶层 toast；接受后的实际
+  结果与未就绪说明均由 `BattleHudScreen` 状态行承载，炮击警告对两者保持优先级。
+  `run_battle_hud_screen_tests.gd` 覆盖警告期间拒绝反馈不抢占、警告消失后再显示；
+  更新后的 `ui-first-skill-result-844x390.png` 证明实际伤害、阶段目标和战场同时可读。
 - 结构突破反馈：`run_battle_tests.gd` 锁定摧毁事件的 ID/名称/lane/kind，
   `run_presentation_tests.gd` 锁定普通画质的世界文字+冲击环以及低画质/减少动态的纯文字预算；
   `ui-first-breakthrough-844x390.png` 证明首战“防线突破”与 HUD 下一城市目标同时可读。
