@@ -243,6 +243,31 @@ func _run() -> void:
 		"stage_count": 3,
 		"stage_name": "核心巨炮",
 		"road_progress": 800,
+		"warnings": [{
+			"remaining_ticks": 22,
+			"suppressed": true,
+			"suppression_current": 82,
+			"suppression_target": 70,
+		}],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 0,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		hud.status_label.text.contains("巨炮已压制 · 安全窗口")
+		and hud.status_label.get_theme_color("font_color") == BattleHudScreen.GREEN,
+		"accepted suppression keeps a readable green confirmation instead of a stale countdown"
+	)
+	hud.apply_snapshot({
+		"stage_index": 2,
+		"stage_count": 3,
+		"stage_name": "核心巨炮",
+		"road_progress": 800,
 		"warnings": [],
 		"units": [{
 			"unit_id": "hero_test",

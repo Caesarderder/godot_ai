@@ -12,6 +12,7 @@ const STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地�
 const ROAD_END: int = 1000
 const SKILL_COST: int = 100
 const CANNON_FUSE_TICKS: int = 7
+const CANNON_SUPPRESSED_CONFIRM_TICKS: int = 3
 const DAMAGE_ENERGY_PER_MAX_HP_PERCENT: int = 1
 const DAMAGE_ENERGY_PER_HIT_CAP: int = 10
 const DAMAGE_ENERGY_PER_SECOND_CAP: int = 20
@@ -324,6 +325,10 @@ func _run_structure_defenses(events: Array[Dictionary]) -> void:
 func _resolve_cannon_warnings(events: Array[Dictionary]) -> void:
 	var remaining: Array[Dictionary] = []
 	for warning in _warnings:
+		if bool(warning.get("suppressed", false)):
+			if tick_index - int(warning.get("suppressed_tick", tick_index)) < CANNON_SUPPRESSED_CONFIRM_TICKS:
+				remaining.append(warning)
+			continue
 		if int(warning["impact_tick"]) > tick_index:
 			remaining.append(warning)
 			continue
@@ -366,6 +371,9 @@ func _record_cannon_suppression_damage(structure: Dictionary, actual_damage: int
 		return
 	var remaining: Array[Dictionary] = []
 	for warning in _warnings:
+		if bool(warning.get("suppressed", false)):
+			remaining.append(warning)
+			continue
 		if not bool(warning.get("suppressible", false)) or int(warning.get("impact_tick", 0)) <= tick_index:
 			remaining.append(warning)
 			continue
@@ -376,6 +384,8 @@ func _record_cannon_suppression_damage(structure: Dictionary, actual_damage: int
 		warning["suppression_remaining"] = maxi(0, target - damage)
 		if damage >= target:
 			_cannons_suppressed += 1
+			warning["suppressed"] = true
+			warning["suppressed_tick"] = tick_index
 			events.append({
 				"type": &"cannon_suppressed",
 				"tick": tick_index,
@@ -384,6 +394,7 @@ func _record_cannon_suppression_damage(structure: Dictionary, actual_damage: int
 				"damage": damage,
 				"target": target,
 			})
+			remaining.append(warning)
 			continue
 		remaining.append(warning)
 	_warnings = remaining

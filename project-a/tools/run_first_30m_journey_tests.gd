@@ -188,6 +188,14 @@ func _run_seed_journey(run_seed: int, growth_route: String) -> void:
 	manager.delete_local_save()
 
 
+func _has_active_cannon_warning(snapshot: Dictionary) -> bool:
+	for warning_value in snapshot.get("warnings", []):
+		var warning := warning_value as Dictionary
+		if not bool(warning.get("suppressed", false)):
+			return true
+	return false
+
+
 func _battle_and_settle(executor: RefCounted, stage_id: String, now_unix: int) -> Dictionary:
 	var session: RefCounted = BattleSessionScript.new()
 	session.start(_snapshots(executor.state), stage_id, StageCatalogScript.stage(stage_id))
@@ -198,7 +206,7 @@ func _battle_and_settle(executor: RefCounted, stage_id: String, now_unix: int) -
 		var should_release := (
 			stage_id != "stage_1_5"
 			or int(snapshot.get("stage_index", 0)) < int(snapshot.get("stage_count", 3)) - 1
-			or not (snapshot.get("warnings", []) as Array).is_empty()
+			or _has_active_cannon_warning(snapshot)
 		)
 		if should_release:
 			for unit_value in snapshot.get("units", []):

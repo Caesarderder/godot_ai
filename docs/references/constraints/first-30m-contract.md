@@ -101,6 +101,11 @@ Compatibility 证据为 `artifacts/ui-first-skill-tutorial-844x390.png`；真人
 首战首次充能时由权威事件报告的有效伤害，不是技能面板攻击值或旧夹具推导值。该证据证明反馈链
 存在，不替代真人对爽感、节奏和信息负荷的判断。
 
+Boss 压炮达到阈值时，领域结果仍在当 tick 生效并取消炮击，但 accepted warning 以
+`suppressed=true` 固定保留 3 tick（0.6 秒），HUD 显示绿色“巨炮已压制 · 安全窗口”后才恢复
+普通战术信息。该确认窗不得重复计数、追加伤害或延后胜负，只用于避免成功反馈在同一 5Hz tick
+内消失；真人能否把它与自己的技能时机建立因果关系仍须盲测。
+
 首技能视觉证据必须通过真实技能卡 `pressed` 信号进入 App Shell 请求路由，再由
 `BattleWorld.request_skill()` 接受并推进一个确定性 tick；截图工具必须监听并断言
 `battle_events_applied` 中的真实施法者、`skill_used` 和正数 `effective_damage`，不得手工构造

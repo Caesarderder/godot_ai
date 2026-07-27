@@ -377,7 +377,15 @@ func _test_boss_cannon_suppression_high_output() -> void:
 	var events: Array[Dictionary] = session.advance_tick()
 	var suppressed := _first_event(events, &"cannon_suppressed")
 	_check(not suppressed.is_empty(), "high structure output can interrupt the boss cannon before impact")
-	_check((session.snapshot().get("warnings", []) as Array).is_empty(), "suppressed boss warning is removed immediately")
+	var warnings := session.snapshot().get("warnings", []) as Array
+	_check(warnings.size() == 1, "suppressed boss warning remains briefly visible for player confirmation")
+	if not warnings.is_empty():
+		_check(bool((warnings[0] as Dictionary).get("suppressed", false)), "suppressed warning exposes the accepted outcome to presentation")
+	for _i in BattleSessionScript.CANNON_SUPPRESSED_CONFIRM_TICKS - 1:
+		session.advance_tick()
+		_check(not (session.snapshot().get("warnings", []) as Array).is_empty(), "suppression confirmation persists for the deterministic minimum window")
+	session.advance_tick()
+	_check((session.snapshot().get("warnings", []) as Array).is_empty(), "suppression confirmation clears after the deterministic minimum window")
 	_defeat_main_allies(session)
 	session.advance_tick()
 	_check(int(session.result.get("cannons_suppressed", 0)) == 1, "battle result records suppressed boss cannon count")

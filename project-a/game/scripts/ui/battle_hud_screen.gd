@@ -109,12 +109,17 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	var objective_copy := _objective_copy(snapshot)
 	var warnings := snapshot.get("warnings", []) as Array
 	var warning_copy := ""
+	var warning_suppressed := false
 	if not warnings.is_empty():
 		var warning := warnings[0] as Dictionary
-		warning_copy = " · 炮击 %0.1f秒 · %s" % [
-			float(warning.get("remaining_ticks", 0)) / 5.0,
-			_warning_tactic,
-		]
+		warning_suppressed = bool(warning.get("suppressed", false))
+		if warning_suppressed:
+			warning_copy = " · 巨炮已压制 · 安全窗口"
+		else:
+			warning_copy = " · 炮击 %0.1f秒 · %s" % [
+				float(warning.get("remaining_ticks", 0)) / 5.0,
+				_warning_tactic,
+			]
 	var battle_status := "阶段 %d/%d · %s · 战线 %d%%%s" % [
 		int(snapshot.get("stage_index", 0)) + 1,
 		int(snapshot.get("stage_count", 3)),
@@ -136,7 +141,10 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		):
 			ready_unit_name = _unit_display_name(String(unit.get("unit_id", "")))
 	status_label.text = battle_status
-	status_label.add_theme_color_override("font_color", RED if not warnings.is_empty() else GOLD)
+	status_label.add_theme_color_override(
+		"font_color",
+		GREEN if warning_suppressed else (RED if not warnings.is_empty() else GOLD)
+	)
 	if not warnings.is_empty():
 		return
 	if _skill_unavailable_updates > 0:
