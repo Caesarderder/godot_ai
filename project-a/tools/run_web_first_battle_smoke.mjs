@@ -576,7 +576,7 @@ async function main() {
 		await new Promise((accept) => setTimeout(accept, 500));
 		await screenshot(cdp, "browser-first-industrial-commissioned-844x390.png");
 		const porcelainBeforeClaim = Number(industrialBuilt.materials?.porcelain ?? 0);
-		await touch(cdp, 650, 268);
+		await touch(cdp, 650, 325);
 		const commissioningClaim = await waitFor(
 			"commissioning output persisted to IndexedDB",
 			async () => {
@@ -700,7 +700,7 @@ async function main() {
 }
 
 main().catch((error) => {
-	console.error("WEB_FIRST_REINFORCEMENT_SMOKE_FAIL");
+	console.error("WEB_FIRST_GROWTH_SMOKE_FAIL");
 	console.error(error?.stack ?? String(error));
 	process.exitCode = 1;
 });
