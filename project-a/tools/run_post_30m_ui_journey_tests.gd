@@ -177,12 +177,23 @@ func _run() -> void:
 		await _wait_frames(4)
 	state = game.current_state()
 	_check(String(state.formation.slots.get("troop_3", "")) == hero_id, "candidate click persists the faction hero in formation")
+	var formation_toast := main.get("toast") as Label
+	_check(
+		formation_toast != null
+			and formation_toast.visible
+			and formation_toast.text.contains("阵营初阵已成")
+			and formation_toast.text.contains("去2-1验证"),
+		"first core deployment immediately celebrates formation and names the next proof"
+	)
 
 	main.call("_show_goals")
 	await _wait_frames(4)
+	_check(_tree_has_text(main, "阵营初阵已成"), "formation completion receives an explicit milestone celebration")
 	_check(_tree_has_text(main, "实战证明 0/3"), "formation completion advances to a visible three-battle proof goal")
+	_check(_tree_has_text(main, "第1场验证"), "proof goal names the immediate attempt instead of only showing a counter")
+	_check(_tree_has_text(main, "首战观察"), "proof goal teaches what to watch for in the new core")
 	var proof_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
-	_check(proof_cta != null and proof_cta.text.contains("验证"), "proof goal retains one clear map action")
+	_check(proof_cta != null and proof_cta.text.contains("开始第1场验证"), "proof goal retains one clear map action")
 	if proof_cta != null:
 		proof_cta.pressed.emit()
 		await _wait_frames(4)

@@ -139,6 +139,8 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 	var hurdle_reason := ""
 	var recovery := ""
 	var hero_id := ""
+	var milestone := ""
+	var proof_focus := ""
 	if hero == null:
 		phase = "research"
 		small = "把%s图纸研发为永久角色" % role_name
@@ -172,19 +174,26 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			recovery = "进入编队，选择一个阵位并亲自确认替换。"
 		elif chapter_two_clears < 3:
 			phase = "prove_one_star"
-			small = "用%d★%s推进第二章（实战证明 %d/3）" % [
+			milestone = "阵营初阵已成 · %s · %s" % [
+				faction_name,
+				FactionCatalogScript.playstyle_for(archetype_id),
+			]
+			proof_focus = _one_star_proof_focus(archetype_id)
+			small = "第%d场验证：用%d★%s攻占%s（实战证明 %d/3）" % [
+				chapter_two_clears + 1,
 				int(hero.star),
 				role_name,
+				String(StageCatalogScript.stage(stage_id).get("display_name", stage_id)),
 				chapter_two_clears,
 			]
-			cta_label = "验证%s · %s" % [
-				role_name,
+			cta_label = "开始第%d场验证 · %s" % [
+				chapter_two_clears + 1,
 				String(StageCatalogScript.stage(stage_id).get("display_name", stage_id)),
 			]
 			target = "map"
 			hurdle_title = "阵营打法尚未经过实战"
-			hurdle_reason = "战力数字不能替代玩家亲自看见新职责改变战局。"
-			recovery = "连续推进三座城，观察新角色的技能时机与战报贡献。"
+			hurdle_reason = "战力数字不能替代玩家亲自看见新职责改变战局；%s" % proof_focus
+			recovery = "失败无永久损失；调整站位或技能时机后可立即重试。"
 		elif int(hero.star) < 2 and not late_probe_stage_id.is_empty():
 			phase = "probe_late_wall"
 			stage_id = late_probe_stage_id
@@ -271,6 +280,8 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 		"stage_id": stage_id,
 		"hero_id": hero_id,
 		"archetype_id": archetype_id,
+		"milestone": milestone,
+		"proof_focus": proof_focus,
 	}
 	return {
 		"active": true,
@@ -304,6 +315,19 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			}],
 		},
 	}
+
+
+static func _one_star_proof_focus(archetype_id: String) -> String:
+	var focus_by_playstyle := {
+		"抢先爆发": "首战观察：核心是否抢在共振前完成第一轮爆发。",
+		"承炮续战": "首战观察：核心是否承住首轮压力并让队伍继续推进。",
+		"后排拆塔": "首战观察：核心是否从后排优先削减街垒与声塔。",
+		"削弱控场": "首战观察：核心是否压低守军威胁并创造输出窗口。",
+	}
+	return String(focus_by_playstyle.get(
+		FactionCatalogScript.playstyle_for(archetype_id),
+		"首战观察：核心技能是否改变队伍的推进节奏。"
+	))
 
 
 static func _faction_core_choice_journey() -> Dictionary:

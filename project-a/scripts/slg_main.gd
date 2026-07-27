@@ -3747,6 +3747,8 @@ func _select_formation_slot(slot: String) -> void:
 
 
 func _assign_formation_slot(slot: String, hero_id: String) -> void:
+	var state_before: RefCounted = game.current_state()
+	var was_deployed: bool = state_before.formation.hero_ids().has(hero_id)
 	var result := _command("assign_formation_slot", {
 		"slot": slot,
 		"hero_id": hero_id,
@@ -3766,7 +3768,25 @@ func _assign_formation_slot(slot: String, hero_id: String) -> void:
 			)
 		):
 			formation_edit_slot = _first_empty_troop_slot()
-	_after_action(result, _show_legion)
+	if not bool(result.get("ok", false)):
+		_notify(_error_copy(String(result.get("error", "编队失败"))))
+		return
+	_show_legion()
+	var deployed_hero: RefCounted = game.current_state().hero_by_id(hero_id)
+	var selected_core := RecruitmentResultProjection.selected_faction_core(
+		game.current_state()
+	)
+	if (
+		not was_deployed
+		and deployed_hero != null
+		and String(deployed_hero.archetype_id) == selected_core
+	):
+		_notify("阵营初阵已成 · %s已部署 · 去2-1验证%s" % [
+			String(deployed_hero.display_name),
+			FactionCatalog.playstyle_for(selected_core),
+		])
+	else:
+		_notify(_success_copy(result))
 
 
 func _open_breakthrough_formation() -> void:

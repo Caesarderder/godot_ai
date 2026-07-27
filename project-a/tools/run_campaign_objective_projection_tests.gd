@@ -160,7 +160,11 @@ func _test_faction_journey_projection() -> void:
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
 	_check(String(hierarchy.get("target", "")) == "map", "deployed one-star core routes to its battlefield proof")
+	_check(String(hierarchy.get("milestone", "")).contains("阵营初阵已成"), "first battlefield proof celebrates formation completion")
 	_check(String(hierarchy.get("small", "")).contains("实战证明 0/3"), "one-star proof exposes an observable three-battle target")
+	_check(String(hierarchy.get("small", "")).contains("第1场验证"), "one-star proof turns the counter into the next concrete attempt")
+	_check(String(hierarchy.get("proof_focus", "")).contains("首战观察"), "one-star proof explains what the player should learn in battle")
+	_check(String(hierarchy.get("cta_label", "")).contains("开始第1场验证"), "one-star proof exposes one explicit first-battle action")
 
 	state.stage_progress["cleared_stages"] = (
 		state.stage_progress.get("cleared_stages", []) as Array

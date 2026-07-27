@@ -180,9 +180,30 @@ func _new_player_welfare_panel(view: Dictionary) -> Control:
 func _goal_hierarchy(view: Dictionary) -> Control:
 	var panel := _panel("")
 	panel.name = "GoalHierarchyPanel"
-	panel.add_child(_label("大目标 · %s" % String(view.get("macro", "")), 17, GOLD))
+	var milestone := String(view.get("milestone", ""))
+	if not milestone.is_empty():
+		var milestone_copy := _label("✓ %s" % milestone, 16, GREEN)
+		milestone_copy.name = "GoalMilestoneBanner"
+		panel.add_child(milestone_copy)
+	else:
+		panel.add_child(_label("大目标 · %s" % String(view.get("macro", "")), 17, GOLD))
 	panel.add_child(_label("中目标 · %s" % String(view.get("medium", "")), 15, CYAN))
 	panel.add_child(_label("小目标 · %s" % String(view.get("small", "")), 14, TEXT))
+	var proof_focus := String(view.get("proof_focus", ""))
+	if not proof_focus.is_empty():
+		var focus_copy := _label(proof_focus, 13, CYAN)
+		focus_copy.name = "GoalProofFocus"
+		panel.add_child(focus_copy)
+	if bool(view.get("actionable", not bool(view.get("finished", false)))):
+		var cta := _button(String(view.get("cta_label", "继续")), true)
+		cta.name = "GoalHierarchyPrimaryCTA"
+		cta.pressed.connect(action_requested.emit.bind("follow_task", {
+			"target": String(view.get("target", "expedition")),
+			"stage_id": String(view.get("stage_id", "")),
+			"hero_id": String(view.get("hero_id", "")),
+			"archetype_id": String(view.get("archetype_id", "")),
+		}))
+		panel.add_child(cta)
 	var hurdle := view.get("hurdle", {}) as Dictionary
 	if not hurdle.is_empty():
 		var hurdle_copy := _label(
@@ -197,16 +218,6 @@ func _goal_hierarchy(view: Dictionary) -> Control:
 		hurdle_copy.name = "CurrentHurdlePanel"
 		hurdle_copy.tooltip_text = String(hurdle.get("reason", ""))
 		panel.add_child(hurdle_copy)
-	if bool(view.get("actionable", not bool(view.get("finished", false)))):
-		var cta := _button(String(view.get("cta_label", "继续")), true)
-		cta.name = "GoalHierarchyPrimaryCTA"
-		cta.pressed.connect(action_requested.emit.bind("follow_task", {
-			"target": String(view.get("target", "expedition")),
-			"stage_id": String(view.get("stage_id", "")),
-			"hero_id": String(view.get("hero_id", "")),
-			"archetype_id": String(view.get("archetype_id", "")),
-		}))
-		panel.add_child(cta)
 	return panel
 
 

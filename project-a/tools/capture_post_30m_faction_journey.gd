@@ -100,6 +100,11 @@ func _capture() -> void:
 	candidate.pressed.emit()
 	await _wait_frames(5)
 	state = game.current_state()
+	main.call("_show_goals")
+	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-proof-zero-844x390.png"):
+		return
+	state = game.current_state()
 	state.stage_progress["cleared_stages"] = [
 		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5",
 		"stage_2_1", "stage_2_2", "stage_2_3",
