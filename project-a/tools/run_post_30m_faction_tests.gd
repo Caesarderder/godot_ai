@@ -18,6 +18,9 @@ const SignalRecruitServiceScript := preload(
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 
 const RUN_SEEDS: Array[int] = [20260721, 20260722, 20260723, 20260724, 20260725, 20260726, 20260727]
+const TICKS_PER_SECOND := 5
+const INTERACTION_SECONDS := 8
+const POST_CHAPTER_SESSION_CEILING_SECONDS := 1200
 
 var failures: Array[String] = []
 var executor: RefCounted
@@ -241,6 +244,30 @@ func _run_seed(run_seed: int) -> void:
 		int(grown_boss.get("ticks", 10001)) <= 900,
 		"seed %d mastered 2-5 route resolves within the three-minute finale ceiling" % run_seed
 	)
+	_ok(
+		int(grown_gate.get("ticks", 10001)) <= 900,
+		"seed %d mastered 2-4 gate resolves within the same three-minute attention ceiling" % run_seed
+	)
+	var first_wall_index := 3
+	for stage_index in one_star_chapter.size():
+		if String((one_star_chapter[stage_index] as Dictionary).get("outcome", "")) == "defeat":
+			first_wall_index = stage_index
+			break
+	var journey_battle_ticks := int(grown_boss.get("ticks", 0))
+	if first_wall_index <= 3:
+		journey_battle_ticks += int(grown_gate.get("ticks", 0))
+	for stage_index in range(first_wall_index + 1):
+		journey_battle_ticks += int(
+			(one_star_chapter[stage_index] as Dictionary).get("ticks", 0)
+		)
+	var modeled_interactions := 10 + first_wall_index + 1
+	var modeled_journey_seconds := int(ceil(
+		float(journey_battle_ticks) / float(TICKS_PER_SECOND)
+	)) + modeled_interactions * INTERACTION_SECONDS + 5
+	_ok(
+		modeled_journey_seconds <= POST_CHAPTER_SESSION_CEILING_SECONDS,
+		"seed %d post-chapter critical path stays within twenty modeled minutes" % run_seed
+	)
 	print(JSON.stringify({
 		"seed": run_seed,
 		"archetype": guaranteed_archetype,
@@ -248,6 +275,8 @@ func _run_seed(run_seed: int) -> void:
 		"two_star": two_star_chapter,
 		"grown_gate": grown_gate,
 		"grown_boss": grown_boss,
+		"first_wall_stage": "stage_2_%d" % (first_wall_index + 1),
+		"modeled_journey_seconds": modeled_journey_seconds,
 	}))
 
 	var decoded := SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(executor.state))

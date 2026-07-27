@@ -130,6 +130,8 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 	config = _apply_authored_definition(config, authored_definition)
 	if stage_id == "stage_1_5":
 		_shape_chapter_one_boss(config)
+	elif stage_id == "stage_2_4":
+		_shape_chapter_two_gate(config)
 	elif stage_in_chapter == 5 and chapter >= 2:
 		_shape_boss_finale(config)
 	return config
@@ -953,6 +955,18 @@ static func _shape_boss_finale(config: Dictionary) -> void:
 			structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 40 / 100))
 			structure["hp"] = int(structure["max_hp"])
 			structure["attack"] = maxi(0, int(int(structure.get("attack", 0)) * 40 / 100))
+
+
+static func _shape_chapter_two_gate(config: Dictionary) -> void:
+	# 2-4 teaches the full echo/resonance combination, but its cleanup must not
+	# outlast the chapter Boss. Keep the authored enemies and pressure intact so
+	# the 1★ wall remains real; shorten only the exposed final objective.
+	var final_structure_id := String(config.get("final_structure_id", "alliance_core"))
+	for structure in config.get("structures", []):
+		if String(structure.get("structure_id", "")) != final_structure_id:
+			continue
+		structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 75 / 100))
+		structure["hp"] = int(structure["max_hp"])
 
 
 static func _shape_chapter_one_boss(config: Dictionary) -> void:

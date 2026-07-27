@@ -584,6 +584,8 @@ Inflation_r =
 | 2-1 至 2-5 推荐战力 | 6900/7300/7700/8100/9000 | implemented；首轮消费后 7 seed 四胜一败，2-5 核心剩余 50.80%–81.69% |
 | 2-5 至 3-5 推荐战力 | 9000/9400/9800/10200/10600/11500 | implemented；二轮消费后 7 seed 五胜一败 |
 | 阵营核心 2★Lv3 的 2-5 耗时 | 87–179 秒 | implemented / 7-seed deterministic scan；三分钟硬上限，真人节奏感仍 unknown |
+| 2★Lv2 的 2-4 验证耗时 | 79–165 秒 | implemented / 7-seed deterministic scan；只缩短最终据点收尾，1★成长墙保留 |
+| 30–60 分钟关键路径模型 | 541–696 秒 | derived / 7-seed；含真实战斗、5 秒研发和交互预算，只证明无结构性拖延 |
 
 已知缺口：
 
