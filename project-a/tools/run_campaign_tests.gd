@@ -18,10 +18,15 @@ func _run() -> void:
 	var chapter_feedback_values: Array[String] = []
 	var recommendation_signatures: Array[String] = []
 	var boss_suppression_targets: Array[int] = []
+	var display_names: Array[String] = []
 	for stage_id in ids:
 		var config := StageCatalogScript.stage(stage_id)
 		_check(not config.is_empty(), "%s has a definition" % stage_id)
 		_check(String(config.get("stage_id", "")) == stage_id, "%s identity is stable" % stage_id)
+		var display_name := String(config.get("display_name", ""))
+		_check(not display_name.is_empty(), "%s exposes a player-facing encounter name" % stage_id)
+		_check(not display_names.has(display_name), "%s does not reuse another stage's encounter name" % stage_id)
+		display_names.append(display_name)
 		if stage_id == "stage_1_1":
 			_check((config.get("enemies", []) as Array).is_empty(), "stage_1_1 has no alliance defenders")
 			_check((config.get("structures", []) as Array).size() == 2, "stage_1_1 teaches obstacle then city destruction")
@@ -79,6 +84,7 @@ func _run() -> void:
 		_check(["victory", "defeat"].has(String(session.result.get("outcome", ""))), "%s produces a valid outcome" % stage_id)
 		_check(String(session.result.get("outcome", "")) == "victory", "%s is clearable by the documented three-star release roster" % stage_id)
 	_check(chapter_feedback_values.size() == 5, "Act I has distinct chapter feedback for five chapters")
+	_check(display_names.size() == 25, "all twenty-five Act I stages keep distinct player-facing identities")
 	_check(recommendation_signatures.size() >= 5, "Act I recommendations differ across at least five chapter beats")
 	_check(
 		boss_suppression_targets.size() == 5

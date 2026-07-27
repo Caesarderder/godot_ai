@@ -201,6 +201,16 @@ func _run() -> void:
 			and echo_debrief.contains("前排或后排"),
 		"stage 2-4 defeat names the alternating-rank lesson and its measured cost"
 	)
+	var tv_debrief := String(main.call("_battle_debrief_copy", {
+		"tv_shield_count": 4,
+		"tv_control_count": 5,
+	}, "defeat", "stage_3_4"))
+	_check(
+		tv_debrief.contains("精英护盾启动 4 次")
+			and tv_debrief.contains("屏幕控制 5 次")
+			and tv_debrief.contains("先击穿护盾"),
+		"stage 3-4 result explains its combined TV modules and next target priority"
+	)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"

@@ -385,6 +385,60 @@ func _run() -> void:
 			and hud.status_label.text.contains("下一次将切换排位"),
 		"echo impact quantifies the consequence and teaches the next alternating target"
 	)
+	hud.apply_battle_events([{
+		"type": &"tv_signal_vanish",
+		"duration_ticks": 10,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 0,
+		"stage_count": 3,
+		"stage_name": "信号消失",
+		"road_progress": 420,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("目标信号消失")
+			and hud.status_label.text.contains("先转火"),
+		"stage 3-1 HUD converts target loss into an immediate fallback action"
+	)
+	hud.apply_battle_events([{
+		"type": &"screen_control",
+		"unit_id": &"hero_unknown",
+		"duration_ticks": 8,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "屏幕控制",
+		"road_progress": 520,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("屏幕控制")
+			and hud.status_label.text.contains("1.6秒")
+			and hud.status_label.text.contains("其余成员继续推进"),
+		"stage 3-3 HUD names the controlled member window and unaffected fallback"
+	)
+	hud.apply_battle_events([{
+		"type": &"tv_overseer_shield",
+		"shielded": 2,
+		"amount": 24,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "处决画面",
+		"road_progress": 560,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("2名精英获得 24 护盾")
+			and hud.status_label.text.contains("集中爆发击穿"),
+		"stage 3-4 HUD quantifies overseer protection and its response"
+	)
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

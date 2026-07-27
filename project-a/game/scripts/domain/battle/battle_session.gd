@@ -60,6 +60,11 @@ var _resonance_energy_drained: int = 0
 var _speaker_reinforcement_waves: int = 0
 var _speaker_echo_impact_count: int = 0
 var _speaker_echo_damage_dealt: int = 0
+var _tv_signal_vanish_count: int = 0
+var _tv_teleport_count: int = 0
+var _tv_control_count: int = 0
+var _tv_shield_count: int = 0
+var _tv_signal_returns: Dictionary = {}
 var _started_solo: bool = false
 var _solo_pressure_bp: int = 10000
 
@@ -120,6 +125,11 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_speaker_reinforcement_waves = 0
 	_speaker_echo_impact_count = 0
 	_speaker_echo_damage_dealt = 0
+	_tv_signal_vanish_count = 0
+	_tv_teleport_count = 0
+	_tv_control_count = 0
+	_tv_shield_count = 0
+	_tv_signal_returns = {}
 	_started_solo = false
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
@@ -241,11 +251,8 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 	if chapter == 2:
 		_run_speaker_reinforcements(events)
 		_run_speaker_echo(events)
-	elif chapter == 3 and tick_index % 40 == 0:
-		var target := _lowest_hp_ally()
-		if not target.is_empty():
-			target["stun_ticks"] = maxi(int(target.get("stun_ticks", 0)), 8)
-			events.append({"type": &"screen_control", "tick": tick_index, "unit_id": target["unit_id"], "duration_ticks": 8})
+	elif chapter == 3:
+		_run_tv_mechanics(events)
 	elif chapter >= 4 and tick_index % 30 == 0:
 		var shielded := 0
 		for enemy in _living_stage_enemies():
@@ -255,6 +262,162 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 				shielded += 1
 		if shielded > 0:
 			events.append({"type": &"alliance_coordination", "tick": tick_index, "shielded": shielded})
+
+
+func _run_tv_mechanics(events: Array[Dictionary]) -> void:
+	_run_tv_signal_vanish(events)
+	_run_tv_teleport(events)
+	_run_tv_control(events)
+	_run_tv_shield(events)
+
+
+func _run_tv_signal_vanish(events: Array[Dictionary]) -> void:
+	for unit_id_value in _tv_signal_returns.keys():
+		var unit_id := StringName(String(unit_id_value))
+		if int(_tv_signal_returns[unit_id_value]) != tick_index:
+			continue
+		_tv_signal_returns.erase(unit_id_value)
+		var returned_unit := _unit_by_id(unit_id)
+		if returned_unit.is_empty() or not bool(returned_unit.get("alive", false)):
+			continue
+		events.append({
+			"type": &"tv_signal_return",
+			"tick": tick_index,
+			"unit_id": unit_id,
+			"road_position": int(returned_unit.get("road_position", 500)),
+			"lane": int(returned_unit.get("lane", 1)),
+		})
+	var period := int(_stage_config.get("tv_signal_period_ticks", 0))
+	var duration := int(_stage_config.get("tv_signal_duration_ticks", 0))
+	var limit := int(_stage_config.get("tv_signal_limit", 0))
+	if (
+		period <= 0
+		or duration <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or tick_index % period != 0
+		or _tv_signal_vanish_count >= limit
+	):
+		return
+	var target := _elite_enemy_target()
+	if target.is_empty():
+		target = _first_living_enemy()
+	if target.is_empty():
+		return
+	target["phase_ticks"] = maxi(int(target.get("phase_ticks", 0)), duration)
+	_tv_signal_returns[target["unit_id"]] = tick_index + duration
+	_tv_signal_vanish_count += 1
+	events.append({
+		"type": &"tv_signal_vanish",
+		"tick": tick_index,
+		"unit_id": target["unit_id"],
+		"duration_ticks": duration,
+		"vanish": _tv_signal_vanish_count,
+		"vanish_limit": limit,
+	})
+
+
+func _run_tv_teleport(events: Array[Dictionary]) -> void:
+	var period := int(_stage_config.get("tv_teleport_period_ticks", 0))
+	var limit := int(_stage_config.get("tv_teleport_limit", 0))
+	var offset := 40 if int(_stage_config.get("stage_in_chapter", 0)) == 5 else 0
+	if (
+		period <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or tick_index % period != offset
+		or _tv_teleport_count >= limit
+	):
+		return
+	var target := _elite_enemy_target()
+	if target.is_empty():
+		target = _first_living_enemy()
+	if target.is_empty():
+		return
+	var old_position := int(target["road_position"])
+	var front := _front_line()
+	var new_position := (
+		mini(ROAD_END - 35, front + 55)
+		if old_position > front + 95
+		else mini(ROAD_END - 35, front + 165)
+	)
+	target["road_position"] = new_position
+	target["lane"] = (int(target["lane"]) + 2) % 3
+	_tv_teleport_count += 1
+	events.append({
+		"type": &"tv_teleport",
+		"tick": tick_index,
+		"unit_id": target["unit_id"],
+		"from_position": old_position,
+		"road_position": new_position,
+		"lane": int(target["lane"]),
+		"teleport": _tv_teleport_count,
+		"teleport_limit": limit,
+	})
+
+
+func _run_tv_control(events: Array[Dictionary]) -> void:
+	var period := int(_stage_config.get("tv_control_period_ticks", 0))
+	var duration := int(_stage_config.get("tv_control_duration_ticks", 0))
+	var limit := int(_stage_config.get("tv_control_limit", 0))
+	var offset := 80 if int(_stage_config.get("stage_in_chapter", 0)) == 5 else 0
+	if (
+		period <= 0
+		or duration <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or tick_index % period != offset
+		or _tv_control_count >= limit
+	):
+		return
+	var target := _lowest_hp_ally()
+	if target.is_empty():
+		return
+	target["stun_ticks"] = maxi(int(target.get("stun_ticks", 0)), duration)
+	_tv_control_count += 1
+	events.append({
+		"type": &"screen_control",
+		"tick": tick_index,
+		"unit_id": target["unit_id"],
+		"duration_ticks": duration,
+		"control": _tv_control_count,
+		"control_limit": limit,
+	})
+
+
+func _run_tv_shield(events: Array[Dictionary]) -> void:
+	var period := int(_stage_config.get("tv_shield_period_ticks", 0))
+	var amount := int(_stage_config.get("tv_shield_amount", 0))
+	var limit := int(_stage_config.get("tv_shield_limit", 0))
+	if (
+		period <= 0
+		or amount <= 0
+		or limit <= 0
+		or tick_index <= 0
+		or tick_index % period != 0
+		or _tv_shield_count >= limit
+	):
+		return
+	var shielded := 0
+	for enemy in _living_stage_enemies():
+		if not bool(enemy.get("elite", false)):
+			continue
+		enemy["shield"] = mini(90, int(enemy.get("shield", 0)) + amount)
+		enemy["shield_ticks"] = 20
+		shielded += 1
+		if shielded >= 2:
+			break
+	if shielded <= 0:
+		return
+	_tv_shield_count += 1
+	events.append({
+		"type": &"tv_overseer_shield",
+		"tick": tick_index,
+		"shielded": shielded,
+		"amount": amount,
+		"shield": _tv_shield_count,
+		"shield_limit": limit,
+	})
 
 
 func _run_speaker_reinforcements(events: Array[Dictionary]) -> void:
@@ -445,6 +608,8 @@ func _run_enemies(events: Array[Dictionary]) -> void:
 		if int(enemy["team"]) != TEAM_ENEMY or not bool(enemy["alive"]) or int(enemy["stage"]) != _stage_index:
 			continue
 		_tick_common_combat(enemy)
+		if int(enemy.get("phase_ticks", 0)) > 0:
+			continue
 		if int(enemy.get("stun_ticks", 0)) > 0:
 			continue
 		if int(enemy["cooldown_ticks"]) > 0:
@@ -975,6 +1140,10 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"speaker_reinforcement_waves": _speaker_reinforcement_waves,
 		"speaker_echo_impact_count": _speaker_echo_impact_count,
 		"speaker_echo_damage_dealt": _speaker_echo_damage_dealt,
+		"tv_signal_vanish_count": _tv_signal_vanish_count,
+		"tv_teleport_count": _tv_teleport_count,
+		"tv_control_count": _tv_control_count,
+		"tv_shield_count": _tv_shield_count,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,
 		"gman_max_hp": gman_max_hp,
@@ -1038,7 +1207,12 @@ func _is_structure_attackable(structure: Dictionary) -> bool:
 
 func _first_living_enemy() -> Dictionary:
 	for unit in _units:
-		if int(unit["team"]) == TEAM_ENEMY and bool(unit["alive"]) and int(unit["stage"]) == _stage_index:
+		if (
+			int(unit["team"]) == TEAM_ENEMY
+			and bool(unit["alive"])
+			and int(unit["stage"]) == _stage_index
+			and int(unit.get("phase_ticks", 0)) <= 0
+		):
 			return unit
 	return {}
 
@@ -1053,7 +1227,12 @@ func _elite_enemy_target() -> Dictionary:
 func _living_stage_enemies() -> Array[Dictionary]:
 	var enemies: Array[Dictionary] = []
 	for unit in _units:
-		if int(unit["team"]) == TEAM_ENEMY and bool(unit["alive"]) and int(unit["stage"]) == _stage_index:
+		if (
+			int(unit["team"]) == TEAM_ENEMY
+			and bool(unit["alive"])
+			and int(unit["stage"]) == _stage_index
+			and int(unit.get("phase_ticks", 0)) <= 0
+		):
 			enemies.append(unit)
 	return enemies
 
@@ -1146,6 +1325,7 @@ func _tick_status_effects() -> void:
 		unit["weakness_ticks"] = maxi(0, int(unit.get("weakness_ticks", 0)) - 1)
 		unit["cannon_guard_ticks"] = maxi(0, int(unit.get("cannon_guard_ticks", 0)) - 1)
 		unit["stun_ticks"] = maxi(0, int(unit.get("stun_ticks", 0)) - 1)
+		unit["phase_ticks"] = maxi(0, int(unit.get("phase_ticks", 0)) - 1)
 		unit["taunt_ticks"] = maxi(0, int(unit.get("taunt_ticks", 0)) - 1)
 		if int(unit["taunt_ticks"]) == 0:
 			unit["taunt_target_id"] = &""
@@ -1219,6 +1399,7 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"cannon_guard_ticks": 0,
 		"weakness_ticks": 0,
 		"stun_ticks": 0,
+		"phase_ticks": 0,
 		"taunt_ticks": 0,
 		"taunt_target_id": &"",
 		"auto_skill": bool(hero.get("auto_skill", hero.get("auto_skill_enabled", false))),
@@ -1270,6 +1451,7 @@ func _make_summon(owner: Dictionary, serial: int, display_name: String = "寄生
 		"shield_ticks": 0,
 		"weakness_ticks": 0,
 		"stun_ticks": 0,
+		"phase_ticks": 0,
 		"taunt_ticks": 0,
 		"taunt_target_id": &"",
 		"auto_skill": false,
@@ -1327,6 +1509,7 @@ func _enemy(id: String, label: String, class_id: String, stage: int, road_positi
 		"shield_ticks": 0,
 		"weakness_ticks": 0,
 		"stun_ticks": 0,
+		"phase_ticks": 0,
 		"taunt_ticks": 0,
 		"taunt_target_id": &"",
 		"auto_skill": false,

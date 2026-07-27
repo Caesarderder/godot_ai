@@ -2928,6 +2928,13 @@ func _battle_debrief_copy(
 	)
 	if not chapter_two_mechanic.is_empty():
 		return chapter_two_mechanic
+	var chapter_three_mechanic := _chapter_three_mechanic_debrief(
+		runtime_result,
+		outcome,
+		stage_id
+	)
+	if not chapter_three_mechanic.is_empty():
+		return chapter_three_mechanic
 	var resonance_pulses := int(runtime_result.get("resonance_pulse_count", 0))
 	if (
 		resonance_pulses > 0
@@ -2987,6 +2994,35 @@ func _chapter_two_mechanic_debrief(
 		return "失败归因 · 双塔交替轰击 %d 次造成 %d 伤害；黄色预警会明确点名前排或后排。" % [
 			impacts,
 			damage,
+		]
+	return ""
+
+
+func _chapter_three_mechanic_debrief(
+	runtime_result: Dictionary,
+	outcome: String,
+	stage_id: String
+) -> String:
+	if not stage_id.begins_with("stage_3_") or stage_id == "stage_3_5":
+		return ""
+	var vanish_count := int(runtime_result.get("tv_signal_vanish_count", 0))
+	var teleport_count := int(runtime_result.get("tv_teleport_count", 0))
+	var control_count := int(runtime_result.get("tv_control_count", 0))
+	var shield_count := int(runtime_result.get("tv_shield_count", 0))
+	if vanish_count > 0:
+		return "信号战复盘 · 敌方消失并复现 %d 次；失去目标时转火，不必空等原目标。" % vanish_count
+	if teleport_count > 0:
+		return "换位战复盘 · TV精英传送 %d 次；观察战斗带变化后重新集中火力。" % teleport_count
+	if shield_count > 0:
+		return "监军复盘 · 精英护盾启动 %d 次、屏幕控制 %d 次；先击穿护盾再处理高伤目标。" % [
+			shield_count,
+			control_count,
+		]
+	if control_count > 0:
+		var prefix := "控制战复盘" if outcome == "victory" else "失败归因"
+		return "%s · 关键成员被短暂停火 %d 次；保留其他成员技能维持推进。" % [
+			prefix,
+			control_count,
 		]
 	return ""
 

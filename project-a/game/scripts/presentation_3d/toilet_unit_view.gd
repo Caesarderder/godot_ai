@@ -73,13 +73,16 @@ func apply_snapshot(unit_snapshot: Dictionary) -> void:
 	if team != TEAM_ALLY:
 		_hp_label.text = "◆%d" % shield if shield > 0 else ""
 	_is_alive = bool(unit_snapshot.get("alive", true))
+	var is_phased := int(unit_snapshot.get("phase_ticks", 0)) > 0
 	if _hp_bar_root != null:
-		_hp_bar_root.visible = _is_alive and team != TEAM_ALLY
+		_hp_bar_root.visible = _is_alive and not is_phased and team != TEAM_ALLY
 	if not _is_alive:
 		_body_pivot.rotation_degrees.z = -78.0 if team == TEAM_ALLY else 78.0
 		_body_pivot.position.y = 0.12
 		set_process(false)
 		show()
+	elif is_phased:
+		hide()
 	else:
 		show()
 

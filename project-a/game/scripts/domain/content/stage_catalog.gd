@@ -14,6 +14,28 @@ const ACT1_STAGE_IDS: Array[String] = [
 const DEFAULT_STAGE_ID: String = "stage_1_1"
 const ENDLESS_PREFIX: String = "endless_"
 const DEFAULT_STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地广场"]
+const ACT1_DISPLAY_NAMES: Dictionary = {
+	"stage_2_1": "低音街垒",
+	"stage_2_2": "震荡高架",
+	"stage_2_3": "广播车队",
+	"stage_2_4": "双塔回响",
+	"stage_2_5": "共振堡垒",
+	"stage_3_1": "信号消失",
+	"stage_3_2": "烟幕换位",
+	"stage_3_3": "镜片工厂",
+	"stage_3_4": "处决画面",
+	"stage_3_5": "黑屏中继塔",
+	"stage_4_1": "联合标记",
+	"stage_4_2": "禁飞走廊",
+	"stage_4_3": "反寄生实验区",
+	"stage_4_4": "轮换防线",
+	"stage_4_5": "三联军械库",
+	"stage_5_1": "空城大道",
+	"stage_5_2": "战略仓库",
+	"stage_5_3": "泰坦足迹",
+	"stage_5_4": "中央防区",
+	"stage_5_5": "审判之门",
+}
 const RECOMMENDED_POWER: Array[int] = [
 	1950, 2000, 2020, 5700, 6500,
 	6900, 7300, 7700, 8100, 9000,
@@ -202,20 +224,6 @@ static func unlocks_for(stage_id: String, outcome: String) -> Array[String]:
 static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, power_bp: int) -> Dictionary:
 	var index := ACT1_STAGE_IDS.find(stage_id)
 	var recommended_power := RECOMMENDED_POWER[index]
-	var boss_names := {
-		1: "灰镜核心巨炮",
-		2: "共振堡垒",
-		3: "黑屏中继塔",
-		4: "三联军械库",
-		5: "审判之门",
-	}
-	var chapter_names := {
-		1: "灰镜街区",
-		2: "震荡封锁线",
-		3: "黑屏城区",
-		4: "三军联合防线",
-		5: "伪胜之城",
-	}
 	var next_id := ACT1_STAGE_IDS[index + 1] if index >= 0 and index + 1 < ACT1_STAGE_IDS.size() else "endless_1"
 	var is_boss := stage_in_chapter == 5
 	var unlock_victory: Array[String] = []
@@ -223,12 +231,17 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 	var recommendation := _recommendation_fields(stage_id)
 	var resonance := _resonance_profile(chapter, stage_in_chapter)
 	var encounter := _chapter_two_encounter_profile(chapter, stage_in_chapter)
+	var tv_encounter := _chapter_three_encounter_profile(chapter, stage_in_chapter)
 	return {
 		"stage_id": stage_id,
 		"act": 1,
 		"chapter": chapter,
 		"stage_in_chapter": stage_in_chapter,
-		"display_name": "%d-%d %s" % [chapter, stage_in_chapter, boss_names.get(chapter, "联盟基地") if is_boss else chapter_names.get(chapter, "城市大道")],
+		"display_name": "%d-%d %s" % [
+			chapter,
+			stage_in_chapter,
+			String(ACT1_DISPLAY_NAMES.get(stage_id, "联盟基地" if is_boss else "城市大道")),
+		],
 		"stage_names": DEFAULT_STAGE_NAMES.duplicate(),
 		"final_structure_id": "alliance_core",
 		"suppressible_cannon": is_boss,
@@ -263,6 +276,17 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"speaker_echo_warning_ticks": int(encounter.get("echo_warning_ticks", 0)),
 		"speaker_echo_damage": int(encounter.get("echo_damage", 0)),
 		"speaker_echo_impact_limit": int(encounter.get("echo_impact_limit", 0)),
+		"tv_signal_period_ticks": int(tv_encounter.get("signal_period_ticks", 0)),
+		"tv_signal_duration_ticks": int(tv_encounter.get("signal_duration_ticks", 0)),
+		"tv_signal_limit": int(tv_encounter.get("signal_limit", 0)),
+		"tv_teleport_period_ticks": int(tv_encounter.get("teleport_period_ticks", 0)),
+		"tv_teleport_limit": int(tv_encounter.get("teleport_limit", 0)),
+		"tv_control_period_ticks": int(tv_encounter.get("control_period_ticks", 0)),
+		"tv_control_duration_ticks": int(tv_encounter.get("control_duration_ticks", 0)),
+		"tv_control_limit": int(tv_encounter.get("control_limit", 0)),
+		"tv_shield_period_ticks": int(tv_encounter.get("shield_period_ticks", 0)),
+		"tv_shield_amount": int(tv_encounter.get("shield_amount", 0)),
+		"tv_shield_limit": int(tv_encounter.get("shield_limit", 0)),
 		"power_bp": power_bp,
 		"minimum_power": int(recommended_power * 85 / 100),
 		"recommended_power": recommended_power,
@@ -307,6 +331,49 @@ static func _chapter_two_encounter_profile(
 			"echo_warning_ticks": 10,
 			"echo_damage": 1,
 			"echo_impact_limit": 3,
+		},
+	}
+	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
+
+
+static func _chapter_three_encounter_profile(
+	chapter: int,
+	stage_in_chapter: int
+) -> Dictionary:
+	if chapter != 3:
+		return {}
+	var beats := {
+		1: {
+			"signal_period_ticks": 60,
+			"signal_duration_ticks": 10,
+			"signal_limit": 2,
+		},
+		2: {
+			"teleport_period_ticks": 50,
+			"teleport_limit": 3,
+		},
+		3: {
+			"control_period_ticks": 40,
+			"control_duration_ticks": 8,
+			"control_limit": 6,
+		},
+		4: {
+			"control_period_ticks": 50,
+			"control_duration_ticks": 8,
+			"control_limit": 5,
+			"shield_period_ticks": 60,
+			"shield_amount": 24,
+			"shield_limit": 4,
+		},
+		5: {
+			"teleport_period_ticks": 120,
+			"teleport_limit": 6,
+			"control_period_ticks": 120,
+			"control_duration_ticks": 8,
+			"control_limit": 6,
+			"shield_period_ticks": 120,
+			"shield_amount": 28,
+			"shield_limit": 6,
 		},
 	}
 	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
@@ -606,6 +673,32 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 	if is_boss:
 		threat = "%s 本关是章节 Boss，最终结构会分段受损并逼玩家与基地比拼输出速度。" % String(chapter_threats[chapter])
 		counter = "%s Boss 战优先处理电池和护甲层，核心暴露后再集中释放攻城技能。" % String(chapter_counters[chapter])
+	var encounter_readability: Dictionary = {
+		"stage_3_1": {
+			"threat": "TV 单位会短暂从战场信号中消失，原集火目标在 2 秒内无法锁定。",
+			"counter": "目标消失时立即转火场上敌人；它复现后再决定是否切回。",
+		},
+		"stage_3_2": {
+			"threat": "TV 精英会在前后战斗带与路线间传送，持续打乱军团锁定顺序。",
+			"counter": "观察青色传送反馈，优先处理贴近前线的精英，不要追逐退后的目标。",
+		},
+		"stage_3_3": {
+			"threat": "屏幕控制会让当前低生命关键成员短暂停火，但触发次数有限。",
+			"counter": "受控成员停火时让其他角色维持推进；手动技能不要全部压在同一人身上。",
+		},
+		"stage_3_4": {
+			"threat": "TV 监军会为当前战斗带的高伤精英补充护盾，并穿插有限屏幕控制。",
+			"counter": "先集中火力击穿青色护盾，再处理高伤目标；保留一轮技能应对重新加盾。",
+		},
+		"stage_3_5": {
+			"threat": "本关是章节 Boss：黑屏中继塔错峰轮换传送、屏幕控制与精英护盾，并启用核心巨炮。",
+			"counter": "Boss 战先识别当前模块；传送后重锁目标、控制时分散技能、护盾期集中爆发，巨炮预警仍优先处理。",
+		},
+	}
+	if encounter_readability.has(stage_id):
+		var encounter_copy := encounter_readability[stage_id] as Dictionary
+		threat = String(encounter_copy["threat"])
+		counter = String(encounter_copy["counter"])
 	return {
 		"threat_summary": threat,
 		"counter_hint": counter,

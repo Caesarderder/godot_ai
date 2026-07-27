@@ -76,6 +76,21 @@ func _run() -> void:
 			and StringName((received[0] as Dictionary).get("type", &"")) == &"speaker_echo_warning",
 		"dual-tower warning preserves its stable event identity"
 	)
+	var tv_events: Array[Dictionary] = [{
+		"type": &"tv_teleport",
+		"tick": 50,
+		"unit_id": &"tv_elite",
+		"road_position": 560,
+		"lane": 2,
+	}]
+	world.call("_apply_events", tv_events)
+	received = holder.get("events", []) as Array
+	_check(int(holder["emissions"]) == 4, "TV repositioning crosses the presentation-to-HUD boundary")
+	_check(
+		received.size() == 1
+			and StringName((received[0] as Dictionary).get("type", &"")) == &"tv_teleport",
+		"TV repositioning preserves its stable event identity"
+	)
 	world.queue_free()
 	await process_frame
 	await _check_real_skill_request_pipeline()

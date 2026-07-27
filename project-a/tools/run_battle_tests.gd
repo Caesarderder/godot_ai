@@ -30,6 +30,7 @@ func _init() -> void:
 	_test_battle_has_no_time_limit()
 	_test_chapter_two_resonance_learning_curve()
 	_test_chapter_two_encounter_escalation()
+	_test_chapter_three_encounter_learning_curve()
 	_test_act_one_stage_catalog_and_config_start()
 	if failures.is_empty():
 		print("BATTLE TESTS PASS")
@@ -540,6 +541,93 @@ func _test_chapter_two_encounter_escalation() -> void:
 			and int(finale.get("speaker_echo_period_ticks", 0)) > 0
 			and int(finale.get("speaker_echo_impact_limit", 0)) == 3,
 		"stage 2-5 combines one learned reinforcement wave with three alternating echoes"
+	)
+
+
+func _test_chapter_three_encounter_learning_curve() -> void:
+	var signal_config := StageCatalogScript.stage("stage_3_1")
+	_check(
+		int(signal_config.get("tv_signal_limit", 0)) == 2
+			and int(signal_config.get("tv_control_period_ticks", 0)) == 0,
+		"stage 3-1 safely introduces signal loss without stacking screen control"
+	)
+	var signal_session: RefCounted = BattleSessionScript.new()
+	signal_session.start(_siege_heroes(), "stage_3_1", signal_config)
+	signal_session.tick_index = 60
+	var signal_events: Array[Dictionary] = []
+	signal_session._run_chapter_mechanics(signal_events)
+	var vanish := _first_event(signal_events, &"tv_signal_vanish")
+	_check(
+		not vanish.is_empty()
+			and int(vanish.get("duration_ticks", 0)) == 10,
+		"stage 3-1 removes one real target for a readable two-second signal loss"
+	)
+	var vanished_id := StringName(String(vanish.get("unit_id", "")))
+	_check(
+		signal_session._unit_by_id(vanished_id).get("phase_ticks", 0) == 10,
+		"signal loss changes targetability instead of acting as cosmetic copy"
+	)
+	var phased_target_is_active := false
+	for active_enemy in signal_session._living_stage_enemies():
+		if active_enemy.get("unit_id", &"") == vanished_id:
+			phased_target_is_active = true
+	_check(
+		not phased_target_is_active,
+		"phased TV target leaves the active target set until it returns"
+	)
+	signal_session.tick_index = 70
+	signal_session._unit_by_id(vanished_id)["phase_ticks"] = 0
+	var return_events: Array[Dictionary] = []
+	signal_session._run_chapter_mechanics(return_events)
+	_check(
+		not _first_event(return_events, &"tv_signal_return").is_empty(),
+		"stage 3-1 emits an explicit return fact when the target becomes lockable again"
+	)
+	var teleport_config := StageCatalogScript.stage("stage_3_2")
+	var teleport_session: RefCounted = BattleSessionScript.new()
+	teleport_session.start(_siege_heroes(), "stage_3_2", teleport_config)
+	teleport_session.tick_index = 50
+	var teleport_events: Array[Dictionary] = []
+	teleport_session._run_chapter_mechanics(teleport_events)
+	var teleport := _first_event(teleport_events, &"tv_teleport")
+	_check(
+		not teleport.is_empty()
+			and int(teleport.get("from_position", 0)) != int(teleport.get("road_position", 0)),
+		"stage 3-2 moves one real elite between battle bands"
+	)
+	var control_config := StageCatalogScript.stage("stage_3_3")
+	var control_session: RefCounted = BattleSessionScript.new()
+	control_session.start(_siege_heroes(), "stage_3_3", control_config)
+	control_session.tick_index = 40
+	var control_events: Array[Dictionary] = []
+	control_session._run_chapter_mechanics(control_events)
+	var control := _first_event(control_events, &"screen_control")
+	_check(
+		not control.is_empty()
+			and int(control.get("duration_ticks", 0)) == 8
+			and int(control_config.get("tv_control_limit", 0)) == 6,
+		"stage 3-3 independently tests finite screen control"
+	)
+	var overseer_config := StageCatalogScript.stage("stage_3_4")
+	var overseer_session: RefCounted = BattleSessionScript.new()
+	overseer_session.start(_siege_heroes(), "stage_3_4", overseer_config)
+	overseer_session._stage_index = 1
+	overseer_session.tick_index = 60
+	var shield_events: Array[Dictionary] = []
+	overseer_session._run_chapter_mechanics(shield_events)
+	var shield := _first_event(shield_events, &"tv_overseer_shield")
+	_check(
+		not shield.is_empty()
+			and int(shield.get("shielded", 0)) > 0
+			and int(shield.get("amount", 0)) == 24,
+		"stage 3-4 adds visible overseer protection to the learned control pressure"
+	)
+	var finale := StageCatalogScript.stage("stage_3_5")
+	_check(
+		int(finale.get("tv_teleport_limit", 0)) > 0
+			and int(finale.get("tv_control_limit", 0)) > 0
+			and int(finale.get("tv_shield_limit", 0)) > 0,
+		"stage 3-5 rotates all three learned TV modules instead of repeating one stun rule"
 	)
 
 

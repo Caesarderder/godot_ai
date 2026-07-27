@@ -70,6 +70,10 @@ related:
 - M1–M3：`run_balance_tests.gd`、`run_slg_loop_tests.gd`、`run_lifecycle_tests.gd`、
   `run_battle_tests.gd`、`run_campaign_tests.gd` 覆盖升级属性与 `ΔCP`、首章旅程、永久角色、三星、
   派驻、无损结算和 Boss；`run_factory_casualty_tests.gd` 补充无损结算、幂等与旧 schema 迁移兼容。
+- 第三章遭遇：`run_battle_tests.gd` 覆盖目标消失/复现、精英真实换位、有限屏幕控制、监军护盾与
+  3-5 三模块配置；`run_battle_hud_screen_tests.gd` 和 `run_battle_event_feedback_tests.gd`
+  覆盖 HUD/3D 事件边界，`run_progression_cycle_scan.gd` 保持 7-seed 成长路线。844×390
+  Compatibility 证据覆盖 3-1 信号消失与 3-4 监军护盾；真人是否能快速重锁目标仍待盲测。
 - M0.5：`run_first_chapter_balance_scan.gd` 使用 7 个新档种子扫描真实 `BattleSession`，
   验证同一 Gman 在前三关开局属性一致、前三关稳定胜利、1-4 单人必败及三人基础编队稳定反攻。
   五项战力口径下新档 Gman CP 为 `1603–1683`，前三关推荐线统一为 `1650`；

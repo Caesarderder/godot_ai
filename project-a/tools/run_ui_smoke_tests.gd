@@ -687,7 +687,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 			and _tree_has_text(instance, "完全恢复"),
 		"help explains the first hurdle, both recovery routes, and lossless failure"
 	)
-	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.13.9-chapter-two-encounters.1"), "help exposes local-data privacy and the running product version")
+	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.13.10-tv-encounters.1"), "help exposes local-data privacy and the running product version")
 	_ok(help_back != null and help_back.custom_minimum_size.y >= 48.0, "help exposes a touch-sized return path")
 	if help_back != null:
 		help_back.pressed.emit()
@@ -1084,7 +1084,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	game_autoload.current_state().stage_progress["highest_unlocked_stage"] = "stage_2_1"
 	instance.call("_select_chapter", 2)
 	await _wait_frames(3)
-	_ok(_tree_has_text(instance, "2-1 震荡封锁线"), "chapter navigation reaches the second chapter content")
+	_ok(_tree_has_text(instance, "2-1 低音街垒"), "chapter navigation reaches the named second-chapter opening encounter")
 	game_autoload.current_state().stage_progress["cleared_stages"] = ["stage_1_1", "stage_1_2"]
 	game_autoload.current_state().meta_progression.commander_xp = 100
 	instance.call("_show_goals")

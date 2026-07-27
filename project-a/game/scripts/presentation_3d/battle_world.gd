@@ -561,6 +561,41 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			_play_audio(&"hit", -11.0, 0.78)
 			_add_camera_shake(0.14, 0.12)
 			_spawn_pulse_ring(Vector3(0.0, 0.1, 0.0), Color("#a94fe8"), 6.4)
+		elif event_type == &"tv_signal_vanish":
+			has_hud_event = true
+			_play_audio(&"warning", -15.0, 0.72)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#7185a8"), 3.8)
+		elif event_type == &"tv_signal_return":
+			has_hud_event = true
+			_play_audio(&"warning", -15.0, 1.32)
+			_spawn_pulse_ring(
+				_world_position(
+					int(event.get("road_position", 500)),
+					int(event.get("lane", 1))
+				),
+				Color("#a6ecdf"),
+				2.6
+			)
+		elif event_type == &"tv_teleport":
+			has_hud_event = true
+			_play_audio(&"warning", -14.0, 1.42)
+			_spawn_pulse_ring(
+				_world_position(
+					int(event.get("road_position", 500)),
+					int(event.get("lane", 1))
+				),
+				Color("#73d8d1"),
+				3.0
+			)
+		elif event_type == &"screen_control":
+			has_hud_event = true
+			_play_audio(&"hit", -13.0, 0.62)
+			_add_camera_shake(0.08, 0.08)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#7fa0a8"), 4.8)
+		elif event_type == &"tv_overseer_shield":
+			has_hud_event = true
+			_play_audio(&"shield", -13.0, 1.12)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#7edbd0"), 3.8)
 		elif event_type in [&"unit_healed", &"unit_revived"]:
 			_play_audio(&"heal", -13.0, 1.0)
 		elif event_type == &"unit_shielded":

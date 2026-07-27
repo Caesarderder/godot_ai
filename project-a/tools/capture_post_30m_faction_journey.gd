@@ -213,6 +213,27 @@ func _capture() -> void:
 	await _wait_frames(1)
 	if not _save("res://artifacts/ui-chapter-two-echo-impact-844x390.png"):
 		return
+	main.call("_start_stage_battle", "stage_3_1")
+	await _wait_frames(5)
+	battle_world = main.get("battle_world")
+	battle_world.set_process(false)
+	battle_session = battle_world.get("_session")
+	battle_session.tick_index = 59
+	battle_world.call("_process", 0.2)
+	await _wait_frames(2)
+	if not _save("res://artifacts/ui-chapter-three-signal-vanish-844x390.png"):
+		return
+	main.call("_start_stage_battle", "stage_3_4")
+	await _wait_frames(5)
+	battle_world = main.get("battle_world")
+	battle_world.set_process(false)
+	battle_session = battle_world.get("_session")
+	battle_session._stage_index = 1
+	battle_session.tick_index = 59
+	battle_world.call("_process", 0.2)
+	await _wait_frames(2)
+	if not _save("res://artifacts/ui-chapter-three-overseer-shield-844x390.png"):
+		return
 
 	if audio_director != null:
 		audio_director.call("stop_all")

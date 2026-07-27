@@ -137,6 +137,34 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 			]
 			_chapter_feedback_updates = 6
 			_chapter_feedback_danger = true
+		elif event_type == &"tv_signal_vanish":
+			_chapter_feedback_copy = "目标信号消失 · %0.1f秒后复现 · 先转火场上目标" % (
+				float(int(event.get("duration_ticks", 10))) / 5.0
+			)
+			_chapter_feedback_updates = 10
+			_chapter_feedback_danger = false
+		elif event_type == &"tv_signal_return":
+			_chapter_feedback_copy = "目标信号复现 · 已重新进入战场 · 评估距离后再决定是否切回"
+			_chapter_feedback_updates = 8
+			_chapter_feedback_danger = false
+		elif event_type == &"tv_teleport":
+			_chapter_feedback_copy = "TV精英换位 · 已切换战斗带与路线 · 重新确认集火目标"
+			_chapter_feedback_updates = 8
+			_chapter_feedback_danger = false
+		elif event_type == &"screen_control":
+			_chapter_feedback_copy = "屏幕控制 · %s停火 %0.1f秒 · 其余成员继续推进" % [
+				_unit_display_name(String(event.get("unit_id", ""))),
+				float(int(event.get("duration_ticks", 8))) / 5.0,
+			]
+			_chapter_feedback_updates = 8
+			_chapter_feedback_danger = true
+		elif event_type == &"tv_overseer_shield":
+			_chapter_feedback_copy = "监军护盾 · %d名精英获得 %d 护盾 · 集中爆发击穿" % [
+				int(event.get("shielded", 0)),
+				int(event.get("amount", 0)),
+			]
+			_chapter_feedback_updates = 8
+			_chapter_feedback_danger = false
 	if not _skill_feedback_queue.is_empty():
 		_skill_confirmation_updates = 0
 	_start_next_skill_feedback()
