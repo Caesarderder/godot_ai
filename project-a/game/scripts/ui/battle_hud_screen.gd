@@ -36,6 +36,9 @@ var _skill_feedback_copy := ""
 var _skill_feedback_queue: Array[String] = []
 var _skill_unavailable_updates := 0
 var _reinforcement_rally_updates := 0
+var _chapter_feedback_updates := 0
+var _chapter_feedback_copy := ""
+var _chapter_feedback_danger := false
 var _unit_hud: Dictionary = {}
 var _skill_buttons: Dictionary = {}
 
@@ -62,6 +65,9 @@ func configure(
 	_skill_feedback_queue.clear()
 	_skill_unavailable_updates = 0
 	_reinforcement_rally_updates = 10 if reinforcement_rally else 0
+	_chapter_feedback_updates = 0
+	_chapter_feedback_copy = ""
+	_chapter_feedback_danger = false
 	_warning_tactic = _warning_tactic_for(snapshots)
 	skill_mode_button.text = "技能：手动" if _manual_skills else "技能：自动"
 	skill_grid.columns = maxi(1, snapshots.size())
@@ -92,11 +98,25 @@ func show_skill_unavailable() -> void:
 
 func apply_battle_events(events: Array[Dictionary]) -> void:
 	for event in events:
-		if StringName(event.get("type", &"")) != &"skill_used":
-			continue
-		var copy := _skill_result_copy(String(event.get("unit_id", "")), events)
-		if not copy.is_empty():
-			_skill_feedback_queue.append(copy)
+		var event_type := StringName(event.get("type", &""))
+		if event_type == &"skill_used":
+			var copy := _skill_result_copy(String(event.get("unit_id", "")), events)
+			if not copy.is_empty():
+				_skill_feedback_queue.append(copy)
+		elif event_type == &"resonance_warning":
+			_chapter_feedback_copy = (
+				"共振蓄能 · 2秒后削减全队能量 · 立即释放已就绪技能"
+				if _manual_skills
+				else "共振蓄能 · 2秒后削减全队能量 · 可切手动抢先释放"
+			)
+			_chapter_feedback_updates = 10
+			_chapter_feedback_danger = false
+		elif event_type == &"resonance_pulse":
+			_chapter_feedback_copy = "共振冲击 · 全队损失 %d 能量 · 技能节奏被拖慢" % int(
+				event.get("energy_drained", 0)
+			)
+			_chapter_feedback_updates = 6
+			_chapter_feedback_danger = true
 	if not _skill_feedback_queue.is_empty():
 		_skill_confirmation_updates = 0
 	_start_next_skill_feedback()
@@ -150,7 +170,17 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	)
 	if not warnings.is_empty():
 		return
-	if _skill_unavailable_updates > 0:
+	if _chapter_feedback_updates > 0:
+		status_label.text = _chapter_feedback_copy
+		status_label.add_theme_color_override(
+			"font_color",
+			RED if _chapter_feedback_danger else GOLD
+		)
+		_chapter_feedback_updates -= 1
+		if _chapter_feedback_updates == 0:
+			_chapter_feedback_copy = ""
+			_chapter_feedback_danger = false
+	elif _skill_unavailable_updates > 0:
 		status_label.text = "技能尚未就绪 · 等待能量充满"
 		status_label.add_theme_color_override("font_color", MUTED)
 		_skill_unavailable_updates -= 1

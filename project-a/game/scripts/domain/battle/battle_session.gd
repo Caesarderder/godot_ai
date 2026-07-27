@@ -55,6 +55,8 @@ var _armored_group_shield_extra_targets: int = 0
 var _saw_followup_hits: int = 0
 var _repair_group_extra_targets: int = 0
 var _parasite_extra_summons: int = 0
+var _resonance_pulse_count: int = 0
+var _resonance_energy_drained: int = 0
 var _started_solo: bool = false
 var _solo_pressure_bp: int = 10000
 
@@ -110,6 +112,8 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_saw_followup_hits = 0
 	_repair_group_extra_targets = 0
 	_parasite_extra_summons = 0
+	_resonance_pulse_count = 0
+	_resonance_energy_drained = 0
 	_started_solo = false
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
@@ -188,13 +192,41 @@ func advance_tick() -> Array[Dictionary]:
 
 func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 	var chapter := int(_stage_config.get("chapter", 1))
-	if chapter == 2 and tick_index % 35 == 0:
+	var resonance_period := int(_stage_config.get("resonance_period_ticks", 0))
+	var resonance_warning := int(_stage_config.get("resonance_warning_ticks", 0))
+	if (
+		chapter == 2
+		and resonance_period > 0
+		and resonance_warning > 0
+		and tick_index % resonance_period == resonance_period - resonance_warning
+	):
+		events.append({
+			"type": &"resonance_warning",
+			"tick": tick_index,
+			"impact_tick": tick_index + resonance_warning,
+			"remaining_ticks": resonance_warning,
+			"energy_drain": int(_stage_config.get("resonance_energy_drain", 18)),
+		})
+	elif chapter == 2 and resonance_period > 0 and tick_index % resonance_period == 0:
 		var affected := 0
+		var energy_drained := 0
+		var energy_drain := int(_stage_config.get("resonance_energy_drain", 18))
+		var weakness_ticks := int(_stage_config.get("resonance_weakness_ticks", 8))
 		for ally in _living_main_allies():
-			ally["energy"] = maxi(0, int(ally["energy"]) - 18)
-			ally["weakness_ticks"] = maxi(int(ally.get("weakness_ticks", 0)), 8)
+			var energy_before := int(ally["energy"])
+			ally["energy"] = maxi(0, energy_before - energy_drain)
+			energy_drained += energy_before - int(ally["energy"])
+			ally["weakness_ticks"] = maxi(int(ally.get("weakness_ticks", 0)), weakness_ticks)
 			affected += 1
-		events.append({"type": &"resonance_pulse", "tick": tick_index, "affected": affected})
+		_resonance_pulse_count += 1
+		_resonance_energy_drained += energy_drained
+		events.append({
+			"type": &"resonance_pulse",
+			"tick": tick_index,
+			"affected": affected,
+			"energy_drained": energy_drained,
+			"weakness_ticks": weakness_ticks,
+		})
 	elif chapter == 3 and tick_index % 40 == 0:
 		var target := _lowest_hp_ally()
 		if not target.is_empty():
@@ -819,6 +851,8 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"saw_followup_hits": _saw_followup_hits,
 		"repair_group_extra_targets": _repair_group_extra_targets,
 		"parasite_extra_summons": _parasite_extra_summons,
+		"resonance_pulse_count": _resonance_pulse_count,
+		"resonance_energy_drained": _resonance_energy_drained,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,
 		"gman_max_hp": gman_max_hp,

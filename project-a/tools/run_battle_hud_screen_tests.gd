@@ -282,6 +282,56 @@ func _run() -> void:
 		hud.status_label.text.contains("技能尚未就绪 · 等待能量充满"),
 		"rejected skill order uses the local HUD after the cannon warning clears"
 	)
+	hud.apply_battle_events([{
+		"type": &"resonance_warning",
+		"remaining_ticks": 10,
+		"energy_drain": 14,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "共振街区",
+		"road_progress": 500,
+		"warnings": [],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 80,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		hud.status_label.text.contains("共振蓄能")
+			and hud.status_label.text.contains("立即释放已就绪技能"),
+		"chapter-two warning turns hidden energy loss into a timed player decision"
+	)
+	hud.apply_battle_events([{
+		"type": &"resonance_pulse",
+		"energy_drained": 42,
+		"affected": 3,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "共振街区",
+		"road_progress": 500,
+		"warnings": [],
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 200,
+			"max_hp": 200,
+			"energy": 66,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		hud.status_label.text.contains("共振冲击")
+			and hud.status_label.text.contains("全队损失 42 能量"),
+		"chapter-two pulse quantifies its real impact after the warning"
+	)
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

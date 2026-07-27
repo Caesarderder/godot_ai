@@ -28,6 +28,7 @@ func _init() -> void:
 	_test_boss_cannon_determinism()
 	_test_same_input_same_result()
 	_test_battle_has_no_time_limit()
+	_test_chapter_two_resonance_learning_curve()
 	_test_act_one_stage_catalog_and_config_start()
 	if failures.is_empty():
 		print("BATTLE TESTS PASS")
@@ -423,6 +424,36 @@ func _test_battle_has_no_time_limit() -> void:
 	session.advance_tick()
 	_check(not session.is_finished, "elapsed ticks and legacy enrage config never end a living battle")
 	_check(not session.snapshot().has("max_ticks"), "battle snapshot exposes no attack countdown")
+
+
+func _test_chapter_two_resonance_learning_curve() -> void:
+	var opening := StageCatalogScript.stage("stage_2_1")
+	var finale := StageCatalogScript.stage("stage_2_5")
+	_check(int(opening.get("resonance_period_ticks", 0)) == 55, "chapter two introduces resonance with an eleven-second period")
+	_check(int(opening.get("resonance_energy_drain", 0)) == 10, "chapter two opens with a light ten-energy drain")
+	_check(int(finale.get("resonance_period_ticks", 0)) == 35, "chapter-two boss reaches the established seven-second pulse")
+	_check(int(finale.get("resonance_energy_drain", 0)) == 18, "chapter-two boss preserves the established full drain")
+	var session: RefCounted = BattleSessionScript.new()
+	session.start(_siege_heroes(), "stage_2_1", opening)
+	session.tick_index = 44
+	var warning_events: Array[Dictionary] = session.advance_tick()
+	var warning := _first_event(warning_events, &"resonance_warning")
+	_check(not warning.is_empty(), "resonance emits a deterministic warning before the energy drain")
+	_check(int(warning.get("impact_tick", 0)) - int(warning.get("tick", 0)) == 10, "resonance gives a two-second skill-spend window")
+	var energy_before := 0
+	for unit in session._living_main_allies():
+		unit["energy"] = 40
+		energy_before += 40
+	session.tick_index = 55
+	var pulse_events: Array[Dictionary] = []
+	session._run_chapter_mechanics(pulse_events)
+	var pulse := _first_event(pulse_events, &"resonance_pulse")
+	_check(not pulse.is_empty(), "resonance warning resolves into one visible pulse fact")
+	_check(int(pulse.get("energy_drained", 0)) > 0, "resonance pulse reports the actual energy removed")
+	var energy_after := 0
+	for unit in session._living_main_allies():
+		energy_after += int(unit.get("energy", 0))
+	_check(energy_after < energy_before, "resonance pulse changes the real allied skill economy")
 
 
 func _test_act_one_stage_catalog_and_config_start() -> void:

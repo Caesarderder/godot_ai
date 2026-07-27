@@ -221,6 +221,7 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 	var unlock_victory: Array[String] = []
 	var readability := _readability_fields(stage_id, chapter, stage_in_chapter, unlock_victory)
 	var recommendation := _recommendation_fields(stage_id)
+	var resonance := _resonance_profile(chapter, stage_in_chapter)
 	return {
 		"stage_id": stage_id,
 		"act": 1,
@@ -250,10 +251,27 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"recommendation_reason": recommendation["recommendation_reason"],
 		"factory_production_target": 0,
 		"defense_evolution": _defense_evolution(stage_id, chapter, stage_in_chapter),
+		"resonance_period_ticks": int(resonance.get("period_ticks", 0)),
+		"resonance_warning_ticks": int(resonance.get("warning_ticks", 0)),
+		"resonance_energy_drain": int(resonance.get("energy_drain", 0)),
+		"resonance_weakness_ticks": int(resonance.get("weakness_ticks", 0)),
 		"power_bp": power_bp,
 		"minimum_power": int(recommended_power * 85 / 100),
 		"recommended_power": recommended_power,
 	}
+
+
+static func _resonance_profile(chapter: int, stage_in_chapter: int) -> Dictionary:
+	if chapter != 2:
+		return {}
+	var beats := {
+		1: {"period_ticks": 55, "warning_ticks": 10, "energy_drain": 10, "weakness_ticks": 5},
+		2: {"period_ticks": 50, "warning_ticks": 10, "energy_drain": 12, "weakness_ticks": 6},
+		3: {"period_ticks": 45, "warning_ticks": 10, "energy_drain": 14, "weakness_ticks": 7},
+		4: {"period_ticks": 35, "warning_ticks": 10, "energy_drain": 18, "weakness_ticks": 8},
+		5: {"period_ticks": 35, "warning_ticks": 10, "energy_drain": 18, "weakness_ticks": 8},
+	}
+	return (beats.get(stage_in_chapter, beats[5]) as Dictionary).duplicate(true)
 
 
 static func _endless_index(stage_id: String) -> int:

@@ -171,6 +171,16 @@ func _run() -> void:
 			and mastery_proof.contains("3 次"),
 		"chapter-two result attributes the breakthrough to the exact drawn hero's two-star mechanic"
 	)
+	var resonance_debrief := String(main.call("_battle_debrief_copy", {
+		"resonance_pulse_count": 8,
+		"resonance_energy_drained": 320,
+		"cannon_hit_count": 4,
+	}, "defeat", "stage_2_4"))
+	_check(
+		resonance_debrief.contains("共振冲击 8 次")
+			and resonance_debrief.contains("紫色预警"),
+		"chapter-two non-boss defeat explains the authored resonance mechanic instead of mislabeling ordinary artillery as the boss cannon"
+	)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"

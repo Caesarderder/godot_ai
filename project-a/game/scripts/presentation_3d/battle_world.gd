@@ -514,7 +514,7 @@ func _presentation_target(battle_snapshot: Dictionary) -> Dictionary:
 
 
 func _apply_events(events: Array[Dictionary]) -> void:
-	var has_skill_event := false
+	var has_hud_event := false
 	for event in events:
 		var event_type: StringName = event.get("type", &"")
 		if event_type in [&"attack_started", &"attack_hit", &"unit_damaged", &"enemy_damaged", &"skill_used", &"unit_healed", &"unit_shielded", &"unit_revived"]:
@@ -528,10 +528,19 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			if enemy_unit != null:
 				enemy_unit.play_battle_event(event)
 		if event_type == &"skill_used":
-			has_skill_event = true
+			has_hud_event = true
 			_spawn_skill_vfx(event)
 			_play_audio(&"skill", -12.0, 0.92 + float(int(event.get("skill_tier", 1))) * 0.08)
 			_add_camera_shake(0.08, 0.06)
+		elif event_type == &"resonance_warning":
+			has_hud_event = true
+			_play_audio(&"warning", -15.0, 1.18)
+			_spawn_pulse_ring(Vector3(0.0, 0.08, 0.0), Color("#b99cff"), 4.2)
+		elif event_type == &"resonance_pulse":
+			has_hud_event = true
+			_play_audio(&"hit", -12.0, 0.68)
+			_add_camera_shake(0.12, 0.1)
+			_spawn_pulse_ring(Vector3(0.0, 0.1, 0.0), Color("#7657d8"), 8.0)
 		elif event_type in [&"unit_healed", &"unit_revived"]:
 			_play_audio(&"heal", -13.0, 1.0)
 		elif event_type == &"unit_shielded":
@@ -556,7 +565,7 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			_play_audio(&"collapse", -8.0, 0.82)
 			_add_camera_shake(0.34, 0.22)
 			_spawn_structure_breakthrough(event)
-	if has_skill_event:
+	if has_hud_event:
 		var detached_events: Array[Dictionary] = []
 		for event in events:
 			detached_events.append(event.duplicate(true))

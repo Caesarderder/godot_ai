@@ -46,6 +46,21 @@ func _run() -> void:
 	}]
 	world.call("_apply_events", ordinary_events)
 	_check(int(holder["emissions"]) == 1, "ordinary 5Hz combat ticks do not emit HUD skill facts")
+	var resonance_events: Array[Dictionary] = [{
+		"type": &"resonance_warning",
+		"tick": 45,
+		"impact_tick": 55,
+		"remaining_ticks": 10,
+		"energy_drain": 10,
+	}]
+	world.call("_apply_events", resonance_events)
+	received = holder.get("events", []) as Array
+	_check(int(holder["emissions"]) == 2, "chapter mechanic warning crosses the presentation-to-HUD boundary")
+	_check(
+		received.size() == 1
+			and StringName((received[0] as Dictionary).get("type", &"")) == &"resonance_warning",
+		"resonance warning preserves its stable event identity"
+	)
 	world.queue_free()
 	await process_frame
 	await _check_real_skill_request_pipeline()

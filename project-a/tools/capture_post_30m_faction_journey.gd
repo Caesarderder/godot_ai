@@ -158,6 +158,30 @@ func _capture() -> void:
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-chapter-three-reorientation-844x390.png"):
 		return
+	main.set("battle_manual_skills", true)
+	main.call("_start_stage_battle", "stage_2_1")
+	await _wait_frames(5)
+	var battle_world: Node = main.get("battle_world")
+	if battle_world == null:
+		_fail("chapter-two battle world unavailable")
+		return
+	battle_world.set_process(false)
+	var battle_session: RefCounted = battle_world.get("_session")
+	var skill_mode := main.find_child("BattleSkillModeButton", true, false) as Button
+	if skill_mode != null and skill_mode.text.contains("自动"):
+		skill_mode.pressed.emit()
+	for ally in battle_session._living_main_allies():
+		ally["energy"] = 100
+	battle_session.tick_index = 44
+	battle_world.call("_process", 0.2)
+	await _wait_frames(2)
+	if not _save("res://artifacts/ui-chapter-two-resonance-warning-844x390.png"):
+		return
+	battle_session.tick_index = 54
+	battle_world.call("_process", 0.2)
+	await _wait_frames(1)
+	if not _save("res://artifacts/ui-chapter-two-resonance-impact-844x390.png"):
+		return
 
 	if audio_director != null:
 		audio_director.call("stop_all")

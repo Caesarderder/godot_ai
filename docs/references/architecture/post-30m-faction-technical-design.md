@@ -140,6 +140,10 @@ First validation: `godot --headless --path project-a --script res://tools/run_po
 BattleSession 结果同时保留八类 2★机制的确定性计数，2-4/2-5 结算按 durable 十连核心与实际
 部署名单生成“阵营质变验证”；领域旅程证明真实战斗能产生对应计数，UI 旅程与
 `ui-faction-chapter-two-proof-844x390.png` 证明玩家能在小屏结算首屏看到角色、机制与次数。
+StageCatalog 为第二章每关提供可检查的共振周期、预警、能量削减和虚弱时长；BattleSession 生成
+`resonance_warning` / `resonance_pulse` 并在结果中累计次数和真实能量损失。BattleWorld 将这两类
+低频章节事件连同紫色波纹送达 HUD，不再像普通 5Hz 攻击一样过滤；HUD 以炮击预警更高优先级展示
+共振决策窗口，结算对 2-1–2-4 优先输出声波归因。
 2-5 胜利不再直接启动 3-1：结果页生成章节完成与电视控制威胁预告，`map_stage` 从目标关卡配置
 推导正确章号并打开第三章侦察页。CampaignObjectiveProjection 的通用章节文案已按第2–5章配置，
 不再把 3-1 及以后错误标记为“第二章声波防线”。UI 旅程同时锁定 844×390 CTA 边界。

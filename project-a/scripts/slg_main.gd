@@ -2907,6 +2907,13 @@ func _battle_debrief_copy(
 	outcome: String,
 	stage_id: String = ""
 ) -> String:
+	var resonance_pulses := int(runtime_result.get("resonance_pulse_count", 0))
+	if (
+		resonance_pulses > 0
+		and stage_id.begins_with("stage_2_")
+		and stage_id != "stage_2_5"
+	):
+		return _resonance_debrief_copy(runtime_result, outcome)
 	var guarded_count := int(runtime_result.get("cannon_guarded_count", 0))
 	if guarded_count > 0:
 		if outcome != "victory" and stage_id == "stage_1_5":
@@ -2925,11 +2932,27 @@ func _battle_debrief_copy(
 		if outcome != "victory" and stage_id == "stage_1_5":
 			return "失败归因 · 阵容/战力：已压制巨炮 %d 次但仍未突破；回军团检查编队与成长。" % int(runtime_result["cannon_suppressed_count"])
 		return "成功压制巨炮 %d 次：技能时机有效改善了本局生存与推进效率。" % int(runtime_result["cannon_suppressed_count"])
+	if resonance_pulses > 0:
+		return _resonance_debrief_copy(runtime_result, outcome)
 	if outcome == "retreat":
 		return "全员安全撤退；调整阵位、技能或成长投资后即可再次挑战。"
 	if outcome != "victory":
 		return "攻势终止于第 %d 阶段；强化角色或工厂后可无损再战。" % (int(runtime_result.get("stage_reached", 0)) + 1)
 	return "军团完成占领并无损返回；可连战，也可立即投入战果进行成长。"
+
+
+func _resonance_debrief_copy(runtime_result: Dictionary, outcome: String) -> String:
+	var pulses := int(runtime_result.get("resonance_pulse_count", 0))
+	var drained := int(runtime_result.get("resonance_energy_drained", 0))
+	if outcome != "victory":
+		return "失败归因 · 共振冲击 %d 次共削减 %d 能量；切手动并在紫色预警结束前释放技能。" % [
+			pulses,
+			drained,
+		]
+	return "声波复盘 · 承受 %d 次共振、损失 %d 能量；预警期抢先释放可缩短下一次战斗。" % [
+		pulses,
+		drained,
+	]
 
 
 func _boss_failure_recovery(runtime_result: Dictionary) -> Dictionary:

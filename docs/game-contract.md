@@ -193,7 +193,7 @@ related:
 - handoff_request: 把长期重复图纸迁移为型号专属碎片，免费十连使用标准保底并形成至少一条新角色升星路线；保留“抽图纸、研究为永久角色”，不得恢复直接抽英雄或图纸材料混池
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 2026-07-28 已完成型号专属碎片账本、重复图纸转换、按稀有度升星成本、免费阵营十连保证、S1 强度、研发/编队/UI/存档接线，并由 7-seed `run_post_30m_faction_tests.gd` 覆盖；同日补齐可从 durable receipt 与领域事实恢复的五阶段阵营目标链，并由 `run_post_30m_ui_journey_tests.gd` 证明真实主场景点击会定向到抽取型号的科技分支、空编队槽与同一角色升星。BattleSession 现会分别记录八种型号的 2★质变次数，2-4/2-5 结算把真实参战角色、专属机制和触发次数命名为“阵营质变验证”。2-5 胜利进一步揭示第三章电视控制威胁，并经唯一 CTA 打开 3-1 所在第三章侦察页；结算说明会在小屏换行，不再把按钮撑出视口。`ui-faction-chapter-two-proof-844x390.png` 与 `ui-chapter-three-reorientation-844x390.png` 证明该因果和承接在小屏首屏可见。真人阵营认同和继续游玩意愿仍待验证，不能由自动测试宣称“好玩”。
+- deviation: 2026-07-28 已完成型号专属碎片账本、重复图纸转换、按稀有度升星成本、免费阵营十连保证、S1 强度、研发/编队/UI/存档接线，并由 7-seed `run_post_30m_faction_tests.gd` 覆盖；同日补齐可从 durable receipt 与领域事实恢复的五阶段阵营目标链，并由 `run_post_30m_ui_journey_tests.gd` 证明真实主场景点击会定向到抽取型号的科技分支、空编队槽与同一角色升星。BattleSession 现会分别记录八种型号的 2★质变次数，2-4/2-5 结算把真实参战角色、专属机制和触发次数命名为“阵营质变验证”。第二章共振从 2-1 的 11 秒/10 能量渐进到 2-4 的 7 秒/18 能量，冲击前有 2 秒可操作预警，HUD 与结算量化真实能量损失。2-5 胜利进一步揭示第三章电视控制威胁，并经唯一 CTA 打开 3-1 所在第三章侦察页；结算说明会在小屏换行，不再把按钮撑出视口。连续小屏证据证明共振预警、冲击、阵营因果和章节承接可见。真人阵营认同和继续游玩意愿仍待验证，不能由自动测试宣称“好玩”。
 - last_updated: 2026-07-28
 - last_verified: 2026-07-28
 

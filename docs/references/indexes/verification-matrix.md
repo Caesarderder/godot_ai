@@ -191,6 +191,11 @@ related:
   同一 capture 继续生成 `ui-chapter-three-reorientation-844x390.png`：2-5 结算 CTA 打开第三章
   3-1 侦察页，显示电视控制威胁、75% 极高风险与“先培养军团 / 仍要试探”选择。
   `run_post_30m_ui_journey_tests.gd` 锁定 CTA 完整位于 844×390 视口且章号由目标关卡推导。
+  `run_battle_tests.gd` 锁定 2-1 与 2-5 的共振强度端点、2 秒预警和真实扣能量；
+  `run_battle_event_feedback_tests.gd` 锁定章节事件穿过 3D 表现边界，
+  `run_battle_hud_screen_tests.gd` 锁定手动/自动提示与实际损失文案。
+  `ui-chapter-two-resonance-warning-844x390.png` 和
+  `ui-chapter-two-resonance-impact-844x390.png` 提供真实 BattleWorld 小屏渲染证据。
   `run_campaign_objective_projection_tests.gd` 在不经过 UI 的情况下锁定同一事实 owner：
   首章进行中保留当前小目标；首章完成但低于 2-1 挑战线时，标题/基地/目标中心共享精确战力缺口
   与“先培养军团”；达到挑战线后，三者共同切换为侦察 2-1。该测试防止 App Shell 的跨页面
