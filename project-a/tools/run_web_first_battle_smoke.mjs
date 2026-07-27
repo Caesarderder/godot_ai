@@ -229,10 +229,18 @@ async function finishActiveBattle(
 	skillCardY = 306,
 	skillInputIntervalMs = 900,
 	settlementTimeoutMs = 90000,
+	midBattleEvidence = null,
 ) {
 	await new Promise((accept) => setTimeout(accept, 2200));
 	let skillTouches = 0;
 	let skillCardIndex = 0;
+	const midBattleEvidencePromise = midBattleEvidence
+		? new Promise((accept, reject) => {
+			setTimeout(() => {
+				screenshot(cdp, midBattleEvidence.name).then(accept, reject);
+			}, midBattleEvidence.delayMs);
+		})
+		: Promise.resolve();
 	const skillInput = setInterval(() => {
 		skillTouches += 1;
 		const x = skillCardXs[skillCardIndex % skillCardXs.length];
@@ -245,6 +253,7 @@ async function finishActiveBattle(
 			return save && completion(save) ? save : null;
 		}, settlementTimeoutMs, 400);
 		clearInterval(skillInput);
+		await midBattleEvidencePromise;
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, evidenceName);
 		return { save: settledSave, skillTouches };
@@ -621,6 +630,10 @@ async function main() {
 			330,
 			300,
 			150000,
+			{
+				delayMs: 55000,
+				name: "browser-first-boss-cannon-window-844x390.png",
+			},
 		);
 		await touch(cdp, 640, 248);
 		await new Promise((accept) => setTimeout(accept, 900));
@@ -646,7 +659,7 @@ async function main() {
 			})}`);
 		}
 		const browserVersion = await cdp.send("Browser.getVersion");
-		console.log("WEB_FIRST_GROWTH_SMOKE_PASS");
+		console.log("WEB_FIRST_CHAPTER_SMOKE_PASS");
 		console.log(JSON.stringify({
 			candidate: {
 				revision: candidate.revision,
@@ -715,6 +728,7 @@ async function main() {
 				"artifacts/browser-first-growth-choice-844x390.png",
 				"artifacts/browser-first-growth-committed-844x390.png",
 				"artifacts/browser-first-boss-started-844x390.png",
+				"artifacts/browser-first-boss-cannon-window-844x390.png",
 				"artifacts/browser-chapter-one-complete-844x390.png",
 				"artifacts/browser-chapter-two-reconnaissance-844x390.png",
 			],
