@@ -201,6 +201,21 @@ func _run() -> void:
 			and echo_debrief.contains("前排或后排"),
 		"stage 2-4 defeat names the alternating-rank lesson and its measured cost"
 	)
+	var chapter_exam_debrief := String(main.call("_battle_debrief_copy", {
+		"speaker_reinforcement_waves": 1,
+		"speaker_echo_impact_count": 3,
+		"speaker_echo_damage_dealt": 72,
+		"resonance_pulse_count": 12,
+		"cannon_hit_count": 6,
+	}, "victory", "stage_2_5"))
+	_check(
+		chapter_exam_debrief.contains("章节考试")
+			and chapter_exam_debrief.contains("广播增援1波")
+			and chapter_exam_debrief.contains("声塔命中3次")
+			and chapter_exam_debrief.contains("共振12次")
+			and chapter_exam_debrief.contains("巨炮命中6次"),
+		"stage 2-5 result summarizes every learned module instead of collapsing into a generic cannon report"
+	)
 	var tv_debrief := String(main.call("_battle_debrief_copy", {
 		"tv_shield_count": 4,
 		"tv_control_count": 5,

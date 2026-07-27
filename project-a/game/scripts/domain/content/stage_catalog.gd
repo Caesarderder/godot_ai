@@ -935,6 +935,7 @@ static func _shape_boss_finale(config: Dictionary) -> void:
 	config["cannon_suppression_target"] = 800 + chapter * 100
 	config["boss_cannon_damage"] = 140 + chapter * 20
 	config["boss_cannon_period_ticks"] = 28 - chapter
+	var core_hp_multiplier_percent := 95 if chapter == 2 else 220
 	for enemy in config.get("enemies", []):
 		if int(enemy.get("stage", -1)) != 2:
 			continue
@@ -943,7 +944,10 @@ static func _shape_boss_finale(config: Dictionary) -> void:
 		enemy["attack"] = maxi(1, int(int(enemy.get("attack", 1)) * 40 / 100))
 	for structure in config.get("structures", []):
 		if String(structure.get("structure_id", "")) == final_structure_id:
-			structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 220 / 100))
+			structure["max_hp"] = maxi(
+				1,
+				int(int(structure.get("max_hp", 1)) * core_hp_multiplier_percent / 100)
+			)
 			structure["hp"] = int(structure["max_hp"])
 		elif int(structure.get("stage", -1)) == 2:
 			structure["max_hp"] = maxi(1, int(int(structure.get("max_hp", 1)) * 40 / 100))

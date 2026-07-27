@@ -237,6 +237,10 @@ func _run_seed(run_seed: int) -> void:
 		"victory",
 		"seed %d two-star level-three faction core defeats 2-5" % run_seed
 	)
+	_ok(
+		int(grown_boss.get("ticks", 10001)) <= 900,
+		"seed %d mastered 2-5 route resolves within the three-minute finale ceiling" % run_seed
+	)
 	print(JSON.stringify({
 		"seed": run_seed,
 		"archetype": guaranteed_archetype,

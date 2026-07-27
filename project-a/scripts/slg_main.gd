@@ -2988,6 +2988,16 @@ func _chapter_two_mechanic_debrief(
 	outcome: String,
 	stage_id: String
 ) -> String:
+	if stage_id == "stage_2_5":
+		var prefix := "章节考试" if outcome == "victory" else "失败归因"
+		return "%s · 广播增援%d波 / 声塔命中%d次（%d伤害）/ 共振%d次 / 巨炮命中%d次；阵营已完成技能时机、站位与破核验证。" % [
+			prefix,
+			int(runtime_result.get("speaker_reinforcement_waves", 0)),
+			int(runtime_result.get("speaker_echo_impact_count", 0)),
+			int(runtime_result.get("speaker_echo_damage_dealt", 0)),
+			int(runtime_result.get("resonance_pulse_count", 0)),
+			int(runtime_result.get("cannon_hit_count", 0)),
+		]
 	if stage_id == "stage_2_3":
 		var waves := int(runtime_result.get("speaker_reinforcement_waves", 0))
 		if waves <= 0:
