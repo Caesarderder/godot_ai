@@ -285,6 +285,13 @@ related:
   更新后的 `ui-first-skill-result-844x390.png` 证明实际伤害、阶段目标和战场同时可读。
   revision `23be7a332c88` 的 Chrome 150 完整新档旅程再以 471.2 秒、702 次技能触控和三项
   runtime/console/network 零失败验证导出候选；Boss 中段真实截图不再出现全局技能 toast。
+- 压炮确认窗：`run_battle_tests.gd` 锁定达到阈值当 tick 即成功、accepted warning 以
+  `suppressed=true` 保留 3 tick、期间无 impact/重复计数并在精确时刻移除；HUD 测试锁定绿色
+  “巨炮已压制 · 安全窗口”。`capture_cannon_suppressed.gd` 从真实 `BattleSession` 事件与
+  snapshot 驱动正式 HUD，生成 `ui-boss-cannon-suppressed-844x390.png`。revision
+  `87ade1230422` 的 Chrome 150 全章回归用时 473.4 秒，710 次技能触控，runtime exception、
+  非预期 console error、failed request 均为 0；固定时点 Web 截图未命中 0.6 秒窗口，不声称
+  它替代确定性截图或真人理解验证。
 - 结构突破反馈：`run_battle_tests.gd` 锁定摧毁事件的 ID/名称/lane/kind，
   `run_presentation_tests.gd` 锁定普通画质的世界文字+冲击环以及低画质/减少动态的纯文字预算；
   `ui-first-breakthrough-844x390.png` 证明首战“防线突破”与 HUD 下一城市目标同时可读。

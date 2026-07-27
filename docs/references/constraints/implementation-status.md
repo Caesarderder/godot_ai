@@ -258,6 +258,13 @@ related:
   revision `23be7a332c88` 又完成一次 Chrome 150 隔离新档首章旅程：471.2 秒、702 次技能触控，
   全部持久化断言继续成立且 0 runtime exception、0 非预期 console error、0 failed request；
   更新后的 Boss 中段截图完整显示阶段 3/3、核心耐久、战线与三张技能卡状态。
+- 巨炮成功反馈不再可能在同一 5Hz tick 内闪退：`BattleSession` 达到阈值时仍立即记录压炮、
+  取消炮击并保持原战斗结果，但把 accepted `suppressed` snapshot 固定保留 3 tick（0.6 秒）；
+  HUD 以绿色“巨炮已压制 · 安全窗口”确认后恢复普通状态。领域测试锁定不重复计数、不产生
+  impact 和精确清理时刻，14 条首 30 分钟路线回到原战斗时长/技能次数基线。revision
+  `87ade1230422` 的 Chrome 150 完整新档旅程又以 473.4 秒、710 次技能触控、三项运行错误为 0
+  完成首章；固定 55 秒 Web 截图未命中短确认窗，因此另由真实 `BattleSession` accepted event
+  驱动 `BattleHudScreen` 生成 `ui-boss-cannon-suppressed-844x390.png`，不以手写 UI 假状态冒充。
 
 ## 新合同状态
 
