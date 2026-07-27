@@ -195,8 +195,10 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 						schemaVersion: parsed.schema_version,
 						contentVersion: parsed.content_version,
 						clearedStages: parsed.stage_progress?.cleared_stages,
+						highestUnlockedStage: parsed.stage_progress?.highest_unlocked_stage,
 						attempts: parsed.attempt_counters,
 						onboardingActiveIndex: parsed.onboarding?.active_index,
+						onboardingFinished: parsed.onboarding?.finished,
 						facilities: parsed.factory?.facilities,
 						facilityPlacements: parsed.factory?.facility_placements,
 						facilityWork: parsed.factory?.facility_work,
@@ -606,6 +608,30 @@ async function main() {
 		);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-growth-committed-844x390.png");
+		await touch(cdp, 420, 250);
+		await new Promise((accept) => setTimeout(accept, 1000));
+		await screenshot(cdp, "browser-first-boss-started-844x390.png");
+		const chapterOne = await finishActiveBattle(
+			cdp,
+			"stage_1_5 chapter boss",
+			(save) => save.clearedStages?.includes("stage_1_5")
+				&& save.highestUnlockedStage === "stage_2_1",
+			"browser-chapter-one-complete-844x390.png",
+			[145, 420, 700],
+			330,
+			300,
+			150000,
+		);
+		await touch(cdp, 640, 248);
+		await new Promise((accept) => setTimeout(accept, 900));
+		const chapterTwoHandoff = await evaluate(cdp, READ_SAVE_EXPRESSION);
+		if (
+			Number(chapterTwoHandoff?.attempts?.stage_2_1 ?? 0) !== 0
+				|| chapterTwoHandoff?.highestUnlockedStage !== "stage_2_1"
+		) {
+			throw new Error(`chapter-two reconnaissance must not auto-start battle: ${JSON.stringify(chapterTwoHandoff)}`);
+		}
+		await screenshot(cdp, "browser-chapter-two-reconnaissance-844x390.png");
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
@@ -629,7 +655,7 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through 1-4 recovery, first industrial commissioning, and autonomous two-star growth",
+			journey: "fresh profile through every chapter-one core loop, boss victory, and chapter-two reconnaissance",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
@@ -649,12 +675,18 @@ async function main() {
 				Number(commissioningClaim.materials?.porcelain ?? 0) - porcelainBeforeClaim,
 			firstGrowthChoice: "assault",
 			firstGrowthStar: firstGrowth.roster.find((hero) => hero.archetypeId === "assault")?.star,
-			clearedStages: counterattack.save.clearedStages,
+			chapterBossOutcome: "victory",
+			chapterBossAttempts: chapterOne.save.attempts.stage_1_5,
+			chapterOneComplete: chapterOne.save.clearedStages.includes("stage_1_5"),
+			chapterTwoUnlocked: chapterTwoHandoff.highestUnlockedStage,
+			chapterTwoReconnaissanceAutoStarted: false,
+			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: skillTouches
 				+ stage12.skillTouches
 				+ stage13.skillTouches
 				+ firstWall.skillTouches
-				+ counterattack.skillTouches,
+				+ counterattack.skillTouches
+				+ chapterOne.skillTouches,
 			elapsedMs: Date.now() - startedAt,
 			runtimeExceptions: exceptions.length,
 			unexpectedConsoleErrors: unexpectedConsoleErrors.length,
@@ -682,6 +714,9 @@ async function main() {
 				"artifacts/browser-first-industrial-collected-844x390.png",
 				"artifacts/browser-first-growth-choice-844x390.png",
 				"artifacts/browser-first-growth-committed-844x390.png",
+				"artifacts/browser-first-boss-started-844x390.png",
+				"artifacts/browser-chapter-one-complete-844x390.png",
+				"artifacts/browser-chapter-two-reconnaissance-844x390.png",
 			],
 		}, null, 2));
 	} finally {

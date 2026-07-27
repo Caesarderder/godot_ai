@@ -372,6 +372,13 @@ console error 与网络失败，并保存少量关键转折截图。当前 Chrom
 `LegionScreen` 二选一。Web 旅程必须以设施等级、位置、订单清空、资源增量和具体永久角色
 `star == 2` 为到达条件；不得直接推进 objective、补材料或调用 UI 内部方法。
 
+Boss 验证同样不增加专用流程管理器：`BossReadyAttackButton` 发出 `boss/stage_1_5`，
+App Shell 启动既有 `BattleWorld` / `BattleSession`，并只从 accepted battle events 投影巨炮
+预警、压制或格挡反馈。Web 旅程通过真实英雄卡输入完成战斗，以 `cleared_stages` 包含
+`stage_1_5`、最高开放关卡为 `stage_2_1` 和 onboarding 完成作为持久化成功条件；检测到结算
+后必须先停止输入再保存首章完成页。最后点击“侦察 2-1”只能打开战前地图，不能增加 2-1
+尝试次数。自动输入证明可达性，不替代真人对 5 秒预警和路线因果的理解证据。
+
 该旅程证明真实 Web UI 的连续可达性与保存链，不证明玩家理解、乐趣、20–30 分钟节奏或移动
 设备表现；这些仍由目标玩家盲测和真机门禁负责。
 
