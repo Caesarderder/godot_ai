@@ -203,11 +203,17 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 						facilityPlacements: parsed.factory?.facility_placements,
 						facilityWork: parsed.factory?.facility_work,
 						materials: parsed.factory?.materials,
+						economy: {
+							toiletCoins: parsed.economy?.toilet_coins,
+							industrialTech: parsed.economy?.industrial_tech,
+							skillChips: parsed.economy?.skill_chips,
+						},
 						formation: parsed.formation,
 						roster: (parsed.roster ?? []).map((hero) => ({
 							heroId: hero.hero_id,
 							archetypeId: hero.archetype_id,
 							star: hero.star,
+							activeSkillLevel: hero.active_skill_level,
 						})),
 						onboardingClaimed: parsed.onboarding?.claimed,
 					});
@@ -645,6 +651,67 @@ async function main() {
 			throw new Error(`chapter-two reconnaissance must not auto-start battle: ${JSON.stringify(chapterTwoHandoff)}`);
 		}
 		await screenshot(cdp, "browser-chapter-two-reconnaissance-844x390.png");
+		const skillResearchBefore = chapterTwoHandoff;
+		await touch(cdp, 600, 330);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-chapter-two-skill-growth-ready-844x390.png");
+		await touch(cdp, 515, 216);
+		const skillResearchAfter = await waitFor(
+			"G-Man active skill level two persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const commander = save?.roster?.find((hero) => hero.archetypeId === "gman");
+				return Number(commander?.activeSkillLevel ?? 0) === 2 ? save : null;
+			},
+			10000,
+			250,
+		);
+		const expectedSkillResearchDelta = {
+			toiletCoins: 80,
+			industrialTech: 6,
+			skillChips: 1,
+			porcelain: 24,
+			parts: 16,
+			sludge: 20,
+		};
+		const actualSkillResearchDelta = {
+			toiletCoins:
+				Number(skillResearchBefore.economy?.toiletCoins ?? 0)
+				- Number(skillResearchAfter.economy?.toiletCoins ?? 0),
+			industrialTech:
+				Number(skillResearchBefore.economy?.industrialTech ?? 0)
+				- Number(skillResearchAfter.economy?.industrialTech ?? 0),
+			skillChips:
+				Number(skillResearchBefore.economy?.skillChips ?? 0)
+				- Number(skillResearchAfter.economy?.skillChips ?? 0),
+			porcelain:
+				Number(skillResearchBefore.materials?.porcelain ?? 0)
+				- Number(skillResearchAfter.materials?.porcelain ?? 0),
+			parts:
+				Number(skillResearchBefore.materials?.parts ?? 0)
+				- Number(skillResearchAfter.materials?.parts ?? 0),
+			sludge:
+				Number(skillResearchBefore.materials?.sludge ?? 0)
+				- Number(skillResearchAfter.materials?.sludge ?? 0),
+		};
+		if (JSON.stringify(actualSkillResearchDelta) !== JSON.stringify(expectedSkillResearchDelta)) {
+			throw new Error(`skill research cost drifted: ${JSON.stringify({
+				expectedSkillResearchDelta,
+				actualSkillResearchDelta,
+			})}`);
+		}
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-chapter-two-skill-growth-committed-844x390.png");
+		await touch(cdp, 315, 330);
+		await new Promise((accept) => setTimeout(accept, 900));
+		const chapterTwoAfterGrowth = await evaluate(cdp, READ_SAVE_EXPRESSION);
+		if (
+			Number(chapterTwoAfterGrowth?.attempts?.stage_2_1 ?? 0) !== 0
+				|| chapterTwoAfterGrowth?.highestUnlockedStage !== "stage_2_1"
+		) {
+			throw new Error(`skill growth return must preserve reconnaissance state: ${JSON.stringify(chapterTwoAfterGrowth)}`);
+		}
+		await screenshot(cdp, "browser-chapter-two-after-skill-growth-844x390.png");
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
@@ -668,7 +735,7 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through every chapter-one core loop, boss victory, and chapter-two reconnaissance",
+			journey: "fresh profile through every chapter-one core loop, boss victory, chapter-two reconnaissance, and first skill-II growth",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
@@ -693,6 +760,12 @@ async function main() {
 			chapterOneComplete: chapterOne.save.clearedStages.includes("stage_1_5"),
 			chapterTwoUnlocked: chapterTwoHandoff.highestUnlockedStage,
 			chapterTwoReconnaissanceAutoStarted: false,
+			firstSkillGrowth: {
+				archetypeId: "gman",
+				activeSkillLevel: skillResearchAfter.roster.find((hero) => hero.archetypeId === "gman")?.activeSkillLevel,
+				cost: actualSkillResearchDelta,
+				chapterTwoAttemptsAfterReturn: chapterTwoAfterGrowth.attempts.stage_2_1,
+			},
 			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: skillTouches
 				+ stage12.skillTouches
@@ -731,6 +804,9 @@ async function main() {
 				"artifacts/browser-first-boss-cannon-window-844x390.png",
 				"artifacts/browser-chapter-one-complete-844x390.png",
 				"artifacts/browser-chapter-two-reconnaissance-844x390.png",
+				"artifacts/browser-chapter-two-skill-growth-ready-844x390.png",
+				"artifacts/browser-chapter-two-skill-growth-committed-844x390.png",
+				"artifacts/browser-chapter-two-after-skill-growth-844x390.png",
 			],
 		}, null, 2));
 	} finally {
@@ -749,7 +825,7 @@ async function main() {
 }
 
 main().catch((error) => {
-	console.error("WEB_FIRST_GROWTH_SMOKE_FAIL");
+	console.error("WEB_FIRST_CHAPTER_SMOKE_FAIL");
 	console.error(error?.stack ?? String(error));
 	process.exitCode = 1;
 });
