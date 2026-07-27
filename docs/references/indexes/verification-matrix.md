@@ -214,7 +214,12 @@ related:
   和 `browser-first-formation-complete-844x390.png` 保存恢复链转折；
   `browser-first-wall-counterattack-started-844x390.png` 与
   `browser-first-wall-counterattack-victory-844x390.png` 证明援军开场提示、胜利、单人失败到
-  三人反攻的因果复盘，以及唯一“选择工业支援”出口。工业成长/Boss 连续路径仍待扩展。
+  三人反攻的因果复盘，以及唯一“选择工业支援”出口。候选 `19279cf6bf84` 随后在同一新档
+  选择陶瓷厂、放置到 `[-1, 2]`、等待 30 秒施工、验收并领取预置的 6 陶瓷，再比较两条
+  `7/7` 路线并把冲锋永久升至 2★；完整旅程用时 395.3 秒，仍为 0 异常、0 非预期 console
+  error、0 网络失败。七张 `browser-first-industrial-*` / `browser-first-growth-*` 证据覆盖
+  设施选择、网格交易边界、施工、首批收取、二选一和 Boss 验证入口。收取后零库存按钮现禁用
+  并显示“暂无可收取”，不再广告必然失败的假行动。1-5 Boss 连续路径仍待扩展。
   候选构建现对 HTML/JS/WASM/PCK 记录确定性 gzip-9 体积并执行 30 MiB 硬门禁；排除零引用的
   legacy `scripts/main.gd` 并加入正式品牌启动图后，revision `127323a` 的当前 PCK 为
   `18.92 MiB`，gzip-9 初始 payload 为 `27.62 MiB`，仍低于 30 MiB 硬门槛，但比 20 MiB
