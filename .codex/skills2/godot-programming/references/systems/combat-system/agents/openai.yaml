@@ -1,4 +1,0 @@
-interface:
-  display_name: "Combat System"
-  short_description: "实现可去重、可验证的伤害生命连击与战斗反馈事务"
-  default_prompt: "Use $combat-system to implement or review this Godot combat flow."

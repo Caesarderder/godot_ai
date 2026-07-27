@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rule Resolution"
-  short_description: "实现回合行动点卡组效果栈与命令撤销的确定性规则核心"
-  default_prompt: "Use $rule-resolution to implement or review this turn or command resolution system."

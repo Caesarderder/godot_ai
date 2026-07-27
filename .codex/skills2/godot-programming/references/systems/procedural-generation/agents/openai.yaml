@@ -1,4 +1,0 @@
-interface:
-  display_name: "Procedural Generation"
-  short_description: "实现固定种子、有限预算且可验证的网格与关卡生成"
-  default_prompt: "Use $procedural-generation to implement or review this deterministic generator."

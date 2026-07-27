@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gd Agentic Genre Educational"
-  short_description: "完整保留并合规引用 gd-agentic-genre-educational 代码原型"
-  default_prompt: "Use $gd-agentic-genre-educational to consult and safely port the preserved prototype library."

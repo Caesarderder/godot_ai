@@ -1,4 +1,0 @@
-interface:
-  display_name: "Narrative Runtime"
-  short_description: "实现本地化就绪、分支可验证且效果只提交一次的对话运行时"
-  default_prompt: "Use $narrative-runtime to implement or review this dialogue runtime."

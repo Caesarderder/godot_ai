@@ -1,4 +1,0 @@
-interface:
-  display_name: "Builda 矢量美术"
-  short_description: "生成并验证适用于 Godot Web 的轻量 SVG 游戏素材"
-  default_prompt: "使用 $builda-vector-art 为当前 Godot 游戏创建风格统一、可安全导入并由 Godot 驱动动效的 SVG 素材。"

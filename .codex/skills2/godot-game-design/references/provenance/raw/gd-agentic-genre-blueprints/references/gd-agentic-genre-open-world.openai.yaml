@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gd Agentic Genre Open World"
-  short_description: "完整保留并合规引用 gd-agentic-genre-open-world 代码原型"
-  default_prompt: "Use $gd-agentic-genre-open-world to consult and safely port the preserved prototype library."

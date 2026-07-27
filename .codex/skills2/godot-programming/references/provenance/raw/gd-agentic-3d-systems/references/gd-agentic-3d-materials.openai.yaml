@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gd Agentic 3d Materials"
-  short_description: "完整保留并合规引用 gd-agentic-3d-materials 代码原型"
-  default_prompt: "Use $gd-agentic-3d-materials to consult and safely port the preserved prototype library."

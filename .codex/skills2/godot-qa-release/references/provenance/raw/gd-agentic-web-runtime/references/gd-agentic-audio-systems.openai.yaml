@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gd Agentic Audio Systems"
-  short_description: "完整保留并合规引用 gd-agentic-audio-systems 代码原型"
-  default_prompt: "Use $gd-agentic-audio-systems to consult and safely port the preserved prototype library."

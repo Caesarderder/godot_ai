@@ -1,4 +1,0 @@
-interface:
-  display_name: "Game Design"
-  short_description: "Turn a concept into a playable game contract"
-  default_prompt: "Use $game-design to refine my product design into a playable game contract."

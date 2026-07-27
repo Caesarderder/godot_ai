@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gd Agentic Signal Architecture"
-  short_description: "完整保留并合规引用 gd-agentic-signal-architecture 代码原型"
-  default_prompt: "Use $gd-agentic-signal-architecture to consult and safely port the preserved prototype library."

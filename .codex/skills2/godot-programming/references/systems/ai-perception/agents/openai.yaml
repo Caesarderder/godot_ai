@@ -1,4 +1,0 @@
-interface:
-  display_name: "AI Perception"
-  short_description: "实现视听证据、怀疑衰减、警戒滞回与受控导演压力"
-  default_prompt: "Use $ai-perception to implement or review this AI sensing and alert flow."

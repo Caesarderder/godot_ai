@@ -1,4 +1,0 @@
-interface:
-  display_name: "Game Web Release"
-  short_description: "验收 Godot Web 发布候选、线上运行与回滚能力"
-  default_prompt: "使用 $game-web-release 验收当前 Godot Web 发布候选，并明确构建、托管和上线状态。"

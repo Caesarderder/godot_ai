@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gd Agentic Scene Management"
-  short_description: "完整保留并合规引用 gd-agentic-scene-management 代码原型"
-  default_prompt: "Use $gd-agentic-scene-management to consult and safely port the preserved prototype library."

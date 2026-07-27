@@ -1,4 +1,0 @@
-interface:
-  display_name: "Caesar Godot Skills"
-  short_description: "合并迁移 Builda Agent catalog 中的全部项目 skills"
-  default_prompt: "Use $caesar-godot-skills to migrate all Builda Agent project-skills into this project without removing existing target-only skills."
