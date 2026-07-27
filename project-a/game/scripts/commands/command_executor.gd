@@ -24,6 +24,7 @@ const LogisticsServiceScript := preload("res://game/scripts/domain/factory/logis
 const OnboardingServiceScript := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
 const MetaProgressionServiceScript := preload("res://game/scripts/domain/meta/meta_progression_service.gd")
 const SignalRecruitServiceScript := preload("res://game/scripts/domain/recruitment/signal_recruit_service.gd")
+const RecruitmentResultProjectionScript := preload("res://game/scripts/domain/recruitment/recruitment_result_projection.gd")
 const ResearchBreakthroughServiceScript := preload("res://game/scripts/domain/recruitment/research_breakthrough_service.gd")
 const NewPlayerWelfareServiceScript := preload("res://game/scripts/domain/meta/new_player_welfare_service.gd")
 const StarterGiftServiceScript := preload("res://game/scripts/domain/meta/starter_gift_service.gd")
@@ -280,14 +281,36 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			return ResearchBreakthroughServiceScript.claim(candidate)
 		"claim_faction_signal":
 			return ResearchBreakthroughServiceScript.claim_faction_ten(candidate)
+		"choose_faction_core":
+			var faction_event := RecruitmentResultProjectionScript.latest_event_for_command(
+				candidate,
+				"claim_faction_signal"
+			)
+			if faction_event.is_empty():
+				return {"ok": false, "error": "FACTION_CORE_SIGNAL_MISSING"}
+			for receipt_value in candidate.command_receipts.values():
+				var prior_receipt := receipt_value as Dictionary
+				if String(prior_receipt.get("type", "")) == "choose_faction_core":
+					return {"ok": false, "error": "FACTION_CORE_ALREADY_CHOSEN"}
+			var archetype_id := String(data["archetype_id"])
+			var candidates := RecruitmentResultProjectionScript.faction_core_candidates(candidate)
+			if not candidates.has(archetype_id):
+				return {"ok": false, "error": "FACTION_CORE_INVALID"}
+			return {
+				"ok": true,
+				"event": {
+					"type": "faction_core_chosen",
+					"archetype_id": archetype_id,
+				},
+			}
 		"choose_faction_doctrine":
 			if not (candidate.stage_progress.get("cleared_stages", []) as Array).has("stage_3_5"):
 				return {"ok": false, "error": "FACTION_DOCTRINE_LOCKED"}
-			var has_faction_core := false
+			var has_faction_core := not RecruitmentResultProjectionScript.selected_faction_core(
+				candidate
+			).is_empty()
 			for receipt_value in candidate.command_receipts.values():
 				var prior_receipt := receipt_value as Dictionary
-				if String(prior_receipt.get("type", "")) == "claim_faction_signal":
-					has_faction_core = true
 				if String(prior_receipt.get("type", "")) == "choose_faction_doctrine":
 					return {"ok": false, "error": "FACTION_DOCTRINE_ALREADY_CHOSEN"}
 			if not has_faction_core:
@@ -697,6 +720,13 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 			return _exact_keys(data, [], "claim_foundational_signal")
 		"claim_faction_signal":
 			return _exact_keys(data, [], "claim_faction_signal")
+		"choose_faction_core":
+			var core_error := _exact_keys(data, ["archetype_id"], "choose_faction_core")
+			if not core_error.is_empty():
+				return core_error
+			if typeof(data["archetype_id"]) != TYPE_STRING or String(data["archetype_id"]).is_empty():
+				return "choose_faction_core.archetype_id must be non-empty string"
+			return ""
 		"choose_faction_doctrine":
 			var doctrine_error := _exact_keys(data, ["doctrine_id"], "choose_faction_doctrine")
 			if not doctrine_error.is_empty():

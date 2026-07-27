@@ -56,24 +56,24 @@ static func recruit_free_faction_ten(
 	if not (POOLS["S"] as Array).has(target_archetype):
 		return {"ok": false, "error": "RECRUIT_TARGET_INVALID"}
 	var results: Array[Dictionary] = []
-	for _index in 8:
+	for _index in 6:
 		results.append(_draw_once(state, target_archetype))
 	results.append(_draw_forced_rarity(state, "A", target_archetype))
-	var duplicate_source := _first_new_design(results)
-	if duplicate_source.is_empty():
-		duplicate_source = {
-			"recipe_id": "flying.rocket",
-			"archetype_id": "rocket",
-			"rarity": "B",
-		}
-		if not bool(state.factory.discovered_blueprints.get("flying.rocket", false)):
-			results[0] = grant_design(
-				state,
-				"flying.rocket",
-				"B",
-				int(DUPLICATE_FRAGMENTS["B"])
-			)
-	results.append(_draw_guaranteed_duplicate(state, duplicate_source, target_archetype))
+	var first_candidate := _first_new_design(results)
+	if first_candidate.is_empty():
+		first_candidate = _draw_forced_new_design(state, [])
+		results.append(first_candidate)
+	var second_candidate := _draw_forced_new_design(
+		state,
+		[String(first_candidate.get("archetype_id", ""))]
+	)
+	results.append(second_candidate)
+	results.append(_draw_guaranteed_duplicate(state, first_candidate, target_archetype))
+	results.append(_draw_guaranteed_duplicate(state, second_candidate, target_archetype))
+	var core_candidates: Array[String] = [
+		String(first_candidate.get("archetype_id", "")),
+		String(second_candidate.get("archetype_id", "")),
+	]
 	return {
 		"ok": true,
 		"event": {
@@ -84,10 +84,74 @@ static func recruit_free_faction_ten(
 			"s_pity": state.meta_progression.recruit_s_pity,
 			"a_pity": state.meta_progression.recruit_a_pity,
 			"target_guaranteed": state.meta_progression.recruit_target_guaranteed,
-			"guaranteed_duplicate_archetype": String(duplicate_source.get("archetype_id", "")),
+			"guaranteed_duplicate_archetype": core_candidates[0],
+			"faction_core_candidates": core_candidates,
+			"requires_core_choice": true,
 			"pity_advanced": true,
 		},
 	}
+
+
+static func _draw_forced_new_design(
+	state: RefCounted,
+	excluded_archetypes: Array[String]
+) -> Dictionary:
+	var available: Array[Dictionary] = []
+	for rarity in ["A", "B"]:
+		for archetype_value in POOLS[rarity]:
+			var archetype_id := String(archetype_value)
+			if excluded_archetypes.has(archetype_id):
+				continue
+			var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
+			var recipe_id := String(recipe.get("recipe_id", ""))
+			if (
+				not bool(state.factory.discovered_blueprints.get(recipe_id, false))
+				and not bool(state.factory.blueprints.get(recipe_id, false))
+			):
+				available.append({
+					"archetype_id": archetype_id,
+					"recipe_id": recipe_id,
+					"rarity": rarity,
+				})
+	if available.is_empty():
+		var fallback_archetype := "rocket"
+		for rarity in ["A", "B"]:
+			for archetype_value in POOLS[rarity]:
+				var archetype_id := String(archetype_value)
+				if not excluded_archetypes.has(archetype_id):
+					fallback_archetype = archetype_id
+					break
+			if not excluded_archetypes.has(fallback_archetype):
+				break
+		var fallback_recipe := FactoryCatalogScript.recipe_for_archetype(fallback_archetype)
+		available.append({
+			"archetype_id": fallback_archetype,
+			"recipe_id": String(fallback_recipe.get("recipe_id", "")),
+			"rarity": String(fallback_recipe.get("rating", "B")),
+		})
+	var meta: RefCounted = state.meta_progression
+	meta.recruit_draw_count += 1
+	meta.recruit_s_pity += 1
+	meta.recruit_a_pity += 1
+	var pick_index := _stable_roll(
+		state.run_seed,
+		meta.recruit_pool_id,
+		meta.recruit_draw_count,
+		"faction-core-choice"
+	) % available.size()
+	var selected := available[pick_index]
+	var rarity := String(selected.get("rarity", "B"))
+	if rarity == "S":
+		meta.recruit_s_pity = 0
+		meta.recruit_a_pity = 0
+	elif rarity == "A":
+		meta.recruit_a_pity = 0
+	return grant_design(
+		state,
+		String(selected.get("recipe_id", "")),
+		rarity,
+		int(DUPLICATE_FRAGMENTS.get(rarity, 20))
+	)
 
 
 static func _draw_guaranteed_duplicate(

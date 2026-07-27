@@ -1278,16 +1278,16 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 		"suicide_dive":
 			var target := _current_target()
 			if not target.is_empty():
-				_damage_target(target, int(unit["attack"]) * (5 if star >= 2 else 4), unit["unit_id"], true, events)
+				_damage_target(target, int(unit["attack"]) * (8 if star >= 2 else 4), unit["unit_id"], true, events)
 				if star >= 2:
 					var splash_hits := 0
 					for extra in _current_stage_targets():
 						if _target_id(extra) != _target_id(target):
-							_damage_target(extra, int(unit["attack"]) * 8 / 10, unit["unit_id"], true, events)
+							_damage_target(extra, int(unit["attack"]) * 2, unit["unit_id"], true, events)
 							splash_hits += 1
 					_bomber_splash_extra_targets += splash_hits
 				if star < 3:
-					var retained_percent := 72 if star >= 2 else 35
+					var retained_percent := 85 if star >= 2 else 35
 					unit["hp"] = maxi(
 						1,
 						mini(

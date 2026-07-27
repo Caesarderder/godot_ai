@@ -48,14 +48,19 @@ func _capture() -> void:
 		state,
 		"claim_faction_signal"
 	)
-	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	var candidates := event.get("faction_core_candidates", []) as Array
+	var archetype_id := String(candidates[1]) if candidates.size() == 2 else ""
 	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
 	var recipe_id := String(recipe.get("recipe_id", ""))
-	var focus_action := main.find_child("RecruitFocusActionButton", true, false) as Button
-	if focus_action == null or recipe_id.is_empty():
-		_fail("faction core result unavailable")
+	var core_choice := main.find_child(
+		"ChooseFactionCore_%s" % archetype_id,
+		true,
+		false
+	) as Button
+	if core_choice == null or recipe_id.is_empty():
+		_fail("faction core choice unavailable")
 		return
-	focus_action.pressed.emit()
+	core_choice.pressed.emit()
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-blueprint-focus-844x390.png"):
 		return

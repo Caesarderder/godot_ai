@@ -80,6 +80,15 @@ func _run() -> void:
 	if free_ten != null:
 		free_ten.pressed.emit()
 		await _wait_frames(4)
+	_check(
+		main.find_child("RecruitFactionCoreChoice", true, false) != null,
+		"post-ten-pull first asks the player to choose their faction identity"
+	)
+	var core_choice := _button_with_text(main, "作为阵营核心")
+	_check(core_choice != null, "chapter completion exposes an executable faction-core choice")
+	if core_choice != null:
+		core_choice.pressed.emit()
+		await _wait_frames(4)
 	main.set("legion_tab", "roster")
 	main.call("_show_legion")
 	await _wait_frames(4)

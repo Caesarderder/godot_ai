@@ -373,8 +373,54 @@ func _recruit_panel() -> Control:
 	panel.add_child(actions)
 	var results := _view.get("recruit_results", []) as Array
 	if not results.is_empty():
-		var result_panel := _panel("本次信号响应")
+		var core_choices := _view.get("recruit_core_choices", []) as Array
+		var result_panel := _panel(
+			"" if not core_choices.is_empty() else "本次信号响应"
+		)
 		result_panel.name = "SignalRecruitResultPanel"
+		if not core_choices.is_empty():
+			var choice_panel := _panel("选择长期阵营核心 · 选择后永久保留")
+			choice_panel.name = "RecruitFactionCoreChoice"
+			choice_panel.add_child(_label(
+				"两名候选都能升至2★；比较阵营职责，不必只看评级。",
+				11,
+				CYAN
+			))
+			var choice_grid := GridContainer.new()
+			choice_grid.columns = 2
+			choice_grid.add_theme_constant_override("h_separation", 8)
+			choice_grid.add_theme_constant_override("v_separation", 6)
+			for choice_value in core_choices:
+				var choice := choice_value as Dictionary
+				var card := _panel("")
+				card.custom_minimum_size.x = 350
+				card.add_child(_label(
+					"%s级 · %s · %s\n2★：%s · 碎片%d已满足" % [
+						String(choice.get("rating", "B")),
+						String(choice.get("display_name", "")),
+						String(choice.get("faction", "")),
+						String(choice.get("next_star_effect", "")),
+						int(choice.get("fragments", 0)),
+					],
+					12,
+					GOLD
+				))
+				var choose := _button(
+					"选择%s作为阵营核心" % String(choice.get("display_name", "")),
+					true
+				)
+				choose.name = "ChooseFactionCore_%s" % String(
+					choice.get("archetype_id", "")
+				)
+				choose.custom_minimum_size.y = 48
+				choose.pressed.connect(action_requested.emit.bind(
+					"choose_faction_core",
+					{"archetype_id": String(choice.get("archetype_id", ""))}
+				))
+				card.add_child(choose)
+				choice_grid.add_child(card)
+			choice_panel.add_child(choice_grid)
+			result_panel.add_child(choice_panel)
 		var focus := _view.get("recruit_focus", {}) as Dictionary
 		if not focus.is_empty():
 			var focus_card := _panel("阵营核心 · %s" % String(focus.get("faction", "")))
@@ -619,6 +665,17 @@ func _focus_recruit_result() -> void:
 	if result_panel == null:
 		return
 	var action := result_panel.find_child("RecruitFocusActionButton", true, false) as Button
+	if action == null:
+		for choice_value in _view.get("recruit_core_choices", []):
+			action = result_panel.find_child(
+				"ChooseFactionCore_%s" % String(
+					(choice_value as Dictionary).get("archetype_id", "")
+				),
+				true,
+				false
+			) as Button
+			if action != null:
+				break
 	if action != null and not action.disabled:
 		action.grab_focus()
 	scroll.scroll_vertical = clampi(

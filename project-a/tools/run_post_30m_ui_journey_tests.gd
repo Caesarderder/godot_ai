@@ -39,7 +39,8 @@ func _run() -> void:
 		free_ten.pressed.emit()
 		await _wait_frames(8)
 	_check(main.find_child("SignalRecruitResultPanel", true, false) != null, "ten-pull renders its real result panel")
-	_check(main.find_child("RecruitFactionFocus", true, false) != null, "ten-pull identifies one faction core")
+	var core_choice_panel := main.find_child("RecruitFactionCoreChoice", true, false)
+	_check(core_choice_panel != null, "ten-pull asks the player to decide their faction core")
 	var recruit_scroll := main.find_child("LegionContentScroll_recruit", true, false) as ScrollContainer
 	_check(
 		recruit_scroll != null and recruit_scroll.scroll_vertical > 0,
@@ -51,18 +52,47 @@ func _run() -> void:
 		state,
 		"claim_faction_signal"
 	)
-	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	var core_candidates := event.get("faction_core_candidates", []) as Array
+	_check(
+		core_candidates.size() == 2
+			and String(core_candidates[0]) != String(core_candidates[1]),
+		"free ten guarantees two distinct faction-core candidates"
+	)
+	var archetype_id := String(core_candidates[1]) if core_candidates.size() == 2 else ""
 	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
 	var recipe_id := String(recipe.get("recipe_id", ""))
-	_check(not archetype_id.is_empty() and not recipe_id.is_empty(), "durable ten-pull receipt identifies an exact research target")
-	var focus_action := main.find_child("RecruitFocusActionButton", true, false) as Button
-	_check(focus_action != null and not focus_action.disabled, "faction result provides one executable research action")
-	if focus_action != null:
-		focus_action.pressed.emit()
+	_check(not archetype_id.is_empty() and not recipe_id.is_empty(), "durable ten-pull receipt preserves both valid research candidates")
+	var first_choice := (
+		main.find_child("ChooseFactionCore_%s" % String(core_candidates[0]), true, false)
+		as Button
+		if core_candidates.size() == 2
+		else null
+	)
+	var second_choice := main.find_child(
+		"ChooseFactionCore_%s" % archetype_id,
+		true,
+		false
+	) as Button
+	_check(
+		first_choice != null
+			and second_choice != null
+			and first_choice.custom_minimum_size.y >= 48
+			and second_choice.custom_minimum_size.y >= 48
+			and first_choice.get_global_rect().end.y <= 310.0
+			and second_choice.get_global_rect().end.y <= 310.0,
+		"both faction candidates expose full-size choices above the persistent bottom navigation"
+	)
+	if second_choice != null:
+		second_choice.pressed.emit()
 		await _wait_frames(4)
+	state = game.current_state()
+	_check(
+		RecruitmentResultProjectionScript.selected_faction_core(state) == archetype_id,
+		"choosing the second candidate durably preserves the player's own identity"
+	)
 	_check(
 		String(main.get("blueprint_branch")) == recipe_id.get_slice(".", 0),
-		"result action opens the branch containing the drawn faction core"
+		"core choice opens the branch containing the player-selected blueprint"
 	)
 	var blueprint_node_name := "BlueprintNode_%s" % recipe_id.replace(".", "_")
 	var focused_blueprint := main.find_child(blueprint_node_name, true, false)

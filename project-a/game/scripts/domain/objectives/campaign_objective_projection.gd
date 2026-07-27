@@ -112,7 +112,12 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 		state,
 		"claim_faction_signal"
 	)
-	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	var archetype_id := RecruitmentResultProjectionScript.selected_faction_core(state)
+	if (
+		archetype_id.is_empty()
+		and bool(event.get("requires_core_choice", false))
+	):
+		return _faction_core_choice_journey()
 	if archetype_id.is_empty():
 		return {"active": false}
 	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
@@ -301,6 +306,55 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 	}
 
 
+static func _faction_core_choice_journey() -> Dictionary:
+	var small := "比较两名新型号，亲自决定长期阵营核心"
+	var hierarchy := {
+		"macro": "用自己的角色池形成阵营",
+		"medium": "阵营起点：决定第一名长期核心",
+		"small": small,
+		"hurdle": {
+			"scale": "阵营选择",
+			"title": "抽取结果还没有成为你的路线",
+			"reason": "两名候选都拥有2★所需的专属碎片，但阵营职责和后续科技不同。",
+			"recovery": "进入信号结果比较评级、阵营和2★质变；选择永久保留，刷新不会代选。",
+		},
+		"finished": false,
+		"actionable": true,
+		"cta_label": "选择我的阵营核心",
+		"target": "legion",
+		"stage_id": "stage_2_1",
+		"hero_id": "",
+		"archetype_id": "",
+	}
+	return {
+		"active": true,
+		"phase": "choose_core",
+		"title": {
+			"primary_label": "选择我的阵营核心",
+			"objective": "阵营成形 · %s" % small,
+		},
+		"hierarchy": hierarchy,
+		"factory_task": {
+			"finished": false,
+			"onboarding_finished": true,
+			"title": "阵营成形：选择长期核心",
+			"lesson": "抽卡决定可选角色池；由你决定哪名角色获得持续目标、科技和关卡验证。",
+			"cta_label": "选择我的阵营核心",
+			"target": "legion",
+			"stage_id": "stage_2_1",
+			"progress": 0,
+			"target_value": 1,
+			"completed": false,
+			"claimed": true,
+			"objectives": [{
+				"id": "choose_faction_core",
+				"label": small,
+				"completed": false,
+			}],
+		},
+	}
+
+
 static func _selected_faction_doctrine(state: RefCounted) -> String:
 	var latest_revision := -1
 	var selected := ""
@@ -334,6 +388,7 @@ static func _faction_phase_title(phase: String) -> String:
 		"level_three": "培养核心至Lv3",
 		"breakthrough": "突破第二章",
 		"choose_doctrine": "Tier 2抉择",
+		"choose_core": "选择阵营核心",
 	}
 	return String(titles.get(phase, "形成阵营"))
 

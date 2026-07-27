@@ -93,8 +93,17 @@ func _test_faction_journey_projection() -> void:
 	if not bool(claim.get("ok", false)):
 		return
 	state = executor.state
-	var archetype_id := String(
-		(claim.get("event", {}) as Dictionary).get("guaranteed_duplicate_archetype", "")
+	var core_candidates := (
+		(claim.get("event", {}) as Dictionary).get("faction_core_candidates", [])
+		as Array
+	)
+	_check(core_candidates.size() == 2, "objective fixture exposes two durable core candidates")
+	var projection := CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	var hierarchy := projection.get("hierarchy", {}) as Dictionary
+	_check(
+		String(hierarchy.get("cta_label", "")).contains("选择我的阵营核心")
+			and String(hierarchy.get("target", "")) == "legion",
+		"post-ten objective waits for the player's faction decision"
 	)
 	state.economy.recruit_tickets = 1
 	var later_recruit := executor.execute({
@@ -106,8 +115,24 @@ func _test_faction_journey_projection() -> void:
 	})
 	_check(bool(later_recruit.get("ok", false)), "later standard recruit fixture succeeds")
 	state = executor.state
-	var projection := CampaignObjectiveProjectionScript.derive(state, {"finished": true})
-	var hierarchy := projection.get("hierarchy", {}) as Dictionary
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(
+		String(hierarchy.get("cta_label", "")).contains("选择我的阵营核心"),
+		"later standard recruitment cannot erase the pending faction choice"
+	)
+	var archetype_id := String(core_candidates[1]) if core_candidates.size() == 2 else ""
+	var choose_core := executor.execute({
+		"type": "choose_faction_core",
+		"command_id": "objective-faction-core",
+		"business_key": "objective-faction-core",
+		"expected_revision": state.revision,
+		"payload": {"archetype_id": archetype_id},
+	})
+	_check(bool(choose_core.get("ok", false)), "objective fixture durably selects the second candidate")
+	state = executor.state
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
 	var task := projection.get("factory_task", {}) as Dictionary
 	_check(String(hierarchy.get("target", "")) == "blueprints", "post-ten goal opens the selected core's exact blueprint branch")
 	_check(String(hierarchy.get("medium", "")).contains(archetype_id) == false, "player-facing faction goal uses names rather than internal archetype ids")

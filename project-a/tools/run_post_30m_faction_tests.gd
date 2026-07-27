@@ -38,6 +38,7 @@ func _init() -> void:
 	)
 	_test_s_one_star_value()
 	_test_free_ten_hard_pity_edge()
+	_test_faction_core_choice_is_durable_and_exclusive()
 	_test_tier_two_doctrine_choice_is_durable_and_exclusive()
 	if failures.is_empty():
 		print("POST_30M_FACTION_TESTS_OK: %d seeded faction journeys" % RUN_SEEDS.size())
@@ -106,11 +107,19 @@ func _run_seed(run_seed: int) -> void:
 	_ok(has_a, "seed %d free faction ten guarantees A or S" % run_seed)
 	_ok(not new_archetypes.is_empty(), "seed %d free faction ten reveals a new archetype" % run_seed)
 	var guaranteed_archetype := String(event.get("guaranteed_duplicate_archetype", ""))
+	var core_candidates := event.get("faction_core_candidates", []) as Array
 	_ok(
 		not guaranteed_archetype.is_empty()
 			and new_archetypes.has(guaranteed_archetype)
 			and fragment_archetypes.has(guaranteed_archetype),
 		"seed %d one new archetype also receives a matching duplicate" % run_seed
+	)
+	_ok(
+		core_candidates.size() == 2
+			and String(core_candidates[0]) != String(core_candidates[1])
+			and fragment_archetypes.has(String(core_candidates[0]))
+			and fragment_archetypes.has(String(core_candidates[1])),
+		"seed %d free faction ten guarantees two distinct, star-ready core choices" % run_seed
 	)
 	_ok(
 		int(executor.state.economy.hero_shards) >= shared_data_before,
@@ -135,7 +144,23 @@ func _run_seed(run_seed: int) -> void:
 		"seed %d free faction ten is deterministic" % run_seed
 	)
 
-	var recipe := FactoryCatalogScript.recipe_for_archetype(guaranteed_archetype)
+	var chosen_archetype := (
+		String(core_candidates[run_seed % 2])
+		if core_candidates.size() == 2
+		else guaranteed_archetype
+	)
+	var core_choice := _command(
+		"choose_faction_core",
+		{"archetype_id": chosen_archetype},
+		"post30-faction-core-choice"
+	)
+	_ok(bool(core_choice.get("ok", false)), "seed %d player can choose either offered core" % run_seed)
+	_eq(
+		RecruitmentResultProjectionScript.selected_faction_core(executor.state),
+		chosen_archetype,
+		"seed %d chosen core becomes the durable faction authority" % run_seed
+	)
+	var recipe := FactoryCatalogScript.recipe_for_archetype(chosen_archetype)
 	_ok(not recipe.is_empty(), "seed %d guaranteed archetype resolves to a recipe" % run_seed)
 	if recipe.is_empty():
 		return
@@ -167,9 +192,9 @@ func _run_seed(run_seed: int) -> void:
 	_ok(bool(assign.get("ok", false)), "seed %d selected faction hero joins the six-slot formation" % run_seed)
 	var one_star_chapter := _simulate_chapter_two(executor.state)
 
-	var wrong_archetype := "rocket" if guaranteed_archetype != "rocket" else "repair"
-	var correct_balance := int(executor.state.meta_progression.hero_fragments.get(guaranteed_archetype, 0))
-	executor.state.meta_progression.hero_fragments[guaranteed_archetype] = 0
+	var wrong_archetype := "rocket" if chosen_archetype != "rocket" else "repair"
+	var correct_balance := int(executor.state.meta_progression.hero_fragments.get(chosen_archetype, 0))
+	executor.state.meta_progression.hero_fragments[chosen_archetype] = 0
 	executor.state.meta_progression.hero_fragments[wrong_archetype] = 999
 	var wrong_fragments := _command(
 		"upgrade_hero_star",
@@ -181,7 +206,7 @@ func _run_seed(run_seed: int) -> void:
 			and String(wrong_fragments.get("error", "")) == "NOT_ENOUGH_HERO_FRAGMENTS",
 		"seed %d another archetype's fragments cannot upgrade the selected hero" % run_seed
 	)
-	executor.state.meta_progression.hero_fragments[guaranteed_archetype] = correct_balance
+	executor.state.meta_progression.hero_fragments[chosen_archetype] = correct_balance
 	var quote := LogisticsServiceScript.star_upgrade_quote(executor.state, hero_id)
 	_ok(bool(quote.get("ok", false)), "seed %d guaranteed duplicate funds the selected hero's 2-star quote" % run_seed)
 	var star := _command(
@@ -193,7 +218,7 @@ func _run_seed(run_seed: int) -> void:
 	hero = executor.state.hero_by_id(hero_id)
 	_eq(int(hero.star), 2, "seed %d selected faction hero records the two-star transformation" % run_seed)
 	_ok(
-		hero.skill_ids.has("%s_passive" % guaranteed_archetype),
+		hero.skill_ids.has("%s_passive" % chosen_archetype),
 		"seed %d two-star hero owns its qualitative passive unlock" % run_seed
 	)
 
@@ -204,14 +229,14 @@ func _run_seed(run_seed: int) -> void:
 			and int(battle.get("ticks", 0)) > 0,
 		"seed %d faction formation completes a real second-chapter battle" % run_seed
 	)
-	var qualitative_metric := _qualitative_metric_for(guaranteed_archetype)
+	var qualitative_metric := _qualitative_metric_for(chosen_archetype)
 	var qualitative_events := 0
 	for chapter_result in two_star_chapter:
 		qualitative_events += int((chapter_result as Dictionary).get(qualitative_metric, 0))
 	_ok(
 		not qualitative_metric.is_empty() and qualitative_events > 0,
 		"seed %d two-star faction mechanic leaves visible battle evidence for %s"
-			% [run_seed, guaranteed_archetype]
+			% [run_seed, chosen_archetype]
 	)
 	# Three first clears provide 90 combat XP and cover level two before 2-4.
 	hero.xp = 90
@@ -229,7 +254,7 @@ func _run_seed(run_seed: int) -> void:
 	var chapter_three_opening := _simulate_stage(
 		executor.state,
 		"stage_3_1",
-		FactionCatalogScript.tech_preview_for(guaranteed_archetype)
+		FactionCatalogScript.tech_preview_for(chosen_archetype)
 	)
 	_ok(
 		not String(chapter_three_opening.get("faction_protocol_id", "")).is_empty()
@@ -308,7 +333,7 @@ func _run_seed(run_seed: int) -> void:
 	)
 	print(JSON.stringify({
 		"seed": run_seed,
-		"archetype": guaranteed_archetype,
+		"archetype": chosen_archetype,
 		"one_star": one_star_chapter,
 		"two_star": two_star_chapter,
 		"grown_gate": grown_gate,
@@ -393,6 +418,65 @@ func _test_free_ten_hard_pity_edge() -> void:
 	_ok(
 		not ((values[9] as Dictionary).get("pity_bonus", {}) as Dictionary).is_empty(),
 		"tenth response keeps matching fragments and exposes the guaranteed S result"
+	)
+
+
+func _test_faction_core_choice_is_durable_and_exclusive() -> void:
+	executor = CommandExecutorScript.new(
+		_post_chapter_one_state(20260729),
+		func(_state: RefCounted) -> bool: return true
+	)
+	serial = 0
+	var before_signal := _command(
+		"choose_faction_core",
+		{"archetype_id": "rocket"},
+		"core-before-signal"
+	)
+	_eq(
+		String(before_signal.get("error", "")),
+		"FACTION_CORE_SIGNAL_MISSING",
+		"faction core cannot be invented before the free signal"
+	)
+	var claim := _command("claim_faction_signal", {}, "core-choice-signal")
+	var candidates := (claim.get("event", {}) as Dictionary).get(
+		"faction_core_candidates",
+		[]
+	) as Array
+	_ok(candidates.size() == 2, "core choice fixture receives two candidates")
+	var invalid := _command(
+		"choose_faction_core",
+		{"archetype_id": "gman"},
+		"core-invalid-choice"
+	)
+	_eq(
+		String(invalid.get("error", "")),
+		"FACTION_CORE_INVALID",
+		"core choice rejects a character outside the drawn candidates"
+	)
+	var selected := String(candidates[1]) if candidates.size() == 2 else ""
+	var chosen := _command(
+		"choose_faction_core",
+		{"archetype_id": selected},
+		"core-valid-choice"
+	)
+	_ok(bool(chosen.get("ok", false)), "player can choose the second drawn candidate")
+	var overwrite := _command(
+		"choose_faction_core",
+		{"archetype_id": String(candidates[0]) if candidates.size() == 2 else ""},
+		"core-overwrite"
+	)
+	_eq(
+		String(overwrite.get("error", "")),
+		"FACTION_CORE_ALREADY_CHOSEN",
+		"the alternative candidate cannot overwrite the durable identity"
+	)
+	var decoded := SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(executor.state))
+	_ok(bool(decoded.get("ok", false)), "chosen faction core survives save roundtrip")
+	if bool(decoded.get("ok", false)):
+		_eq(
+			RecruitmentResultProjectionScript.selected_faction_core(decoded["state"]),
+			selected,
+			"save roundtrip restores the exact player-selected core"
 		)
 
 
@@ -404,6 +488,16 @@ func _test_tier_two_doctrine_choice_is_durable_and_exclusive() -> void:
 	serial = 0
 	var claim := _command("claim_faction_signal", {}, "doctrine-faction-core")
 	_ok(bool(claim.get("ok", false)), "doctrine test obtains one durable faction core")
+	var candidates := (claim.get("event", {}) as Dictionary).get(
+		"faction_core_candidates",
+		[]
+	) as Array
+	var core := _command(
+		"choose_faction_core",
+		{"archetype_id": String(candidates[0]) if not candidates.is_empty() else ""},
+		"doctrine-core-choice"
+	)
+	_ok(bool(core.get("ok", false)), "doctrine test preserves the chosen faction core")
 	var locked := _command(
 		"choose_faction_doctrine",
 		{"doctrine_id": "coordination"},

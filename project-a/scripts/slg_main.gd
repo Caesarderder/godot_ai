@@ -1252,8 +1252,8 @@ func _legion_view() -> Dictionary:
 		and not (state.stage_progress.get("cleared_stages", []) as Array).has("stage_1_5")
 	)
 	var recruit_event := RecruitmentResultProjection.latest_event(state)
-	var focus_archetype := String(recruit_event.get("guaranteed_duplicate_archetype", ""))
-	if focus_archetype.is_empty():
+	var focus_archetype := RecruitmentResultProjection.selected_faction_core(state)
+	if focus_archetype.is_empty() and not bool(recruit_event.get("requires_core_choice", false)):
 		for result_value in recruit_event.get("results", []):
 			var result := result_value as Dictionary
 			if String(result.get("kind", "")) == "blueprint":
@@ -1506,6 +1506,28 @@ func _legion_view() -> Dictionary:
 			"pity_bonus": _recruit_result_view(draw.get("pity_bonus", {}) as Dictionary),
 		})
 	var recruit_focus: Dictionary = {}
+	var recruit_core_choices: Array[Dictionary] = []
+	if (
+		RecruitmentResultProjection.selected_faction_core(state).is_empty()
+		and bool(
+			RecruitmentResultProjection.latest_event_for_command(
+				state,
+				"claim_faction_signal"
+			).get("requires_core_choice", false)
+		)
+	):
+		for candidate_archetype in RecruitmentResultProjection.faction_core_candidates(state):
+			var candidate_recipe := FactoryCatalog.recipe_for_archetype(candidate_archetype)
+			recruit_core_choices.append({
+				"archetype_id": candidate_archetype,
+				"display_name": HeroGenerator.archetype_display_name(candidate_archetype),
+				"rating": String(candidate_recipe.get("rating", "B")),
+				"faction": FactionCatalog.faction_for(candidate_archetype),
+				"fragments": int(
+					state.meta_progression.hero_fragments.get(candidate_archetype, 0)
+				),
+				"next_star_effect": FactionCatalog.next_star_effect(candidate_archetype, 2),
+			})
 	if not focus_archetype.is_empty():
 		var focus_hero: RefCounted = null
 		for hero in state.roster:
@@ -1642,6 +1664,7 @@ func _legion_view() -> Dictionary:
 		"recruit_target_guaranteed": bool(state.meta_progression.recruit_target_guaranteed),
 		"recruit_results": recruit_results,
 		"recruit_focus": recruit_focus,
+		"recruit_core_choices": recruit_core_choices,
 		"codex": codex,
 	}
 
@@ -1775,6 +1798,8 @@ func _on_legion_action_requested(action_id: String, payload: Dictionary) -> void
 			_signal_recruit(int(payload.get("count", 1)))
 		"claim_foundational_signal":
 			_claim_faction_signal()
+		"choose_faction_core":
+			_choose_faction_core(String(payload.get("archetype_id", "")))
 		"open_research":
 			_open_blueprint_for_archetype(String(payload.get("archetype_id", "")))
 		"focus_growth":
@@ -1825,12 +1850,10 @@ func _blueprint_view() -> Dictionary:
 		"claim_faction_signal"
 	)
 	var faction_focus_recipe := FactoryCatalog.recipe_for_archetype(
-		String(faction_event.get("guaranteed_duplicate_archetype", ""))
+		RecruitmentResultProjection.selected_faction_core(state)
 	)
 	var faction_focus_recipe_id := String(faction_focus_recipe.get("recipe_id", ""))
-	var faction_archetype_id := String(
-		faction_event.get("guaranteed_duplicate_archetype", "")
-	)
+	var faction_archetype_id := RecruitmentResultProjection.selected_faction_core(state)
 	var faction_tech_preview := {}
 	var faction_tech_choices: Array[Dictionary] = []
 	if (
@@ -2047,6 +2070,20 @@ func _claim_faction_signal() -> void:
 	legion_tab = "recruit"
 	_notify("阵营起手十连完成：新图纸可研发，重复型号已转为该角色专属碎片")
 	_show_legion()
+
+
+func _choose_faction_core(archetype_id: String) -> void:
+	var result := _command(
+		"choose_faction_core",
+		{"archetype_id": archetype_id},
+		"post-chapter-faction-core"
+	)
+	if not bool(result.get("ok", false)):
+		_notify(_error_copy(String(result.get("error", "FACTION_CORE_INVALID"))))
+		return
+	var role_name := HeroGenerator.archetype_display_name(archetype_id)
+	_notify("阵营核心已确定 · %s的选择将贯穿后续科技与关卡" % role_name)
+	_open_blueprint_for_archetype(archetype_id)
 
 
 func _show_goals() -> void:
@@ -2947,7 +2984,7 @@ func _faction_mastery_proof_copy(
 		state,
 		"claim_faction_signal"
 	)
-	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	var archetype_id := RecruitmentResultProjection.selected_faction_core(state)
 	if archetype_id.is_empty():
 		return ""
 	var hero: RefCounted = null
@@ -3288,8 +3325,8 @@ func _hero_experience_copy(event: Dictionary, runtime_result: Dictionary) -> Str
 		game.current_state(),
 		"claim_faction_signal"
 	)
-	var core_archetype := String(
-		faction_event.get("guaranteed_duplicate_archetype", "")
+	var core_archetype := RecruitmentResultProjection.selected_faction_core(
+		game.current_state()
 	)
 	if core_archetype.is_empty():
 		return base
@@ -3328,7 +3365,7 @@ func _faction_tech_result_copy(tier: int = 1) -> String:
 		state,
 		"claim_faction_signal"
 	)
-	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	var archetype_id := RecruitmentResultProjection.selected_faction_core(state)
 	var preview := FactionCatalog.tech_protocol_for(archetype_id, tier)
 	if preview.is_empty():
 		return _growth_opportunity_copy({})
@@ -3444,9 +3481,7 @@ func _active_faction_protocol(state: RefCounted) -> Dictionary:
 		state,
 		"claim_faction_signal"
 	)
-	var archetype_id := String(
-		faction_event.get("guaranteed_duplicate_archetype", "")
-	)
+	var archetype_id := RecruitmentResultProjection.selected_faction_core(state)
 	var doctrine_id := _selected_faction_doctrine(state)
 	var tier := 2 if not doctrine_id.is_empty() else 1
 	return FactionCatalog.tech_protocol_for(archetype_id, tier, doctrine_id)
@@ -4921,6 +4956,9 @@ func _error_copy(code: String) -> String:
 		"SMUGGLED_LOGISTICS_CASE_STORAGE_FULL": "工业仓库空间不足，先完成一次成长消费再开箱",
 		"NO_CONTRABAND_STAR_CORE": "当前没有可使用的黑金升星核心",
 		"CONTRABAND_CORE_REQUIRES_ONE_STAR": "黑金核心只能帮助一星角色升至二星",
+		"FACTION_CORE_SIGNAL_MISSING": "先领取阵营起手十连",
+		"FACTION_CORE_INVALID": "只能从本次十连的两名候选中选择阵营核心",
+		"FACTION_CORE_ALREADY_CHOSEN": "阵营核心已经确定，不能重复更换",
 		"FACTION_DOCTRINE_LOCKED": "完成第三章 3-5 后才能选择 Tier 2 科技",
 		"FACTION_DOCTRINE_CORE_MISSING": "阵营核心记录缺失，请先恢复阵营十连存档",
 		"FACTION_DOCTRINE_ALREADY_CHOSEN": "Tier 2 科技方向已经确定",
