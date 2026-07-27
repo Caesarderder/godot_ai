@@ -113,6 +113,9 @@ autowrap_mode = 2
 [node name="Qualification" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
 unique_name_in_owner = true
 layout_mode = 2
+autowrap_mode = 2
+max_lines_visible = 3
+text_overrun_behavior = 3
 
 [node name="PrimaryAction" type="Button" parent="Columns/NextPanel/NextMargin/Next"]
 unique_name_in_owner = true

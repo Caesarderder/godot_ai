@@ -159,6 +159,9 @@ func _test_faction_journey_projection() -> void:
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
 	_check(not String(hierarchy.get("medium", "")).contains("阵营核心"), "completed second chapter releases the player into the next campaign goal")
+	_check(String(hierarchy.get("macro", "")).contains("电视控制链"), "third chapter replaces the resolved second-chapter promise with a new macro threat")
+	_check(String(hierarchy.get("medium", "")).contains("第三章"), "third-chapter objective identifies the current chapter instead of repeating chapter two")
+	_check(String((hierarchy.get("hurdle", {}) as Dictionary).get("reason", "")).contains("控制关键成员"), "third-chapter hurdle explains the new point-kill pressure")
 
 
 func _test_second_chapter_reconnaissance_projection() -> void:

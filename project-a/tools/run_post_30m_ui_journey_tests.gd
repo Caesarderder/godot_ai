@@ -171,6 +171,37 @@ func _run() -> void:
 			and mastery_proof.contains("3 次"),
 		"chapter-two result attributes the breakthrough to the exact drawn hero's two-star mechanic"
 	)
+	state.stage_progress["cleared_stages"].append("stage_2_4")
+	state.stage_progress["cleared_stages"].append("stage_2_5")
+	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
+	main.set("last_battle_runtime_result", proof_runtime)
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_2_5",
+			"next_stage_id": "stage_3_1",
+			"reward": {"gold": 78},
+			"hero_shards": 12,
+		},
+	})
+	main.call("_show_result")
+	await _wait_frames(4)
+	_check(_tree_has_text(main, "第2章胜利"), "chapter-two boss receives a chapter-completion celebration")
+	_check(_tree_has_text(main, "电视控制"), "chapter-two result previews the next chapter's distinct threat")
+	var next_chapter := main.find_child("PrimaryAction", true, false) as Button
+	_check(next_chapter != null and next_chapter.text.contains("第3章新战线"), "chapter transition offers one reorientation action instead of blind auto-battle")
+	_check(
+		next_chapter != null
+			and next_chapter.get_global_rect().end.x <= float(root.size.x)
+			and next_chapter.get_global_rect().end.y <= float(root.size.y),
+		"chapter-transition CTA remains fully visible inside the 844x390 viewport"
+	)
+	if next_chapter != null:
+		next_chapter.pressed.emit()
+		await _wait_frames(4)
+	_check(String(main.get("selected_stage_id")) == "stage_3_1", "chapter transition focuses the exact next stage")
+	_check(int(main.get("selected_chapter")) == 3, "chapter transition opens chapter three rather than the stale chapter-two tab")
 
 	await _finish(main, game, audio_director)
 

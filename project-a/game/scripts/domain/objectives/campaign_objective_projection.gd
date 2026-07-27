@@ -274,9 +274,13 @@ static func _title_view(
 			"objective": "五章战役已完成，继续无尽攻城",
 		}
 	if chapter_one_cleared >= CHAPTER_ONE_STAGE_IDS.size() and needs_growth:
+		var chapter_copy := _chapter_campaign_copy(stage_config)
 		return {
 			"primary_label": "返回指挥室",
-			"objective": "第二章备战 · 还差 %d 战力到挑战线" % challenge_gap,
+			"objective": "%s备战 · 还差 %d 战力到挑战线" % [
+				String(chapter_copy["chapter_name"]),
+				challenge_gap,
+			],
 		}
 	var action := report.get("next_action", {}) as Dictionary
 	return {
@@ -364,9 +368,10 @@ static func _next_chapter_hierarchy(
 	needs_growth: bool,
 	challenge_gap: int
 ) -> Dictionary:
+	var chapter_copy := _chapter_campaign_copy(stage_config)
 	return {
-		"macro": "推进第二章，扩大战争工厂",
-		"medium": "第二章：突破震荡封锁线",
+		"macro": String(chapter_copy["macro"]),
+		"medium": String(chapter_copy["medium"]),
 		"small": (
 			"将军团提升至挑战线（还差 %d 战力）" % challenge_gap
 			if needs_growth
@@ -374,12 +379,12 @@ static func _next_chapter_hierarchy(
 		),
 		"hurdle": {
 			"scale": "中坎",
-			"title": "第二章声波防线",
-			"reason": "首章队伍已证明基础职责，但第二章要求更高的永久成长与后勤供给。",
+			"title": String(chapter_copy["hurdle_title"]),
+			"reason": String(chapter_copy["hurdle_reason"]),
 			"recovery": (
-				"先培养现有军团；所有首章资产保留，不需要付费解锁路线。"
+				String(chapter_copy["growth_recovery"])
 				if needs_growth
-				else "先侦察敌方声波结构，再决定阵容和技能时机。"
+				else String(chapter_copy["recon_recovery"])
 			),
 		},
 		"finished": true,
@@ -400,11 +405,15 @@ static func _next_chapter_factory_task(
 	needs_growth: bool,
 	challenge_gap: int
 ) -> Dictionary:
+	var chapter_copy := _chapter_campaign_copy(stage_config)
 	return {
 		"finished": false,
 		"onboarding_finished": true,
-		"title": "第二章备战：震荡封锁线",
-		"lesson": "首章资产全部保留；先跨过新的成长坎，再侦察声波防线。",
+		"title": "%s备战：%s" % [
+			String(chapter_copy["chapter_name"]),
+			String(chapter_copy["front_name"]),
+		],
+		"lesson": String(chapter_copy["lesson"]),
 		"cta_label": (
 			"先培养军团"
 			if needs_growth
@@ -426,6 +435,57 @@ static func _next_chapter_factory_task(
 			"completed": false,
 		}],
 	}
+
+
+static func _chapter_campaign_copy(stage_config: Dictionary) -> Dictionary:
+	var chapter := int(stage_config.get("chapter", 2))
+	var chapters := {
+		2: {
+			"chapter_name": "第二章",
+			"front_name": "震荡封锁线",
+			"macro": "推进第二章，扩大战争工厂",
+			"medium": "第二章：突破震荡封锁线",
+			"hurdle_title": "第二章声波防线",
+			"hurdle_reason": "首章队伍已证明基础职责，但第二章要求更高的永久成长与后勤供给。",
+			"growth_recovery": "先培养现有军团；所有首章资产保留，不需要付费解锁路线。",
+			"recon_recovery": "先侦察敌方声波结构，再决定阵容和技能时机。",
+			"lesson": "首章资产全部保留；先跨过新的成长坎，再侦察声波防线。",
+		},
+		3: {
+			"chapter_name": "第三章",
+			"front_name": "电视控制区",
+			"macro": "破解电视控制链，扩展阵营组合",
+			"medium": "第三章：保护核心成员脱离点杀",
+			"hurdle_title": "电视控制与点杀链",
+			"hurdle_reason": "第二章证明了2★核心；第三章会控制关键成员并制造连续点杀窗口。",
+			"growth_recovery": "优先培养维修、装甲或干扰成员，保住被控制的阵营核心。",
+			"recon_recovery": "先侦察控制目标与爆发窗口，再决定保护、打断或召唤牵制路线。",
+			"lesson": "阵营核心已经成形；第三章要求围绕它补充续航与反控制职责。",
+		},
+		4: {
+			"chapter_name": "第四章",
+			"front_name": "联合精英防线",
+			"macro": "击穿联合精英防线，完善六人阵营",
+			"medium": "第四章：处理护盾、集火与多线压力",
+			"hurdle_title": "联合精英协同",
+			"hurdle_reason": "敌军开始把护盾、集火和多线结构组合起来，单一核心无法包办全部职责。",
+			"growth_recovery": "补齐破盾、承伤与牵制角色，并把资源集中到实际参战成员。",
+			"recon_recovery": "先辨认本关主压力，再从爆发、续航或增殖路线中选择反制。",
+			"lesson": "用已形成的阵营核心带动第二、第三职责，而不是只追逐最高战力数字。",
+		},
+		5: {
+			"chapter_name": "第五章",
+			"front_name": "联盟总指挥部",
+			"macro": "摧毁联盟总指挥部，完成五章战役",
+			"medium": "第五章：证明完整阵营的最终解法",
+			"hurdle_title": "联盟最终防御协议",
+			"hurdle_reason": "最终章连续复用此前的控制、护盾、炮击和结构压力，检验完整阵营理解。",
+			"growth_recovery": "只强化当前阵营的关键短板；不需要推翻已经验证的核心路线。",
+			"recon_recovery": "读取敌方组合后安排技能顺序，把每个成员的职责用在明确窗口。",
+			"lesson": "五章终局检验阵营组合与技能时机；失败保留全部永久成长。",
+		},
+	}
+	return (chapters.get(chapter, chapters[2]) as Dictionary).duplicate(true)
 
 
 static func _count_cleared(cleared: Array, stage_ids: Array[String]) -> int:

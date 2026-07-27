@@ -188,6 +188,9 @@ related:
   、质变解锁与第二章质变结算六张 844×390 连续证据；两秒扫视无需滚动即可辨认当前阵营核心、
   唯一主操作，以及 2★专属机制对突破 2-5 的实际贡献次数。`run_post_30m_faction_tests.gd`
   同时锁定真实第二章战斗会为抽取核心产生对应机制计数，避免渲染 fixture 代替领域事实。
+  同一 capture 继续生成 `ui-chapter-three-reorientation-844x390.png`：2-5 结算 CTA 打开第三章
+  3-1 侦察页，显示电视控制威胁、75% 极高风险与“先培养军团 / 仍要试探”选择。
+  `run_post_30m_ui_journey_tests.gd` 锁定 CTA 完整位于 844×390 视口且章号由目标关卡推导。
   `run_campaign_objective_projection_tests.gd` 在不经过 UI 的情况下锁定同一事实 owner：
   首章进行中保留当前小目标；首章完成但低于 2-1 挑战线时，标题/基地/目标中心共享精确战力缺口
   与“先培养军团”；达到挑战线后，三者共同切换为侦察 2-1。该测试防止 App Shell 的跨页面

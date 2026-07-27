@@ -2557,10 +2557,21 @@ func _show_result() -> void:
 	)
 	var cleared_stage_id := String(event.get("stage_id", ""))
 	var chapter_one_complete := won and cleared_stage_id == "stage_1_5"
+	var cleared_stage := StageCatalog.stage(cleared_stage_id)
+	var completed_chapter := int(cleared_stage.get("chapter", 0))
+	var chapter_boss_complete := (
+		won
+		and int(cleared_stage.get("stage_in_chapter", 0)) == 5
+		and completed_chapter >= 2
+	)
 	var result_title := (
 		"第一章完成 · 灰镜核心已摧毁"
 		if chapter_one_complete
-		else ("城镇已占领" if won else ("已主动撤退" if outcome == "retreat" else "攻势受阻"))
+		else (
+			"第%d章完成 · 阵营突破已确认" % completed_chapter
+			if chapter_boss_complete
+			else ("城镇已占领" if won else ("已主动撤退" if outcome == "retreat" else "攻势受阻"))
+		)
 	)
 	var shell := _shell(result_title, "战果已结算，全员无损返回")
 	var reward := event.get("reward", {}) as Dictionary
@@ -2635,6 +2646,12 @@ func _show_result() -> void:
 		qualification = _chapter_one_unlock_copy(next_stage_id)
 		primary_label = "领取阵营起手十连"
 		primary_action = "faction_recruit"
+	elif chapter_boss_complete and not next_stage_id.is_empty():
+		var next_stage := StageCatalog.stage(next_stage_id)
+		qualification = _chapter_transition_copy(completed_chapter, next_stage)
+		primary_label = "查看第%d章新战线" % int(next_stage.get("chapter", completed_chapter + 1))
+		primary_action = "map_stage"
+		primary_payload = {"stage_id": next_stage_id}
 	elif not won and cleared_stage_id == "stage_1_5":
 		var recovery := _boss_failure_recovery(last_battle_runtime_result)
 		primary_label = String(recovery.get("label", "调整后再战"))
@@ -2666,7 +2683,11 @@ func _show_result() -> void:
 		"outcome_banner": (
 			"首章胜利 · 你的成长选择通过实战验证"
 			if chapter_one_complete
-			else ("胜利 · 获得军团成长战果" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
+			else (
+				"第%d章胜利 · 阵营打法通过实战验证" % completed_chapter
+				if chapter_boss_complete
+				else ("胜利 · 获得军团成长战果" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
+			)
 		),
 		"outcome_color": "green" if won else ("gold" if outcome == "retreat" else "red"),
 		"reward_headline": "金币 +%d    军团数据 +%d" % [
@@ -2729,7 +2750,7 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 		"map_stage":
 			var stage_id := String(payload.get("stage_id", "stage_2_1"))
 			selected_stage_id = stage_id
-			selected_chapter = 2
+			selected_chapter = int(StageCatalog.stage(stage_id).get("chapter", 2))
 			_show_map()
 		"factory", "base":
 			_open_factory_task_context() if action_id == "factory" else _show_base()
@@ -2859,6 +2880,20 @@ func _chapter_one_unlock_copy(next_stage_id: String) -> String:
 	if bool(unlocks.get("pass", false)):
 		unlocked.append("免费战役战令")
 	return "首章解锁 · %s" % (" · ".join(unlocked) if not unlocked.is_empty() else "第2章战线")
+
+
+func _chapter_transition_copy(completed_chapter: int, next_stage: Dictionary) -> String:
+	var next_chapter := int(next_stage.get("chapter", completed_chapter + 1))
+	var previews := {
+		3: "新威胁：电视控制关键成员；补充续航或反控制。",
+		4: "新威胁：联合精英组合护盾与集火；完善六人职责。",
+		5: "最终战线：全部防御协议启动；验证完整阵营解法。",
+	}
+	return "第%d章完成 · %s开放\n%s" % [
+		completed_chapter,
+		String(next_stage.get("display_name", "下一战线")),
+		String(previews.get(next_chapter, "先侦察新威胁，再决定阵营成长方向。")),
+	]
 
 
 func _open_research_lab() -> void:

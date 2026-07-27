@@ -386,6 +386,9 @@ durable command receipt 恢复，刷新不再丢失；结果首屏显示阵营�
 候选和角色名册共享“阵营核心”身份标记，升星成功提示直接展示该型号解锁的真实质变。
 BattleSession 现分别累计八种型号的 2★机制触发证据；2-4/2-5 结算按实际部署角色显示机制名称、
 次数与突破关系，`ui-faction-chapter-two-proof-844x390.png` 证明该因果反馈在小屏首屏可见。
+2-5 胜利后会先庆祝章节完成、预告第三章电视控制威胁，再由唯一 CTA 打开 3-1 第三章侦察页；
+第3–5章目标、卡点与恢复文案均按当前章节投影，不再复用第二章身份。结算说明自动换行，
+`ui-chapter-three-reorientation-844x390.png` 证明目标章、关卡风险和培养/试探选择首屏可见。
 S1≥B2 与错误碎片不突变继续受覆盖；真人阵营认同与继续游玩意愿仍待验证。
 旧 `QuestService`、`AchievementService`、`WarMeritTrack` 和
 `BlueprintDrawService` 仍作为兼容代码存在，但不再是新 UI 的长期进度权威。

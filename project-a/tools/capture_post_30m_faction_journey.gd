@@ -120,6 +120,9 @@ func _capture() -> void:
 		return
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
+	state.stage_progress["cleared_stages"].append("stage_2_4")
+	state.stage_progress["cleared_stages"].append("stage_2_5")
+	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
 	var metric_key := _qualitative_metric_for(archetype_id)
 	var runtime_result := {
 		"ticks": 612,
@@ -146,6 +149,14 @@ func _capture() -> void:
 	main.call("_show_result")
 	await _wait_frames(10)
 	if not _save("res://artifacts/ui-faction-chapter-two-proof-844x390.png"):
+		return
+	var next_chapter := main.find_child("PrimaryAction", true, false) as Button
+	if next_chapter == null:
+		_fail("chapter-three reorientation action unavailable")
+		return
+	next_chapter.pressed.emit()
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-chapter-three-reorientation-844x390.png"):
 		return
 
 	if audio_director != null:
