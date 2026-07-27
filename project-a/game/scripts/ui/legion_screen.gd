@@ -103,6 +103,8 @@ func _rebuild() -> void:
 	match active_tab:
 		"recruit":
 			content.add_child(_recruit_panel())
+			if not (_view.get("recruit_results", []) as Array).is_empty():
+				call_deferred("_focus_recruit_result")
 		"codex":
 			content.add_child(_codex_panel())
 		"roster":
@@ -110,6 +112,7 @@ func _rebuild() -> void:
 			call_deferred("_focus_selected_roster_hero")
 		_:
 			content.add_child(_formation_panel())
+			call_deferred("_focus_faction_candidate")
 
 
 func _boss_ready_panel(boss_ready: Dictionary) -> Control:
@@ -297,16 +300,18 @@ func _candidate_panel(slot_id: String) -> Control:
 		var delta := int(candidate.get("power_delta", 0))
 		var current := bool(candidate.get("current", false))
 		var recommended := bool(candidate.get("recommended", false))
+		var journey_focus := bool(candidate.get("journey_focus", false))
 		var action := _button(
-			"%s%s%s\n%s · 战力 %d\n军团变化 %s" % [
+			"%s%s%s%s\n%s · 战力 %d\n军团变化 %s" % [
 				String(candidate.get("display_name", "")),
 				" ✓" if current else "",
 				" · 推荐下一步" if recommended else "",
+				" · ★阵营核心" if journey_focus else "",
 				String(candidate.get("role", "")),
 				int(candidate.get("power", 0)),
 				("%+d" % delta) if delta != 0 else "不变",
 			],
-			recommended and not current
+			(recommended or journey_focus) and not current
 		)
 		action.name = "FormationCandidate_%s" % String(candidate.get("hero_id", ""))
 		action.custom_minimum_size = Vector2(220, 66 if bool((_view.get("first_formation", {}) as Dictionary).get("active", false)) else 72)
@@ -528,9 +533,10 @@ func _roster_panel() -> Control:
 		var hero_id := String(hero.get("hero_id", ""))
 		var selected := hero_id == _selected_hero_id
 		var entry := _button(
-			"%s%s\nLv.%d · %d★  战力 %d" % [
+			"%s%s%s\nLv.%d · %d★  战力 %d" % [
 				"◆ " if selected else "",
 				String(hero.get("display_name", "未知角色")),
+				" · ★阵营核心" if bool(hero.get("journey_focus", false)) else "",
 				int(hero.get("level", 1)),
 				int(hero.get("star", 1)),
 				int(hero.get("power", 0)),
@@ -606,6 +612,44 @@ func _focus_selected_roster_hero() -> void:
 		selected.grab_focus()
 
 
+func _focus_recruit_result() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var result_panel := content.find_child("SignalRecruitResultPanel", true, false) as Control
+	if result_panel == null:
+		return
+	var action := result_panel.find_child("RecruitFocusActionButton", true, false) as Button
+	if action != null and not action.disabled:
+		action.grab_focus()
+	scroll.scroll_vertical = clampi(
+		int(result_panel.position.y),
+		0,
+		int(scroll.get_v_scroll_bar().max_value)
+	)
+
+
+func _focus_faction_candidate() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	for candidate_value in _view.get("candidates", []):
+		var candidate := candidate_value as Dictionary
+		if not bool(candidate.get("journey_focus", false)) or bool(candidate.get("current", false)):
+			continue
+		var action := content.find_child(
+			"FormationCandidate_%s" % String(candidate.get("hero_id", "")),
+			true,
+			false
+		) as Button
+		if action != null and not action.disabled:
+			action.grab_focus()
+			scroll.scroll_vertical = clampi(
+				int(action.global_position.y - content.global_position.y) - 24,
+				0,
+				int(scroll.get_v_scroll_bar().max_value)
+			)
+			return
+
+
 func _hero_card(hero: Dictionary) -> Control:
 	var panel := VBoxContainer.new()
 	panel.name = "RosterHeroDetail_%s" % String(hero.get("hero_id", "unknown"))
@@ -625,7 +669,8 @@ func _hero_card(hero: Dictionary) -> Control:
 	identity_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	identity.add_child(identity_copy)
 	identity_copy.add_child(_label(
-		"%s  ·  Lv.%d  %d★  ·  %s  ·  碎片%d" % [
+		"%s%s  ·  Lv.%d  %d★  ·  %s  ·  碎片%d" % [
+			"★阵营核心 · " if bool(hero.get("journey_focus", false)) else "",
 			String(hero.get("display_name", "未知角色")),
 			int(hero.get("level", 1)),
 			int(hero.get("star", 1)),
@@ -722,13 +767,17 @@ func _hero_card(hero: Dictionary) -> Control:
 	cultivation.custom_minimum_size.y = 64
 	cultivation.add_theme_constant_override("separation", 4)
 	panel.add_child(cultivation)
+	var prioritize_star := (
+		bool(hero.get("journey_focus", false))
+		and bool(hero.get("star_upgrade_available", false))
+	)
 	_add_cultivation_action(
 		cultivation,
 		"升级",
 		"upgrade",
 		hero,
 		hero.get("level_resource_context", {}) as Dictionary,
-		true
+		not prioritize_star
 	)
 	if int(hero.get("star", 1)) < 3:
 		_add_cultivation_action(
@@ -737,7 +786,7 @@ func _hero_card(hero: Dictionary) -> Control:
 			"star",
 			hero,
 			hero.get("star_resource_context", {}) as Dictionary,
-			false
+			prioritize_star
 		)
 	if int(hero.get("star", 1)) == 1 and int(hero.get("welfare_star_core_count", 0)) > 0:
 		var welfare_core := _add_cultivation_action(

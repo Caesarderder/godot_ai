@@ -18,6 +18,7 @@ func _init() -> void:
 
 
 func _run() -> void:
+	root.size = Vector2i(844, 390)
 	change_scene_to_file("res://scenes/screens/main.tscn")
 	await _wait_frames(8)
 	var main := current_scene
@@ -36,9 +37,14 @@ func _run() -> void:
 	_check(free_ten != null and not free_ten.disabled, "post-chapter recruit tab exposes the free faction ten-pull")
 	if free_ten != null:
 		free_ten.pressed.emit()
-		await _wait_frames(4)
+		await _wait_frames(8)
 	_check(main.find_child("SignalRecruitResultPanel", true, false) != null, "ten-pull renders its real result panel")
 	_check(main.find_child("RecruitFactionFocus", true, false) != null, "ten-pull identifies one faction core")
+	var recruit_scroll := main.find_child("LegionContentScroll_recruit", true, false) as ScrollContainer
+	_check(
+		recruit_scroll != null and recruit_scroll.scroll_vertical > 0,
+		"ten-pull automatically reveals its reward instead of leaving it below the fold"
+	)
 
 	var state: RefCounted = game.current_state()
 	var event := RecruitmentResultProjectionScript.latest_event_for_command(
@@ -59,7 +65,12 @@ func _run() -> void:
 		"result action opens the branch containing the drawn faction core"
 	)
 	var blueprint_node_name := "BlueprintNode_%s" % recipe_id.replace(".", "_")
-	_check(main.find_child(blueprint_node_name, true, false) != null, "drawn blueprint is visible without another navigation guess")
+	var focused_blueprint := main.find_child(blueprint_node_name, true, false)
+	_check(focused_blueprint != null, "drawn blueprint is visible without another navigation guess")
+	_check(
+		focused_blueprint != null and _tree_has_text(focused_blueprint, "本轮十连阵营核心"),
+		"drawn blueprint is visually distinguished from its branch neighbor"
+	)
 	var research_button_name := "UnlockFoundationalBlueprint_%s" % recipe_id.replace(".", "_")
 	var research := main.find_child(research_button_name, true, false) as Button
 	_check(research != null and not research.disabled, "drawn blueprint exposes its five-second research action")
@@ -79,7 +90,7 @@ func _run() -> void:
 	_check(claim != null and not claim.disabled, "completed research exposes a claim action on the same node")
 	if claim != null:
 		claim.pressed.emit()
-		await _wait_frames(4)
+		await _wait_frames(8)
 
 	state = game.current_state()
 	var faction_hero := _hero_for(state, archetype_id)
@@ -92,6 +103,12 @@ func _run() -> void:
 	_check(String(main.get("formation_edit_slot")) == "troop_3", "claim selects the first empty formation slot")
 	var candidate := main.find_child("FormationCandidate_%s" % hero_id, true, false) as Button
 	_check(candidate != null and not candidate.disabled, "new faction hero is immediately visible as a formation candidate")
+	_check(candidate != null and candidate.text.contains("阵营核心"), "formation preserves the ten-pull core identity")
+	var formation_scroll := main.find_child("LegionContentScroll_formation", true, false) as ScrollContainer
+	_check(
+		formation_scroll != null and formation_scroll.scroll_vertical > 0,
+		"research claim automatically reveals the new formation candidate"
+	)
 	if candidate != null:
 		candidate.pressed.emit()
 		await _wait_frames(4)
@@ -130,6 +147,7 @@ func _run() -> void:
 	if star != null:
 		star.pressed.emit()
 		await _wait_frames(4)
+	_check(_tree_has_text(main, "质变解锁"), "star success immediately names the unlocked qualitative effect")
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	_check(faction_hero != null and int(faction_hero.star) == 2, "star click applies the faction core's qualitative two-star state")

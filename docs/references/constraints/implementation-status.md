@@ -382,7 +382,8 @@ Lv10 前隐藏周任务。军团页呈现 B/A/S 概率、十抽 A、60 抽 S、�
 durable command receipt 恢复，刷新不再丢失；结果首屏显示阵营核心、2★质变与研发/培养主 CTA。
 `run_post_30m_ui_journey_tests.gd` 进一步经真实主场景按钮完成免费十连、抽取型号科技分支定位、
 研发领取、第三空槽编队、三场证明目标、精确角色 2★与 2-5 后续目标；全套 46 个
-`run_*_tests.gd` 当前通过。
+`run_*_tests.gd` 当前通过。十连奖励与新角色候选不再落在 844×390 折叠线下；科技节点、编队
+候选和角色名册共享“阵营核心”身份标记，升星成功提示直接展示该型号解锁的真实质变。
 S1≥B2 与错误碎片不突变继续受覆盖；真人阵营认同与继续游玩意愿仍待验证。
 旧 `QuestService`、`AchievementService`、`WarMeritTrack` 和
 `BlueprintDrawService` 仍作为兼容代码存在，但不再是新 UI 的长期进度权威。

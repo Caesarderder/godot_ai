@@ -1251,6 +1251,14 @@ func _legion_view() -> Dictionary:
 		and String(onboarding.get("task_id", "")) == "operation.chapter_boss"
 		and not (state.stage_progress.get("cleared_stages", []) as Array).has("stage_1_5")
 	)
+	var recruit_event := RecruitmentResultProjection.latest_event(state)
+	var focus_archetype := String(recruit_event.get("guaranteed_duplicate_archetype", ""))
+	if focus_archetype.is_empty():
+		for result_value in recruit_event.get("results", []):
+			var result := result_value as Dictionary
+			if String(result.get("kind", "")) == "blueprint":
+				focus_archetype = String(result.get("archetype_id", ""))
+				break
 	var candidates: Array[Dictionary] = []
 	var roster: Array[Dictionary] = []
 	var growth_choices: Array[Dictionary] = []
@@ -1372,6 +1380,10 @@ func _legion_view() -> Dictionary:
 			"power_delta": power - deployed_power,
 			"current": deployed_id == String(hero.hero_id),
 			"recommended": String(hero.archetype_id) == recommended_archetype,
+			"journey_focus": (
+				not focus_archetype.is_empty()
+				and String(hero.archetype_id) == focus_archetype
+			),
 		})
 		roster.append({
 			"hero_id": String(hero.hero_id),
@@ -1425,6 +1437,10 @@ func _legion_view() -> Dictionary:
 				state,
 				NewPlayerWelfareService.STAR_CORE_ITEM_ID
 			),
+			"journey_focus": (
+				not focus_archetype.is_empty()
+				and String(hero.archetype_id) == focus_archetype
+			),
 		})
 		if first_growth_active and String(hero.archetype_id) in ["assault", "armored"]:
 			var target_power := CombatPower.projected_hero_power_for_star(hero, 2)
@@ -1472,7 +1488,6 @@ func _legion_view() -> Dictionary:
 				),
 			}
 	var recruit_results: Array[Dictionary] = []
-	var recruit_event := RecruitmentResultProjection.latest_event(state)
 	var visible_recruit_results: Array[Dictionary] = []
 	for transient_result in last_recruit_results:
 		visible_recruit_results.append(transient_result)
@@ -1491,13 +1506,6 @@ func _legion_view() -> Dictionary:
 			"pity_bonus": _recruit_result_view(draw.get("pity_bonus", {}) as Dictionary),
 		})
 	var recruit_focus: Dictionary = {}
-	var focus_archetype := String(recruit_event.get("guaranteed_duplicate_archetype", ""))
-	if focus_archetype.is_empty():
-		for result_value in recruit_event.get("results", []):
-			var result := result_value as Dictionary
-			if String(result.get("kind", "")) == "blueprint":
-				focus_archetype = String(result.get("archetype_id", ""))
-				break
 	if not focus_archetype.is_empty():
 		var focus_hero: RefCounted = null
 		for hero in state.roster:
@@ -1812,6 +1820,14 @@ func _show_blueprints() -> void:
 
 func _blueprint_view() -> Dictionary:
 	var state: RefCounted = game.current_state()
+	var faction_event := RecruitmentResultProjection.latest_event_for_command(
+		state,
+		"claim_faction_signal"
+	)
+	var faction_focus_recipe := FactoryCatalog.recipe_for_archetype(
+		String(faction_event.get("guaranteed_duplicate_archetype", ""))
+	)
+	var faction_focus_recipe_id := String(faction_focus_recipe.get("recipe_id", ""))
 	var branches := {
 		"ordinary": {"title": "突击枝", "summary": "突破与控场，两条独立研发路线", "recipes": ["ordinary.assault", "ordinary.sonic"]},
 		"heavy": {"title": "重装枝", "summary": "承压与斩杀，两条独立研发路线", "recipes": ["heavy.armored", "heavy.saw"]},
@@ -1850,6 +1866,7 @@ func _blueprint_view() -> Dictionary:
 			"action_label": "",
 			"action_name": "",
 			"disabled": false,
+			"journey_focus": recipe_id == faction_focus_recipe_id,
 		}
 		if unlocked:
 			node["status_id"] = "unlocked"
@@ -1876,6 +1893,7 @@ func _blueprint_view() -> Dictionary:
 		"branch": blueprint_branch,
 		"branch_title": String(branch_data.get("title", "研究分支")),
 		"branch_summary": String(branch_data.get("summary", "比较职责与成长质变")),
+		"journey_focus_recipe_id": faction_focus_recipe_id,
 		"core_status": (
 			"选择已获得的设计图纸 · 研发完成后永久角色入列"
 			if not state.factory.discovered_blueprints.is_empty()
@@ -3333,13 +3351,19 @@ func _success_copy(result: Dictionary) -> String:
 		"hero_upgraded":
 			return "角色已升至 Lv.%d，战力提升" % int(event.get("level", 1))
 		"hero_star_upgraded":
+			var archetype_id := String(event.get("archetype_id", ""))
+			var star := int(event.get("star", 1))
+			var hero_name := HeroGenerator.archetype_display_name(archetype_id)
+			var effect := FactionCatalog.next_star_effect(archetype_id, star)
 			if String(event.get("source", "")) == "new_player_welfare":
 				var waived := event.get("waived_cost", {}) as Dictionary
-				return "黑金核心生效：升至 %d★，免除军团数据 %d" % [
-					int(event.get("star", 2)),
+				return "黑金核心生效：%s升至 %d★ · 质变解锁：%s · 免除军团数据 %d" % [
+					hero_name,
+					star,
+					effect,
 					int(waived.get("hero_shards", 0)),
 				]
-			return "角色已升至 %d★" % int(event.get("star", 1))
+			return "%s升至 %d★ · 质变解锁：%s" % [hero_name, star, effect]
 		"new_player_welfare_claimed":
 			return "黑市援助已到账：黑金升星核心 ×1、走私后勤箱 ×1"
 		"smuggled_logistics_case_opened":

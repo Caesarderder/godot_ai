@@ -62,6 +62,7 @@ func _capture() -> void:
 		return
 	var blueprint_state: RefCounted = main.get("game").current_state()
 	blueprint_state.factory.facilities["research_lab"] = 1
+	blueprint_state.factory.facility_placements["research_lab"] = [2, 1]
 	for recipe_id in ["ordinary.assault", "heavy.armored"]:
 		blueprint_state.factory.blueprints.erase(recipe_id)
 		blueprint_state.factory.discovered_blueprints[recipe_id] = true

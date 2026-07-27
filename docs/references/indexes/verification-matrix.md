@@ -184,6 +184,8 @@ related:
   `run_post_30m_ui_journey_tests.gd` 再以真实主场景按钮串联十连结果、定向科技节点、研发领取、
   第三个空编队槽、三场实战证明、精确 `hero_id` 升星与 2-5 目标；它与
   `run_campaign_objective_projection_tests.gd` 共同防止刷新或跨屏后阵营身份和下一行动分叉。
+  `capture_post_30m_faction_journey.gd` 生成十连结果、金框科技核心、自动聚焦编队候选、升星待命
+  与质变解锁五张 844×390 连续证据；两秒扫视无需滚动即可辨认当前阵营核心和唯一主操作。
   `run_campaign_objective_projection_tests.gd` 在不经过 UI 的情况下锁定同一事实 owner：
   首章进行中保留当前小目标；首章完成但低于 2-1 挑战线时，标题/基地/目标中心共享精确战力缺口
   与“先培养军团”；达到挑战线后，三者共同切换为侦察 2-1。该测试防止 App Shell 的跨页面
@@ -284,7 +286,7 @@ related:
 - M7 领域与 UI：`run_meta_progression_tests.gd`、`run_meta_tests.gd`、`run_ui_smoke_tests.gd`
   覆盖 v8 往返、v5/v6/v7 迁移、任务与批量等级/战令/成就领奖、30 项成就、十抽 A、60 抽 S、
   专属数据升星、招募英雄六槽替换和顶层待领取计数；
-  `ui-pass-844x390.png`、`ui-achievements-844x390.png`、`ui-recruit-result-844x390.png`、
+  `ui-pass-844x390.png`、`ui-achievements-844x390.png`、`ui-faction-recruit-result-844x390.png`、
   `ui-formation-edit-844x390.png` 提供本机渲染证据。
 - 可访问性本地基线：`run_ui_focus_tests.gd` 验证作者场景和动态按钮均可聚焦且有高对比焦点样式；
   `run_font_coverage_tests.gd` 扫描运行时中文字符覆盖；`run_presentation_tests.gd` 验证“减少动态”

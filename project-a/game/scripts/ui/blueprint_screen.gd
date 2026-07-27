@@ -176,11 +176,16 @@ func _animate_results() -> void:
 
 
 func _build_node(view: Dictionary) -> PanelContainer:
+	var journey_focus := bool(view.get("journey_focus", false))
 	var card := PanelContainer.new()
 	card.name = "BlueprintNode_%s" % String(view.get("recipe_id", "")).replace(".", "_")
 	card.custom_minimum_size = Vector2(286, 104)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.add_theme_stylebox_override("panel", _panel_style(PANEL_2))
+	var card_style := _panel_style(Color("#242015") if journey_focus else PANEL_2)
+	if journey_focus:
+		card_style.border_color = GOLD
+		card_style.set_border_width_all(2)
+	card.add_theme_stylebox_override("panel", card_style)
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 6)
 	margin.add_theme_constant_override("margin_top", 3)
@@ -190,11 +195,19 @@ func _build_node(view: Dictionary) -> PanelContainer:
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 1)
 	margin.add_child(content)
+	if journey_focus:
+		var focus_badge := Label.new()
+		focus_badge.name = "FactionJourneyBlueprintBadge"
+		focus_badge.text = "★ 本轮十连阵营核心"
+		focus_badge.add_theme_font_override("font", CJK_FONT)
+		focus_badge.add_theme_font_size_override("font_size", 10)
+		focus_badge.add_theme_color_override("font_color", GOLD)
+		content.add_child(focus_badge)
 	var heading := Label.new()
 	heading.text = String(view.get("display_name", "未知蓝图"))
 	heading.add_theme_font_override("font", CJK_FONT)
 	heading.add_theme_font_size_override("font_size", 13)
-	heading.add_theme_color_override("font_color", CYAN)
+	heading.add_theme_color_override("font_color", GOLD if journey_focus else CYAN)
 	content.add_child(heading)
 	var identity := Label.new()
 	identity.text = "%s级 · %s · %s" % [

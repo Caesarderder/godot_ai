@@ -16,6 +16,11 @@ validated_by:
   - godot --headless --path project-a --script tools/run_post_30m_faction_tests.gd
   - godot --headless --path project-a --script tools/run_post_30m_ui_journey_tests.gd
   - project-a/artifacts/ui-faction-journey-research-844x390.png
+  - project-a/artifacts/ui-faction-recruit-result-844x390.png
+  - project-a/artifacts/ui-faction-blueprint-focus-844x390.png
+  - project-a/artifacts/ui-faction-formation-focus-844x390.png
+  - project-a/artifacts/ui-faction-star-ready-844x390.png
+  - project-a/artifacts/ui-faction-star-unlocked-844x390.png
 tags:
   - reference:technical-design
   - workflow:post-30m
@@ -130,5 +135,6 @@ Open decisions: 无阻塞决策；4★/5★与正式卡池运营延期
 First validation: `godot --headless --path project-a --script res://tools/run_post_30m_faction_tests.gd`；
 7 个 seed 均完成 1★前三关、后段成长墙、2★Lv2 通过 2-4、2★Lv3 通过 2-5；
 `run_post_30m_ui_journey_tests.gd` 另从真实主场景点击十连、定向科技节点、研发领取、第三编队槽、
-三场证明目标与精确角色升星，证明跨屏 CTA 没有退回泛化页面。
+三场证明目标与精确角色升星，证明跨屏 CTA 没有退回泛化页面；同一测试锁定 844×390 下十连
+奖励与新编队候选会自动进入视野，并验证科技、候选、名册和升星反馈持续指向同一阵营核心。
 Residual risk: 真人阵营认同、移动端触控和生产 origin 持久化
