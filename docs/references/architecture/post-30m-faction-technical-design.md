@@ -82,6 +82,11 @@ Compatibility、单线程 Web、844×390 横屏。
 | `LegionScreen` | 仅投影 | action signal | 可读状态 | 禁用操作并解释缺口 |
 | `CampaignObjectiveProjection` | 无长期状态 | 当前完整 GameState | 研发/编队/实战/升星/Boss 单一目标 | 缺失阵营 receipt 时安全退回通用战役目标 |
 
+Tier 1 阵营协议不增加新的存档字段：App Shell 仅在 `stage_2_5` 已首通时，从
+`claim_faction_signal` durable receipt 重建阵营协议并注入第三章及以后关卡配置；
+`BattleSession` 在首 tick 验证编队中至少有一名同阵营角色后，原子应用一次效果并发布
+`faction_protocol`。表现层只消费事件，不决定协议是否生效。
+
 ## 数据合同
 
 `hero_fragments` 使用 `archetype_id → non-negative int`，只接受 FactoryCatalog 已知可招募型号。

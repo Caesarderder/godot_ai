@@ -4,6 +4,7 @@ const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_se
 const CombatPowerScript := preload("res://game/scripts/domain/progression/combat_power.gd")
 const CommandExecutorScript := preload("res://game/scripts/commands/command_executor.gd")
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const FactionCatalogScript := preload("res://game/scripts/domain/content/faction_catalog.gd")
 const GameStateScript := preload("res://game/scripts/state/game_state.gd")
 const HeroGeneratorScript := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const HeroProgressionScript := preload("res://game/scripts/domain/progression/hero_progression.gd")
@@ -224,6 +225,16 @@ func _run_seed(run_seed: int) -> void:
 		"seed %d chapter-two victories fund the faction core through level three" % run_seed
 	)
 	var grown_boss := _simulate_stage(executor.state, "stage_2_5")
+	var chapter_three_opening := _simulate_stage(
+		executor.state,
+		"stage_3_1",
+		FactionCatalogScript.tech_preview_for(guaranteed_archetype)
+	)
+	_ok(
+		not String(chapter_three_opening.get("faction_protocol_id", "")).is_empty()
+			and int(chapter_three_opening.get("faction_protocol_affected", 0)) > 0,
+		"seed %d chapter-three opening visibly cashes in the recruited faction protocol" % run_seed
+	)
 	for stage_index in 3:
 		_eq(
 			String((one_star_chapter[stage_index] as Dictionary).get("outcome", "")),
@@ -384,7 +395,11 @@ func _test_free_ten_hard_pity_edge() -> void:
 	)
 
 
-func _simulate_stage(state: RefCounted, stage_id: String) -> Dictionary:
+func _simulate_stage(
+	state: RefCounted,
+	stage_id: String,
+	faction_protocol: Dictionary = {}
+) -> Dictionary:
 	var snapshots: Array[Dictionary] = []
 	for slot in state.formation.hero_ids().size():
 		var hero: RefCounted = state.hero_by_id(String(state.formation.hero_ids()[slot]))
@@ -406,7 +421,10 @@ func _simulate_stage(state: RefCounted, stage_id: String) -> Dictionary:
 			"auto_skill": false,
 		})
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(snapshots, stage_id, StageCatalogScript.stage(stage_id))
+	var config := StageCatalogScript.stage(stage_id)
+	if not faction_protocol.is_empty():
+		config["faction_protocol"] = faction_protocol.duplicate(true)
+	session.start(snapshots, stage_id, config)
 	var safety := 0
 	var manual_skill_uses := 0
 	var manual_burst_actions := 0

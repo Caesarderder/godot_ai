@@ -2262,6 +2262,9 @@ func _start_battle() -> void:
 	battle_unit_hud.clear()
 	_clear()
 	var config := StageCatalog.stage(selected_stage_id)
+	var faction_protocol := _active_faction_protocol(game.current_state())
+	if not faction_protocol.is_empty():
+		config["faction_protocol"] = faction_protocol
 	var shell := _shell(
 		String(config.get("display_name", selected_stage_id)),
 		"选择技能时机改变本局战况 · 失败不会造成永久损失",
@@ -2708,6 +2711,8 @@ func _show_result() -> void:
 	elif chapter_boss_complete and not next_stage_id.is_empty():
 		var next_stage := StageCatalog.stage(next_stage_id)
 		qualification = _chapter_transition_copy(completed_chapter, next_stage)
+		if completed_chapter == 2:
+			qualification += "\n%s" % _faction_tech_unlock_short_copy()
 		primary_label = "查看第%d章新战线" % int(next_stage.get("chapter", completed_chapter + 1))
 		primary_action = "map_stage"
 		primary_payload = {"stage_id": next_stage_id}
@@ -2737,6 +2742,7 @@ func _show_result() -> void:
 	else:
 		primary_label = "培养角色"
 		primary_action = "legion"
+	var protocol_growth := _faction_protocol_result_copy(last_battle_runtime_result)
 	var result_screen := BattleResultScreenScene.instantiate()
 	result_screen.configure({
 		"outcome_banner": (
@@ -2764,7 +2770,11 @@ func _show_result() -> void:
 		"growth": (
 			_faction_tech_result_copy()
 			if won and cleared_stage_id == "stage_2_5"
-			else _growth_opportunity_copy(event)
+			else (
+				protocol_growth
+				if not protocol_growth.is_empty()
+				else _growth_opportunity_copy(event)
+			)
 		),
 		"safety": "全员无损返回 · 无维修消耗 · 可立即再次出征",
 		"qualification": qualification,
@@ -2967,6 +2977,15 @@ func _chapter_transition_copy(completed_chapter: int, next_stage: Dictionary) ->
 		completed_chapter,
 		String(next_stage.get("display_name", "下一战线")),
 		String(previews.get(next_chapter, "先侦察新威胁，再决定阵营成长方向。")),
+	]
+
+
+func _faction_tech_unlock_short_copy() -> String:
+	var preview := _active_faction_protocol(game.current_state())
+	if preview.is_empty():
+		return "阵营科技解锁 · 3-1起生效"
+	return "科技解锁 · %s · 3-1起生效" % [
+		String(preview.get("title", "阵营协议")),
 	]
 
 
@@ -3267,10 +3286,22 @@ func _faction_tech_result_copy() -> String:
 	var preview := FactionCatalog.tech_preview_for(archetype_id)
 	if preview.is_empty():
 		return _growth_opportunity_copy({})
-	return "阵营未来 · %s「%s」已预告：%s（第三章推进后开放，当前不增加战力）" % [
+	return "阵营科技解锁 · %s「%s」：%s（第3章起自动生效）" % [
 		String(preview.get("faction", "阵营")),
 		String(preview.get("title", "未来协议")),
 		String(preview.get("effect", "")),
+	]
+
+
+func _faction_protocol_result_copy(runtime_result: Dictionary) -> String:
+	var title := String(runtime_result.get("faction_protocol_title", ""))
+	var affected := int(runtime_result.get("faction_protocol_affected", 0))
+	if title.is_empty() or affected <= 0:
+		return ""
+	return "阵营科技兑现 · %s「%s」本局影响 %d 个目标" % [
+		String(runtime_result.get("faction_protocol_faction", "阵营")),
+		title,
+		affected,
 	]
 
 
@@ -3355,6 +3386,19 @@ func _battle_snapshots() -> Array[Dictionary]:
 			"auto_skill": bool(hero.auto_skill_enabled) or bool(settings_store.global_auto_skill),
 		})
 	return snapshots
+
+
+func _active_faction_protocol(state: RefCounted) -> Dictionary:
+	if not (state.stage_progress.get("cleared_stages", []) as Array).has("stage_2_5"):
+		return {}
+	var faction_event := RecruitmentResultProjection.latest_event_for_command(
+		state,
+		"claim_faction_signal"
+	)
+	var archetype_id := String(
+		faction_event.get("guaranteed_duplicate_archetype", "")
+	)
+	return FactionCatalog.tech_preview_for(archetype_id)
 
 
 func _claim_output() -> void:

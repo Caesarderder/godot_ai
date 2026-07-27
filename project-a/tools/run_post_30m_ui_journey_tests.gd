@@ -376,13 +376,21 @@ func _run() -> void:
 		"chapter-two result turns hidden participation XP into the faction core's visible next-level progress"
 	)
 	_check(
-		_tree_has_text(main, "阵营未来")
-			and _tree_has_text(main, "第三章推进后开放")
-			and _tree_has_text(main, "当前不增加战力"),
-		"chapter-two result previews the player's durable faction technology without granting hidden power"
+		_tree_has_text(main, "阵营科技解锁")
+			and _tree_has_text(main, "第3章起自动生效"),
+		"chapter-two result converts the player's durable faction identity into a real next-battle unlock"
 	)
 	var next_chapter := main.find_child("PrimaryAction", true, false) as Button
+	var qualification := main.find_child("Qualification", true, false) as Label
 	_check(next_chapter != null and next_chapter.text.contains("第3章新战线"), "chapter transition offers one reorientation action instead of blind auto-battle")
+	_check(
+		qualification != null
+			and qualification.visible
+			and qualification.text.contains("科技解锁")
+			and qualification.text.contains("3-1起生效")
+			and qualification.get_global_rect().end.y <= float(root.size.y),
+		"chapter-two reward is visible beside the chapter-three action instead of falling below the report fold"
+	)
 	result_factory = main.find_child("FactoryAction", true, false) as Button
 	_check(
 		result_factory != null and not result_factory.visible,
@@ -411,9 +419,18 @@ func _run() -> void:
 	_check(
 		tech_preview != null
 			and tech_preview.visible
-			and _tree_has_text(tech_preview, "阵营科技预览")
-			and _tree_has_text(tech_preview, "预览不增加当前战力"),
-		"blueprint screen persistently reconstructs the core faction's read-only technology preview"
+			and _tree_has_text(tech_preview, "阵营科技已激活")
+			and _tree_has_text(tech_preview, "第3章起自动生效"),
+		"blueprint screen persistently reconstructs the core faction's active technology"
+	)
+	var protocol := main.call("_active_faction_protocol", game.current_state()) as Dictionary
+	_check(
+		not protocol.is_empty()
+			and not String(protocol.get("effect_id", "")).is_empty()
+			and (protocol.get("member_archetypes", []) as Array).has(
+				String(protocol.get("archetype_id", ""))
+			),
+		"chapter-three battle config derives the active protocol from the durable faction core"
 	)
 	_check(
 		tech_preview != null

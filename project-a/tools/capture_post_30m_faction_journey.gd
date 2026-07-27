@@ -300,6 +300,10 @@ func _capture() -> void:
 	battle_world = main.get("battle_world")
 	battle_world.set_process(false)
 	battle_session = battle_world.get("_session")
+	battle_world.call("_process", 0.2)
+	await _wait_frames(2)
+	if not _save("res://artifacts/ui-faction-tech-activated-battle-844x390.png"):
+		return
 	battle_session.tick_index = 59
 	battle_world.call("_process", 0.2)
 	await _wait_frames(2)

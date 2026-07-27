@@ -30,6 +30,7 @@ func _init() -> void:
 	_test_battle_has_no_time_limit()
 	_test_chapter_two_resonance_learning_curve()
 	_test_chapter_two_encounter_escalation()
+	_test_faction_protocols_create_distinct_openings()
 	_test_chapter_three_encounter_learning_curve()
 	_test_chapter_four_counterplay_ladder()
 	_test_act_one_stage_catalog_and_config_start()
@@ -41,6 +42,73 @@ func _init() -> void:
 		push_error(failure)
 	print("BATTLE TESTS FAIL: %d failure(s)" % failures.size())
 	quit(1)
+
+
+func _test_faction_protocols_create_distinct_openings() -> void:
+	var cases: Array[Dictionary] = [
+		{
+			"hero": "assault",
+			"effect_id": "opening_energy",
+			"member_archetypes": ["assault", "saw", "bomber"],
+			"value": 30,
+		},
+		{
+			"hero": "armored",
+			"effect_id": "opening_shield",
+			"member_archetypes": ["armored", "repair", "gman"],
+			"value": 1200,
+			"duration_ticks": 100,
+		},
+		{
+			"hero": "rocket",
+			"effect_id": "opening_armor_break",
+			"member_archetypes": ["rocket", "bomber", "gman"],
+			"duration_ticks": 1200,
+		},
+		{
+			"hero": "sonic",
+			"effect_id": "opening_weakness",
+			"member_archetypes": ["sonic", "parasite", "repair"],
+			"duration_ticks": 50,
+		},
+	]
+	for case in cases:
+		var session: RefCounted = BattleSessionScript.new()
+		var config := StageCatalogScript.stage("stage_3_1")
+		config["faction_protocol"] = case.duplicate(true)
+		var hero := _hero(
+			0,
+			String(case["hero"]),
+			"guardian" if String(case["hero"]) == "armored" else "fighter",
+			2,
+			500,
+			70,
+			30
+		)
+		session.start([hero], "stage_3_1", config)
+		var events: Array = session.advance_tick()
+		var protocol_events := events.filter(
+			func(event: Dictionary) -> bool:
+				return String(event.get("type", "")) == "faction_protocol"
+		)
+		_check(protocol_events.size() == 1, "%s protocol emits one visible opening event" % case["effect_id"])
+		_check(int(session._faction_protocol_affected) > 0, "protocol records the number of affected combat targets")
+		var snapshot := session.snapshot() as Dictionary
+		var result_probe := session._finish_result(false, "protocol_probe") as Dictionary
+		_check(
+			String(result_probe.get("faction_protocol_id", "")) == String(case["effect_id"])
+				and int(result_probe.get("faction_protocol_affected", 0)) > 0,
+			"%s protocol remains available to settlement feedback" % case["effect_id"]
+		)
+		match String(case["effect_id"]):
+			"opening_energy":
+				_check(int((snapshot["units"][0] as Dictionary).get("energy", 0)) >= 30, "fast faction starts closer to its first burst")
+			"opening_shield":
+				_check(int((snapshot["units"][0] as Dictionary).get("shield", 0)) > 0, "defense faction starts with a real shield")
+			"opening_armor_break":
+				_check(int((snapshot["structures"][0] as Dictionary).get("armor_break_ticks", 0)) > 1000, "bombardment faction marks the opening structure")
+			"opening_weakness":
+				_check(int((snapshot["enemies"][0] as Dictionary).get("weakness_ticks", 0)) > 0, "disruption faction weakens the opening defenders")
 
 
 func _test_damage_energy_normalization() -> void:

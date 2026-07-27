@@ -536,6 +536,10 @@ func _apply_events(events: Array[Dictionary]) -> void:
 			_spawn_skill_vfx(event)
 			_play_audio(&"skill", -12.0, 0.92 + float(int(event.get("skill_tier", 1))) * 0.08)
 			_add_camera_shake(0.08, 0.06)
+		elif event_type == &"faction_protocol":
+			has_hud_event = true
+			_play_audio(&"skill", -11.0, 1.18)
+			_spawn_pulse_ring(Vector3(0.0, 0.1, 0.0), Color("#e5a84b"), 6.0)
 		elif event_type == &"resonance_warning":
 			has_hud_event = true
 			_play_audio(&"warning", -15.0, 1.18)

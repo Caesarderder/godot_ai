@@ -81,6 +81,9 @@ var _finale_support_count: int = 0
 var _finale_pending_impacts: Array[Dictionary] = []
 var _started_solo: bool = false
 var _solo_pressure_bp: int = 10000
+var _faction_protocol: Dictionary = {}
+var _faction_protocol_applied: bool = false
+var _faction_protocol_affected: int = 0
 
 
 func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID, stage_config: Dictionary = {}) -> void:
@@ -111,6 +114,11 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 		int(_stage_config.get("boss_cannon_period_ticks", DEFAULT_BOSS_CANNON_PERIOD_TICKS))
 	)
 	_solo_pressure_bp = maxi(10000, int(_stage_config.get("solo_pressure_bp", 10000)))
+	_faction_protocol = (
+		(_stage_config.get("faction_protocol", {}) as Dictionary).duplicate(true)
+		if int(_stage_config.get("chapter", 1)) >= 3
+		else {}
+	)
 	if _cannon_warning_ticks <= 0:
 		_cannon_warning_ticks = CANNON_FUSE_TICKS
 	_units.clear()
@@ -158,6 +166,8 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_finale_support_count = 0
 	_finale_pending_impacts.clear()
 	_started_solo = false
+	_faction_protocol_applied = false
+	_faction_protocol_affected = 0
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
 		is_finished = true
@@ -233,6 +243,7 @@ func advance_tick() -> Array[Dictionary]:
 	if is_finished:
 		return events
 	tick_index += 1
+	_apply_faction_protocol(events)
 	_tick_status_effects()
 	_resolve_cannon_warnings(events)
 	_run_structure_defenses(events)
@@ -242,6 +253,70 @@ func advance_tick() -> Array[Dictionary]:
 	_update_stage(events)
 	_resolve_battle(events)
 	return events
+
+
+func _apply_faction_protocol(events: Array[Dictionary]) -> void:
+	if _faction_protocol_applied or _faction_protocol.is_empty():
+		return
+	_faction_protocol_applied = true
+	var members := _faction_protocol.get("member_archetypes", []) as Array
+	var matching_allies: Array[Dictionary] = []
+	for ally in _living_main_allies():
+		if members.has(String(ally.get("archetype_id", ""))):
+			matching_allies.append(ally)
+	if matching_allies.is_empty():
+		return
+	var effect_id := String(_faction_protocol.get("effect_id", ""))
+	var affected := 0
+	var value := int(_faction_protocol.get("value", 0))
+	match effect_id:
+		"opening_energy":
+			for ally in matching_allies:
+				ally["energy"] = mini(SKILL_COST, int(ally.get("energy", 0)) + value)
+				affected += 1
+		"opening_shield":
+			var duration := int(_faction_protocol.get("duration_ticks", 100))
+			for ally in matching_allies:
+				ally["shield"] = maxi(
+					int(ally.get("shield", 0)),
+					int(int(ally.get("max_hp", 1)) * value / 10000)
+				)
+				ally["shield_ticks"] = maxi(int(ally.get("shield_ticks", 0)), duration)
+				affected += 1
+		"opening_armor_break":
+			var duration := int(_faction_protocol.get("duration_ticks", 1200))
+			for structure in _structures:
+				if int(structure.get("stage", -1)) == 0:
+					structure["armor_break_ticks"] = maxi(
+						int(structure.get("armor_break_ticks", 0)),
+						duration
+					)
+					affected += 1
+		"opening_weakness":
+			var duration := int(_faction_protocol.get("duration_ticks", 50))
+			for enemy in _units:
+				if (
+					int(enemy.get("team", TEAM_ALLY)) == TEAM_ENEMY
+					and int(enemy.get("stage", -1)) == 0
+				):
+					enemy["weakness_ticks"] = maxi(
+						int(enemy.get("weakness_ticks", 0)),
+						duration
+					)
+					affected += 1
+		_:
+			return
+	_faction_protocol_affected = affected
+	events.append({
+		"type": &"faction_protocol",
+		"tick": tick_index,
+		"faction": String(_faction_protocol.get("faction", "阵营")),
+		"title": String(_faction_protocol.get("title", "阵营协议")),
+		"effect_id": effect_id,
+		"affected": affected,
+		"value": value,
+		"duration_ticks": int(_faction_protocol.get("duration_ticks", 0)),
+	})
 
 
 func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
@@ -1497,6 +1572,10 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"finale_damage_dealt": _finale_damage_dealt,
 		"finale_armor_count": _finale_armor_count,
 		"finale_support_count": _finale_support_count,
+		"faction_protocol_id": String(_faction_protocol.get("effect_id", "")),
+		"faction_protocol_title": String(_faction_protocol.get("title", "")),
+		"faction_protocol_faction": String(_faction_protocol.get("faction", "")),
+		"faction_protocol_affected": _faction_protocol_affected,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,
 		"gman_max_hp": gman_max_hp,

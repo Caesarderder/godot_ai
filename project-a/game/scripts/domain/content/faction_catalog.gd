@@ -28,19 +28,28 @@ const STAR_EFFECTS: Dictionary = {
 const TECH_PREVIEWS: Dictionary = {
 	"快攻破城": {
 		"title": "连锁破城协议",
-		"effect": "围绕首次破坏结构后的连续突进窗口，放大冲锋、双锯与自爆的抢攻节奏",
+		"effect": "同阵营主力以额外30能量开局，更早形成第一次集中爆发",
+		"effect_id": "opening_energy",
+		"value": 30,
 	},
 	"钢铁防线": {
 		"title": "移动堡垒协议",
-		"effect": "围绕格挡后的反攻窗口，让装甲、维修与 Gman 把承压转成持续推进",
+		"effect": "同阵营主力开局获得最大生命12%的20秒护盾，把第一轮承压转为推进窗口",
+		"effect_id": "opening_shield",
+		"value": 1200,
+		"duration_ticks": 100,
 	},
 	"远程轰炸": {
 		"title": "火力标定协议",
-		"effect": "围绕结构破甲后的集火窗口，让火箭、自爆与 Gman 更快拆除关键设施",
+		"effect": "首个战区的结构在本局持续处于火力标定状态，受到的伤害提高25%",
+		"effect_id": "opening_armor_break",
+		"duration_ticks": 1200,
 	},
 	"干扰增殖": {
 		"title": "失序扩散协议",
-		"effect": "围绕虚弱目标的控制窗口，让音波、寄生与维修扩大召唤和续航优势",
+		"effect": "首个战区守军开局虚弱10秒，为召唤、控制与续航争取展开时间",
+		"effect_id": "opening_weakness",
+		"duration_ticks": 50,
 	},
 }
 
@@ -63,4 +72,14 @@ static func tech_preview_for(archetype_id: String) -> Dictionary:
 		return {}
 	preview["faction"] = faction
 	preview["archetype_id"] = archetype_id
+	preview["member_archetypes"] = archetypes_for_faction(faction)
 	return preview
+
+
+static func archetypes_for_faction(faction: String) -> Array[String]:
+	var result: Array[String] = []
+	for archetype_id_value in FACTIONS:
+		if String(FACTIONS[archetype_id_value]) == faction:
+			result.append(String(archetype_id_value))
+	result.sort()
+	return result

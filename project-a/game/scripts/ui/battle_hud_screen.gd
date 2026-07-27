@@ -111,6 +111,30 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 			var copy := _skill_result_copy(String(event.get("unit_id", "")), events)
 			if not copy.is_empty():
 				_skill_feedback_queue.append(copy)
+		elif event_type == &"faction_protocol":
+			var effect_id := String(event.get("effect_id", ""))
+			var detail := ""
+			match effect_id:
+				"opening_energy":
+					detail = "%d名同阵营主力获得%d开局能量" % [
+						int(event.get("affected", 0)),
+						int(event.get("value", 0)),
+					]
+				"opening_shield":
+					detail = "%d名同阵营主力获得开局护盾" % int(event.get("affected", 0))
+				"opening_armor_break":
+					detail = "%d座前线结构已被标定，承伤提高25%%" % int(event.get("affected", 0))
+				"opening_weakness":
+					detail = "%d名首区守军陷入10秒虚弱" % int(event.get("affected", 0))
+				_:
+					detail = "阵营效果已生效"
+			_chapter_feedback_copy = "%s · %s：%s" % [
+				String(event.get("faction", "阵营")),
+				String(event.get("title", "阵营协议")),
+				detail,
+			]
+			_chapter_feedback_updates = 12
+			_chapter_feedback_danger = false
 		elif event_type == &"resonance_warning":
 			_chapter_feedback_copy = (
 				"共振蓄能 · 2秒后削减全队能量 · 立即释放已就绪技能"
