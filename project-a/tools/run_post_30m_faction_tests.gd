@@ -108,6 +108,16 @@ func _run_seed(run_seed: int) -> void:
 	_ok(not new_archetypes.is_empty(), "seed %d free faction ten reveals a new archetype" % run_seed)
 	var guaranteed_archetype := String(event.get("guaranteed_duplicate_archetype", ""))
 	var core_candidates := event.get("faction_core_candidates", []) as Array
+	var first_core_recipe := (
+		FactoryCatalogScript.recipe_for_archetype(String(core_candidates[0]))
+		if core_candidates.size() == 2
+		else {}
+	)
+	var second_core_recipe := (
+		FactoryCatalogScript.recipe_for_archetype(String(core_candidates[1]))
+		if core_candidates.size() == 2
+		else {}
+	)
 	_ok(
 		not guaranteed_archetype.is_empty()
 			and new_archetypes.has(guaranteed_archetype)
@@ -120,6 +130,16 @@ func _run_seed(run_seed: int) -> void:
 			and fragment_archetypes.has(String(core_candidates[0]))
 			and fragment_archetypes.has(String(core_candidates[1])),
 		"seed %d free faction ten guarantees two distinct, star-ready core choices" % run_seed
+	)
+	_ok(
+		core_candidates.size() == 2
+			and String(first_core_recipe.get("rating", ""))
+				== String(second_core_recipe.get("rating", ""))
+			and String(first_core_recipe.get("rating", ""))
+				== String(event.get("faction_core_rating", ""))
+			and FactionCatalogScript.faction_for(String(core_candidates[0]))
+				!= FactionCatalogScript.faction_for(String(core_candidates[1])),
+		"seed %d core choice compares playstyles at the same visible rating" % run_seed
 	)
 	_ok(
 		int(executor.state.economy.hero_shards) >= shared_data_before,
@@ -415,9 +435,11 @@ func _test_free_ten_hard_pity_edge() -> void:
 	_eq(values.size(), 10, "hard-pity free ten still presents exactly ten response cards")
 	_eq(int(state.meta_progression.recruit_draw_count), 10, "hard-pity free ten advances ten draw indices")
 	_eq(int(state.meta_progression.recruit_s_pity), 0, "tenth response consumes the 60-draw S guarantee")
+	var final_response := values[9] as Dictionary
 	_ok(
-		not ((values[9] as Dictionary).get("pity_bonus", {}) as Dictionary).is_empty(),
-		"tenth response keeps matching fragments and exposes the guaranteed S result"
+		String(final_response.get("rarity", "")) == "S"
+			or not (final_response.get("pity_bonus", {}) as Dictionary).is_empty(),
+		"tenth response exposes the guaranteed S without delaying the shared pity"
 	)
 
 

@@ -1523,6 +1523,7 @@ func _legion_view() -> Dictionary:
 				"display_name": HeroGenerator.archetype_display_name(candidate_archetype),
 				"rating": String(candidate_recipe.get("rating", "B")),
 				"faction": FactionCatalog.faction_for(candidate_archetype),
+				"playstyle": FactionCatalog.playstyle_for(candidate_archetype),
 				"fragments": int(
 					state.meta_progression.hero_fragments.get(candidate_archetype, 0)
 				),

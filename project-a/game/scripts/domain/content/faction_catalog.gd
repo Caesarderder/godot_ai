@@ -14,6 +14,13 @@ const FACTIONS: Dictionary = {
 	"saw": "快攻破城",
 }
 
+const PLAYSTYLES: Dictionary = {
+	"快攻破城": "抢先爆发",
+	"钢铁防线": "承炮续战",
+	"远程轰炸": "后排拆塔",
+	"干扰增殖": "削弱控场",
+}
+
 const STAR_EFFECTS: Dictionary = {
 	"assault": {2: "突进顺劈多个目标", 3: "高倍率冲击并震慑"},
 	"sonic": {2: "虚弱覆盖跨线目标", 3: "普通守军追加短暂眩晕"},
@@ -119,6 +126,10 @@ const TIER_TWO_SPECIALIZATION: Dictionary = {
 
 static func faction_for(archetype_id: String) -> String:
 	return String(FACTIONS.get(archetype_id, "独立战术"))
+
+
+static func playstyle_for(archetype_id: String) -> String:
+	return String(PLAYSTYLES.get(faction_for(archetype_id), "灵活应战"))
 
 
 static func next_star_effect(archetype_id: String, target_star: int) -> String:

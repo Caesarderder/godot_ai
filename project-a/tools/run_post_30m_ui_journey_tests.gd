@@ -55,8 +55,17 @@ func _run() -> void:
 	var core_candidates := event.get("faction_core_candidates", []) as Array
 	_check(
 		core_candidates.size() == 2
-			and String(core_candidates[0]) != String(core_candidates[1]),
-		"free ten guarantees two distinct faction-core candidates"
+			and String(core_candidates[0]) != String(core_candidates[1])
+			and String(
+				FactoryCatalogScript.recipe_for_archetype(
+					String(core_candidates[0])
+				).get("rating", "")
+			) == String(
+				FactoryCatalogScript.recipe_for_archetype(
+					String(core_candidates[1])
+				).get("rating", "")
+			),
+		"free ten guarantees two distinct, same-rating faction-core candidates"
 	)
 	var archetype_id := String(core_candidates[1]) if core_candidates.size() == 2 else ""
 	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
@@ -76,11 +85,14 @@ func _run() -> void:
 	_check(
 		first_choice != null
 			and second_choice != null
+			and first_choice.text.contains(" · ")
+			and second_choice.text.contains(" · ")
+			and first_choice.text != second_choice.text
 			and first_choice.custom_minimum_size.y >= 48
 			and second_choice.custom_minimum_size.y >= 48
 			and first_choice.get_global_rect().end.y <= 310.0
 			and second_choice.get_global_rect().end.y <= 310.0,
-		"both faction candidates expose full-size choices above the persistent bottom navigation"
+		"both faction candidates expose distinct playstyle promises above the bottom navigation"
 	)
 	if second_choice != null:
 		second_choice.pressed.emit()

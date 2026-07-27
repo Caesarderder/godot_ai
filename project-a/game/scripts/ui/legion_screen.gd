@@ -382,7 +382,7 @@ func _recruit_panel() -> Control:
 			var choice_panel := _panel("选择长期阵营核心 · 选择后永久保留")
 			choice_panel.name = "RecruitFactionCoreChoice"
 			choice_panel.add_child(_label(
-				"两名候选都能升至2★；比较阵营职责，不必只看评级。",
+				"同评级、不同打法；两名候选都已备齐2★碎片。",
 				11,
 				CYAN
 			))
@@ -406,7 +406,10 @@ func _recruit_panel() -> Control:
 					GOLD
 				))
 				var choose := _button(
-					"选择%s作为阵营核心" % String(choice.get("display_name", "")),
+					"选择%s · %s" % [
+						String(choice.get("display_name", "")),
+						String(choice.get("playstyle", "")),
+					],
 					true
 				)
 				choose.name = "ChooseFactionCore_%s" % String(

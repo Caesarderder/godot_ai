@@ -1270,7 +1270,12 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 			if star >= 2:
 				_rocket_salvo_extra_targets += maxi(0, rocket_targets.size() - 1)
 			for target in rocket_targets:
-				_damage_target(target, maxi(18, int(unit["attack"]) * (18 if star >= 2 else 13) / 10), unit["unit_id"], true, events)
+				var rocket_multiplier := (
+					55
+					if star >= 2 and target.has("structure_id")
+					else (30 if star >= 2 else 13)
+				)
+				_damage_target(target, maxi(18, int(unit["attack"]) * rocket_multiplier / 10), unit["unit_id"], true, events)
 				if target.has("structure_id") and star >= 3:
 					target["armor_break_ticks"] = 30
 					events.append({"type": &"structure_armor_broken", "tick": tick_index, "structure_id": target["structure_id"], "source_id": unit["unit_id"], "duration_ticks": 30})

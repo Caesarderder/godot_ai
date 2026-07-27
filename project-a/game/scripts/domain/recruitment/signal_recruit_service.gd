@@ -56,20 +56,20 @@ static func recruit_free_faction_ten(
 	if not (POOLS["S"] as Array).has(target_archetype):
 		return {"ok": false, "error": "RECRUIT_TARGET_INVALID"}
 	var results: Array[Dictionary] = []
-	for _index in 6:
-		results.append(_draw_once(state, target_archetype))
-	results.append(_draw_forced_rarity(state, "A", target_archetype))
-	var first_candidate := _first_new_design(results)
-	if first_candidate.is_empty():
-		first_candidate = _draw_forced_new_design(state, [])
-		results.append(first_candidate)
+	var candidate_rarity := _faction_core_rarity(state)
+	var first_candidate := _draw_forced_new_design(state, [], candidate_rarity)
+	results.append(first_candidate)
 	var second_candidate := _draw_forced_new_design(
 		state,
-		[String(first_candidate.get("archetype_id", ""))]
+		[String(first_candidate.get("archetype_id", ""))],
+		candidate_rarity
 	)
 	results.append(second_candidate)
 	results.append(_draw_guaranteed_duplicate(state, first_candidate, target_archetype))
 	results.append(_draw_guaranteed_duplicate(state, second_candidate, target_archetype))
+	for _index in 5:
+		results.append(_draw_once(state, target_archetype))
+	results.append(_draw_forced_minimum_a(state, target_archetype))
 	var core_candidates: Array[String] = [
 		String(first_candidate.get("archetype_id", "")),
 		String(second_candidate.get("archetype_id", "")),
@@ -86,6 +86,7 @@ static func recruit_free_faction_ten(
 			"target_guaranteed": state.meta_progression.recruit_target_guaranteed,
 			"guaranteed_duplicate_archetype": core_candidates[0],
 			"faction_core_candidates": core_candidates,
+			"faction_core_rating": candidate_rarity,
 			"requires_core_choice": true,
 			"pity_advanced": true,
 		},
@@ -94,40 +95,37 @@ static func recruit_free_faction_ten(
 
 static func _draw_forced_new_design(
 	state: RefCounted,
-	excluded_archetypes: Array[String]
+	excluded_archetypes: Array[String],
+	rarity: String
 ) -> Dictionary:
 	var available: Array[Dictionary] = []
-	for rarity in ["A", "B"]:
+	for archetype_value in POOLS[rarity]:
+		var archetype_id := String(archetype_value)
+		if excluded_archetypes.has(archetype_id):
+			continue
+		var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
+		var recipe_id := String(recipe.get("recipe_id", ""))
+		if (
+			not bool(state.factory.discovered_blueprints.get(recipe_id, false))
+			and not bool(state.factory.blueprints.get(recipe_id, false))
+		):
+			available.append({
+				"archetype_id": archetype_id,
+				"recipe_id": recipe_id,
+				"rarity": rarity,
+			})
+	if available.is_empty():
+		var fallback_archetype := String((POOLS[rarity] as Array)[0])
 		for archetype_value in POOLS[rarity]:
 			var archetype_id := String(archetype_value)
-			if excluded_archetypes.has(archetype_id):
-				continue
-			var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
-			var recipe_id := String(recipe.get("recipe_id", ""))
-			if (
-				not bool(state.factory.discovered_blueprints.get(recipe_id, false))
-				and not bool(state.factory.blueprints.get(recipe_id, false))
-			):
-				available.append({
-					"archetype_id": archetype_id,
-					"recipe_id": recipe_id,
-					"rarity": rarity,
-				})
-	if available.is_empty():
-		var fallback_archetype := "rocket"
-		for rarity in ["A", "B"]:
-			for archetype_value in POOLS[rarity]:
-				var archetype_id := String(archetype_value)
-				if not excluded_archetypes.has(archetype_id):
-					fallback_archetype = archetype_id
-					break
-			if not excluded_archetypes.has(fallback_archetype):
+			if not excluded_archetypes.has(archetype_id):
+				fallback_archetype = archetype_id
 				break
 		var fallback_recipe := FactoryCatalogScript.recipe_for_archetype(fallback_archetype)
 		available.append({
 			"archetype_id": fallback_archetype,
 			"recipe_id": String(fallback_recipe.get("recipe_id", "")),
-			"rarity": String(fallback_recipe.get("rating", "B")),
+			"rarity": rarity,
 		})
 	var meta: RefCounted = state.meta_progression
 	meta.recruit_draw_count += 1
@@ -140,18 +138,50 @@ static func _draw_forced_new_design(
 		"faction-core-choice"
 	) % available.size()
 	var selected := available[pick_index]
-	var rarity := String(selected.get("rarity", "B"))
-	if rarity == "S":
+	var selected_rarity := String(selected.get("rarity", "B"))
+	if selected_rarity == "S":
 		meta.recruit_s_pity = 0
 		meta.recruit_a_pity = 0
-	elif rarity == "A":
+	elif selected_rarity == "A":
 		meta.recruit_a_pity = 0
 	return grant_design(
 		state,
 		String(selected.get("recipe_id", "")),
-		rarity,
-		int(DUPLICATE_FRAGMENTS.get(rarity, 20))
+		selected_rarity,
+		int(DUPLICATE_FRAGMENTS.get(selected_rarity, 20))
 	)
+
+
+static func _faction_core_rarity(state: RefCounted) -> String:
+	var preferred := (
+		"A"
+		if _stable_roll(
+			state.run_seed,
+			state.meta_progression.recruit_pool_id,
+			state.meta_progression.recruit_draw_count,
+			"faction-core-rating"
+		) % 2 == 0
+		else "B"
+	)
+	if _new_design_count(state, preferred) >= 2:
+		return preferred
+	var alternative := "B" if preferred == "A" else "A"
+	if _new_design_count(state, alternative) >= 2:
+		return alternative
+	return preferred
+
+
+static func _new_design_count(state: RefCounted, rarity: String) -> int:
+	var count := 0
+	for archetype_value in POOLS[rarity]:
+		var recipe := FactoryCatalogScript.recipe_for_archetype(String(archetype_value))
+		var recipe_id := String(recipe.get("recipe_id", ""))
+		if (
+			not bool(state.factory.discovered_blueprints.get(recipe_id, false))
+			and not bool(state.factory.blueprints.get(recipe_id, false))
+		):
+			count += 1
+	return count
 
 
 static func _draw_guaranteed_duplicate(
@@ -232,11 +262,10 @@ static func _draw_forced_rarity(
 	)
 
 
-static func _first_new_design(results: Array[Dictionary]) -> Dictionary:
-	for result in results:
-		if String(result.get("kind", "")) == "blueprint":
-			return result
-	return {}
+static func _draw_forced_minimum_a(state: RefCounted, target_archetype: String) -> Dictionary:
+	if int(state.meta_progression.recruit_s_pity) + 1 >= S_PITY:
+		return _draw_forced_rarity(state, "S", target_archetype)
+	return _draw_forced_rarity(state, "A", target_archetype)
 
 
 static func _pick_archetype(state: RefCounted, rarity: String, target_archetype: String) -> String:

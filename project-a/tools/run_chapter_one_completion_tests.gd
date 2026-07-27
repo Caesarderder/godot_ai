@@ -84,7 +84,7 @@ func _run() -> void:
 		main.find_child("RecruitFactionCoreChoice", true, false) != null,
 		"post-ten-pull first asks the player to choose their faction identity"
 	)
-	var core_choice := _button_with_text(main, "作为阵营核心")
+	var core_choice := main.find_child("ChooseFactionCore_*", true, false) as Button
 	_check(core_choice != null, "chapter completion exposes an executable faction-core choice")
 	if core_choice != null:
 		core_choice.pressed.emit()
