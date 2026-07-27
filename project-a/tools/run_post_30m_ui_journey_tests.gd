@@ -158,6 +158,19 @@ func _run() -> void:
 	main.call("_show_goals")
 	await _wait_frames(4)
 	_check(_tree_has_text(main, "击毁2-5核心"), "two-star completion reveals the final chapter-two proof instead of losing the journey")
+	var proof_runtime := {
+		"deployed_unit_ids": [hero_id],
+	}
+	proof_runtime[_qualitative_metric_for(archetype_id)] = 3
+	var mastery_proof := String(
+		main.call("_faction_mastery_proof_copy", proof_runtime, "victory", "stage_2_5")
+	)
+	_check(
+		mastery_proof.contains("阵营质变验证")
+			and mastery_proof.contains(String(faction_hero.display_name))
+			and mastery_proof.contains("3 次"),
+		"chapter-two result attributes the breakthrough to the exact drawn hero's two-star mechanic"
+	)
 
 	await _finish(main, game, audio_director)
 
@@ -194,6 +207,19 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 		if String(hero.archetype_id) == archetype_id:
 			return hero
 	return null
+
+
+func _qualitative_metric_for(archetype_id: String) -> String:
+	return String({
+		"assault": "assault_cleave_extra_hits",
+		"sonic": "sonic_cross_lane_extra_targets",
+		"rocket": "rocket_salvo_extra_targets",
+		"bomber": "bomber_splash_extra_targets",
+		"armored": "armored_group_shield_extra_targets",
+		"saw": "saw_followup_hits",
+		"repair": "repair_group_extra_targets",
+		"parasite": "parasite_extra_summons",
+	}.get(archetype_id, ""))
 
 
 func _tree_has_text(node: Node, fragment: String) -> bool:

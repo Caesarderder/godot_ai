@@ -118,6 +118,35 @@ func _capture() -> void:
 	await _wait_frames(2)
 	if not _save("res://artifacts/ui-faction-star-unlocked-844x390.png"):
 		return
+	state = game.current_state()
+	faction_hero = state.hero_by_id(hero_id)
+	var metric_key := _qualitative_metric_for(archetype_id)
+	var runtime_result := {
+		"ticks": 612,
+		"structures_destroyed": 7,
+		"enemies_defeated": 9,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"troop_damage_share_percent": 84,
+		"ally_damage_dealt_by_unit": {hero_id: 2380},
+	}
+	runtime_result[metric_key] = 7
+	main.set("last_battle_runtime_result", runtime_result)
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_2_5",
+			"next_stage_id": "stage_3_1",
+			"reward": {"gold": 78, "porcelain": 35, "parts": 31, "sludge": 26},
+			"industrial_tech": 5,
+			"hero_shards": 12,
+			"skill_chips": 3,
+		},
+	})
+	main.call("_show_result")
+	await _wait_frames(10)
+	if not _save("res://artifacts/ui-faction-chapter-two-proof-844x390.png"):
+		return
 
 	if audio_director != null:
 		audio_director.call("stop_all")
@@ -159,6 +188,19 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 		if String(hero.archetype_id) == archetype_id:
 			return hero
 	return null
+
+
+func _qualitative_metric_for(archetype_id: String) -> String:
+	return String({
+		"assault": "assault_cleave_extra_hits",
+		"sonic": "sonic_cross_lane_extra_targets",
+		"rocket": "rocket_salvo_extra_targets",
+		"bomber": "bomber_splash_extra_targets",
+		"armored": "armored_group_shield_extra_targets",
+		"saw": "saw_followup_hits",
+		"repair": "repair_group_extra_targets",
+		"parasite": "parasite_extra_summons",
+	}.get(archetype_id, ""))
 
 
 func _save(path: String) -> bool:

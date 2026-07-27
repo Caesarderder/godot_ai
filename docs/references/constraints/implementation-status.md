@@ -384,6 +384,8 @@ durable command receipt 恢复，刷新不再丢失；结果首屏显示阵营�
 研发领取、第三空槽编队、三场证明目标、精确角色 2★与 2-5 后续目标；全套 46 个
 `run_*_tests.gd` 当前通过。十连奖励与新角色候选不再落在 844×390 折叠线下；科技节点、编队
 候选和角色名册共享“阵营核心”身份标记，升星成功提示直接展示该型号解锁的真实质变。
+BattleSession 现分别累计八种型号的 2★机制触发证据；2-4/2-5 结算按实际部署角色显示机制名称、
+次数与突破关系，`ui-faction-chapter-two-proof-844x390.png` 证明该因果反馈在小屏首屏可见。
 S1≥B2 与错误碎片不突变继续受覆盖；真人阵营认同与继续游玩意愿仍待验证。
 旧 `QuestService`、`AchievementService`、`WarMeritTrack` 和
 `BlueprintDrawService` 仍作为兼容代码存在，但不再是新 UI 的长期进度权威。

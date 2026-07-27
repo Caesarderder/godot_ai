@@ -194,6 +194,15 @@ func _run_seed(run_seed: int) -> void:
 			and int(battle.get("ticks", 0)) > 0,
 		"seed %d faction formation completes a real second-chapter battle" % run_seed
 	)
+	var qualitative_metric := _qualitative_metric_for(guaranteed_archetype)
+	var qualitative_events := 0
+	for chapter_result in two_star_chapter:
+		qualitative_events += int((chapter_result as Dictionary).get(qualitative_metric, 0))
+	_ok(
+		not qualitative_metric.is_empty() and qualitative_events > 0,
+		"seed %d two-star faction mechanic leaves visible battle evidence for %s"
+			% [run_seed, guaranteed_archetype]
+	)
 	# Three first clears provide 90 combat XP and cover level two before 2-4.
 	hero.xp = 90
 	executor.state.economy.toilet_coins += 200
@@ -339,10 +348,10 @@ func _simulate_stage(state: RefCounted, stage_id: String) -> Dictionary:
 	while not session.is_finished and safety < 10000:
 		session.advance_tick()
 		safety += 1
-	return {
-		"outcome": String(session.result.get("outcome", "")),
-		"ticks": int(session.result.get("ticks", safety)),
-	}
+	var row: Dictionary = session.result.duplicate(true)
+	row["outcome"] = String(session.result.get("outcome", ""))
+	row["ticks"] = int(session.result.get("ticks", safety))
+	return row
 
 
 func _simulate_chapter_two(state: RefCounted) -> Array[Dictionary]:
@@ -352,6 +361,19 @@ func _simulate_chapter_two(state: RefCounted) -> Array[Dictionary]:
 		row["stage_id"] = stage_id
 		rows.append(row)
 	return rows
+
+
+func _qualitative_metric_for(archetype_id: String) -> String:
+	return String({
+		"assault": "assault_cleave_extra_hits",
+		"sonic": "sonic_cross_lane_extra_targets",
+		"rocket": "rocket_salvo_extra_targets",
+		"bomber": "bomber_splash_extra_targets",
+		"armored": "armored_group_shield_extra_targets",
+		"saw": "saw_followup_hits",
+		"repair": "repair_group_extra_targets",
+		"parasite": "parasite_extra_summons",
+	}.get(archetype_id, ""))
 
 
 func _command(command_type: String, payload: Dictionary, business_key: String) -> Dictionary:

@@ -48,6 +48,13 @@ var _ally_damage_taken: int = 0
 var _troop_damage_taken: int = 0
 var _ally_damage_dealt_by_unit: Dictionary = {}
 var _assault_cleave_extra_hits: int = 0
+var _sonic_cross_lane_extra_targets: int = 0
+var _rocket_salvo_extra_targets: int = 0
+var _bomber_splash_extra_targets: int = 0
+var _armored_group_shield_extra_targets: int = 0
+var _saw_followup_hits: int = 0
+var _repair_group_extra_targets: int = 0
+var _parasite_extra_summons: int = 0
 var _started_solo: bool = false
 var _solo_pressure_bp: int = 10000
 
@@ -96,6 +103,13 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_troop_damage_taken = 0
 	_ally_damage_dealt_by_unit.clear()
 	_assault_cleave_extra_hits = 0
+	_sonic_cross_lane_extra_targets = 0
+	_rocket_salvo_extra_targets = 0
+	_bomber_splash_extra_targets = 0
+	_armored_group_shield_extra_targets = 0
+	_saw_followup_hits = 0
+	_repair_group_extra_targets = 0
+	_parasite_extra_summons = 0
 	_started_solo = false
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
@@ -482,6 +496,8 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 			for enemy in _living_stage_enemies():
 				if star >= 2 or int(enemy["lane"]) == int(unit["lane"]):
 					sonic_targets.append(enemy)
+			if star >= 2:
+				_sonic_cross_lane_extra_targets += maxi(0, sonic_targets.size() - 1)
 			for enemy in sonic_targets:
 				enemy["weakness_ticks"] = 35 if star >= 2 else 22
 				_damage_target(enemy, maxi(10, int(unit["attack"]) * (9 if star >= 3 else 5) / 10), unit["unit_id"], true, events)
@@ -497,6 +513,8 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 				var rocket_target := _current_target()
 				if not rocket_target.is_empty():
 					rocket_targets.append(rocket_target)
+			if star >= 2:
+				_rocket_salvo_extra_targets += maxi(0, rocket_targets.size() - 1)
 			for target in rocket_targets:
 				_damage_target(target, maxi(18, int(unit["attack"]) * (18 if star >= 2 else 13) / 10), unit["unit_id"], true, events)
 				if target.has("structure_id") and star >= 3:
@@ -508,9 +526,12 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 			if not target.is_empty():
 				_damage_target(target, int(unit["attack"]) * (5 if star >= 2 else 4), unit["unit_id"], true, events)
 				if star >= 2:
+					var splash_hits := 0
 					for extra in _current_stage_targets():
 						if _target_id(extra) != _target_id(target):
 							_damage_target(extra, int(unit["attack"]) * 8 / 10, unit["unit_id"], true, events)
+							splash_hits += 1
+					_bomber_splash_extra_targets += splash_hits
 				if star < 3:
 					var retained_percent := 72 if star >= 2 else 35
 					unit["hp"] = maxi(
@@ -522,7 +543,10 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 					)
 		"siege_shield":
 			var shield_percent := 48 if star >= 3 else (40 if star >= 2 else 26)
-			for ally in _living_allies():
+			var shield_targets := _living_allies()
+			if star >= 2:
+				_armored_group_shield_extra_targets += maxi(0, shield_targets.size() - 1)
+			for ally in shield_targets:
 				var shield_gain := maxi(18, int(ally["max_hp"]) * shield_percent / 100)
 				ally["shield"] = int(ally["shield"]) + shield_gain
 				ally["shield_ticks"] = 35
@@ -559,6 +583,7 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 				_damage_target(target, int(unit["attack"]) * (4 if star >= 2 else 3), unit["unit_id"], true, events)
 				if star >= 2 and was_alive:
 					_damage_target(target, int(unit["attack"]) * 2, unit["unit_id"], true, events)
+					_saw_followup_hits += 1
 				if star >= 3 and not bool(target.get("alive", true)):
 					unit["energy"] = 55
 		"field_repair":
@@ -684,6 +709,8 @@ func _heal_lowest_allies(unit: Dictionary, star: int, events: Array[Dictionary])
 	var targets := _living_allies()
 	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["hp"]) * int(b["max_hp"]) < int(b["hp"]) * int(a["max_hp"]))
 	var count := mini(targets.size(), 3 if star >= 2 else 1)
+	if star >= 2:
+		_repair_group_extra_targets += maxi(0, count - 1)
 	for index in count:
 		var ally := targets[index]
 		var heal := maxi(22, int(unit["attack"]) * (16 if star >= 2 else 12) / 10)
@@ -693,6 +720,8 @@ func _heal_lowest_allies(unit: Dictionary, star: int, events: Array[Dictionary])
 
 func _summon_parasites(owner: Dictionary, star: int, events: Array[Dictionary]) -> void:
 	var count := 2 if star >= 2 else 1
+	if star >= 2:
+		_parasite_extra_summons += maxi(0, count - 1)
 	for _i in count:
 		_summon_serial += 1
 		var summon := _make_summon(owner, _summon_serial, "寄生幼体")
@@ -783,6 +812,13 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"troop_damage_share_percent": troop_damage_share_percent,
 		"ally_damage_dealt_by_unit": _ally_damage_dealt_by_unit.duplicate(true),
 		"assault_cleave_extra_hits": _assault_cleave_extra_hits,
+		"sonic_cross_lane_extra_targets": _sonic_cross_lane_extra_targets,
+		"rocket_salvo_extra_targets": _rocket_salvo_extra_targets,
+		"bomber_splash_extra_targets": _bomber_splash_extra_targets,
+		"armored_group_shield_extra_targets": _armored_group_shield_extra_targets,
+		"saw_followup_hits": _saw_followup_hits,
+		"repair_group_extra_targets": _repair_group_extra_targets,
+		"parasite_extra_summons": _parasite_extra_summons,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,
 		"gman_max_hp": gman_max_hp,

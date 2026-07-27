@@ -2609,6 +2609,12 @@ func _show_result() -> void:
 			outcome,
 			String(event.get("stage_id", ""))
 		)
+		if cleared_stage_id in ["stage_2_4", "stage_2_5"]:
+			hurdle_proof = _faction_mastery_proof_copy(
+				last_battle_runtime_result,
+				outcome,
+				cleared_stage_id
+			)
 		if chapter_one_complete:
 			hurdle_proof = _boss_mastery_proof_copy(last_battle_runtime_result)
 	var next_stage_id := String(event.get("next_stage_id", ""))
@@ -2789,6 +2795,58 @@ func _boss_mastery_proof_copy(runtime_result: Dictionary) -> String:
 			int(runtime_result.get("cannon_guard_counter_damage", 0)),
 		]
 	return "路线验证 · 二星成长帮助军团摧毁了首章核心巨炮"
+
+
+func _faction_mastery_proof_copy(
+	runtime_result: Dictionary,
+	outcome: String,
+	stage_id: String
+) -> String:
+	if not stage_id in ["stage_2_4", "stage_2_5"]:
+		return ""
+	var state: RefCounted = game.current_state()
+	var event := RecruitmentResultProjection.latest_event_for_command(
+		state,
+		"claim_faction_signal"
+	)
+	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	if archetype_id.is_empty():
+		return ""
+	var hero: RefCounted = null
+	for roster_hero in state.roster:
+		if String(roster_hero.archetype_id) == archetype_id:
+			hero = roster_hero
+			break
+	if (
+		hero == null
+		or int(hero.star) < 2
+		or not (runtime_result.get("deployed_unit_ids", []) as Array).has(String(hero.hero_id))
+	):
+		return ""
+	var metric := {
+		"assault": ["assault_cleave_extra_hits", "顺劈额外命中"],
+		"sonic": ["sonic_cross_lane_extra_targets", "跨线虚弱额外覆盖"],
+		"rocket": ["rocket_salvo_extra_targets", "齐射额外命中"],
+		"bomber": ["bomber_splash_extra_targets", "爆发溅射额外命中"],
+		"armored": ["armored_group_shield_extra_targets", "群体护盾额外覆盖"],
+		"saw": ["saw_followup_hits", "精英追斩触发"],
+		"repair": ["repair_group_extra_targets", "群体维修额外覆盖"],
+		"parasite": ["parasite_extra_summons", "额外召唤寄生幼体"],
+	}.get(archetype_id, []) as Array
+	if metric.is_empty():
+		return ""
+	var count := int(runtime_result.get(String(metric[0]), 0))
+	var hero_name := String(hero.display_name)
+	if count <= 0:
+		return "阵营质变验证 · %s的2★机制本局尚未触发；调整技能时机后再战。" % hero_name
+	return "阵营质变验证 · %s%s %d 次 · %s" % [
+		hero_name,
+		String(metric[1]),
+		count,
+		"二星质变帮助突破%s" % StageCatalog.stage(stage_id).get("display_name", stage_id)
+		if outcome == "victory"
+		else "质变已经生效，仍需提升等级或调整技能时机",
+	]
 
 
 func _chapter_one_unlock_copy(next_stage_id: String) -> String:

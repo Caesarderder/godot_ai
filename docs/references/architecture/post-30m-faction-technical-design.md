@@ -137,4 +137,7 @@ First validation: `godot --headless --path project-a --script res://tools/run_po
 `run_post_30m_ui_journey_tests.gd` 另从真实主场景点击十连、定向科技节点、研发领取、第三编队槽、
 三场证明目标与精确角色升星，证明跨屏 CTA 没有退回泛化页面；同一测试锁定 844×390 下十连
 奖励与新编队候选会自动进入视野，并验证科技、候选、名册和升星反馈持续指向同一阵营核心。
+BattleSession 结果同时保留八类 2★机制的确定性计数，2-4/2-5 结算按 durable 十连核心与实际
+部署名单生成“阵营质变验证”；领域旅程证明真实战斗能产生对应计数，UI 旅程与
+`ui-faction-chapter-two-proof-844x390.png` 证明玩家能在小屏结算首屏看到角色、机制与次数。
 Residual risk: 真人阵营认同、移动端触控和生产 origin 持久化
