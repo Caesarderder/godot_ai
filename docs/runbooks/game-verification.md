@@ -50,6 +50,7 @@ godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
 godot --headless --path project-a -s tools/run_campaign_tests.gd
 godot --headless --path project-a -s tools/run_stage_definition_tests.gd
 godot --headless --path project-a -s tools/run_campaign_objective_projection_tests.gd
+godot --headless --path project-a -s tools/run_post_30m_ui_journey_tests.gd
 godot --headless --path project-a -s tools/run_objective_hurdle_definition_tests.gd
 godot --headless --path project-a -s tools/run_onboarding_definition_tests.gd
 godot --headless --path project-a -s tools/run_first_chapter_balance_scan.gd

@@ -95,32 +95,33 @@ func _run() -> void:
 
 	main.call("_show_goals")
 	await _wait_frames(4)
-	_check(_tree_has_text(main, "第二章：突破震荡封锁线"), "post-onboarding goals replace the completed training label with the next chapter")
-	_check(_tree_has_text(main, "将军团提升至挑战线"), "post-onboarding goals name the immediate growth gap")
-	_check(_tree_has_text(main, "第二章声波防线"), "post-onboarding goals name the new medium hurdle")
-	_check(_tree_has_button(main, "先培养军团"), "post-onboarding goals retain one executable growth action")
-	var goal_growth := _button_with_text(main, "先培养军团")
+	_check(_tree_has_text(main, "用自己的角色池形成"), "post-ten-pull goals replace generic chapter growth with faction identity")
+	_check(_tree_has_text(main, "阵营核心"), "post-ten-pull goals preserve the drawn faction core")
+	_check(_tree_has_text(main, "图纸研发为永久角色"), "post-ten-pull goals name the immediate research gap")
+	var goal_growth := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(goal_growth != null and goal_growth.text.contains("研发"), "post-ten-pull goals retain one executable research action")
 	if goal_growth != null:
 		goal_growth.pressed.emit()
 		await _wait_frames(4)
-	_check(main.find_child("LegionFormationTab", true, false) != null, "post-onboarding goal action opens permanent legion growth")
+	_check(main.find_child("BlueprintScreen", true, false) != null, "post-ten-pull goal action opens the exact blueprint system")
 
 	main.call("_show_title")
 	await _wait_frames(4)
-	_check(_tree_has_text(main, "第二章备战"), "returning title summarizes the same chapter-two growth gap")
-	var resume := _button_with_text(main, "返回指挥室")
-	_check(resume != null, "returning chapter-one save exposes a safe command-room resume")
+	_check(_tree_has_text(main, "阵营成形"), "returning title restores the same faction journey")
+	var resume := _button_with_text(main, "研发")
+	_check(resume != null, "returning chapter-one save names its exact faction action")
 	if resume != null:
 		resume.pressed.emit()
 		await _wait_frames(4)
-	_check(_tree_has_text(main, "第二章备战：震荡封锁线"), "resumed factory replaces the completed onboarding card with the next campaign task")
-	_check(_tree_has_text(main, "将军团提升至挑战线"), "resumed factory preserves the executable growth objective")
-	var resumed_growth := _button_with_text(main, "先培养军团")
-	_check(resumed_growth != null, "resumed factory keeps the growth route as its primary action")
+	_check(_tree_has_text(main, "阵营成形：研发新角色"), "resumed factory restores the faction research phase")
+	_check(_tree_has_text(main, "图纸研发为永久角色"), "resumed factory preserves the exact research objective")
+	var task_panel := main.find_child("OnboardingMissionPanel", true, false)
+	var resumed_growth := _button_with_text(task_panel, "研发") if task_panel != null else null
+	_check(resumed_growth != null, "resumed factory keeps faction research as its primary action")
 	if resumed_growth != null:
 		resumed_growth.pressed.emit()
 		await _wait_frames(4)
-	_check(main.find_child("LegionFormationTab", true, false) != null, "resumed factory growth action opens the legion")
+	_check(main.find_child("BlueprintScreen", true, false) != null, "resumed factory action opens the exact blueprint system")
 
 	state = game.current_state()
 	assault = _hero_for(state, "assault")

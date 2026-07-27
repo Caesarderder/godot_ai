@@ -178,14 +178,12 @@ related:
   同一领域测试覆盖首败后“信号图纸 → 建研究所 → 两次研发 → 编队 → 反攻”的持久状态矩阵；UI smoke
   验证战区“建造研究所”语义行动准确打开研究设施而非通用军团页，
   `ui-first-wall-recovery-844x390.png` 保存首败恢复首屏。
-  `run_chapter_one_completion_tests.gd` 继续覆盖章节间承接：2-1 极高风险侦察同时提供 48px
-  “先培养军团”和“仍要试探”，安全行动不启动战斗而打开军团；七行动结束后的目标中心改为
-  第二章大/中/小目标、真实挑战线缺口和非付费恢复说明。视觉证据为
-  `ui-chapter-two-handoff-844x390.png` 与 `ui-chapter-two-goal-844x390.png`。
-  同一测试还覆盖跨会话投影：标题摘要显示第二章真实缺口，“返回指挥室”后的基地任务替换已完成
-  新手卡并继续以“先培养军团”进入军团，不回旧章节或自动开战；
-  `ui-chapter-two-resume-title-844x390.png` 与 `ui-chapter-two-resume-base-844x390.png`
-  保存 844×390 恢复态证据。
+  `run_chapter_one_completion_tests.gd` 继续覆盖章节间承接：首章结算先进入阵营起手十连；领取后
+  目标中心、标题与基地任务都从 durable receipt 恢复同一个抽取核心的研发目标，不退回泛化的
+  “先培养军团”，对应 CTA 直接进入该型号所在科技分支。
+  `run_post_30m_ui_journey_tests.gd` 再以真实主场景按钮串联十连结果、定向科技节点、研发领取、
+  第三个空编队槽、三场实战证明、精确 `hero_id` 升星与 2-5 目标；它与
+  `run_campaign_objective_projection_tests.gd` 共同防止刷新或跨屏后阵营身份和下一行动分叉。
   `run_campaign_objective_projection_tests.gd` 在不经过 UI 的情况下锁定同一事实 owner：
   首章进行中保留当前小目标；首章完成但低于 2-1 挑战线时，标题/基地/目标中心共享精确战力缺口
   与“先培养军团”；达到挑战线后，三者共同切换为侦察 2-1。该测试防止 App Shell 的跨页面

@@ -14,6 +14,7 @@ source_of_truth:
 validated_by:
   - godot --headless --path project-a --script tools/run_campaign_objective_projection_tests.gd
   - godot --headless --path project-a --script tools/run_post_30m_faction_tests.gd
+  - godot --headless --path project-a --script tools/run_post_30m_ui_journey_tests.gd
   - project-a/artifacts/ui-faction-journey-research-844x390.png
 tags:
   - reference:technical-design
@@ -127,5 +128,7 @@ Ready milestone: 免费阵营十连 → 新角色研发 → 专属碎片 2★ �
 Confirmed inputs: 当前 GDD、用户确认方向、现有招募/研究/星级/BattleSession
 Open decisions: 无阻塞决策；4★/5★与正式卡池运营延期
 First validation: `godot --headless --path project-a --script res://tools/run_post_30m_faction_tests.gd`；
-7 个 seed 均完成 1★前三关、后段成长墙、2★Lv2 通过 2-4、2★Lv3 通过 2-5
+7 个 seed 均完成 1★前三关、后段成长墙、2★Lv2 通过 2-4、2★Lv3 通过 2-5；
+`run_post_30m_ui_journey_tests.gd` 另从真实主场景点击十连、定向科技节点、研发领取、第三编队槽、
+三场证明目标与精确角色升星，证明跨屏 CTA 没有退回泛化页面。
 Residual risk: 真人阵营认同、移动端触控和生产 origin 持久化
