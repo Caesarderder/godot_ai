@@ -1828,6 +1828,15 @@ func _blueprint_view() -> Dictionary:
 		String(faction_event.get("guaranteed_duplicate_archetype", ""))
 	)
 	var faction_focus_recipe_id := String(faction_focus_recipe.get("recipe_id", ""))
+	var faction_archetype_id := String(
+		faction_event.get("guaranteed_duplicate_archetype", "")
+	)
+	var faction_tech_preview := {}
+	if (
+		(state.stage_progress.get("cleared_stages", []) as Array).has("stage_2_5")
+		and not faction_archetype_id.is_empty()
+	):
+		faction_tech_preview = FactionCatalog.tech_preview_for(faction_archetype_id)
 	var branches := {
 		"ordinary": {"title": "突击枝", "summary": "突破与控场，两条独立研发路线", "recipes": ["ordinary.assault", "ordinary.sonic"]},
 		"heavy": {"title": "重装枝", "summary": "承压与斩杀，两条独立研发路线", "recipes": ["heavy.armored", "heavy.saw"]},
@@ -1902,6 +1911,7 @@ func _blueprint_view() -> Dictionary:
 		"breakthrough": {},
 		"results": [],
 		"results_summary": "",
+		"faction_tech_preview": faction_tech_preview,
 		"reduced_motion": bool(settings_store.reduced_motion),
 		"nodes": nodes,
 	}
@@ -2701,7 +2711,11 @@ func _show_result() -> void:
 		"contribution": contribution,
 		"hurdle_proof": hurdle_proof,
 		"debrief": debrief,
-		"growth": _growth_opportunity_copy(event),
+		"growth": (
+			_faction_tech_result_copy()
+			if won and cleared_stage_id == "stage_2_5"
+			else _growth_opportunity_copy(event)
+		),
 		"safety": "全员无损返回 · 无维修消耗 · 可立即再次出征",
 		"qualification": qualification,
 		"primary_label": primary_label,
@@ -2983,6 +2997,23 @@ func _growth_opportunity_copy(event: Dictionary) -> String:
 	if int(event.get("hero_shards", 0)) > 0:
 		gains.append("军团数据可用于升星与技能研究")
 	return "下一步成长：%s" % ("继续挑战或选择一项永久升级" if gains.is_empty() else "；".join(gains))
+
+
+func _faction_tech_result_copy() -> String:
+	var state: RefCounted = game.current_state()
+	var event := RecruitmentResultProjection.latest_event_for_command(
+		state,
+		"claim_faction_signal"
+	)
+	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
+	var preview := FactionCatalog.tech_preview_for(archetype_id)
+	if preview.is_empty():
+		return _growth_opportunity_copy({})
+	return "阵营未来 · %s「%s」已预告：%s（第三章推进后开放，当前不增加战力）" % [
+		String(preview.get("faction", "阵营")),
+		String(preview.get("title", "未来协议")),
+		String(preview.get("effect", "")),
+	]
 
 
 func _show_epilogue(event: Dictionary = {}) -> void:

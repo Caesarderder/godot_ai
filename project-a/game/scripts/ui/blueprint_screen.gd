@@ -32,6 +32,9 @@ const BRANCHES := [
 @onready var results_panel: PanelContainer = %ResearchBreakthroughResults
 @onready var results_summary: Label = %BlueprintResultsSummary
 @onready var results_grid: GridContainer = %BlueprintResultsGrid
+@onready var tech_preview: PanelContainer = %FactionTechPreview
+@onready var tech_identity: Label = %Identity
+@onready var tech_effect: Label = %Effect
 @onready var branch_row: HBoxContainer = %BlueprintBranchRow
 @onready var branch_panel: PanelContainer = %BlueprintBranchPanel
 @onready var branch_heading: Label = %BlueprintBranchHeading
@@ -84,9 +87,18 @@ func _apply_view() -> void:
 	breakthrough_button.visible = bool(breakthrough.get("claimable", false))
 	var results := _view.get("results", []) as Array
 	var showing_results := not results.is_empty()
+	var preview := _view.get("faction_tech_preview", {}) as Dictionary
 	results_panel.visible = showing_results
+	tech_preview.visible = not showing_results and not preview.is_empty()
+	tech_identity.text = "阵营科技预览 · %s\n%s" % [
+		String(preview.get("faction", "阵营待形成")),
+		String(preview.get("title", "未来协议")),
+	]
+	tech_effect.text = "%s\n第三章推进后开放 · 预览不增加当前战力" % String(
+		preview.get("effect", "")
+	)
 	tabs.visible = not showing_results
-	core_panel.visible = not showing_results
+	core_panel.visible = not showing_results and preview.is_empty()
 	branch_row.visible = not showing_results
 	results_summary.text = String(_view.get(
 		"results_summary",
@@ -284,7 +296,7 @@ func _focus_primary_after_layout() -> void:
 
 
 func _apply_theme() -> void:
-	for panel in [core_panel, results_panel, branch_panel]:
+	for panel in [core_panel, results_panel, tech_preview, branch_panel]:
 		panel.add_theme_stylebox_override("panel", _panel_style(PANEL))
 	for label_node in find_children("*", "Label", true, false):
 		var label := label_node as Label
@@ -293,6 +305,10 @@ func _apply_theme() -> void:
 	core_status.add_theme_color_override("font_color", GOLD)
 	breakthrough_copy.add_theme_color_override("font_color", CYAN)
 	results_summary.add_theme_color_override("font_color", CYAN)
+	tech_identity.add_theme_color_override("font_color", GOLD)
+	tech_identity.add_theme_font_size_override("font_size", 11)
+	tech_effect.add_theme_color_override("font_color", CYAN)
+	tech_effect.add_theme_font_size_override("font_size", 9)
 	branch_heading.add_theme_font_size_override("font_size", 16)
 	branch_heading.add_theme_color_override("font_color", CYAN)
 	for button_node in find_children("*", "Button", true, false):

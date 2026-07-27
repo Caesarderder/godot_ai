@@ -199,6 +199,12 @@ func _run() -> void:
 	await _wait_frames(4)
 	_check(_tree_has_text(main, "第2章胜利"), "chapter-two boss receives a chapter-completion celebration")
 	_check(_tree_has_text(main, "电视控制"), "chapter-two result previews the next chapter's distinct threat")
+	_check(
+		_tree_has_text(main, "阵营未来")
+			and _tree_has_text(main, "第三章推进后开放")
+			and _tree_has_text(main, "当前不增加战力"),
+		"chapter-two result previews the player's durable faction technology without granting hidden power"
+	)
 	var next_chapter := main.find_child("PrimaryAction", true, false) as Button
 	_check(next_chapter != null and next_chapter.text.contains("第3章新战线"), "chapter transition offers one reorientation action instead of blind auto-battle")
 	_check(
@@ -212,6 +218,22 @@ func _run() -> void:
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_3_1", "chapter transition focuses the exact next stage")
 	_check(int(main.get("selected_chapter")) == 3, "chapter transition opens chapter three rather than the stale chapter-two tab")
+	main.call("_show_blueprints")
+	await _wait_frames(4)
+	var tech_preview := main.find_child("FactionTechPreview", true, false) as Control
+	_check(
+		tech_preview != null
+			and tech_preview.visible
+			and _tree_has_text(tech_preview, "阵营科技预览")
+			and _tree_has_text(tech_preview, "预览不增加当前战力"),
+		"blueprint screen persistently reconstructs the core faction's read-only technology preview"
+	)
+	_check(
+		tech_preview != null
+			and tech_preview.get_global_rect().end.x <= float(root.size.x)
+			and tech_preview.get_global_rect().end.y <= float(root.size.y),
+		"faction technology preview remains visible inside the 844x390 viewport"
+	)
 
 	await _finish(main, game, audio_director)
 

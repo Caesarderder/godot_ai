@@ -134,6 +134,35 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "立即编入反攻队"
 
+[node name="FactionTechPreview" type="PanelContainer" parent="BlueprintTree"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="BlueprintTree/FactionTechPreview"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="Content" type="HBoxContainer" parent="BlueprintTree/FactionTechPreview/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Identity" type="Label" parent="BlueprintTree/FactionTechPreview/Margin/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Effect" type="Label" parent="BlueprintTree/FactionTechPreview/Margin/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+vertical_alignment = 1
+autowrap_mode = 2
+
 [node name="BlueprintBranchRow" type="HBoxContainer" parent="BlueprintTree"]
 unique_name_in_owner = true
 layout_mode = 2

@@ -150,6 +150,12 @@ func _capture() -> void:
 	await _wait_frames(10)
 	if not _save("res://artifacts/ui-faction-chapter-two-proof-844x390.png"):
 		return
+	main.call("_show_blueprints")
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-tech-preview-844x390.png"):
+		return
+	main.call("_show_result")
+	await _wait_frames(6)
 	var next_chapter := main.find_child("PrimaryAction", true, false) as Button
 	if next_chapter == null:
 		_fail("chapter-three reorientation action unavailable")
