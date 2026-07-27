@@ -77,6 +77,38 @@ func _test_war_readiness_report() -> void:
 	state.formation.slots["troop_2"] = assault.hero_id
 	var counterattack_ready := WarReadinessReportScript.derive(state, StageCatalogScript.stage("stage_1_4"))
 	_eq(String((counterattack_ready.get("next_action", {}) as Dictionary).get("id", "")), "attack", "deployed reinforcements release the player to counterattack")
+	var tactical_state: RefCounted = GameStateScript.create_new(20260728, 1000, false)
+	var rocket: RefCounted = HeroGeneratorScript.generate_archetype(20260728, 2, "rocket", "ranger")
+	tactical_state.roster.append(rocket)
+	var missing_counter := WarReadinessReportScript.derive(
+		tactical_state,
+		StageCatalogScript.stage("stage_2_1")
+	)
+	var missing_plan := missing_counter.get("formation_plan", {}) as Dictionary
+	_eq(String(missing_plan.get("status_id", "")), "missing", "chapter-two report detects when no suggested counter is deployed")
+	_check(bool(missing_plan.get("can_prepare", false)), "chapter-two report detects an owned counter waiting in the roster")
+	_eq(String((missing_counter.get("next_action", {}) as Dictionary).get("id", "")), "formation", "owned but undeployed counter turns preparation into an executable formation choice")
+	tactical_state.formation.slots["troop_2"] = rocket.hero_id
+	var partial_counter := WarReadinessReportScript.derive(
+		tactical_state,
+		StageCatalogScript.stage("stage_2_1")
+	)
+	var partial_plan := partial_counter.get("formation_plan", {}) as Dictionary
+	_eq(String(partial_plan.get("status_id", "")), "partial", "one deployed suggested role produces partial coverage")
+	_check(String(partial_plan.get("covered_copy", "")).contains("火箭"), "formation plan names the deployed counter")
+	_check(String(partial_plan.get("missing_copy", "")).contains("装甲"), "formation plan names the remaining primary role")
+	var tactical_armored: RefCounted = HeroGeneratorScript.generate_archetype(20260728, 3, "armored", "guardian")
+	tactical_state.roster.append(tactical_armored)
+	tactical_state.formation.slots["troop_3"] = tactical_armored.hero_id
+	var covered_counter := WarReadinessReportScript.derive(
+		tactical_state,
+		StageCatalogScript.stage("stage_2_1")
+	)
+	_eq(
+		String((covered_counter.get("formation_plan", {}) as Dictionary).get("status_id", "")),
+		"covered",
+		"deploying both primary roles visibly completes the stage plan"
+	)
 
 
 func _test_economy_valuation() -> void:

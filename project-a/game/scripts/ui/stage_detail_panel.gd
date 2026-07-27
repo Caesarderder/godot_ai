@@ -71,9 +71,27 @@ func _apply_configuration() -> void:
 	status_label.text = status
 	status_label.add_theme_color_override("font_color", GREEN if _cleared else GOLD)
 	threat_summary.text = String(_config.get("threat_summary", "联盟守军正在集结。"))
-	decision_hint.text = "反制选择：%s" % String(
-		_config.get("counter_hint", "观察敌方结构和阵容职责后再决定成长路线。")
-	)
+	var formation_plan := _report.get("formation_plan", {}) as Dictionary
+	if formation_plan.is_empty():
+		decision_hint.text = "反制选择：%s" % String(
+			_config.get("counter_hint", "观察敌方结构和阵容职责后再决定成长路线。")
+		)
+	else:
+		var plan_status := String(formation_plan.get("status_id", "missing"))
+		var plan_consequence := "当前主解完整，可直接验证技能时机。"
+		if plan_status == "partial":
+			plan_consequence = "已有可用解法；补齐建议角色会让职责更完整。"
+		elif plan_status == "missing":
+			plan_consequence = (
+				"仓库已有反制角色，可先调整编队。"
+				if bool(formation_plan.get("can_prepare", false))
+				else "暂无建议角色，仍可凭战力与技能时机试探。"
+			)
+		decision_hint.text = "阵容核对 · 已覆盖：%s｜待补：%s\n%s" % [
+			String(formation_plan.get("covered_copy", "无")),
+			String(formation_plan.get("missing_copy", "无")),
+			plan_consequence,
+		]
 	power_line.text = "我方 %d  /  推荐 %d" % [
 		int(_report.get("cp_ready", 0)),
 		int(_report.get("recommended_power", 0)),

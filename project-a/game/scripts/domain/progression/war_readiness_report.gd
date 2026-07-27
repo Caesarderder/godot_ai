@@ -2,6 +2,7 @@ class_name WarReadinessReport
 extends RefCounted
 
 const CombatPowerScript := preload("res://game/scripts/domain/progression/combat_power.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
 
 static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
@@ -47,6 +48,19 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 	)
 	var stage_id := String(stage_config.get("stage_id", ""))
 	var cleared_stages := state.stage_progress.get("cleared_stages", []) as Array
+	var formation_plan := _formation_plan(state, stage_config)
+	if (
+		int(stage_config.get("chapter", 1)) >= 2
+		and not cleared_stages.has(stage_id)
+		and String(formation_plan.get("status_id", "")) == "missing"
+		and bool(formation_plan.get("can_prepare", false))
+	):
+		next_action = {
+			"id": "formation",
+			"title": "调整本关阵容",
+			"detail": "仓库已有本关建议角色但尚未上阵；先换阵可让抽取与培养选择在战斗中得到验证。",
+			"hero_id": "",
+		}
 	if stage_id == "stage_1_4" and not cleared_stages.has(stage_id):
 		var attempts := int(state.attempt_counters.get(stage_id, 0))
 		if attempts == 0:
@@ -109,6 +123,7 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 		"weakest_resource_id": String(weakest_resource["id"]),
 		"weakest_resource_label": String(weakest_resource["label"]),
 		"weakest_resource_percent": int(weakest_resource["percent"]),
+		"formation_plan": formation_plan,
 		"next_action": next_action,
 	}
 
@@ -187,3 +202,72 @@ static func _formation_has_archetype(state: RefCounted, archetype_id: String) ->
 		if hero != null and String(hero.archetype_id) == archetype_id:
 			return true
 	return false
+
+
+static func _formation_plan(state: RefCounted, stage_config: Dictionary) -> Dictionary:
+	if int(stage_config.get("chapter", 1)) < 2:
+		return {}
+	var recommended := stage_config.get("recommended_recipe_ids", []) as Array
+	var fallback := stage_config.get("fallback_recipe_ids", []) as Array
+	if recommended.is_empty():
+		return {}
+	var deployed: Dictionary = {}
+	for hero_id in state.formation.hero_ids():
+		var hero: RefCounted = state.hero_by_id(String(hero_id))
+		if hero != null:
+			deployed[String(hero.archetype_id)] = true
+	var primary_names: Array[String] = []
+	var fallback_names: Array[String] = []
+	var missing_names: Array[String] = []
+	var owned_candidate := false
+	for recipe_value in recommended:
+		var recipe_id := String(recipe_value)
+		var recipe := FactoryCatalogScript.recipe(recipe_id)
+		var archetype_id := String(recipe.get("archetype_id", ""))
+		if deployed.has(archetype_id):
+			primary_names.append(_short_recipe_name(recipe_id))
+		else:
+			missing_names.append(_short_recipe_name(recipe_id))
+			owned_candidate = owned_candidate or _has_archetype(state, archetype_id)
+	for recipe_value in fallback:
+		var recipe_id := String(recipe_value)
+		var recipe := FactoryCatalogScript.recipe(recipe_id)
+		var archetype_id := String(recipe.get("archetype_id", ""))
+		if deployed.has(archetype_id):
+			fallback_names.append(_short_recipe_name(recipe_id))
+		else:
+			owned_candidate = owned_candidate or _has_archetype(state, archetype_id)
+	var status_id := "missing"
+	if missing_names.is_empty():
+		status_id = "covered"
+	elif not primary_names.is_empty() or not fallback_names.is_empty():
+		status_id = "partial"
+	var covered_copy := "无"
+	if not primary_names.is_empty():
+		covered_copy = "、".join(primary_names)
+	if not fallback_names.is_empty():
+		covered_copy = "%s备选 %s" % [
+			"" if covered_copy == "无" else "%s；" % covered_copy,
+			"、".join(fallback_names),
+		]
+	return {
+		"status_id": status_id,
+		"covered_copy": covered_copy,
+		"missing_copy": "无" if missing_names.is_empty() else "、".join(missing_names),
+		"covered_count": primary_names.size(),
+		"recommended_count": recommended.size(),
+		"can_prepare": owned_candidate,
+	}
+
+
+static func _short_recipe_name(recipe_id: String) -> String:
+	return String({
+		"ordinary.assault": "冲锋",
+		"ordinary.sonic": "音波",
+		"flying.rocket": "火箭",
+		"flying.bomber": "自爆",
+		"heavy.armored": "装甲",
+		"heavy.saw": "双锯",
+		"special.repair": "维修",
+		"special.parasite": "寄生",
+	}.get(recipe_id, recipe_id))

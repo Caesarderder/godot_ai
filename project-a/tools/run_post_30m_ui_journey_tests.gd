@@ -218,6 +218,12 @@ func _run() -> void:
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_3_1", "chapter transition focuses the exact next stage")
 	_check(int(main.get("selected_chapter")) == 3, "chapter transition opens chapter three rather than the stale chapter-two tab")
+	_check(
+		_tree_has_text(main, "阵容核对")
+			and _tree_has_text(main, "已覆盖")
+			and _tree_has_text(main, "待补"),
+		"next-chapter reconnaissance translates static recommendations into the player's current formation plan"
+	)
 	main.call("_show_blueprints")
 	await _wait_frames(4)
 	var tech_preview := main.find_child("FactionTechPreview", true, false) as Control
