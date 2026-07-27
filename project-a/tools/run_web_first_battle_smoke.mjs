@@ -222,6 +222,7 @@ async function finishActiveBattle(
 	completion,
 	evidenceName,
 	skillCardXs = [420],
+	skillCardY = 306,
 ) {
 	await new Promise((accept) => setTimeout(accept, 2200));
 	let skillTouches = 0;
@@ -230,7 +231,7 @@ async function finishActiveBattle(
 		skillTouches += 1;
 		const x = skillCardXs[skillCardIndex % skillCardXs.length];
 		skillCardIndex += 1;
-		void touch(cdp, x, 330);
+		void touch(cdp, x, skillCardY);
 	}, 900);
 	try {
 		const settledSave = await waitFor(`${stageId} settlement persisted to IndexedDB`, async () => {
@@ -422,19 +423,27 @@ async function main() {
 		}
 		await new Promise((accept) => setTimeout(accept, waitForConstructionMs));
 		await screenshot(cdp, "browser-research-ready-to-claim-844x390.png");
-		await touch(cdp, 650, 300);
-		const researchBuilt = await waitFor(
-			"completed research lab persisted to IndexedDB",
-			async () => {
-				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
-				return Number(save?.facilities?.research_lab ?? 0) === 1
-					&& Object.keys(save?.facilityWork ?? {}).length === 0
-					? save
-					: null;
-			},
-			10000,
-			250,
-		);
+		const claimInput = setInterval(() => {
+			void touch(cdp, 650, 318);
+		}, 700);
+		let researchBuilt;
+		try {
+			await touch(cdp, 650, 318);
+			researchBuilt = await waitFor(
+				"completed research lab persisted to IndexedDB",
+				async () => {
+					const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+					return Number(save?.facilities?.research_lab ?? 0) === 1
+						&& Object.keys(save?.facilityWork ?? {}).length === 0
+						? save
+						: null;
+				},
+				10000,
+				250,
+			);
+		} finally {
+			clearInterval(claimInput);
+		}
 		await new Promise((accept) => setTimeout(accept, 500));
 		await screenshot(cdp, "browser-research-lab-built-844x390.png");
 		await touch(cdp, 650, 320);
@@ -501,6 +510,7 @@ async function main() {
 					&& save.clearedStages?.includes("stage_1_4"),
 				"browser-first-wall-counterattack-victory-844x390.png",
 				[145, 420, 700],
+				330,
 			);
 		} catch (error) {
 			await screenshot(cdp, "browser-first-wall-counterattack-timeout-844x390.png");
