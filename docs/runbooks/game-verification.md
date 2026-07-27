@@ -244,6 +244,22 @@ python3 tools/package_web_rollback.py --rehearse
 - 20 分钟连续游玩、控制台、FPS 和内存；
 - 商业 IP 与素材来源另作外部门禁。
 
+#### Safari / WebKit 预检
+
+macOS 桌面 Safari 只作为额外 WebKit 预检，不能替代 iOS Safari 真机。不得用 Chrome 修改 UA
+冒充 Safari。先以只读方式确认系统 driver：
+
+```bash
+/usr/bin/safaridriver --version
+/usr/bin/safaridriver -p 7055
+curl --silent --show-error http://127.0.0.1:7055/status
+```
+
+只有 `status.value.ready == true` 还不够；创建 session 可能明确返回必须在 Safari 设置的开发者
+区域启用“允许远程自动化”。该权限属于设备所有者决定，自动化不得自行开启。启用后仍需针对
+冻结候选记录 Safari 完整版本、844×390 Canvas 启动、首次手势、刷新存档身份、控制台/网络
+错误和截图。桌面结果只能标为 `WEBKIT_PREFLIGHT`；`DEVICE_VERIFIED` 仍要求真实 iOS Safari。
+
 ## 预期结果
 
 只有实现引用、自动证据、浏览器设备证据和真人证据满足对应合同，才能更新为 implemented/verified。

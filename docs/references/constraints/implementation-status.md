@@ -272,6 +272,9 @@ related:
   技能触控，runtime exception、非预期 console error 和 failed request 均为 0。三张
   `browser-chapter-two-skill-growth-*` 证据分别保存资源齐备、Lv.2 生效和返回风险侦察；
   自动路径只证明可达与交易正确，不证明真人会自主选择技能成长。
+- 本机 Safari 26.5.2 自带 `safaridriver`，`/status` 返回 ready，但真实 session 创建被浏览器
+  拒绝并明确要求设备所有者在 Safari 开发者设置中启用“允许远程自动化”。该系统权限未被
+  自动修改，因此没有桌面 WebKit 运行证据；即使后续通过也只算预检，不能替代 iOS Safari 真机。
 
 ## 新合同状态
 

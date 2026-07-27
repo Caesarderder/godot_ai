@@ -64,6 +64,8 @@ State labels:
   or network failures
   (`node tools/run_web_first_battle_smoke.mjs`).
 - [ ] Firefox desktop smoke.
+- [ ] Optional desktop Safari `WEBKIT_PREFLIGHT` against the frozen candidate; record the exact Safari version.
+  This requires the device owner to enable Safari “Allow remote automation” and never replaces iOS evidence.
 - [ ] Chrome Android real-device smoke.
 - [ ] Safari iOS real-device smoke.
 - [ ] Browser reload/restart persistence proof on the final production origin (local HTTP proof passes).
