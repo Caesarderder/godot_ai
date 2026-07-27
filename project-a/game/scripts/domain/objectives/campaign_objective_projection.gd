@@ -203,9 +203,35 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			hurdle_title = "第二章后段成长墙"
 			hurdle_reason = "1★已经完成后段试探；现在用专属碎片解决刚刚暴露的成长缺口。"
 			recovery = "免费十连已保证同型号重复；碎片只用于这个角色。"
+		elif int(hero.level) < 2:
+			phase = "level_two"
+			small = "用前三场积累的经验与金币，将2★%s升至Lv2" % role_name
+			cta_label = "将%s升至Lv2" % role_name
+			target = "legion"
+			hurdle_title = "质变需要基础强度承载"
+			hurdle_reason = "2★已经改变技能行为；Lv2补足突破2-4所需的基础属性。"
+			recovery = "2-1至2-3的首通经验已计入该角色；升级不消耗工业材料。"
+		elif not cleared.has("stage_2_4"):
+			phase = "breakthrough_gate"
+			stage_id = "stage_2_4"
+			small = "用2★Lv2 %s突破2-4双塔回响" % role_name
+			cta_label = "验证Lv2阵营 · 2-4 双塔回响"
+			target = "map"
+			hurdle_title = "第一次成长兑现"
+			hurdle_reason = "用刚解锁的2★机制和Lv2强度解决已经见过的压力。"
+			recovery = "失败无损；根据声塔命中与共振数据调整站位和技能时机。"
+		elif int(hero.level) < 3:
+			phase = "level_three"
+			small = "使用2-4战果，将2★%s升至Lv3迎战章节Boss" % role_name
+			cta_label = "将%s升至Lv3" % role_name
+			target = "legion"
+			hurdle_title = "Boss前最后一次明确成长"
+			hurdle_reason = "2-4已经证明质变有效；Lv3补足击毁2-5核心的持续输出或生存。"
+			recovery = "2-4首通经验与金币已入账；升级后直接返回共振堡垒验证。"
 		elif not cleared.has("stage_2_5"):
 			phase = "breakthrough"
-			small = "用2★%s突破第二章后段，击毁2-5核心" % role_name
+			stage_id = "stage_2_5"
+			small = "用2★Lv3 %s击毁2-5核心，完成阵营成形" % role_name
 			cta_label = "检验2★质变 · %s" % String(
 				StageCatalogScript.stage(stage_id).get("display_name", stage_id)
 			)
@@ -274,6 +300,9 @@ static func _faction_phase_title(phase: String) -> String:
 		"prove_one_star": "证明核心打法",
 		"probe_late_wall": "试探后段防线",
 		"star": "解锁2★质变",
+		"level_two": "培养核心至Lv2",
+		"breakthrough_gate": "兑现第一次成长",
+		"level_three": "培养核心至Lv3",
 		"breakthrough": "突破第二章",
 	}
 	return String(titles.get(phase, "形成阵营"))

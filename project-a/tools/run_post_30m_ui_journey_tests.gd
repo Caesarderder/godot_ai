@@ -206,9 +206,46 @@ func _run() -> void:
 		int(state.meta_progression.hero_fragments.get(archetype_id, 0)) < fragments_before,
 		"star click consumes only the focused archetype's dedicated fragments"
 	)
+	faction_hero.xp = 90
+	state.economy.toilet_coins = maxi(int(state.economy.toilet_coins), 500)
 	main.call("_show_goals")
 	await _wait_frames(4)
-	_check(_tree_has_text(main, "击毁2-5核心"), "two-star completion reveals the final chapter-two proof instead of losing the journey")
+	_check(_tree_has_text(main, "升至Lv2"), "two-star completion reveals the affordable level-two preparation")
+	var level_two_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(level_two_cta != null and level_two_cta.text.contains("Lv2"), "level-two phase exposes the exact faction core action")
+	if level_two_cta != null:
+		level_two_cta.pressed.emit()
+		await _wait_frames(4)
+	var upgrade := main.find_child("CultivationAction_upgrade", true, false) as Button
+	_check(upgrade != null and not upgrade.disabled, "chapter-two experience and coins fund the focused hero's level-two action")
+	if upgrade != null:
+		upgrade.pressed.emit()
+		await _wait_frames(4)
+	state = game.current_state()
+	faction_hero = state.hero_by_id(hero_id)
+	_check(faction_hero != null and int(faction_hero.level) == 2, "level-two guidance applies the required 2-4 preparation")
+	state.stage_progress["cleared_stages"].append("stage_2_4")
+	state.stage_progress["highest_unlocked_stage"] = "stage_2_5"
+	faction_hero.xp = 120
+	main.call("_show_goals")
+	await _wait_frames(4)
+	_check(_tree_has_text(main, "升至Lv3"), "2-4 victory converts its rewards into an exact boss preparation")
+	var level_three_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(level_three_cta != null and level_three_cta.text.contains("Lv3"), "level-three phase exposes the exact faction core action")
+	if level_three_cta != null:
+		level_three_cta.pressed.emit()
+		await _wait_frames(4)
+	upgrade = main.find_child("CultivationAction_upgrade", true, false) as Button
+	_check(upgrade != null and not upgrade.disabled, "2-4 rewards fund the focused hero's level-three action")
+	if upgrade != null:
+		upgrade.pressed.emit()
+		await _wait_frames(4)
+	state = game.current_state()
+	faction_hero = state.hero_by_id(hero_id)
+	_check(faction_hero != null and int(faction_hero.level) == 3, "level-three guidance applies the required boss preparation")
+	main.call("_show_goals")
+	await _wait_frames(4)
+	_check(_tree_has_text(main, "击毁2-5核心"), "two-star level-three completion reveals the final chapter-two proof instead of losing the journey")
 	var proof_runtime := {
 		"deployed_unit_ids": [hero_id],
 	}

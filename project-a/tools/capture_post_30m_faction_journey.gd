@@ -155,7 +155,47 @@ func _capture() -> void:
 		return
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
+	faction_hero.xp = 90
+	state.economy.toilet_coins = maxi(int(state.economy.toilet_coins), 500)
+	main.call("_show_goals")
+	await _wait_frames(6)
+	if not _save("res://artifacts/ui-faction-level-two-goal-844x390.png"):
+		return
+	var level_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	if level_cta == null or not level_cta.text.contains("Lv2"):
+		_fail("faction level-two goal unavailable")
+		return
+	level_cta.pressed.emit()
+	await _wait_frames(5)
+	var upgrade := main.find_child("CultivationAction_upgrade", true, false) as Button
+	if upgrade == null or upgrade.disabled:
+		_fail("faction level-two action unavailable")
+		return
+	upgrade.pressed.emit()
+	await _wait_frames(5)
+	state = game.current_state()
+	faction_hero = state.hero_by_id(hero_id)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
+	state.stage_progress["highest_unlocked_stage"] = "stage_2_5"
+	faction_hero.xp = 120
+	main.call("_show_goals")
+	await _wait_frames(6)
+	if not _save("res://artifacts/ui-faction-level-three-goal-844x390.png"):
+		return
+	level_cta = main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	if level_cta == null or not level_cta.text.contains("Lv3"):
+		_fail("faction level-three goal unavailable")
+		return
+	level_cta.pressed.emit()
+	await _wait_frames(5)
+	upgrade = main.find_child("CultivationAction_upgrade", true, false) as Button
+	if upgrade == null or upgrade.disabled:
+		_fail("faction level-three action unavailable")
+		return
+	upgrade.pressed.emit()
+	await _wait_frames(5)
+	state = game.current_state()
+	faction_hero = state.hero_by_id(hero_id)
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
 	var metric_key := _qualitative_metric_for(archetype_id)

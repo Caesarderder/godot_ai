@@ -162,10 +162,26 @@ func _test_faction_journey_projection() -> void:
 	hero.star = 2
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
-	_check(String(hierarchy.get("target", "")) == "map", "two-star transformation routes back to battle validation")
-	_check(String(hierarchy.get("small", "")).contains("击毁2-5核心"), "final faction step names the chapter boss proof")
+	_check(String(hierarchy.get("target", "")) == "legion", "two-star transformation first routes to the affordable level-two preparation")
+	_check(String(hierarchy.get("small", "")).contains("升至Lv2"), "level-two phase explains the first post-star power step")
+	hero.level = 2
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "map", "two-star level-two core routes back to the exact 2-4 validation")
+	_check(String(hierarchy.get("stage_id", "")) == "stage_2_4", "level-two validation does not skip the encountered gate")
 
 	state.stage_progress["cleared_stages"].append("stage_2_4")
+	state.stage_progress["highest_unlocked_stage"] = "stage_2_5"
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "legion", "2-4 victory routes to the exact level-three boss preparation")
+	_check(String(hierarchy.get("small", "")).contains("升至Lv3"), "level-three phase explains how 2-4 battle rewards fund the boss step")
+	hero.level = 3
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("target", "")) == "map", "two-star level-three core routes to final chapter-two validation")
+	_check(String(hierarchy.get("small", "")).contains("击毁2-5核心"), "final faction step names the chapter boss proof")
+
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
