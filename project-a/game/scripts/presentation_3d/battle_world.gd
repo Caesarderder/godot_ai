@@ -9,6 +9,15 @@ const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_se
 const ToiletUnitViewScript := preload("res://game/scripts/presentation_3d/toilet_unit_view.gd")
 const AudioDirectorScript := preload("res://game/scripts/presentation/audio_director.gd")
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const INDUSTRIAL_BUILDINGS: Array[PackedScene] = [
+	preload("res://assets/3d/environment/kenney_city_industrial/building_a.glb"),
+	preload("res://assets/3d/environment/kenney_city_industrial/building_d.glb"),
+	preload("res://assets/3d/environment/kenney_city_industrial/building_h.glb"),
+	preload("res://assets/3d/environment/kenney_city_industrial/building_p.glb"),
+]
+const INDUSTRIAL_CHIMNEY := preload(
+	"res://assets/3d/environment/kenney_city_industrial/chimney_large.glb"
+)
 const TICK_SECONDS: float = 0.2
 
 var _session: RefCounted
@@ -273,17 +282,30 @@ func _build_stage(stage: Node3D) -> void:
 		crater.material_override = _material(Color("#171b20"), 1.0)
 		stage.add_child(crater)
 	for index in range(12):
-		var building := MeshInstance3D.new()
-		var building_mesh := BoxMesh.new()
-		building_mesh.size = Vector3(2.3, 3.0 + float(index % 4), 2.5)
-		building.mesh = building_mesh
 		var side := -1.0 if index % 2 == 0 else 1.0
-		building.position = Vector3(side * 8.2, building_mesh.size.y * 0.5, 11.0 - float(index / 2) * 5.5)
-		building.rotation_degrees.z = float((index % 3) - 1) * 1.8
-		building.material_override = _material(Color("#27333e").lightened(float(index % 4) * 0.025), 0.92)
-		stage.add_child(building)
+		var building_position := Vector3(side * 8.2, 0.0, 11.0 - float(index / 2) * 5.5)
 		if index % 3 == 0:
-			_add_fire_window(stage, building.position + Vector3(side * -0.08, building_mesh.size.y * 0.28, -1.28))
+			_add_industrial_building(stage, index / 3, building_position, side)
+		else:
+			var building := MeshInstance3D.new()
+			var building_mesh := BoxMesh.new()
+			building_mesh.size = Vector3(2.3, 3.0 + float(index % 4), 2.5)
+			building.mesh = building_mesh
+			building.position = building_position + Vector3(0.0, building_mesh.size.y * 0.5, 0.0)
+			building.rotation_degrees.z = float((index % 3) - 1) * 1.8
+			building.material_override = _material(
+				Color("#27333e").lightened(float(index % 4) * 0.025),
+				0.92
+			)
+			stage.add_child(building)
+		if index % 3 == 0:
+			_add_fire_window(stage, building_position + Vector3(side * -0.08, 2.4, -1.28))
+	var chimney := INDUSTRIAL_CHIMNEY.instantiate() as Node3D
+	if chimney != null:
+		chimney.name = "IndustrialChimney"
+		chimney.position = Vector3(-9.3, 0.0, -15.5)
+		chimney.scale = Vector3.ONE * 1.15
+		stage.add_child(chimney)
 	for rubble_index in range(18):
 		var rubble := MeshInstance3D.new()
 		var rubble_mesh := BoxMesh.new()
@@ -297,6 +319,23 @@ func _build_stage(stage: Node3D) -> void:
 	for lamp_index in range(8):
 		var side := -1.0 if lamp_index % 2 == 0 else 1.0
 		_add_street_lamp(stage, Vector3(side * 5.7, 0.0, 10.0 - float(lamp_index) * 4.3), side, lamp_index)
+
+
+func _add_industrial_building(
+	stage: Node3D,
+	variant_index: int,
+	world_position: Vector3,
+	side: float
+) -> void:
+	var packed_scene := INDUSTRIAL_BUILDINGS[variant_index % INDUSTRIAL_BUILDINGS.size()]
+	var building := packed_scene.instantiate() as Node3D
+	if building == null:
+		return
+	building.name = "IndustrialBuilding_%02d" % variant_index
+	building.position = world_position
+	building.rotation_degrees.y = 90.0 if side < 0.0 else -90.0
+	building.scale = Vector3.ONE * 1.3
+	stage.add_child(building)
 
 
 func _build_distant_base(root: Node3D) -> void:

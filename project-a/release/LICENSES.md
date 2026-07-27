@@ -26,6 +26,16 @@ This inventory covers the assets currently intended to ship from `project-a/`.
 | Runtime 3D primitives, UI panels, generated effects, and export splash/icon derivatives | Program-generated from project code or Godot export | Project-owner controlled / Godot export generated | OK as prototype-generated assets |
 | `assets/3d/porcelain-raider-kit/` | Original low-poly models generated with the project Asset Vault Blender pipeline; no third-party mesh or texture incorporated | Project-owner controlled | OK for internal test and controlled Web export; fan-content premise still requires review |
 
+## Third-party visual assets
+
+| Item | Source | License / permission | Distribution status |
+|---|---|---|---|
+| `assets/ui/icons/kenney_game_icons/` | Kenney Game Icons 1.0; selected 13 white 2× PNG files | Creative Commons CC0 | Commercial use and modification permitted; attribution not required |
+| `assets/3d/environment/kenney_city_industrial/` | Kenney City Kit (Industrial) 1.0; selected four buildings, one chimney and shared colormap | Creative Commons CC0 | Commercial use and modification permitted; official notice retained |
+
+Exact selected files, renames, SHA-256 hashes and omitted content are recorded in
+`assets/asset_manifest.md`.
+
 ## Audio
 
 | Item | Source | License / permission | Distribution status |
@@ -51,6 +61,9 @@ Upstream references:
 - `https://kenney.nl/assets/ui-audio`
 - `https://kenney.nl/assets/impact-sounds`
 - `https://kenney.nl/assets/music-jingles`
+- `https://kenney.nl/assets/game-icons`
+- `https://kenney.nl/assets/city-kit-industrial`
+- `https://kenney.nl/support`
 - `https://opengameart.org/content/factory-ambiance`
 - `https://opengameart.org/content/friendly-talk-on-a-robotic-battlefield-looped`
 

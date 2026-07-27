@@ -7,6 +7,9 @@ signal retreat_requested
 signal skill_requested(unit_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const ICON_PAUSE := preload("res://assets/ui/icons/kenney_game_icons/pause.png")
+const ICON_TARGET := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const ICON_RETREAT := preload("res://assets/ui/icons/kenney_game_icons/exit_right.png")
 const PANEL := Color("#0b1117e8")
 const PANEL_2 := Color("#111a21")
 const LINE := Color("#42525d")
@@ -411,10 +414,14 @@ func _meter_row(tag_text: String, color: Color, value: int, maximum: int) -> Dic
 
 func _apply_theme() -> void:
 	%BattleBottomHud.add_theme_stylebox_override("panel", _box(PANEL, 8, LINE))
+	pause_button.icon = ICON_PAUSE
+	skill_mode_button.icon = ICON_TARGET
+	retreat_button.icon = ICON_RETREAT
 	for label: Label in [status_label]:
 		label.add_theme_font_override("font", CJK_FONT)
 	for button: Button in [pause_button, skill_mode_button, retreat_button]:
 		button.focus_mode = Control.FOCUS_ALL
+		button.add_theme_constant_override("icon_max_width", 18)
 		button.add_theme_font_override("font", CJK_FONT)
 		button.add_theme_font_size_override("font_size", 14)
 		button.add_theme_stylebox_override("normal", _box(Color("#1a2228"), 7, LINE))
