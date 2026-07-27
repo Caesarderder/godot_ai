@@ -481,13 +481,22 @@ async function main() {
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-formation-complete-844x390.png");
 		await touch(cdp, 420, 187);
-		const counterattack = await finishActiveBattle(
-			cdp,
-			"stage_1_4 counterattack",
-			(save) => Number(save.attempts?.stage_1_4 ?? 0) === 2
-				&& save.clearedStages?.includes("stage_1_4"),
-			"browser-first-wall-counterattack-victory-844x390.png",
-		);
+		await new Promise((accept) => setTimeout(accept, 1000));
+		await screenshot(cdp, "browser-first-wall-counterattack-started-844x390.png");
+		let counterattack;
+		try {
+			counterattack = await finishActiveBattle(
+				cdp,
+				"stage_1_4 counterattack",
+				(save) => Number(save.attempts?.stage_1_4 ?? 0) === 2
+					&& save.clearedStages?.includes("stage_1_4"),
+				"browser-first-wall-counterattack-victory-844x390.png",
+			);
+		} catch (error) {
+			await screenshot(cdp, "browser-first-wall-counterattack-timeout-844x390.png");
+			const timeoutSave = await evaluate(cdp, READ_SAVE_EXPRESSION);
+			throw new Error(`${error.message}; final save=${JSON.stringify(timeoutSave)}`);
+		}
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
@@ -549,6 +558,7 @@ async function main() {
 				"artifacts/browser-research-breakthrough-result-844x390.png",
 				"artifacts/browser-first-formation-step-one-844x390.png",
 				"artifacts/browser-first-formation-complete-844x390.png",
+				"artifacts/browser-first-wall-counterattack-started-844x390.png",
 				"artifacts/browser-first-wall-counterattack-victory-844x390.png",
 			],
 		}, null, 2));
