@@ -41,6 +41,7 @@ const COMMAND_CLASSES: Dictionary = {
 	"signal_recruit": DURABLE_VALUE,
 	"claim_foundational_signal": DURABLE_VALUE,
 	"claim_faction_signal": DURABLE_VALUE,
+	"choose_faction_doctrine": DURABLE_VALUE,
 	"set_formation": REVERSIBLE_META,
 	"refill_formation": REVERSIBLE_META,
 	"set_auto_skill_preference": REVERSIBLE_META,

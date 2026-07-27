@@ -190,6 +190,69 @@ func _test_tier_two_faction_protocols_expand_the_formation_or_front() -> void:
 		).is_empty(),
 		"Tier 2 does not leak backward into chapter-three replays before its chapter-four activation"
 	)
+	for case in cases:
+		var specialized := FactionCatalogScript.tech_protocol_for(
+			String(case["hero"]),
+			2,
+			"specialization"
+		)
+		var specialized_config := StageCatalogScript.stage("stage_4_1")
+		specialized_config["faction_protocol"] = specialized
+		var specialized_session: RefCounted = BattleSessionScript.new()
+		specialized_session.start(
+			[
+				_hero(0, String(case["hero"]), "fighter", 2, 600, 80, 35),
+				_hero(1, String(case["ally"]), "fighter", 2, 600, 80, 35),
+			],
+			"stage_4_1",
+			specialized_config
+		)
+		var specialized_events: Array[Dictionary] = specialized_session.advance_tick()
+		var specialized_event := specialized_events.filter(
+			func(event: Dictionary) -> bool:
+				return String(event.get("type", "")) == "faction_protocol"
+		)[0] as Dictionary
+		var specialized_snapshot := specialized_session.snapshot() as Dictionary
+		_check(
+			String(specialized.get("doctrine_id", "")) == "specialization"
+				and int(specialized_event.get("tier", 0)) == 2,
+			"%s specialization remains an explicit Tier 2 doctrine" % case["effect_id"]
+		)
+		match String(case["effect_id"]):
+			"opening_energy":
+				_check(
+					int((specialized_snapshot["units"][0] as Dictionary).get("energy", 0)) >= 75
+						and int((specialized_snapshot["units"][1] as Dictionary).get("energy", 0)) == 0,
+					"fast specialization trades formation coverage for 75 core energy"
+				)
+			"opening_shield":
+				_check(
+					int((specialized_snapshot["units"][0] as Dictionary).get("shield", 0)) >= 150
+						and int((specialized_snapshot["units"][1] as Dictionary).get("shield", 0)) == 0,
+					"defense specialization trades formation coverage for a 25 percent core shield"
+				)
+			"opening_armor_break":
+				var opening_structure := specialized_snapshot["structures"][0] as Dictionary
+				var deep_structure := (specialized_snapshot["structures"] as Array).filter(
+					func(structure: Dictionary) -> bool:
+						return int(structure.get("stage", -1)) == 1
+				)[0] as Dictionary
+				_check(
+					int(opening_structure.get("armor_break_bp", 0)) == 4000
+						and int(deep_structure.get("armor_break_ticks", 0)) == 0,
+					"bombardment specialization trades second-zone coverage for 40 percent opening breach"
+				)
+			"opening_weakness":
+				var opening_enemy := specialized_snapshot["enemies"][0] as Dictionary
+				var deep_enemy := (specialized_snapshot["enemies"] as Array).filter(
+					func(enemy: Dictionary) -> bool:
+						return int(enemy.get("stage", -1)) == 1
+				)[0] as Dictionary
+				_check(
+					int(opening_enemy.get("weakness_ticks", 0)) >= 124
+						and int(deep_enemy.get("weakness_ticks", 0)) == 0,
+					"disruption specialization trades second-zone coverage for a 25-second opening weakness"
+				)
 
 
 func _test_damage_energy_normalization() -> void:

@@ -190,6 +190,40 @@ func _test_faction_journey_projection() -> void:
 	_check(String(hierarchy.get("macro", "")).contains("电视控制链"), "third chapter replaces the resolved second-chapter promise with a new macro threat")
 	_check(String(hierarchy.get("medium", "")).contains("第三章"), "third-chapter objective identifies the current chapter instead of repeating chapter two")
 	_check(String((hierarchy.get("hurdle", {}) as Dictionary).get("reason", "")).contains("控制关键成员"), "third-chapter hurdle explains the new point-kill pressure")
+	state.stage_progress["cleared_stages"] = (
+		state.stage_progress.get("cleared_stages", []) as Array
+	) + ["stage_3_1", "stage_3_2", "stage_3_3", "stage_3_4", "stage_3_5"]
+	state.stage_progress["highest_unlocked_stage"] = "stage_4_1"
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	var title := projection.get("title", {}) as Dictionary
+	task = projection.get("factory_task", {}) as Dictionary
+	_check(
+		String(hierarchy.get("target", "")) == "blueprints"
+			and String(hierarchy.get("cta_label", "")).contains("Tier 2"),
+		"refreshing after 3-5 restores doctrine selection instead of skipping to chapter four"
+	)
+	_check(
+		String(title.get("objective", "")).contains("Tier 2")
+			and String(task.get("target", "")) == "blueprints",
+		"title, base, and goals share the same pending doctrine decision"
+	)
+	var doctrine := executor.execute({
+		"type": "choose_faction_doctrine",
+		"command_id": "objective-tier-two-doctrine",
+		"business_key": "objective-tier-two-doctrine",
+		"expected_revision": state.revision,
+		"payload": {"doctrine_id": "specialization"},
+	})
+	_check(bool(doctrine.get("ok", false)), "objective fixture durably chooses one Tier 2 doctrine")
+	state = executor.state
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(
+		String(hierarchy.get("target", "")) != "blueprints"
+			and String(hierarchy.get("medium", "")).contains("第四章"),
+		"chosen doctrine releases the unified objective into chapter-four preparation"
+	)
 
 
 func _test_second_chapter_reconnaissance_projection() -> void:

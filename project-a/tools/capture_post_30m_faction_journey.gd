@@ -330,6 +330,16 @@ func _capture() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_4_1"
 	main.call("_show_blueprints")
 	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-tier-two-choice-844x390.png"):
+		return
+	var doctrine_choice := main.find_child("CoordinationChoice", true, false) as Button
+	if doctrine_choice == null:
+		_fail("Tier 2 doctrine choice unavailable")
+		return
+	doctrine_choice.pressed.emit()
+	await _wait_frames(6)
+	main.call("_show_blueprints")
+	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-tier-two-tech-844x390.png"):
 		return
 	main.call("_start_stage_battle", "stage_4_1")

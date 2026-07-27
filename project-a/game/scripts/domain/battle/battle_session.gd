@@ -275,6 +275,7 @@ func _apply_faction_protocol(events: Array[Dictionary]) -> void:
 	var value := int(_faction_protocol.get("value", 0))
 	var allied_value := int(_faction_protocol.get("allied_value", 0))
 	var zone_count := maxi(1, int(_faction_protocol.get("zone_count", 1)))
+	var armor_break_bp := maxi(0, int(_faction_protocol.get("armor_break_bp", 2500)))
 	match effect_id:
 		"opening_energy":
 			for ally in _living_main_allies():
@@ -303,6 +304,10 @@ func _apply_faction_protocol(events: Array[Dictionary]) -> void:
 						int(structure.get("armor_break_ticks", 0)),
 						duration
 					)
+					structure["armor_break_bp"] = maxi(
+						int(structure.get("armor_break_bp", 0)),
+						armor_break_bp
+					)
 					affected += 1
 		"opening_weakness":
 			var duration := int(_faction_protocol.get("duration_ticks", 50))
@@ -330,6 +335,7 @@ func _apply_faction_protocol(events: Array[Dictionary]) -> void:
 		"allied_value": allied_value,
 		"tier": int(_faction_protocol.get("tier", 1)),
 		"zone_count": zone_count,
+		"armor_break_bp": armor_break_bp,
 		"duration_ticks": int(_faction_protocol.get("duration_ticks", 0)),
 	})
 
@@ -1362,7 +1368,7 @@ func _damage_structure(structure: Dictionary, damage: int, source_id: StringName
 		return
 	var actual := maxi(1, damage)
 	if int(structure.get("armor_break_ticks", 0)) > 0:
-		actual = int(actual * 125 / 100)
+		actual = int(actual * (10000 + int(structure.get("armor_break_bp", 2500))) / 10000)
 	var effective_damage := mini(int(structure["hp"]), actual)
 	var old_damage_stage := int(structure["damage_stage"])
 	structure["hp"] = maxi(0, int(structure["hp"]) - actual)
@@ -2016,6 +2022,7 @@ func _structure(id: String, label: String, kind: String, stage: int, road_positi
 		"attack": attack,
 		"attack_period_ticks": attack_period_ticks,
 		"armor_break_ticks": 0,
+		"armor_break_bp": 2500,
 		"damage_stage": 0,
 		"alive": true,
 	}

@@ -1832,11 +1832,19 @@ func _blueprint_view() -> Dictionary:
 		faction_event.get("guaranteed_duplicate_archetype", "")
 	)
 	var faction_tech_preview := {}
+	var faction_tech_choices: Array[Dictionary] = []
 	if (
 		(state.stage_progress.get("cleared_stages", []) as Array).has("stage_2_5")
 		and not faction_archetype_id.is_empty()
 	):
 		faction_tech_preview = _active_faction_protocol(state)
+		if (
+			(state.stage_progress.get("cleared_stages", []) as Array).has("stage_3_5")
+			and _selected_faction_doctrine(state).is_empty()
+		):
+			faction_tech_choices = FactionCatalog.tier_two_options_for(
+				faction_archetype_id
+			)
 	var branches := {
 		"ordinary": {"title": "突击枝", "summary": "突破与控场，两条独立研发路线", "recipes": ["ordinary.assault", "ordinary.sonic"]},
 		"heavy": {"title": "重装枝", "summary": "承压与斩杀，两条独立研发路线", "recipes": ["heavy.armored", "heavy.saw"]},
@@ -1912,6 +1920,7 @@ func _blueprint_view() -> Dictionary:
 		"results": [],
 		"results_summary": "",
 		"faction_tech_preview": faction_tech_preview,
+		"faction_tech_choices": faction_tech_choices,
 		"reduced_motion": bool(settings_store.reduced_motion),
 		"nodes": nodes,
 	}
@@ -1936,8 +1945,26 @@ func _on_blueprint_action_requested(action_id: String, payload: Dictionary) -> v
 			_unlock_foundational_blueprint(String(payload.get("recipe_id", "")))
 		"claim_research":
 			_claim_foundational_blueprint()
+		"choose_faction_doctrine":
+			_choose_faction_doctrine(String(payload.get("doctrine_id", "")))
 		"back":
 			_show_base()
+
+
+func _choose_faction_doctrine(doctrine_id: String) -> void:
+	var result := _command(
+		"choose_faction_doctrine",
+		{"doctrine_id": doctrine_id},
+		"faction-doctrine-tier-two"
+	)
+	if not bool(result.get("ok", false)):
+		_notify(_error_copy(String(result.get("error", "FACTION_DOCTRINE_CHOICE_FAILED"))))
+		return
+	var protocol := _active_faction_protocol(game.current_state())
+	_notify("Tier 2选择完成 · %s从4-1起生效" % String(protocol.get("title", "阵营协议")))
+	selected_stage_id = "stage_4_1"
+	selected_chapter = 4
+	_show_map()
 
 
 
@@ -2690,6 +2717,14 @@ func _show_result() -> void:
 		qualification = _chapter_one_unlock_copy(next_stage_id)
 		primary_label = "领取阵营起手十连"
 		primary_action = "faction_recruit"
+	elif (
+		chapter_boss_complete
+		and completed_chapter == 3
+		and _selected_faction_doctrine(game.current_state()).is_empty()
+	):
+		qualification = "第三章完成 · Tier 2科技分支已开放\n先决定全队协同或阵营专精，再侦察第四章。"
+		primary_label = "选择 Tier 2 科技方向"
+		primary_action = "faction_doctrine"
 	elif has_faction_result_action:
 		qualification = String(
 			(faction_result_hierarchy.get("hurdle", {}) as Dictionary).get(
@@ -2770,7 +2805,11 @@ func _show_result() -> void:
 		"hurdle_proof": hurdle_proof,
 		"debrief": debrief,
 		"growth": (
-			_faction_tech_result_copy(2 if cleared_stage_id == "stage_3_5" else 1)
+			(
+				"Tier 2科技突破 · 全队协同覆盖更广，阵营专精单点更强；本次选择永久保留"
+				if cleared_stage_id == "stage_3_5"
+				else _faction_tech_result_copy(1)
+			)
 			if won and cleared_stage_id in ["stage_2_5", "stage_3_5"]
 			else (
 				protocol_growth
@@ -2821,6 +2860,8 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 		"faction_recruit":
 			legion_tab = "recruit"
 			_show_legion()
+		"faction_doctrine":
+			_show_blueprints()
 		"next_stage":
 			_start_stage_battle(String(payload.get("stage_id", "")))
 		"map_stage":
@@ -3406,12 +3447,30 @@ func _active_faction_protocol(state: RefCounted) -> Dictionary:
 	var archetype_id := String(
 		faction_event.get("guaranteed_duplicate_archetype", "")
 	)
-	var tier := (
-		2
-		if (state.stage_progress.get("cleared_stages", []) as Array).has("stage_3_5")
-		else 1
-	)
-	return FactionCatalog.tech_protocol_for(archetype_id, tier)
+	var doctrine_id := _selected_faction_doctrine(state)
+	var tier := 2 if not doctrine_id.is_empty() else 1
+	return FactionCatalog.tech_protocol_for(archetype_id, tier, doctrine_id)
+
+
+func _selected_faction_doctrine(state: RefCounted) -> String:
+	var latest_revision := -1
+	var selected := ""
+	for receipt_value in state.command_receipts.values():
+		if typeof(receipt_value) != TYPE_DICTIONARY:
+			continue
+		var receipt := receipt_value as Dictionary
+		if String(receipt.get("type", "")) != "choose_faction_doctrine":
+			continue
+		var result := receipt.get("result", {}) as Dictionary
+		if not bool(result.get("ok", false)):
+			continue
+		var revision := int(result.get("state_revision", -1))
+		var event := result.get("event", {}) as Dictionary
+		var doctrine_id := String(event.get("doctrine_id", ""))
+		if doctrine_id in ["coordination", "specialization"] and revision > latest_revision:
+			latest_revision = revision
+			selected = doctrine_id
+	return selected
 
 
 func _claim_output() -> void:
@@ -4862,5 +4921,8 @@ func _error_copy(code: String) -> String:
 		"SMUGGLED_LOGISTICS_CASE_STORAGE_FULL": "工业仓库空间不足，先完成一次成长消费再开箱",
 		"NO_CONTRABAND_STAR_CORE": "当前没有可使用的黑金升星核心",
 		"CONTRABAND_CORE_REQUIRES_ONE_STAR": "黑金核心只能帮助一星角色升至二星",
+		"FACTION_DOCTRINE_LOCKED": "完成第三章 3-5 后才能选择 Tier 2 科技",
+		"FACTION_DOCTRINE_CORE_MISSING": "阵营核心记录缺失，请先恢复阵营十连存档",
+		"FACTION_DOCTRINE_ALREADY_CHOSEN": "Tier 2 科技方向已经确定",
 	}
 	return String(known.get(code, code))

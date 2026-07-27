@@ -280,6 +280,25 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			return ResearchBreakthroughServiceScript.claim(candidate)
 		"claim_faction_signal":
 			return ResearchBreakthroughServiceScript.claim_faction_ten(candidate)
+		"choose_faction_doctrine":
+			if not (candidate.stage_progress.get("cleared_stages", []) as Array).has("stage_3_5"):
+				return {"ok": false, "error": "FACTION_DOCTRINE_LOCKED"}
+			var has_faction_core := false
+			for receipt_value in candidate.command_receipts.values():
+				var prior_receipt := receipt_value as Dictionary
+				if String(prior_receipt.get("type", "")) == "claim_faction_signal":
+					has_faction_core = true
+				if String(prior_receipt.get("type", "")) == "choose_faction_doctrine":
+					return {"ok": false, "error": "FACTION_DOCTRINE_ALREADY_CHOSEN"}
+			if not has_faction_core:
+				return {"ok": false, "error": "FACTION_DOCTRINE_CORE_MISSING"}
+			return {
+				"ok": true,
+				"event": {
+					"type": "faction_doctrine_chosen",
+					"doctrine_id": String(data["doctrine_id"]),
+				},
+			}
 		"start_production":
 			return FactoryService.start_production(candidate, String(data["recipe_id"]), int(data["now_unix"]))
 		"unlock_foundational_blueprint":
@@ -678,6 +697,16 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 			return _exact_keys(data, [], "claim_foundational_signal")
 		"claim_faction_signal":
 			return _exact_keys(data, [], "claim_faction_signal")
+		"choose_faction_doctrine":
+			var doctrine_error := _exact_keys(data, ["doctrine_id"], "choose_faction_doctrine")
+			if not doctrine_error.is_empty():
+				return doctrine_error
+			if (
+				typeof(data["doctrine_id"]) != TYPE_STRING
+				or String(data["doctrine_id"]) not in ["coordination", "specialization"]
+			):
+				return "choose_faction_doctrine.doctrine_id must be coordination or specialization"
+			return ""
 		"start_production":
 			var start_error := _exact_keys(data, ["recipe_id", "now_unix"], "start_production")
 			if not start_error.is_empty():

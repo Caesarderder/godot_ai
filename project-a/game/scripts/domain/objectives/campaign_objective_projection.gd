@@ -239,6 +239,14 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			hurdle_title = "阵营核心最终验证"
 			hurdle_reason = "升星只有在战斗行为和过关方式改变时才有意义。"
 			recovery = "保留新被动的技能窗口；失败不损失角色、碎片或保底。"
+		elif cleared.has("stage_3_5") and _selected_faction_doctrine(state).is_empty():
+			phase = "choose_doctrine"
+			small = "为%s选择 Tier 2：全队协同或阵营专精" % faction_name
+			cta_label = "选择 Tier 2 科技方向"
+			target = "blueprints"
+			hurdle_title = "第三章胜利需要转化为新打法"
+			hurdle_reason = "Tier 2不是自动加点；覆盖更多目标与强化阵营核心必须由你取舍。"
+			recovery = "进入科技蓝图比较两条免费分支；选择永久保留，从4-1起真实生效。"
 		else:
 			return {"active": false}
 	var hierarchy := {
@@ -293,6 +301,27 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 	}
 
 
+static func _selected_faction_doctrine(state: RefCounted) -> String:
+	var latest_revision := -1
+	var selected := ""
+	for receipt_value in state.command_receipts.values():
+		if typeof(receipt_value) != TYPE_DICTIONARY:
+			continue
+		var receipt := receipt_value as Dictionary
+		if String(receipt.get("type", "")) != "choose_faction_doctrine":
+			continue
+		var result := receipt.get("result", {}) as Dictionary
+		if not bool(result.get("ok", false)):
+			continue
+		var revision := int(result.get("state_revision", -1))
+		var event := result.get("event", {}) as Dictionary
+		var doctrine_id := String(event.get("doctrine_id", ""))
+		if doctrine_id in ["coordination", "specialization"] and revision > latest_revision:
+			latest_revision = revision
+			selected = doctrine_id
+	return selected
+
+
 static func _faction_phase_title(phase: String) -> String:
 	var titles := {
 		"research": "研发新角色",
@@ -304,6 +333,7 @@ static func _faction_phase_title(phase: String) -> String:
 		"breakthrough_gate": "兑现第一次成长",
 		"level_three": "培养核心至Lv3",
 		"breakthrough": "突破第二章",
+		"choose_doctrine": "Tier 2抉择",
 	}
 	return String(titles.get(phase, "形成阵营"))
 

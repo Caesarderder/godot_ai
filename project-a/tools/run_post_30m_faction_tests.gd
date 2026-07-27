@@ -38,6 +38,7 @@ func _init() -> void:
 	)
 	_test_s_one_star_value()
 	_test_free_ten_hard_pity_edge()
+	_test_tier_two_doctrine_choice_is_durable_and_exclusive()
 	if failures.is_empty():
 		print("POST_30M_FACTION_TESTS_OK: %d seeded faction journeys" % RUN_SEEDS.size())
 		quit(0)
@@ -392,7 +393,62 @@ func _test_free_ten_hard_pity_edge() -> void:
 	_ok(
 		not ((values[9] as Dictionary).get("pity_bonus", {}) as Dictionary).is_empty(),
 		"tenth response keeps matching fragments and exposes the guaranteed S result"
+		)
+
+
+func _test_tier_two_doctrine_choice_is_durable_and_exclusive() -> void:
+	executor = CommandExecutorScript.new(
+		_post_chapter_one_state(20260728),
+		func(_state: RefCounted) -> bool: return true
 	)
+	serial = 0
+	var claim := _command("claim_faction_signal", {}, "doctrine-faction-core")
+	_ok(bool(claim.get("ok", false)), "doctrine test obtains one durable faction core")
+	var locked := _command(
+		"choose_faction_doctrine",
+		{"doctrine_id": "coordination"},
+		"doctrine-before-third-boss"
+	)
+	_eq(
+		String(locked.get("error", "")),
+		"FACTION_DOCTRINE_LOCKED",
+		"Tier 2 doctrine stays locked before the third-chapter Boss"
+	)
+	var cleared := executor.state.stage_progress.get("cleared_stages", []) as Array
+	cleared.append("stage_3_5")
+	executor.state.stage_progress["cleared_stages"] = cleared
+	var chosen := _command(
+		"choose_faction_doctrine",
+		{"doctrine_id": "coordination"},
+		"doctrine-tier-two"
+	)
+	_ok(
+		bool(chosen.get("ok", false))
+			and String((chosen.get("event", {}) as Dictionary).get("doctrine_id", ""))
+				== "coordination",
+		"chapter-three completion permits one explicit Tier 2 doctrine"
+	)
+	var second_choice := _command(
+		"choose_faction_doctrine",
+		{"doctrine_id": "specialization"},
+		"doctrine-tier-two-second-attempt"
+	)
+	_eq(
+		String(second_choice.get("error", "")),
+		"FACTION_DOCTRINE_ALREADY_CHOSEN",
+		"the alternative Tier 2 doctrine cannot overwrite the durable opportunity cost"
+	)
+	var decoded := SaveCodecScript.from_json_text(SaveCodecScript.to_json_text(executor.state))
+	_ok(bool(decoded.get("ok", false)), "chosen Tier 2 doctrine survives schema v11 save roundtrip")
+	if bool(decoded.get("ok", false)):
+		var found_choice := false
+		for receipt_value in decoded["state"].command_receipts.values():
+			var receipt := receipt_value as Dictionary
+			if String(receipt.get("type", "")) != "choose_faction_doctrine":
+				continue
+			var event := ((receipt.get("result", {}) as Dictionary).get("event", {}) as Dictionary)
+			found_choice = String(event.get("doctrine_id", "")) == "coordination"
+		_ok(found_choice, "save roundtrip preserves the exact chosen Tier 2 doctrine")
 
 
 func _simulate_stage(

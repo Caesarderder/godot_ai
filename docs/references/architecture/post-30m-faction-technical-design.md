@@ -87,10 +87,12 @@ Tier 1 阵营协议不增加新的存档字段：App Shell 仅在 `stage_2_5` �
 `BattleSession` 在首 tick 验证编队中至少有一名同阵营角色后，原子应用一次效果并发布
 `faction_protocol`。表现层只消费事件，不决定协议是否生效。
 
-Tier 2 沿用同一派生链：若 `stage_3_5` 已首通，App Shell 从相同 receipt 选择同阵营的 Tier 2
-定义并注入第四章及以后关卡。Tier 2 通过 `tier`、`allied_value` 与 `zone_count` 扩展同一效果
-模型，不创建第二协议槽或保存字段；BattleSession 的事件和结算结果必须保留 tier，科技蓝图则
-直接读取 `_active_faction_protocol()`，避免战斗已升级但蓝图仍显示 Tier 1 的投影分叉。
+Tier 2 沿用 command receipt，不增加 schema 字段：`stage_3_5` 首通只开放选择，玩家通过
+`choose_faction_doctrine` durable command 在 `coordination` 与 `specialization` 中确定一次路线；
+重复选择被领域拒绝。未选择时 `_active_faction_protocol()` 仍返回 Tier 1，选择后才从相同阵营
+核心和 doctrine receipt 派生 Tier 2 并注入第四章。Tier 2 通过 `tier`、`allied_value`、
+`zone_count` 与 `armor_break_bp` 表达覆盖/强度取舍；BattleSession 的事件和结算结果保留 tier，
+CampaignObjectiveProjection 则在刷新后持续恢复待选目标，避免一次性结算弹窗成为唯一入口。
 
 ## 数据合同
 

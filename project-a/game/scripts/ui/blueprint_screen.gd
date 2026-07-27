@@ -35,6 +35,8 @@ const BRANCHES := [
 @onready var tech_preview: PanelContainer = %FactionTechPreview
 @onready var tech_identity: Label = %Identity
 @onready var tech_effect: Label = %Effect
+@onready var coordination_choice: Button = %CoordinationChoice
+@onready var specialization_choice: Button = %SpecializationChoice
 @onready var branch_row: HBoxContainer = %BlueprintBranchRow
 @onready var branch_panel: PanelContainer = %BlueprintBranchPanel
 @onready var branch_heading: Label = %BlueprintBranchHeading
@@ -58,6 +60,12 @@ func _ready() -> void:
 		button.pressed.connect(branch_selected.emit.bind(id))
 	breakthrough_button.pressed.connect(action_requested.emit.bind("claim_breakthrough", {}))
 	%BlueprintResultsLegionButton.pressed.connect(action_requested.emit.bind("open_legion", {}))
+	coordination_choice.pressed.connect(
+		action_requested.emit.bind("choose_faction_doctrine", {"doctrine_id": "coordination"})
+	)
+	specialization_choice.pressed.connect(
+		action_requested.emit.bind("choose_faction_doctrine", {"doctrine_id": "specialization"})
+	)
 	back_button.pressed.connect(action_requested.emit.bind("back", {}))
 	if not _view.is_empty():
 		_apply_view()
@@ -88,17 +96,32 @@ func _apply_view() -> void:
 	var results := _view.get("results", []) as Array
 	var showing_results := not results.is_empty()
 	var preview := _view.get("faction_tech_preview", {}) as Dictionary
+	var choices := _view.get("faction_tech_choices", []) as Array
+	var choosing_doctrine := choices.size() == 2
 	results_panel.visible = showing_results
 	tech_preview.visible = not showing_results and not preview.is_empty()
-	tech_identity.text = "Tier %d阵营科技已激活 · %s\n%s" % [
-		int(preview.get("tier", 1)),
-		String(preview.get("faction", "阵营待形成")),
-		String(preview.get("title", "未来协议")),
-	]
-	tech_effect.text = "%s\n第%d章起自动生效 · 编入同阵营角色可扩大收益" % [
-		String(preview.get("effect", "")),
-		int(preview.get("activation_chapter", 3)),
-	]
+	if choosing_doctrine:
+		tech_identity.text = "Tier 2科技待定 · %s\n选择后从第4章生效" % String(
+			preview.get("faction", "阵营")
+		)
+		var coordination := choices[0] as Dictionary
+		var specialization := choices[1] as Dictionary
+		tech_effect.text = "全队协同：%s\n阵营专精：%s" % [
+			String(coordination.get("effect", "")),
+			String(specialization.get("effect", "")),
+		]
+	else:
+		tech_identity.text = "Tier %d阵营科技已激活 · %s\n%s" % [
+			int(preview.get("tier", 1)),
+			String(preview.get("faction", "阵营待形成")),
+			String(preview.get("title", "未来协议")),
+		]
+		tech_effect.text = "%s\n第%d章起自动生效 · 编入同阵营角色可扩大收益" % [
+			String(preview.get("effect", "")),
+			int(preview.get("activation_chapter", 3)),
+		]
+	coordination_choice.visible = choosing_doctrine
+	specialization_choice.visible = choosing_doctrine
 	tabs.visible = not showing_results
 	core_panel.visible = not showing_results and preview.is_empty()
 	branch_row.visible = not showing_results

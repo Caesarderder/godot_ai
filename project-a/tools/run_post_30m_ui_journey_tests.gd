@@ -445,22 +445,77 @@ func _run() -> void:
 			cleared.append(stage_id)
 	game.current_state().stage_progress["cleared_stages"] = cleared
 	game.current_state().stage_progress["highest_unlocked_stage"] = "stage_4_1"
-	main.call("_show_blueprints")
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_3_5",
+			"next_stage_id": "stage_4_1",
+			"reward": {"gold": 74},
+			"hero_xp_each": 30,
+			"hero_xp_recipients": game.current_state().formation.hero_ids().size(),
+		},
+	})
+	main.set("last_battle_runtime_result", {
+		"ticks": 480,
+		"structures_destroyed": 7,
+		"enemies_defeated": 9,
+		"stage_reached": 2,
+	})
+	main.call("_show_result")
+	await _wait_frames(4)
+	var choose_tech_action := main.find_child("PrimaryAction", true, false) as Button
+	_check(
+		choose_tech_action != null
+			and choose_tech_action.text.contains("选择 Tier 2")
+			and not _tree_has_text(main, "查看第4章新战线"),
+		"3-5 settlement makes doctrine selection the sole high-priority handoff before chapter four"
+	)
+	if choose_tech_action != null:
+		choose_tech_action.pressed.emit()
+		await _wait_frames(4)
 	await _wait_frames(4)
 	tech_preview = main.find_child("FactionTechPreview", true, false) as Control
-	var tier_two := main.call("_active_faction_protocol", game.current_state()) as Dictionary
 	_check(
-		int(tier_two.get("tier", 0)) == 2
-			and int(tier_two.get("activation_chapter", 0)) == 4
-			and _tree_has_text(tech_preview, "Tier 2阵营科技已激活")
-			and _tree_has_text(tech_preview, "第4章起自动生效"),
-		"chapter-three completion durably upgrades the same faction protocol to Tier 2"
+		_tree_has_text(tech_preview, "Tier 2科技待定")
+			and _tree_has_text(tech_preview, "全队协同")
+			and _tree_has_text(tech_preview, "阵营专精"),
+		"chapter-three completion opens two explicit Tier 2 doctrines instead of auto-selecting one"
 	)
 	_check(
 		tech_preview != null
 			and tech_preview.get_global_rect().end.x <= float(root.size.x)
 			and tech_preview.get_global_rect().end.y <= float(root.size.y),
-		"Tier 2 technology remains fully visible inside the 844x390 viewport"
+		"both Tier 2 choices remain fully visible inside the 844x390 viewport"
+	)
+	var coordination_choice := main.find_child("CoordinationChoice", true, false) as Button
+	_check(
+		coordination_choice != null
+			and coordination_choice.visible
+			and not coordination_choice.disabled,
+		"Tier 2 coordination choice is an actionable 48px control"
+	)
+	if coordination_choice != null:
+		coordination_choice.pressed.emit()
+		await _wait_frames(4)
+	var tier_two := main.call("_active_faction_protocol", game.current_state()) as Dictionary
+	_check(
+		int(tier_two.get("tier", 0)) == 2
+			and String(tier_two.get("doctrine_id", "")) == "coordination"
+			and int(tier_two.get("activation_chapter", 0)) == 4
+			and String(main.get("selected_stage_id")) == "stage_4_1",
+		"durable doctrine choice activates Tier 2 and hands off to exact chapter-four reconnaissance"
+	)
+	main.call("_show_blueprints")
+	await _wait_frames(4)
+	tech_preview = main.find_child("FactionTechPreview", true, false) as Control
+	var hidden_coordination := main.find_child("CoordinationChoice", true, false) as Button
+	_check(
+		_tree_has_text(tech_preview, "Tier 2阵营科技已激活")
+			and _tree_has_text(tech_preview, "第4章起自动生效")
+			and hidden_coordination != null
+			and not hidden_coordination.visible,
+		"reopening blueprints reconstructs the chosen doctrine without offering a second selection"
 	)
 
 	await _finish(main, game, audio_director)

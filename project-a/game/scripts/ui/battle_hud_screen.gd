@@ -124,13 +124,15 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 				"opening_shield":
 					detail = "%d名主力获得开局护盾，核心成员护盾更厚" % int(event.get("affected", 0))
 				"opening_armor_break":
-					detail = "%d座前线结构已被标定，覆盖%d个战区" % [
+					detail = "%d座结构已标定，覆盖%d个战区，承伤+%d%%" % [
 						int(event.get("affected", 0)),
 						int(event.get("zone_count", 1)),
+						int(event.get("armor_break_bp", 2500)) / 100,
 					]
 				"opening_weakness":
-					detail = "%d名守军陷入虚弱，覆盖%d个战区" % [
+					detail = "%d名守军虚弱%d秒，覆盖%d个战区" % [
 						int(event.get("affected", 0)),
+						int(event.get("duration_ticks", 50)) / 5,
 						int(event.get("zone_count", 1)),
 					]
 				_:

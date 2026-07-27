@@ -85,6 +85,37 @@ const TIER_TWO_TECH: Dictionary = {
 	},
 }
 
+const TIER_TWO_SPECIALIZATION: Dictionary = {
+	"快攻破城": {
+		"title": "核心过载点火协议",
+		"effect": "只强化同阵营主力，但以75能量开局，最快形成第一轮阵营连锁爆发",
+		"effect_id": "opening_energy",
+		"value": 75,
+	},
+	"钢铁防线": {
+		"title": "核心壁垒协议",
+		"effect": "只强化同阵营主力，但获得最大生命25%的20秒护盾，专注承住最高压力",
+		"effect_id": "opening_shield",
+		"value": 2500,
+		"duration_ticks": 100,
+	},
+	"远程轰炸": {
+		"title": "过载火力标定协议",
+		"effect": "只标定首个战区，但使结构承伤提高40%，用于更快击穿第一道防线",
+		"effect_id": "opening_armor_break",
+		"armor_break_bp": 4000,
+		"zone_count": 1,
+		"duration_ticks": 1200,
+	},
+	"干扰增殖": {
+		"title": "深度失序协议",
+		"effect": "只影响首个战区，但使守军虚弱25秒，为增殖阵容争取更长展开时间",
+		"effect_id": "opening_weakness",
+		"zone_count": 1,
+		"duration_ticks": 125,
+	},
+}
+
 
 static func faction_for(archetype_id: String) -> String:
 	return String(FACTIONS.get(archetype_id, "独立战术"))
@@ -101,9 +132,17 @@ static func tech_preview_for(archetype_id: String) -> Dictionary:
 	return tech_protocol_for(archetype_id, 1)
 
 
-static func tech_protocol_for(archetype_id: String, tier: int = 1) -> Dictionary:
+static func tech_protocol_for(
+	archetype_id: String,
+	tier: int = 1,
+	doctrine_id: String = "coordination"
+) -> Dictionary:
 	var faction := faction_for(archetype_id)
-	var catalog := TIER_TWO_TECH if tier >= 2 else TECH_PREVIEWS
+	var catalog := (
+		TIER_TWO_SPECIALIZATION
+		if tier >= 2 and doctrine_id == "specialization"
+		else (TIER_TWO_TECH if tier >= 2 else TECH_PREVIEWS)
+	)
 	var preview := (catalog.get(faction, {}) as Dictionary).duplicate(true)
 	if preview.is_empty():
 		return {}
@@ -112,7 +151,27 @@ static func tech_protocol_for(archetype_id: String, tier: int = 1) -> Dictionary
 	preview["member_archetypes"] = archetypes_for_faction(faction)
 	preview["tier"] = 2 if tier >= 2 else 1
 	preview["activation_chapter"] = 4 if tier >= 2 else 3
+	preview["doctrine_id"] = doctrine_id if tier >= 2 else ""
 	return preview
+
+
+static func tier_two_options_for(archetype_id: String) -> Array[Dictionary]:
+	var options: Array[Dictionary] = []
+	for doctrine_id in ["coordination", "specialization"]:
+		var protocol := tech_protocol_for(archetype_id, 2, doctrine_id)
+		if protocol.is_empty():
+			continue
+		options.append({
+			"doctrine_id": doctrine_id,
+			"title": String(protocol.get("title", "Tier 2协议")),
+			"effect": String(protocol.get("effect", "")),
+			"action_label": (
+				"选择全队协同"
+				if doctrine_id == "coordination"
+				else "选择阵营专精"
+			),
+		})
+	return options
 
 
 static func archetypes_for_faction(faction: String) -> Array[String]:
