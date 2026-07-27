@@ -296,6 +296,17 @@ func _run() -> void:
 		pressure_test.pressed.emit()
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_2_4", "3/3 result hands off to the exact 2-4 pressure test")
+	_check(_tree_has_text(main, "1★压力测试"), "2-4 reconnaissance preserves the one-star experiment")
+	_check(
+		_tree_has_text(main, "声塔命中")
+			and _tree_has_text(main, "共振能量损失")
+			and _tree_has_text(main, "失败无永久损失"),
+		"pressure-test reconnaissance explains which causal evidence to collect"
+	)
+	var lossless_probe := _button_with_text(main, "开始1★无损试探")
+	_check(lossless_probe != null and lossless_probe.is_visible_in_tree(), "pressure test exposes one explicit primary probe")
+	var premature_growth := _button_with_text(main, "先培养军团")
+	_check(premature_growth == null or not premature_growth.is_visible_in_tree(), "pressure test cannot be preempted by premature generic growth")
 
 	state = game.current_state()
 	state.stage_progress["cleared_stages"] = [

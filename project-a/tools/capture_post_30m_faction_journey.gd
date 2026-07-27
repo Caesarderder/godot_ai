@@ -206,6 +206,8 @@ func _capture() -> void:
 		return
 	probe_cta.pressed.emit()
 	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-pressure-test-recon-844x390.png"):
+		return
 	state = game.current_state()
 	state.attempt_counters["stage_2_4"] = 1
 	main.set("last_battle_runtime_result", {

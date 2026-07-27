@@ -69,6 +69,7 @@ static func derive(state: RefCounted, onboarding: Dictionary) -> Dictionary:
 		"campaign_cleared": campaign_cleared,
 		"chapter_one_complete": chapter_one_cleared >= CHAPTER_ONE_STAGE_IDS.size(),
 		"campaign_complete": campaign_cleared >= StageCatalogScript.ACT1_STAGE_IDS.size(),
+		"faction_phase": String(faction_journey.get("phase", "")),
 		"title": (
 			{
 				"primary_label": "返回指挥室",

@@ -118,6 +118,10 @@ func _apply_configuration() -> void:
 	var action_id := String(action.get("id", "attack"))
 	var needs_preparation := action_id in ["upgrade", "research", "recruit", "formation"] and _unlocked and not _cleared
 	var needs_discovery := action_id == "discover" and _unlocked and not _cleared
+	var force_probe := bool(faction_proof.get("force_probe", false))
+	if force_probe:
+		needs_preparation = false
+		needs_discovery = false
 	_preparation_action_id = action_id
 	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
 	next_action.visible = needs_preparation or needs_discovery
@@ -140,6 +144,8 @@ func _apply_configuration() -> void:
 			else ("试探炮台防线" if needs_discovery else ("立即出击" if _unlocked else "尚未侦测"))
 		)
 	)
+	if force_probe:
+		_style_pressure_test_action()
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = PANEL
 	panel_style.border_color = CYAN if _unlocked else LINE
@@ -189,6 +195,24 @@ func _apply_theme() -> void:
 	growth_button.add_theme_color_override("font_color", PANEL)
 	growth_button.add_theme_color_override("font_hover_color", PANEL)
 	growth_button.add_theme_color_override("font_pressed_color", PANEL)
+
+
+func _style_pressure_test_action() -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = GOLD
+	normal.border_color = GOLD
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(8)
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = GOLD.lightened(0.12)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = GOLD.darkened(0.18)
+	attack_button.add_theme_stylebox_override("normal", normal)
+	attack_button.add_theme_stylebox_override("hover", hover)
+	attack_button.add_theme_stylebox_override("pressed", pressed)
+	attack_button.add_theme_color_override("font_color", PANEL)
+	attack_button.add_theme_color_override("font_hover_color", PANEL)
+	attack_button.add_theme_color_override("font_pressed_color", PANEL)
 
 
 func _risk_color(risk_id: String) -> Color:

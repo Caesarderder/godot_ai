@@ -1165,18 +1165,30 @@ func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictio
 		state,
 		OnboardingService.snapshot(state)
 	)
+	var phase := String(objective.get("faction_phase", ""))
 	var hierarchy := objective.get("hierarchy", {}) as Dictionary
 	var proof_focus := String(hierarchy.get("proof_focus", ""))
 	if (
-		proof_focus.is_empty()
-		or String(hierarchy.get("target", "")) != "map"
+		String(hierarchy.get("target", "")) != "map"
 		or String(hierarchy.get("stage_id", "")) != stage_id
+		or (proof_focus.is_empty() and phase != "probe_late_wall")
 	):
 		return {}
 	var hero: RefCounted = state.hero_by_id(String(hierarchy.get("hero_id", "")))
 	if hero == null:
 		return {}
 	var archetype_id := String(hero.archetype_id)
+	if phase == "probe_late_wall":
+		return {
+			"headline": "1★压力测试 · %s核心 · %s" % [
+				String(hero.display_name),
+				FactionCatalog.playstyle_for(archetype_id),
+			],
+			"focus": "观察目标：记录推进阶段、声塔命中与共振能量损失；失败无永久损失。",
+			"attack_label": "开始1★无损试探",
+			"hero_id": String(hero.hero_id),
+			"force_probe": true,
+		}
 	return {
 		"headline": "阵营验证 · %s核心已上阵 · %s" % [
 			String(hero.display_name),

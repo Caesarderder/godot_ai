@@ -184,6 +184,7 @@ func _test_faction_journey_projection() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_4"
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(projection.get("faction_phase", "")) == "probe_late_wall", "projection exposes the durable pressure-test phase to reconnaissance UI")
 	_check(String(hierarchy.get("target", "")) == "map", "three battlefield proofs first route to a lossless late-line probe")
 	_check(String(hierarchy.get("stage_id", "")) == "stage_2_4", "late-line probe focuses the exact 2-4 pressure test")
 	_check(String(hierarchy.get("small", "")).contains("保持1★"), "probe preserves one-star state so growth has an experienced cause")
