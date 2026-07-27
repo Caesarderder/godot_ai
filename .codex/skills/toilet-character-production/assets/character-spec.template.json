@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "archetype_id": "replace_me",
+  "display_name": "待命名马桶人",
+  "rating": "A",
+  "class_id": "ranger",
+  "branch": "flying",
+  "faction": "远程轰炸",
+  "tactical_verb": "聚拢",
+  "player_promise": "当敌人分散形成交叉火力时，玩家用聚拢制造一次可见的范围爆发窗口。",
+  "base_stats": {
+    "hp": 130,
+    "attack": 24,
+    "defense": 21,
+    "speed_milli": 112000,
+    "crit_bp": 1150
+  },
+  "active_skill": {
+    "skill_id": "replace_me_skill",
+    "display_name": "待命名技能",
+    "one_star": "完整而可独立使用的一星效果。",
+    "two_star": "改变目标范围、时机、安全或协同的职责扩展。",
+    "three_star": "产生可被玩家复述的技能质变。",
+    "timing": "说明玩家看到什么信号时释放。",
+    "weakness": "说明无效目标、空窗或机会成本。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_2_1",
+    "research_seconds": 5,
+    "duplicate_fragments": 15
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_2",
+      "demand": "安全展示角色动词的单一需求。",
+      "feedback": "世界内可见的成功反馈。",
+      "fallbacks": ["sonic"]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_3",
+      "demand": "把新需求与已学机制组合。",
+      "feedback": "组合成功的可见反馈。",
+      "fallbacks": ["armored", "assault"]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "新角色是最干净但不是唯一的答案。",
+      "feedback": "高光结果和贡献证明。",
+      "fallbacks": ["rocket", "sonic"]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss 重组此前需求，不硬锁抽取。",
+      "feedback": "Boss 机制被软克制的复盘证据。",
+      "fallbacks": ["armored", "rocket", "repair"]
+    }
+  },
+  "narrative": {
+    "origin": "研究所如何截获并重构该设计。",
+    "silhouette": "844×390 下仍可辨认的形状与动作。",
+    "battle_sound": "不依赖画面也能理解的技能声音。",
+    "alliance_response": "敌人为何制造对应反制关卡。"
+  },
+  "nearest_peers": ["rocket", "sonic"],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "target",
+    "player_desirability": "unknown"
+  }
+}

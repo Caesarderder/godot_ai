@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "archetype_id": "magnetic",
+  "display_name": "磁轨牵引马桶人",
+  "rating": "A",
+  "class_id": "ranger",
+  "branch": "flying",
+  "faction": "远程轰炸",
+  "tactical_verb": "聚拢",
+  "player_promise": "当分散守军形成交叉火力时，玩家释放磁轨牵引完成聚拢，为范围爆发制造一次肉眼可见的歼灭窗口。",
+  "base_stats": {
+    "hp": 130,
+    "attack": 24,
+    "defense": 21,
+    "speed_milli": 112000,
+    "crit_bp": 1150
+  },
+  "active_skill": {
+    "skill_id": "magnetic_convergence",
+    "display_name": "磁轨坍缩",
+    "one_star": "牵引当前阶段至多两名非Boss守军到同一路线，造成1.2倍攻击并减速4秒。",
+    "two_star": "牵引扩展到当前阶段全部普通守军，并施加5秒聚磁标记，使范围伤害可以引爆标记。",
+    "three_star": "首个被标记目标倒下时触发一次坍缩冲击，伤害周围守军并返还自身30点能量。",
+    "timing": "两侧增援刚进入当前阶段、尚未形成交叉火力时释放。",
+    "weakness": "不能移动Boss和固定结构；敌人已经聚集或只剩单体时收益明显下降。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_2_1",
+    "research_seconds": 5,
+    "duplicate_fragments": 15
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_2",
+      "demand": "三名低伤音箱兵从左右路线分散入场，单体伤害不致命，但会拖长清场时间。",
+      "feedback": "牵引轨迹、路线汇聚标记和一次集中爆炸同时出现；结算记录聚拢目标数。",
+      "fallbacks": ["sonic"]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_3",
+      "demand": "分散守军保护一座能量干扰塔，要求先聚拢守军再用冲锋或自爆处理。",
+      "feedback": "聚磁标记被范围技能引爆，界面显示由哪名队友完成连携。",
+      "fallbacks": ["armored", "assault"]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "两轮侧翼增援交替出现；磁轨可以压缩清场窗口，但音波控制或火箭远程也能稳定处理。",
+      "feedback": "结算对比交叉火力持续时间与聚拢后歼灭数量。",
+      "fallbacks": ["rocket", "sonic"]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss 外围电池周期召唤分散护卫；聚拢可为爆发队创造核心输出窗口，但不能直接控制Boss。",
+      "feedback": "护卫被聚拢消灭后，核心暴露计时延长并在战报标记为磁轨协同。",
+      "fallbacks": ["armored", "rocket", "repair"]
+    }
+  },
+  "narrative": {
+    "origin": "研究所从联盟磁悬浮运输轨道截获牵引线圈，把原本搬运炮弹的装置改造成空中控场马桶人。",
+    "silhouette": "马桶两侧悬浮一对向内弯曲的金色轨圈，施法时轨圈闭合成清晰的钳形轮廓。",
+    "battle_sound": "先是左右分离的低频嗡鸣，聚拢瞬间合成一声短促金属坍缩音。",
+    "alliance_response": "联盟发现密集队形会被连锁引爆，后续部署锚定精英和不可牵引结构迫使玩家混编。"
+  },
+  "nearest_peers": ["rocket", "sonic"],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "target",
+    "player_desirability": "unknown"
+  }
+}

@@ -1808,10 +1808,10 @@ func _show_blueprints() -> void:
 func _blueprint_view() -> Dictionary:
 	var state: RefCounted = game.current_state()
 	var branches := {
-		"ordinary": {"title": "突击枝", "recipes": ["ordinary.assault", "ordinary.sonic"]},
-		"heavy": {"title": "重装枝", "recipes": ["heavy.armored", "heavy.saw"]},
-		"flying": {"title": "飞行枝", "recipes": ["flying.rocket", "flying.bomber"]},
-		"special": {"title": "支援枝", "recipes": ["special.repair", "special.parasite"]},
+		"ordinary": {"title": "突击枝", "summary": "突破与控场，两条独立研发路线", "recipes": ["ordinary.assault", "ordinary.sonic"]},
+		"heavy": {"title": "重装枝", "summary": "承压与斩杀，两条独立研发路线", "recipes": ["heavy.armored", "heavy.saw"]},
+		"flying": {"title": "飞行枝", "summary": "拆城与爆发，两条独立研发路线", "recipes": ["flying.rocket", "flying.bomber"]},
+		"special": {"title": "支援枝", "summary": "续航与牵制，两条独立研发路线", "recipes": ["special.repair", "special.parasite"]},
 	}
 	var branch_data := branches.get(blueprint_branch, branches["ordinary"]) as Dictionary
 	var nodes: Array[Dictionary] = []
@@ -1824,11 +1824,23 @@ func _blueprint_view() -> Dictionary:
 		var available := bool(state.factory.discovered_blueprints.get(recipe_id, false))
 		var is_researching := String(active_research.get("recipe_id", "")) == recipe_id
 		var ready := is_researching and now >= FactoryService.blueprint_research_completes_at(active_research)
+		var archetype_id := String(recipe.get("archetype_id", ""))
+		var archetype := FactoryCatalog.archetype(archetype_id)
+		var skill_view := ActiveSkillCatalog.view(
+			FactoryCatalog.active_skill_for_archetype(archetype_id)
+		)
 		var node := {
 			"recipe_id": recipe_id,
 			"display_name": String(recipe.get("display_name", recipe_id)),
+			"rating": String(recipe.get("rating", "B")),
+			"faction": FactionCatalog.faction_for(archetype_id),
+			"role_copy": String(skill_view.get("role_copy", archetype.get("role", ""))),
+			"one_star_value": String(skill_view.get("effect_copy", "拥有完整主动技能")).get_slice("；", 0),
+			"two_star_effect": FactionCatalog.next_star_effect(archetype_id, 2),
+			"three_star_effect": FactionCatalog.next_star_effect(archetype_id, 3),
+			"unlock_source": _blueprint_unlock_source(recipe_id),
 			"status_id": "locked",
-			"status_copy": "前置节点尚未开放",
+			"status_copy": "尚未获得该型号图纸",
 			"action_id": "",
 			"action_label": "",
 			"action_name": "",
@@ -1858,6 +1870,7 @@ func _blueprint_view() -> Dictionary:
 	return {
 		"branch": blueprint_branch,
 		"branch_title": String(branch_data.get("title", "研究分支")),
+		"branch_summary": String(branch_data.get("summary", "比较职责与成长质变")),
 		"core_status": (
 			"选择已获得的设计图纸 · 研发完成后永久角色入列"
 			if not state.factory.discovered_blueprints.is_empty()
@@ -1869,6 +1882,16 @@ func _blueprint_view() -> Dictionary:
 		"reduced_motion": bool(settings_store.reduced_motion),
 		"nodes": nodes,
 	}
+
+
+func _blueprint_unlock_source(recipe_id: String) -> String:
+	var sources := {
+		"ordinary.assault": "1-2 首通或信号招募",
+		"heavy.armored": "1-3 首通或信号招募",
+		"flying.bomber": "2-5 首通或信号招募",
+		"heavy.saw": "3-5 首通或信号招募",
+	}
+	return String(sources.get(recipe_id, "信号招募"))
 
 
 func _on_blueprint_action_requested(action_id: String, payload: Dictionary) -> void:

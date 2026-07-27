@@ -99,20 +99,14 @@ func _apply_view() -> void:
 	if showing_results:
 		call_deferred("_animate_results")
 	branch_row.name = "BlueprintBranchRow_%s" % selected
-	branch_heading.text = String(_view.get("branch_title", "研究分支"))
+	branch_heading.text = "%s · %s" % [
+		String(_view.get("branch_title", "研究分支")),
+		String(_view.get("branch_summary", "比较职责与成长质变")),
+	]
 	_clear_children(node_row)
 	var nodes := _view.get("nodes", []) as Array
-	for node_index in nodes.size():
-		if node_index > 0:
-			var arrow := Label.new()
-			arrow.custom_minimum_size = Vector2(24, 48)
-			arrow.text = "→"
-			arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			arrow.add_theme_font_override("font", CJK_FONT)
-			arrow.add_theme_font_size_override("font_size", 22)
-			arrow.add_theme_color_override("font_color", MUTED)
-			node_row.add_child(arrow)
-		node_row.add_child(_build_node(nodes[node_index] as Dictionary))
+	for node_value in nodes:
+		node_row.add_child(_build_node(node_value as Dictionary))
 
 
 func _build_result_card(view: Dictionary) -> PanelContainer:
@@ -184,33 +178,60 @@ func _animate_results() -> void:
 func _build_node(view: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "BlueprintNode_%s" % String(view.get("recipe_id", "")).replace(".", "_")
-	card.custom_minimum_size = Vector2(260, 104)
+	card.custom_minimum_size = Vector2(286, 104)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override("panel", _panel_style(PANEL_2))
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 9)
-	margin.add_theme_constant_override("margin_top", 7)
-	margin.add_theme_constant_override("margin_right", 9)
-	margin.add_theme_constant_override("margin_bottom", 7)
+	margin.add_theme_constant_override("margin_left", 6)
+	margin.add_theme_constant_override("margin_top", 3)
+	margin.add_theme_constant_override("margin_right", 6)
+	margin.add_theme_constant_override("margin_bottom", 3)
 	card.add_child(margin)
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 5)
+	content.add_theme_constant_override("separation", 1)
 	margin.add_child(content)
 	var heading := Label.new()
 	heading.text = String(view.get("display_name", "未知蓝图"))
 	heading.add_theme_font_override("font", CJK_FONT)
-	heading.add_theme_font_size_override("font_size", 15)
+	heading.add_theme_font_size_override("font_size", 13)
 	heading.add_theme_color_override("font_color", CYAN)
 	content.add_child(heading)
+	var identity := Label.new()
+	identity.text = "%s级 · %s · %s" % [
+		String(view.get("rating", "B")),
+		String(view.get("faction", "独立战术")),
+		String(view.get("role_copy", "职责待确认")),
+	]
+	identity.add_theme_font_override("font", CJK_FONT)
+	identity.add_theme_font_size_override("font_size", 10)
+	identity.add_theme_color_override("font_color", GOLD)
+	identity.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(identity)
+	var growth := Label.new()
+	growth.text = "1★ %s · 2★ %s → 3★ %s" % [
+		String(view.get("one_star_value", "拥有完整主动技能")),
+		String(view.get("two_star_effect", "职责强化")),
+		String(view.get("three_star_effect", "技能质变")),
+	]
+	growth.add_theme_font_override("font", CJK_FONT)
+	growth.add_theme_font_size_override("font_size", 9)
+	growth.add_theme_color_override("font_color", TEXT)
+	growth.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(growth)
 	var status := Label.new()
-	status.text = String(view.get("status_copy", ""))
+	status.text = "%s · 来源：%s" % [
+		String(view.get("status_copy", "")),
+		String(view.get("unlock_source", "信号招募")),
+	]
 	status.add_theme_font_override("font", CJK_FONT)
-	status.add_theme_font_size_override("font_size", 12)
+	status.add_theme_font_size_override("font_size", 9)
 	status.add_theme_color_override("font_color", _status_color(String(view.get("status_id", "locked"))))
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(status)
 	var action_id := String(view.get("action_id", ""))
 	if not action_id.is_empty():
 		var button := _button(String(view.get("action_label", "继续")), true)
+		button.custom_minimum_size.y = 32
 		button.name = String(view.get("action_name", "BlueprintNodeAction"))
 		button.disabled = bool(view.get("disabled", false))
 		button.pressed.connect(action_requested.emit.bind(action_id, {

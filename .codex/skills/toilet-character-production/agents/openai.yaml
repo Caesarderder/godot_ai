@@ -1,0 +1,4 @@
+interface:
+  display_name: "马桶人角色制作"
+  short_description: "基于当前战力、玩法、剧情与关卡事实设计并验证新角色"
+  default_prompt: "使用 $toilet-character-production 基于当前游戏数值与关卡，为我设计一个平衡、有高光时刻且可持续投放的新马桶人角色。"

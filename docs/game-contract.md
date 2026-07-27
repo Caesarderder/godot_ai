@@ -1,13 +1,13 @@
 ---
 contract_version: 9
 project_id: toilet-factory-siege
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 km_id: reference.game-contract
 km_type: reference
 domain: product
 status: active
 owner: maintainers
-last_verified: 2026-07-27
+last_verified: 2026-07-28
 source_of_truth:
   - docs/references/product-design/skibidi-toilet-idle-siege-gdd.md
   - docs/references/product-design/game-state-measurement-framework.md
@@ -52,9 +52,9 @@ related:
 - owner: game-design
 - status: accepted
 - accepted_intent: 每名核心马桶人永久拥有；等级提供稳定数值成长，星级解锁主动技能、被动技能、技能质变与一个工厂专长。战斗失败不降低永久角色状态。
-- acceptance_criteria: 角色拥有稳定 hero_id、level、star、xp、B/A/S 评级和技能解锁状态；军团图鉴展示全部角色及“未获图纸、图纸待研发、已研发入列”状态。等级升级要求该角色达到战斗经验阈值并消耗金币；升星统一消耗军团数据；技能研究消耗金币与军团数据并受研究所等级门槛约束。角色成长不得消耗工业材料。
-- implementation_reference: project-a/game/scripts/state/hero_state.gd, project-a/game/scripts/domain/progression/hero_progression.gd, project-a/game/scripts/domain/factory/logistics_service.gd, project-a/game/scripts/domain/progression/combat_power.gd
-- verification_evidence: project-a/tools/run_balance_tests.gd, project-a/tools/run_slg_loop_tests.gd
+- acceptance_criteria: 角色拥有稳定 hero_id、level、star、xp、B/A/S 评级和技能解锁状态；军团图鉴与科技树展示全部角色及“未获图纸、图纸待研发、已研发入列”状态，并明确评级、阵营、职责、1★完整价值、2★/3★质变和图纸来源。等级升级要求该角色达到战斗经验阈值并消耗金币；升星只消耗该型号专属碎片；技能研究消耗金币与军团数据并受研究所等级门槛约束。角色成长不得消耗工业材料。
+- implementation_reference: project-a/game/scripts/state/hero_state.gd, project-a/game/scripts/domain/progression/hero_progression.gd, project-a/game/scripts/domain/factory/logistics_service.gd, project-a/game/scripts/domain/progression/combat_power.gd, project-a/game/scripts/ui/blueprint_screen.gd, .codex/skills/toilet-character-production/SKILL.md
+- verification_evidence: project-a/tools/run_balance_tests.gd, project-a/tools/run_slg_loop_tests.gd, project-a/tools/run_blueprint_screen_tests.gd, .codex/skills/toilet-character-production/scripts/test_character_design.py
 - conflict_references: project-a/game/scripts/state/hero_state.gd, project-a/game/scripts/state/factory_state.gd
 - handoffs: GC-003, GC-004
 - handoff_from: game-design
@@ -63,8 +63,8 @@ related:
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
 - deviation: 永久身份、统一等级成长、二至三星节点、稳定技能解锁 ID、主动技能三级研究与工厂专长派驻已接通；
-  战役与招募已统一使用单调角色索引分配，交错解锁不会复用 hero ID。完整 25 关经济可达性与真人理解仍待验证。
-- last_updated: 2026-07-26
+  战役与招募已统一使用单调角色索引分配，交错解锁不会复用 hero ID。2026-07-28 科技树删除错误前置箭头并补齐评级、阵营、职责、星级质变与来源；持续新增角色改由仓库 Skill 按当前代码事实和关卡替代路线校验。完整 25 关真人理解仍待验证。
+- last_updated: 2026-07-28
 - last_verified: —
 
 ## GC-003: 工厂后勤与设施

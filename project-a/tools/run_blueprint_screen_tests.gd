@@ -20,6 +20,7 @@ func _run() -> void:
 	screen.call("configure", {
 		"branch": "ordinary",
 		"branch_title": "突击枝",
+		"branch_summary": "突破与控场，两条独立研发路线",
 		"core_status": "首败信号已解析 · 选择两条基础树枝",
 		"breakthrough": {
 			"claimable": true,
@@ -30,6 +31,13 @@ func _run() -> void:
 			{
 				"recipe_id": "ordinary.assault",
 				"display_name": "冲锋蓝图",
+				"rating": "B",
+				"faction": "快攻破城",
+				"role_copy": "前线突破",
+				"one_star_value": "重击最近守军",
+				"two_star_effect": "突进顺劈多个目标",
+				"three_star_effect": "高倍率冲击并震慑",
+				"unlock_source": "1-2 首通或信号招募",
 				"status_id": "available",
 				"status_copy": "免费研发 · 仅耗时5秒 · 长期资源保持不变",
 				"action_id": "start_research",
@@ -40,8 +48,15 @@ func _run() -> void:
 			{
 				"recipe_id": "ordinary.sonic",
 				"display_name": "音波蓝图",
+				"rating": "A",
+				"faction": "干扰增殖",
+				"role_copy": "群体控制",
+				"one_star_value": "伤害并削弱同路守军",
+				"two_star_effect": "虚弱覆盖跨线目标",
+				"three_star_effect": "控制并处决普通守军",
+				"unlock_source": "信号招募",
 				"status_id": "locked",
-				"status_copy": "前置节点尚未开放",
+				"status_copy": "尚未获得该型号图纸",
 				"action_id": "",
 			},
 		],
@@ -61,6 +76,10 @@ func _run() -> void:
 		"research screen leaves the four persistent balances to the App Shell top bar"
 	)
 	_check(_collect_text(screen).contains("长期资源保持不变"), "available blueprint node repeats the zero-cost boundary beside its CTA")
+	_check(_collect_text(screen).contains("两条独立研发路线"), "branch copy does not imply a false prerequisite chain")
+	_check(_collect_text(screen).contains("1★ 重击最近守军"), "node explains the complete one-star role")
+	_check(_collect_text(screen).contains("2★ 突进顺劈多个目标"), "node exposes the next qualitative star breakpoint")
+	_check(_collect_text(screen).contains("来源：1-2 首通或信号招募"), "node exposes its acquisition route")
 	var requested := {"id": "", "recipe_id": ""}
 	screen.connect("action_requested", func(id: String, payload: Dictionary) -> void:
 		requested["id"] = id

@@ -31,7 +31,7 @@ const _ARCHETYPES: Dictionary = {
 		"display_name": "音波马桶人",
 		"role": "crowd_control",
 		"active_skill": "sonic_disruptor",
-		"description": "用音波压制守军火力，2星延长虚弱，3星扩展到全线。",
+		"description": "用音波压制守军火力，2星把虚弱扩展到全线，3星追加短暂眩晕。",
 	},
 	"rocket": {
 		"display_name": "火箭飞行马桶人",
@@ -43,7 +43,7 @@ const _ARCHETYPES: Dictionary = {
 		"display_name": "自爆飞行马桶人",
 		"role": "burst_sacrifice",
 		"active_skill": "suicide_dive",
-		"description": "对当前目标造成爆发冲击，2星波及同阶段目标，3星保留残血撤离。",
+		"description": "对当前目标造成爆发冲击，2星波及同阶段目标，3星俯冲不再自损。",
 	},
 	"armored": {
 		"display_name": "装甲冲城马桶人",
