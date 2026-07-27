@@ -326,6 +326,22 @@ Web 集成还必须证明导出包的 Canvas 真正接收键盘事件：在标�
 headless `FileAccess` 失败测试代替真实 Web 结论。测试工具属于 `tools/`，继续由 Web preset 排除，
 不新增 Autoload、运行时服务或遥测字段。
 
+### Web 候选冻结与回滚合同
+
+`build/web` 是当前候选工作目录，不是回滚历史。每次准备交付前必须从通过审计的 clean HEAD
+候选生成独立确定性归档，满足：
+
+- 归档内只有 `web/` 下已审计的发布文件，不包含源码、凭据、编辑器 sidecar 或绝对路径；
+- 回滚 manifest 绑定完整 revision、产品版本、Godot 版本、归档 SHA256 与每个文件的字节数和
+  SHA256；同一候选连续打包必须字节完全一致；
+- 解包演练拒绝绝对路径、`..`、链接和非普通文件，写入临时目录后逐文件复核，再对恢复目录执行
+  同一 `release_audit.py`；演练不得覆盖当前 `build/web`；
+- 本地触发条件为候选启动失败、PWA 缓存升级后白屏、存档 schema/生产来源身份异常、关键流程
+  smoke 失败或错误率超过生产批准阈值。生产阈值、监控来源、具名事故负责人、CDN/托管版本切换
+  与恢复时限必须由最终托管环境补齐，本地归档不能冒充 `HOSTING_VERIFIED`；
+- 回滚只切换静态候选，不降级或改写玩家存档。若新版本已写入不可逆 schema，必须先证明旧版本
+  能读取该 schema；否则停止流量而不是盲目回滚。
+
 当前八个马桶人 GLB 均由 `game/scenes/actors/ally_models/*_model.tscn` 包装，
 `ToiletUnitView` 只 preload wrapper。`artifacts/` 与 runtime 路径的反向搜索为空。
 

@@ -20,6 +20,6 @@
     "Chrome Android and Safari iOS real-device smoke",
     "production-origin persistence behavior",
     "final legal/IP/asset-license review",
-    "monitoring and rollback rehearsal"
+    "production monitoring thresholds, named incident owner, and hosting rollback rehearsal"
   ]
 }

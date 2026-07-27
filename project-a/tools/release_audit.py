@@ -26,6 +26,7 @@ REQUIRED_RELEASE_FILES = [
     "PRIVACY.md",
     "FAN-CONTENT-NOTICE.md",
     "RELEASE_CHECKLIST.md",
+    "ROLLBACK.md",
     "version.json",
     "offline.html",
     "web-icon.svg",
@@ -85,7 +86,7 @@ EXTERNAL_BLOCKERS = [
     "Chrome Android and Safari iOS real-device smoke were not tested.",
     "Production-origin persistence was not tested; local Chrome private-context and fully blocked IndexedDB behavior are covered separately.",
     "Final legal/IP/store review is still required.",
-    "Monitoring and rollback rehearsal are still required.",
+    "Production monitoring thresholds, a named incident owner, and hosting rollback rehearsal are still required.",
 ]
 
 

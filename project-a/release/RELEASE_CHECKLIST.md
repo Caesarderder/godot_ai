@@ -71,4 +71,7 @@ State labels:
   `BaseButton / Slider / LineEdit / TextEdit`; `ui-settings-slider-focus-844x390.png` proves the Slider
   keyboard/gamepad highlight in a Compatibility render.
 - [ ] Final legal review for font notice, fan-content/IP risk, store copy, and every asset license.
-- [ ] Monitoring, incident owner, rollback artifact, rollback trigger, and rollback rehearsal.
+- [ ] A deterministic local rollback artifact is bound to the final clean candidate and passes isolated restore,
+  full-file SHA256 comparison, and `release_audit.py`.
+- [ ] Production monitoring thresholds, named incident owner, hosting/CDN rollback operation, and production-origin
+  rollback rehearsal.
