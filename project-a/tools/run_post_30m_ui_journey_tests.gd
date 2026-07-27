@@ -141,6 +141,47 @@ func _run() -> void:
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_2_4", "pressure-test action focuses the exact 2-4 encounter")
 	state.attempt_counters["stage_2_4"] = 1
+	main.set("last_battle_runtime_result", {
+		"ticks": 430,
+		"stage_reached": 2,
+		"structures_destroyed": 3,
+		"enemies_defeated": 8,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 620},
+		"speaker_echo_impact_count": 2,
+		"speaker_echo_damage_dealt": 72,
+		"resonance_pulse_count": 12,
+		"resonance_energy_drained": 594,
+	})
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "defeat",
+			"stage_id": "stage_2_4",
+			"next_stage_id": "stage_2_4",
+			"reward": {"gold": 0},
+		},
+	})
+	main.call("_show_result")
+	await _wait_frames(4)
+	_check(
+		_tree_has_text(main, "成长墙确认")
+			and _tree_has_text(main, "2★将解锁"),
+		"one-star probe result turns the actual failed run into a named qualitative growth reason"
+	)
+	var result_growth := main.find_child("PrimaryAction", true, false) as Button
+	_check(
+		result_growth != null and result_growth.text.contains("升至2★"),
+		"one-star probe result exposes the exact faction-core star action instead of generic cultivation"
+	)
+	if result_growth != null:
+		result_growth.pressed.emit()
+		await _wait_frames(4)
+	_check(
+		String(main.get("legion_tab")) == "roster"
+			and String(main.get("legion_selected_hero_id")) == hero_id,
+		"probe-result action lands on the exact durable faction hero"
+	)
 	main.call("_show_goals")
 	await _wait_frames(4)
 	_check(_tree_has_text(main, "专属碎片升至2★"), "the first 2-4 attempt converts experienced pressure into the qualitative star goal")

@@ -2640,6 +2640,18 @@ func _show_result() -> void:
 			hurdle_proof = _boss_mastery_proof_copy(last_battle_runtime_result)
 	var next_stage_id := String(event.get("next_stage_id", ""))
 	var onboarding := OnboardingService.snapshot(game.current_state())
+	var campaign_objective := CampaignObjectiveProjection.derive(
+		game.current_state(),
+		onboarding
+	)
+	var faction_result_hierarchy := (
+		campaign_objective.get("hierarchy", {}) as Dictionary
+	)
+	var has_faction_result_action := (
+		cleared_stage_id in ["stage_2_4", "stage_2_5"]
+		and String(faction_result_hierarchy.get("archetype_id", "")) != ""
+		and String(faction_result_hierarchy.get("target", "")) in ["map", "legion"]
+	)
 	var qualification := ""
 	var primary_label := ""
 	var primary_action := ""
@@ -2656,6 +2668,24 @@ func _show_result() -> void:
 		qualification = _chapter_one_unlock_copy(next_stage_id)
 		primary_label = "领取阵营起手十连"
 		primary_action = "faction_recruit"
+	elif has_faction_result_action:
+		qualification = String(
+			(faction_result_hierarchy.get("hurdle", {}) as Dictionary).get(
+				"recovery",
+				"根据本局事实继续阵营成长。"
+			)
+		)
+		primary_label = String(faction_result_hierarchy.get("cta_label", "继续阵营成长"))
+		if String(faction_result_hierarchy.get("target", "")) == "legion":
+			primary_action = "faction_growth"
+			primary_payload = {
+				"hero_id": String(faction_result_hierarchy.get("hero_id", "")),
+			}
+		else:
+			primary_action = "map_stage"
+			primary_payload = {
+				"stage_id": String(faction_result_hierarchy.get("stage_id", next_stage_id)),
+			}
 	elif chapter_boss_complete and not next_stage_id.is_empty():
 		var next_stage := StageCatalog.stage(next_stage_id)
 		qualification = _chapter_transition_copy(completed_chapter, next_stage)
@@ -2756,6 +2786,10 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 			_open_research_lab()
 		"legion":
 			_show_legion()
+		"faction_growth":
+			legion_selected_hero_id = String(payload.get("hero_id", ""))
+			legion_tab = "roster"
+			_show_legion()
 		"faction_recruit":
 			legion_tab = "recruit"
 			_show_legion()
@@ -2854,10 +2888,20 @@ func _faction_mastery_proof_copy(
 			break
 	if (
 		hero == null
-		or int(hero.star) < 2
 		or not (runtime_result.get("deployed_unit_ids", []) as Array).has(String(hero.hero_id))
 	):
 		return ""
+	if int(hero.star) < 2:
+		if outcome == "victory":
+			return "压力测试 · 1★%s已突破%s；保持当前星级，继续确认真正的后段墙。" % [
+				String(hero.display_name),
+				String(StageCatalog.stage(stage_id).get("display_name", stage_id)),
+			]
+		return "成长墙确认 · 1★%s推进至第%d战线 · 2★将解锁：%s" % [
+			String(hero.display_name),
+			int(runtime_result.get("stage_reached", 0)) + 1,
+			FactionCatalog.next_star_effect(archetype_id, 2),
+		]
 	var metric := {
 		"assault": ["assault_cleave_extra_hits", "顺劈额外命中"],
 		"sonic": ["sonic_cross_lane_extra_targets", "跨线虚弱额外覆盖"],

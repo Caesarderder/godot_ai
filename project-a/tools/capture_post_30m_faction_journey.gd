@@ -112,11 +112,34 @@ func _capture() -> void:
 	await _wait_frames(5)
 	state = game.current_state()
 	state.attempt_counters["stage_2_4"] = 1
-	main.call("_show_goals")
-	await _wait_frames(4)
-	var star_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	main.set("last_battle_runtime_result", {
+		"ticks": 430,
+		"stage_reached": 2,
+		"structures_destroyed": 3,
+		"enemies_defeated": 8,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 620},
+		"speaker_echo_impact_count": 2,
+		"speaker_echo_damage_dealt": 72,
+		"resonance_pulse_count": 12,
+		"resonance_energy_drained": 594,
+	})
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "defeat",
+			"stage_id": "stage_2_4",
+			"next_stage_id": "stage_2_4",
+			"reward": {"gold": 0},
+		},
+	})
+	main.call("_show_result")
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-wall-debrief-844x390.png"):
+		return
+	var star_cta := main.find_child("PrimaryAction", true, false) as Button
 	if star_cta == null or not star_cta.text.contains("升至2★"):
-		_fail("faction star goal unavailable")
+		_fail("faction result star goal unavailable")
 		return
 	star_cta.pressed.emit()
 	await _wait_frames(8)
