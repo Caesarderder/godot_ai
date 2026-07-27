@@ -394,6 +394,7 @@ func _recruit_panel() -> Control:
 				next_button.custom_minimum_size.y = 48
 				next_button.pressed.connect(action_requested.emit.bind(focus_action, {
 					"hero_id": String(focus.get("hero_id", "")),
+					"archetype_id": String(focus.get("archetype_id", "")),
 				}))
 				focus_card.add_child(next_button)
 			result_panel.add_child(focus_card)

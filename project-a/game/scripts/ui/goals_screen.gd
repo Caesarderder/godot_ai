@@ -204,6 +204,7 @@ func _goal_hierarchy(view: Dictionary) -> Control:
 			"target": String(view.get("target", "expedition")),
 			"stage_id": String(view.get("stage_id", "")),
 			"hero_id": String(view.get("hero_id", "")),
+			"archetype_id": String(view.get("archetype_id", "")),
 		}))
 		panel.add_child(cta)
 	return panel

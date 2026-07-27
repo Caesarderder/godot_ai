@@ -21,11 +21,12 @@ func _run() -> void:
 	_check(_tree_has_text(goals, "小目标 · 完成 1-4 首次挑战"), "small executable goal remains visible")
 	_check(_tree_has_text(goals, "大坎 · 1-4 灰镜高墙"), "hurdle scale and identity are explicit")
 	_check(_tree_has_text(goals, "过坎：完成首战后用保障币建研究所"), "recovery path is explicit")
-	var action_request := {"id": "", "stage_id": "", "hero_id": ""}
+	var action_request := {"id": "", "stage_id": "", "hero_id": "", "archetype_id": ""}
 	goals.connect("action_requested", func(action_id: String, payload: Dictionary) -> void:
 		action_request["id"] = action_id
 		action_request["stage_id"] = String(payload.get("stage_id", ""))
 		action_request["hero_id"] = String(payload.get("hero_id", ""))
+		action_request["archetype_id"] = String(payload.get("archetype_id", ""))
 	)
 	var cta := goals.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
 	if cta != null:
@@ -41,6 +42,7 @@ func _run() -> void:
 		"target": "legion",
 		"stage_id": "stage_2_4",
 		"hero_id": "hero_faction_rocket",
+		"archetype_id": "rocket",
 	}, true)
 	goals.call("configure", faction_view)
 	await process_frame
@@ -48,6 +50,7 @@ func _run() -> void:
 	if faction_cta != null:
 		faction_cta.pressed.emit()
 	_check(action_request["hero_id"] == "hero_faction_rocket", "faction CTA preserves the exact hero for roster focus")
+	_check(action_request["archetype_id"] == "rocket", "faction CTA preserves the exact archetype for blueprint focus")
 	goals.call("configure", _action_view())
 	await process_frame
 	var rookie_gift := goals.find_child("StarterGift_rookie_departure_v1", true, false) as Button

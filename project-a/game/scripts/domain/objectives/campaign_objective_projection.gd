@@ -138,7 +138,7 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 		phase = "research"
 		small = "把%s图纸研发为永久角色" % role_name
 		cta_label = "研发%s" % role_name
-		target = "research"
+		target = "blueprints"
 		hurdle_title = "图纸还不是角色"
 		hurdle_reason = "抽取获得的是永久设计资格，需要在研究所完成实体化。"
 		recovery = "研究所已建成；启动并领取5秒研发，不消耗抽卡资源。"
@@ -207,6 +207,7 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 		"target": target,
 		"stage_id": stage_id,
 		"hero_id": hero_id,
+		"archetype_id": archetype_id,
 	}
 	return {
 		"active": true,
@@ -228,6 +229,7 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			"target": target,
 			"stage_id": stage_id,
 			"hero_id": hero_id,
+			"archetype_id": archetype_id,
 			"progress": 0,
 			"target_value": 1,
 			"completed": false,

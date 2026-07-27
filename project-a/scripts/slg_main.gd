@@ -1009,7 +1009,8 @@ func _on_factory_action_requested(action_id: String, payload: Dictionary) -> voi
 			_follow_task(
 				String(payload.get("target", "map")),
 				String(payload.get("stage_id", "")),
-				String(payload.get("hero_id", ""))
+				String(payload.get("hero_id", "")),
+				String(payload.get("archetype_id", ""))
 			)
 		"intelligence":
 			_show_intelligence()
@@ -1767,7 +1768,7 @@ func _on_legion_action_requested(action_id: String, payload: Dictionary) -> void
 		"claim_foundational_signal":
 			_claim_faction_signal()
 		"open_research":
-			_open_research_lab()
+			_open_blueprint_for_archetype(String(payload.get("archetype_id", "")))
 		"focus_growth":
 			legion_selected_hero_id = String(payload.get("hero_id", ""))
 			legion_tab = "roster"
@@ -1934,6 +1935,7 @@ func _claim_foundational_blueprint() -> void:
 	var result := _command("claim_blueprint_research", {"now_unix": int(Time.get_unix_time_from_system())})
 	if bool(result.get("ok", false)):
 		var hero_id := String((result.get("event", {}) as Dictionary).get("hero_id", ""))
+		legion_tab = "formation"
 		formation_edit_slot = "troop_1"
 		for slot_id in ["troop_1", "troop_2", "troop_3", "troop_4", "troop_5"]:
 			if String(game.current_state().formation.slots.get(slot_id, "")).is_empty():
@@ -2151,7 +2153,8 @@ func _on_goals_action_requested(action_id: String, payload: Dictionary) -> void:
 			_follow_task(
 				String(payload.get("target", "expedition")),
 				String(payload.get("stage_id", "")),
-				String(payload.get("hero_id", ""))
+				String(payload.get("hero_id", "")),
+				String(payload.get("archetype_id", ""))
 			)
 		"open_map":
 			_show_map()
@@ -3187,7 +3190,12 @@ func _signal_recruit(count: int) -> void:
 		_notify(_error_copy(String(result.get("error", "招募失败"))))
 
 
-func _follow_task(target: String, stage_id: String = "", hero_id: String = "") -> void:
+func _follow_task(
+	target: String,
+	stage_id: String = "",
+	hero_id: String = "",
+	archetype_id: String = ""
+) -> void:
 	match target:
 		"factory", "repair":
 			_open_factory_task_context() if target == "factory" else _show_legion()
@@ -3203,6 +3211,8 @@ func _follow_task(target: String, stage_id: String = "", hero_id: String = "") -
 			_show_legion()
 		"research":
 			_open_research_lab()
+		"blueprints":
+			_open_blueprint_for_archetype(archetype_id)
 		"expedition":
 			if not stage_id.is_empty():
 				selected_stage_id = stage_id
@@ -3216,6 +3226,14 @@ func _follow_task(target: String, stage_id: String = "", hero_id: String = "") -
 			_show_map()
 		_:
 			_show_map()
+
+
+func _open_blueprint_for_archetype(archetype_id: String) -> void:
+	var recipe := FactoryCatalog.recipe_for_archetype(archetype_id)
+	var recipe_id := String(recipe.get("recipe_id", ""))
+	if not recipe_id.is_empty():
+		blueprint_branch = recipe_id.get_slice(".", 0)
+	_show_blueprints()
 
 
 func _open_factory_task_context() -> void:

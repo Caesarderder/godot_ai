@@ -109,7 +109,7 @@ func _test_faction_journey_projection() -> void:
 	var projection := CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	var hierarchy := projection.get("hierarchy", {}) as Dictionary
 	var task := projection.get("factory_task", {}) as Dictionary
-	_check(String(hierarchy.get("target", "")) == "research", "post-ten goal persists the selected core's research step")
+	_check(String(hierarchy.get("target", "")) == "blueprints", "post-ten goal opens the selected core's exact blueprint branch")
 	_check(String(hierarchy.get("medium", "")).contains(archetype_id) == false, "player-facing faction goal uses names rather than internal archetype ids")
 	_check(String(hierarchy.get("small", "")).contains("研发为永久角色"), "research step explains that a blueprint is not yet a hero")
 	_check(String(task.get("small", "")) == "", "factory task stays a compact action projection")
