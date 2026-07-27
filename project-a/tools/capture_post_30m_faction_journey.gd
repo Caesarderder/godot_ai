@@ -173,6 +173,8 @@ func _capture() -> void:
 		return
 	upgrade.pressed.emit()
 	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-level-two-handoff-844x390.png"):
+		return
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
@@ -194,6 +196,8 @@ func _capture() -> void:
 		return
 	upgrade.pressed.emit()
 	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-level-three-handoff-844x390.png"):
+		return
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	state.stage_progress["cleared_stages"].append("stage_2_5")

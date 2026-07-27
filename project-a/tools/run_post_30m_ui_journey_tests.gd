@@ -224,6 +224,16 @@ func _run() -> void:
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	_check(faction_hero != null and int(faction_hero.level) == 2, "level-two guidance applies the required 2-4 preparation")
+	_check(
+		String(main.get("goals_tab")) == "action"
+			and _tree_has_text(main, "2-4 双塔回响"),
+		"level-two success immediately hands the player to the exact battle validation"
+	)
+	var gate_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(
+		gate_cta != null and gate_cta.text.contains("2-4"),
+		"level-two success keeps one visible 2-4 continuation instead of stranding the player in roster"
+	)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_5"
 	faction_hero.xp = 120
@@ -243,9 +253,16 @@ func _run() -> void:
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	_check(faction_hero != null and int(faction_hero.level) == 3, "level-three guidance applies the required boss preparation")
-	main.call("_show_goals")
-	await _wait_frames(4)
-	_check(_tree_has_text(main, "击毁2-5核心"), "two-star level-three completion reveals the final chapter-two proof instead of losing the journey")
+	_check(
+		String(main.get("goals_tab")) == "action"
+			and _tree_has_text(main, "击毁2-5核心"),
+		"level-three success immediately reveals the final chapter-two proof instead of losing the journey"
+	)
+	var boss_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(
+		boss_cta != null and boss_cta.text.contains("2-5"),
+		"level-three success keeps one visible boss continuation instead of stranding the player in roster"
+	)
 	var proof_runtime := {
 		"deployed_unit_ids": [hero_id],
 	}

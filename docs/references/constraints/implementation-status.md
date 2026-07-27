@@ -395,6 +395,10 @@ durable command receipt 恢复，刷新不再丢失；结果首屏显示阵营�
 不消耗工业材料，避免失败玩家在地图和泛化培养页之间循环。
 `ui-faction-level-two-goal-844x390.png` 与 `ui-faction-level-three-goal-844x390.png`
 证明两个可执行成长步骤及唯一 CTA 在 844×390 首屏完整可读。
+Lv2/Lv3 升级成功后不再停留在通用角色名册：App Shell 会重新读取 durable 阵营目标，将玩家
+直接交接到目标中心的 2-4/2-5 精确验证步骤，同时保留“角色已升级、战力提升”成功反馈。
+`ui-faction-level-two-handoff-844x390.png` 与 `ui-faction-level-three-handoff-844x390.png`
+证明成长结果、战术意义和下一场唯一 CTA 在同一首屏连续出现。
 BattleSession 现分别累计八种型号的 2★机制触发证据；2-4/2-5 结算按实际部署角色显示机制名称、
 次数与突破关系，`ui-faction-chapter-two-proof-844x390.png` 证明该因果反馈在小屏首屏可见。
 第二章共振已从不可见的统一后台扣能量改为 2-1→2-4 渐进机制：11/10/9/7 秒周期对应

@@ -3362,7 +3362,30 @@ func _confirm_facility_construction() -> void:
 
 
 func _upgrade_hero(hero_id: String) -> void:
-	_after_action(_command("upgrade_permanent_hero", {"hero_id": hero_id}), _show_legion)
+	var result := _command("upgrade_permanent_hero", {"hero_id": hero_id})
+	if not bool(result.get("ok", false)):
+		_notify(_error_copy(String(result.get("error", "操作失败"))))
+		return
+	var state: RefCounted = game.current_state()
+	var hierarchy := (
+		CampaignObjectiveProjection.derive(
+			state,
+			OnboardingService.snapshot(state)
+		).get("hierarchy", {})
+		as Dictionary
+	)
+	var next_stage_id := String(hierarchy.get("stage_id", ""))
+	var continues_faction_journey := (
+		String(hierarchy.get("hero_id", "")) == hero_id
+		and String(hierarchy.get("target", "")) == "map"
+		and next_stage_id in ["stage_2_4", "stage_2_5"]
+	)
+	if continues_faction_journey:
+		goals_tab = "action"
+		_show_goals()
+	else:
+		_show_legion()
+	_notify(_success_copy(result))
 
 
 func _upgrade_star(hero_id: String) -> void:
