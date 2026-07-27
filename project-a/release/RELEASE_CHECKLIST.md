@@ -9,16 +9,16 @@ State labels:
 
 ## Local source gate
 
-- [ ] Candidate revision is frozen and dirty state is recorded.
-- [ ] `project-a/project.godot` has no conflict markers and uses Godot 4.6.3 Compatibility/Web-safe settings.
-- [ ] `project-a/export_presets.cfg` has Web preset, single-thread export, release material include filter, PWA metadata, and no GDExtension support.
+- [x] Candidate revision is frozen and dirty state is recorded.
+- [x] `project-a/project.godot` has no conflict markers and uses Godot 4.6.3 Compatibility/Web-safe settings.
+- [x] `project-a/export_presets.cfg` has Web preset, single-thread export, release material include filter, PWA metadata, and no GDExtension support.
 - [ ] `project-a/release/LICENSES.md` reflects every shipped asset.
-- [ ] `run_font_coverage_tests.gd` proves every runtime ASCII/CJK/symbol codepoint exists in the shipped font.
-- [ ] `python3 tools/build_runtime_font_subset.py --inspect` matches the reviewed runtime character inventory;
+- [x] `run_font_coverage_tests.gd` proves every runtime ASCII/CJK/symbol codepoint exists in the shipped font.
+- [x] `python3 tools/build_runtime_font_subset.py --inspect` matches the reviewed runtime character inventory;
   any generated subset is built from the recorded upstream font with official `fonttools`, never by overwriting it.
-- [ ] `project-a/release/PRIVACY.md` reflects actual runtime data behavior.
+- [x] `project-a/release/PRIVACY.md` reflects actual local runtime data behavior; final hosting/provider behavior remains external.
 - [ ] `project-a/release/FAN-CONTENT-NOTICE.md` is reviewed for store/legal risk.
-- [ ] Headless tests pass:
+- [x] Headless tests pass:
   - `godot --headless --path project-a -s tools/run_meta_tests.gd`
   - `godot --headless --path project-a -s tools/run_battle_tests.gd`
   - `godot --headless --path project-a -s tools/run_lifecycle_tests.gd`
@@ -26,17 +26,17 @@ State labels:
 
 ## Local artifact gate
 
-- [ ] Candidate build command is recorded:
+- [x] Candidate build command is recorded:
   - `python3 project-a/tools/build_web_candidate.py`
-- [ ] Artifact files exist: `index.html`, `index.js`, `index.wasm`, `index.pck`.
-- [ ] Artifact sizes and SHA256 hashes are recorded.
-- [ ] `release-candidate.json` binds the clean source revision, Godot version, thread mode, full payload hashes, and matching second export.
-- [ ] No Godot editor/source sidecar such as `.import`, `.gd`, `.tscn`, `.tres`, or `.uid` ships.
-- [ ] The unused legacy `scripts/main.gd` App Shell remains available in source history but is excluded from the player Web package.
-- [ ] No unexpected threaded runtime `.worker.js` file exists; a Godot PWA `index.service.worker.js` is expected when PWA is enabled.
-- [ ] `index.html` declares `GODOT_THREADS_ENABLED = false`.
-- [ ] PWA manifest/service worker output is either present and inspected or explicitly marked unsupported for this candidate.
-- [ ] `python tools/release_audit.py --artifact-dir build/web` passes.
+- [x] Artifact files exist: `index.html`, `index.js`, `index.wasm`, `index.pck`.
+- [x] Artifact sizes and SHA256 hashes are recorded.
+- [x] `release-candidate.json` binds the clean source revision, Godot version, thread mode, full payload hashes, and matching second export.
+- [x] No Godot editor/source sidecar such as `.import`, `.gd`, `.tscn`, `.tres`, or `.uid` ships.
+- [x] The unused legacy `scripts/main.gd` App Shell remains available in source history but is excluded from the player Web package.
+- [x] No unexpected threaded runtime `.worker.js` file exists; a Godot PWA `index.service.worker.js` is expected when PWA is enabled.
+- [x] `index.html` declares `GODOT_THREADS_ENABLED = false`.
+- [x] PWA manifest/service worker output is present and inspected.
+- [x] `python tools/release_audit.py --artifact-dir build/web` passes.
 
 ## External evidence still required before public release
 
