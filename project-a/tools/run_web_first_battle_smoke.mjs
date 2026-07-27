@@ -240,6 +240,7 @@ async function finishActiveBattle(
 			const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
 			return save && completion(save) ? save : null;
 		}, settlementTimeoutMs, 400);
+		clearInterval(skillInput);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, evidenceName);
 		return { save: settledSave, skillTouches };
