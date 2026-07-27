@@ -289,13 +289,34 @@ func _formation_panel() -> Control:
 
 
 func _candidate_panel(slot_id: String) -> Control:
-	var panel := _panel("替换 %s · 比较职责与战力变化" % String(SLOT_NAMES.get(slot_id, slot_id)))
+	var slot_name := String(SLOT_NAMES.get(slot_id, slot_id))
+	var target_empty := _formation_slot_is_empty(slot_id)
+	var panel := _panel(
+		"%s为空 · 部署阵营核心" % slot_name
+		if target_empty
+		else "替换 %s · 比较职责与战力变化" % slot_name
+	)
 	panel.name = "FormationCandidatePanel"
+	if target_empty:
+		panel.add_child(_label(
+			"部署后形成%d人军团 · 下一步：用阵营核心完成3场实战证明" % (
+				_formation_deployed_count() + 1
+			),
+			11,
+			CYAN
+		))
 	var candidates := GridContainer.new()
 	candidates.columns = 3
 	candidates.add_theme_constant_override("h_separation", 6)
 	candidates.add_theme_constant_override("v_separation", 6)
+	var ordered_candidates: Array = []
 	for candidate_value in _view.get("candidates", []):
+		if bool((candidate_value as Dictionary).get("journey_focus", false)):
+			ordered_candidates.append(candidate_value)
+	for candidate_value in _view.get("candidates", []):
+		if not bool((candidate_value as Dictionary).get("journey_focus", false)):
+			ordered_candidates.append(candidate_value)
+	for candidate_value in ordered_candidates:
 		var candidate := candidate_value as Dictionary
 		var delta := int(candidate.get("power_delta", 0))
 		var current := bool(candidate.get("current", false))
@@ -322,9 +343,32 @@ func _candidate_panel(slot_id: String) -> Control:
 		}))
 		candidates.add_child(action)
 	panel.add_child(candidates)
-	if not bool((_view.get("first_formation", {}) as Dictionary).get("active", false)):
-		panel.add_child(_label("已在其他阵位的角色会与当前成员互换，不会丢失永久角色。", 11, MUTED))
+	if (
+		not target_empty
+		and not bool((_view.get("first_formation", {}) as Dictionary).get("active", false))
+	):
+		panel.add_child(_label(
+			"已在其他阵位的角色会与当前成员互换，不会丢失永久角色。",
+			11,
+			MUTED
+		))
 	return panel
+
+
+func _formation_slot_is_empty(slot_id: String) -> bool:
+	for slot_value in _view.get("formation", []):
+		var slot := slot_value as Dictionary
+		if String(slot.get("slot_id", "")) == slot_id:
+			return String(slot.get("hero_id", "")).is_empty()
+	return true
+
+
+func _formation_deployed_count() -> int:
+	var count := 0
+	for slot_value in _view.get("formation", []):
+		if not String((slot_value as Dictionary).get("hero_id", "")).is_empty():
+			count += 1
+	return count
 
 
 func _recruit_panel() -> Control:
@@ -698,8 +742,19 @@ func _focus_faction_candidate() -> void:
 		) as Button
 		if action != null and not action.disabled:
 			action.grab_focus()
+			var candidate_panel := content.find_child(
+				"FormationCandidatePanel",
+				true,
+				false
+			) as Control
 			scroll.scroll_vertical = clampi(
-				int(action.global_position.y - content.global_position.y) - 24,
+				int(
+					(
+						candidate_panel.global_position.y
+						if candidate_panel != null
+						else action.global_position.y
+					) - content.global_position.y
+				) - 4,
 				0,
 				int(scroll.get_v_scroll_bar().max_value)
 			)

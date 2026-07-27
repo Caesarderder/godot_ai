@@ -151,10 +151,26 @@ func _run() -> void:
 	var candidate := main.find_child("FormationCandidate_%s" % hero_id, true, false) as Button
 	_check(candidate != null and not candidate.disabled, "new faction hero is immediately visible as a formation candidate")
 	_check(candidate != null and candidate.text.contains("阵营核心"), "formation preserves the ten-pull core identity")
+	var candidate_panel := main.find_child("FormationCandidatePanel", true, false) as Control
+	_check(
+		candidate_panel != null
+			and _tree_has_text(candidate_panel, "后排 1为空 · 部署阵营核心")
+			and _tree_has_text(candidate_panel, "部署后形成4人军团")
+			and _tree_has_text(candidate_panel, "完成3场实战证明"),
+		"formation handoff keeps the target slot, immediate consequence, and next proof goal together"
+	)
 	var formation_scroll := main.find_child("LegionContentScroll_formation", true, false) as ScrollContainer
 	_check(
 		formation_scroll != null and formation_scroll.scroll_vertical > 0,
 		"research claim automatically reveals the new formation candidate"
+	)
+	_check(
+		candidate_panel != null
+			and candidate_panel.get_global_rect().position.y >= 130.0
+			and candidate != null
+			and candidate.get_global_rect().position.y >= 190.0
+			and candidate.get_global_rect().end.y <= 310.0,
+		"formation handoff shows its context and primary deployment action above navigation"
 	)
 	if candidate != null:
 		candidate.pressed.emit()
