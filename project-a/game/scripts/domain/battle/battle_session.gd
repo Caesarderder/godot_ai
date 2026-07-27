@@ -11,6 +11,7 @@ const TEAM_ENEMY: int = 1
 const STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地广场"]
 const ROAD_END: int = 1000
 const SKILL_COST: int = 100
+const BURST_WINDOW_TICKS: int = 10
 const CANNON_FUSE_TICKS: int = 7
 const DEFAULT_BOSS_CANNON_DAMAGE: int = 46
 const DEFAULT_BOSS_CANNON_PERIOD_TICKS: int = 42
@@ -32,6 +33,7 @@ var _final_structure_id: StringName = &"alliance_core"
 var _units: Array[Dictionary] = []
 var _structures: Array[Dictionary] = []
 var _pending_skills: Dictionary = {}
+var _burst_window_until_tick: int = 0
 var _warnings: Array[Dictionary] = []
 var _suppressible_cannon: bool = false
 var _cannon_suppression_target: int = 0
@@ -114,6 +116,7 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_units.clear()
 	_structures = _make_structures()
 	_pending_skills.clear()
+	_burst_window_until_tick = 0
 	_warnings.clear()
 	_cannons_suppressed = 0
 	_cannon_impacts = 0
@@ -183,6 +186,17 @@ func request_skill(unit_id: StringName) -> bool:
 	if int(unit["energy"]) < SKILL_COST or _pending_skills.has(unit_id):
 		return false
 	_pending_skills[unit_id] = true
+	return true
+
+
+func request_burst() -> bool:
+	if is_finished or tick_index < _burst_window_until_tick:
+		return false
+	if _living_main_allies().is_empty():
+		return false
+	# One squad-level order covers allies that become ready during the next
+	# two seconds, turning six repetitive card taps into one timing choice.
+	_burst_window_until_tick = tick_index + BURST_WINDOW_TICKS
 	return true
 
 
@@ -879,6 +893,7 @@ func snapshot() -> Dictionary:
 		"enemies": enemy_snapshots,
 		"structures": structure_snapshots,
 		"warnings": warning_snapshots,
+		"burst_window_remaining_ticks": maxi(0, _burst_window_until_tick - tick_index),
 		"result": result.duplicate(true),
 	}
 
@@ -890,6 +905,12 @@ func _run_allies(events: Array[Dictionary]) -> void:
 		_tick_common_combat(unit)
 		var unit_id: StringName = unit["unit_id"]
 		var wants_skill := _pending_skills.erase(unit_id)
+		if (
+			not wants_skill
+			and tick_index <= _burst_window_until_tick
+			and int(unit["energy"]) >= SKILL_COST
+		):
+			wants_skill = true
 		if not wants_skill and bool(unit["auto_skill"]) and int(unit["energy"]) >= SKILL_COST:
 			wants_skill = true
 		if wants_skill and int(unit["energy"]) >= SKILL_COST:

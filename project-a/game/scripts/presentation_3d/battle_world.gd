@@ -127,6 +127,10 @@ func request_skill(unit_id: StringName) -> bool:
 	return false if _session == null else _session.request_skill(unit_id)
 
 
+func request_burst() -> bool:
+	return false if _session == null else _session.request_burst()
+
+
 func set_auto_skill(unit_id: StringName, enabled: bool) -> bool:
 	return false if _session == null else _session.set_auto_skill(unit_id, enabled)
 

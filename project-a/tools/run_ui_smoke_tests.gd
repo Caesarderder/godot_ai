@@ -687,7 +687,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 			and _tree_has_text(instance, "完全恢复"),
 		"help explains the first hurdle, both recovery routes, and lossless failure"
 	)
-	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.13.19-input-trust.1"), "help exposes local-data privacy and the running product version")
+	_ok(_tree_has_text(instance, "不使用分析 SDK") and _tree_has_text(instance, "0.13.20-squad-burst.1"), "help exposes local-data privacy and the running product version")
 	_ok(help_back != null and help_back.custom_minimum_size.y >= 48.0, "help exposes a touch-sized return path")
 	if help_back != null:
 		help_back.pressed.emit()
@@ -1283,9 +1283,14 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(music_director.current_state() == &"battle", "ordinary frontline route selects the battle music state")
 	var pause_button := instance.find_child("BattlePauseButton", true, false) as Button
 	var skill_mode_button := instance.find_child("BattleSkillModeButton", true, false) as Button
+	var burst_button := instance.find_child("BattleBurstButton", true, false) as Button
 	var tactical_status := instance.find_child("BattleTacticalStatus", true, false) as Label
 	_ok(pause_button != null and pause_button.custom_minimum_size.y >= 44.0, "battle exposes a touch-sized pause control")
 	_ok(skill_mode_button != null and skill_mode_button.custom_minimum_size.y >= 44.0, "battle exposes an explicit automatic/manual skill decision")
+	_ok(
+		burst_button != null and burst_button.custom_minimum_size.y >= 44.0,
+		"battle exposes a touch-sized squad burst action instead of requiring six repeated taps"
+	)
 	_ok(tactical_status != null and tactical_status.text.contains("阶段"), "battle HUD exposes stage and frontline context")
 	_ok(instance.find_child("BattleHudTimer", true, false) == null, "battle HUD reuses deterministic snapshot events instead of polling duplicate snapshots")
 	var battle_world: Node = instance.get("battle_world")

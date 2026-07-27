@@ -2276,6 +2276,8 @@ func _start_battle() -> void:
 	battle_hud_screen.pause_requested.connect(_set_battle_paused.bind(true))
 	battle_hud_screen.skill_mode_requested.connect(_play_ui_click)
 	battle_hud_screen.skill_mode_requested.connect(_toggle_battle_skill_mode)
+	battle_hud_screen.burst_requested.connect(_play_ui_click)
+	battle_hud_screen.burst_requested.connect(_request_battle_burst)
 	battle_hud_screen.retreat_requested.connect(_play_ui_click)
 	battle_hud_screen.retreat_requested.connect(_retreat)
 	battle_hud_screen.skill_requested.connect(func(_unit_id: String) -> void: _play_ui_click())
@@ -2343,6 +2345,23 @@ func _request_battle_skill(unit_id: String) -> void:
 	var accepted: bool = battle_world.request_skill(StringName(unit_id))
 	playtest_journal.record_event("battle_input", {
 		"action": "skill",
+		"accepted": accepted,
+	})
+	if accepted:
+		if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
+			battle_hud_screen.confirm_skill_requested()
+	else:
+		if battle_hud_screen != null and is_instance_valid(battle_hud_screen):
+			battle_hud_screen.show_skill_unavailable()
+	_refresh_battle_hud_once()
+
+
+func _request_battle_burst() -> void:
+	if battle_world == null or not is_instance_valid(battle_world):
+		return
+	var accepted: bool = battle_world.request_burst()
+	playtest_journal.record_event("battle_input", {
+		"action": "skill_burst",
 		"accepted": accepted,
 	})
 	if accepted:

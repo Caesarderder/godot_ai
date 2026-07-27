@@ -3,6 +3,7 @@ extends VBoxContainer
 
 signal pause_requested
 signal skill_mode_requested
+signal burst_requested
 signal retreat_requested
 signal skill_requested(unit_id: String)
 
@@ -23,6 +24,7 @@ const GREEN := Color("#78b982")
 @onready var status_label: Label = %BattleTacticalStatus
 @onready var pause_button: Button = %BattlePauseButton
 @onready var skill_mode_button: Button = %BattleSkillModeButton
+@onready var burst_button: Button = %BattleBurstButton
 @onready var retreat_button: Button = %BattleRetreatButton
 @onready var skill_grid: GridContainer = %BattleSkillGrid
 
@@ -47,6 +49,7 @@ func _ready() -> void:
 	_apply_theme()
 	pause_button.pressed.connect(pause_requested.emit)
 	skill_mode_button.pressed.connect(skill_mode_requested.emit)
+	burst_button.pressed.connect(burst_requested.emit)
 	retreat_button.pressed.connect(retreat_requested.emit)
 
 
@@ -69,7 +72,10 @@ func configure(
 	_chapter_feedback_copy = ""
 	_chapter_feedback_danger = false
 	_warning_tactic = _warning_tactic_for(snapshots)
-	skill_mode_button.text = "技能：手动" if _manual_skills else "技能：自动"
+	skill_mode_button.text = "手动技能" if _manual_skills else "自动技能"
+	burst_button.visible = _manual_skills
+	burst_button.disabled = not _manual_skills
+	burst_button.tooltip_text = "下达一次全队爆发指令；未来 2 秒内就绪的技能会立即释放"
 	skill_grid.columns = maxi(1, snapshots.size())
 	_clear_units()
 	for snapshot in snapshots:
@@ -82,7 +88,9 @@ func configure(
 
 func set_manual_skills(enabled: bool) -> void:
 	_manual_skills = enabled
-	skill_mode_button.text = "技能：手动" if enabled else "技能：自动"
+	skill_mode_button.text = "手动技能" if enabled else "自动技能"
+	burst_button.visible = enabled
+	burst_button.disabled = not enabled
 
 
 func confirm_skill_requested() -> void:
@@ -266,6 +274,7 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		warning_copy,
 	]
 	var ready_unit_name := ""
+	var ready_count := 0
 	for unit_value in snapshot.get("units", []):
 		var unit := unit_value as Dictionary
 		if bool(unit.get("temporary", false)):
@@ -275,9 +284,19 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 			_manual_skills
 			and bool(unit.get("alive", false))
 			and int(unit.get("energy", 0)) >= 100
-			and ready_unit_name.is_empty()
 		):
-			ready_unit_name = _unit_display_name(String(unit.get("unit_id", "")))
+			ready_count += 1
+			if ready_unit_name.is_empty():
+				ready_unit_name = _unit_display_name(String(unit.get("unit_id", "")))
+	var burst_remaining := int(snapshot.get("burst_window_remaining_ticks", 0))
+	burst_button.visible = _manual_skills
+	burst_button.disabled = not _manual_skills or burst_remaining > 0
+	if burst_remaining > 0:
+		burst_button.text = "爆发 %0.1f秒" % (float(burst_remaining) / 5.0)
+	elif ready_count > 0:
+		burst_button.text = "全队爆发 ×%d" % ready_count
+	else:
+		burst_button.text = "全队蓄势"
 	status_label.text = battle_status
 	status_label.add_theme_color_override(
 		"font_color",
@@ -564,7 +583,7 @@ func _apply_theme() -> void:
 	retreat_button.icon = ICON_RETREAT
 	for label: Label in [status_label]:
 		label.add_theme_font_override("font", CJK_FONT)
-	for button: Button in [pause_button, skill_mode_button, retreat_button]:
+	for button: Button in [pause_button, skill_mode_button, burst_button, retreat_button]:
 		button.focus_mode = Control.FOCUS_ALL
 		button.add_theme_constant_override("icon_max_width", 18)
 		button.add_theme_font_override("font", CJK_FONT)

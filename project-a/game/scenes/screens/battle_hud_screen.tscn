@@ -22,19 +22,25 @@ vertical_alignment = 1
 
 [node name="BattlePauseButton" type="Button" parent="TacticalBar"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(64, 44)
+custom_minimum_size = Vector2(56, 44)
 layout_mode = 2
 text = "暂停"
 
 [node name="BattleSkillModeButton" type="Button" parent="TacticalBar"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 44)
+custom_minimum_size = Vector2(72, 44)
 layout_mode = 2
 text = "技能：自动"
 
+[node name="BattleBurstButton" type="Button" parent="TacticalBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(76, 44)
+layout_mode = 2
+text = "全队爆发"
+
 [node name="BattleRetreatButton" type="Button" parent="TacticalBar"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(64, 44)
+custom_minimum_size = Vector2(56, 44)
 layout_mode = 2
 text = "撤退"
 

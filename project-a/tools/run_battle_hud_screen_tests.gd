@@ -26,6 +26,11 @@ func _run() -> void:
 	_check(hud.find_child("BattleWorldViewportArea", true, false) != null, "HUD reserves the world view area")
 	_check(hud.find_child("BattlePauseButton", true, false) != null, "HUD owns a pause action")
 	_check(hud.find_child("BattleSkillModeButton", true, false) != null, "HUD owns an explicit skill mode")
+	var burst_button := hud.find_child("BattleBurstButton", true, false) as Button
+	_check(
+		burst_button != null and burst_button.custom_minimum_size.y >= 44.0,
+		"manual HUD exposes one touch-sized squad burst timing action"
+	)
 	var skill_button := hud.find_child("BattleSkillButton_hero_test", true, false) as Button
 	_check(skill_button != null, "HUD builds one skill action for each permanent hero")
 	_check(_tree_has_text(hud, "测试先锋 · 攻城护盾"), "HUD names the real player-facing skill")
@@ -49,6 +54,29 @@ func _run() -> void:
 	_check(hud.status_label.text.contains("炮击 2.0秒"), "HUD exposes the boss warning countdown")
 	_check(hud.status_label.text.contains("点装甲护盾扛炮"), "HUD explains the roster-specific cannon response")
 	_check(skill_button != null and not skill_button.disabled, "manual skill becomes actionable at full energy")
+	_check(
+		burst_button != null
+			and not burst_button.disabled
+			and burst_button.text.contains("×1"),
+		"squad burst names how many skills are already ready"
+	)
+	hud.apply_snapshot({
+		"burst_window_remaining_ticks": 8,
+		"units": [{
+			"unit_id": "hero_test",
+			"hp": 40,
+			"max_hp": 200,
+			"energy": 100,
+			"alive": true,
+			"temporary": false,
+		}],
+	})
+	_check(
+		burst_button != null
+			and burst_button.disabled
+			and burst_button.text.contains("1.6秒"),
+		"active squad burst shows its finite execution window and blocks duplicate taps"
+	)
 	hud.apply_snapshot({
 		"stage_index": 0,
 		"stage_count": 3,
@@ -138,6 +166,7 @@ func _run() -> void:
 		}],
 	})
 	_check(skill_button != null and skill_button.disabled, "automatic or defeated units cannot receive manual skill orders")
+	_check(burst_button != null and not burst_button.visible, "automatic mode hides the manual squad burst action")
 	_check(state_label != null and state_label.text == "阵亡", "HUD explains disabled skill state with text")
 	hud.configure([{
 		"hero_id": "hero_test",

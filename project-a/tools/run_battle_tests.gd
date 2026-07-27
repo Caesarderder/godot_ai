@@ -229,6 +229,30 @@ func _test_manual_and_auto_skill_contract() -> void:
 			manual_used = true
 	_check(manual_used, "manual skill request releases on the next deterministic tick")
 
+	var burst_session: RefCounted = BattleSessionScript.new()
+	_start_standard_battle(burst_session, _siege_heroes())
+	var burst_unit := burst_session._living_main_allies()[0] as Dictionary
+	burst_unit["energy"] = BattleSessionScript.SKILL_COST
+	_check(burst_session.request_burst(), "manual squad burst accepts one two-second timing order")
+	_check(
+		not burst_session.request_burst(),
+		"an active squad burst window rejects duplicate orders"
+	)
+	_check(
+		int(burst_session.snapshot().get("burst_window_remaining_ticks", 0))
+			== BattleSessionScript.BURST_WINDOW_TICKS,
+		"battle snapshot exposes the remaining squad burst window"
+	)
+	var burst_used := false
+	while not burst_session.is_finished and not burst_used:
+		for event in burst_session.advance_tick():
+			if event["type"] == &"skill_used":
+				burst_used = true
+	_check(
+		burst_used,
+		"one squad burst order releases ready skills inside its execution window"
+	)
+
 	var auto_session: RefCounted = BattleSessionScript.new()
 	_start_standard_battle(auto_session, _siege_heroes())
 	_check(auto_session.set_auto_skill(&"hero_1", true), "auto skill can be enabled per unit")

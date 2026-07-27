@@ -259,6 +259,14 @@ func _run_seed(run_seed: int) -> void:
 			and int(grown_boss.get("manual_skill_uses", 0)) > 0,
 		"seed %d default manual route resolves real player skill requests" % run_seed
 	)
+	_ok(
+		int(grown_gate.get("manual_burst_actions", 0))
+				< int(grown_gate.get("manual_skill_uses", 0))
+			and int(grown_boss.get("manual_burst_actions", 0))
+				< int(grown_boss.get("manual_skill_uses", 0))
+			and int(grown_boss.get("manual_burst_actions", 100)) <= 40,
+		"seed %d squad burst reduces repeated taps while preserving real manual timing" % run_seed
+	)
 	var first_wall_index := -1
 	for stage_index in one_star_chapter.size():
 		if String((one_star_chapter[stage_index] as Dictionary).get("outcome", "")) == "defeat":
@@ -401,8 +409,10 @@ func _simulate_stage(state: RefCounted, stage_id: String) -> Dictionary:
 	session.start(snapshots, stage_id, StageCatalogScript.stage(stage_id))
 	var safety := 0
 	var manual_skill_uses := 0
+	var manual_burst_actions := 0
 	while not session.is_finished and safety < 10000:
 		var snapshot := session.snapshot() as Dictionary
+		var has_ready_unit := false
 		for unit_value in snapshot.get("units", []):
 			var unit := unit_value as Dictionary
 			if (
@@ -410,7 +420,14 @@ func _simulate_stage(state: RefCounted, stage_id: String) -> Dictionary:
 				and bool(unit.get("alive", false))
 				and int(unit.get("energy", 0)) >= BattleSessionScript.SKILL_COST
 			):
-				session.request_skill(StringName(String(unit.get("unit_id", ""))))
+				has_ready_unit = true
+				break
+		if (
+			has_ready_unit
+			and int(snapshot.get("burst_window_remaining_ticks", 0)) == 0
+			and session.request_burst()
+		):
+			manual_burst_actions += 1
 		var events: Array = session.advance_tick()
 		for event_value in events:
 			if String((event_value as Dictionary).get("type", "")) == "skill_used":
@@ -420,6 +437,7 @@ func _simulate_stage(state: RefCounted, stage_id: String) -> Dictionary:
 	row["outcome"] = String(session.result.get("outcome", ""))
 	row["ticks"] = int(session.result.get("ticks", safety))
 	row["manual_skill_uses"] = manual_skill_uses
+	row["manual_burst_actions"] = manual_burst_actions
 	for structure in session._structures:
 		if String(structure.get("structure_id", "")) == "alliance_core":
 			row["final_core_hp"] = int(structure.get("hp", 0))
