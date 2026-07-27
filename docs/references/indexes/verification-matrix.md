@@ -247,7 +247,11 @@ related:
 - 技能芯片转化：`run_slg_loop_tests.gd` 锁定技能 II/III 的同源 quote、原子消费和研究所门禁；
   14 条 `run_first_30m_journey_tests.gd` 新档证明冲锋/装甲路线在 Boss 后都立即负担得起技能 II。
   `run_chapter_one_completion_tests.gd` 锁定第二章成长直达成员页、精确 80/6/1/24/16/20 成本与
-  可操作按钮；`ui-chapter-two-skill-growth-844x390.png` 提供基准横屏首屏证据。
+  可操作按钮；`ui-chapter-two-skill-growth-844x390.png` 提供基准横屏首屏证据。revision
+  `ea51420b56cb` 的真实 Chrome 150 新档又在 474.1 秒内从 2-1 侦察进入成员培养，点击正式
+  G-Man 技能按钮，证明 Lv.2 与六项精确成本持久化，再通过底部战区导航返回 2-1，尝试数保持
+  0；698 次战斗技能触控期间三类运行错误均为 0。新增三张
+  `browser-chapter-two-skill-growth-*` 截图覆盖交易前、交易后和回访侦察。
 - Web 私密存储证据：`run_web_private_storage_smoke.mjs` 通过 CDP 原生隔离上下文证明同一 Chrome
   私密会话刷新后存档 hash 不变，销毁上下文再新建时得到不同存档；设置页截图同时证明玩家看到
   “未确认持久存储”与下载备份指引。
