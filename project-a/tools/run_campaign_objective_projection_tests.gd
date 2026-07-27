@@ -166,9 +166,21 @@ func _test_faction_journey_projection() -> void:
 	_check(String(hierarchy.get("proof_focus", "")).contains("首战观察"), "one-star proof explains what the player should learn in battle")
 	_check(String(hierarchy.get("cta_label", "")).contains("开始第1场验证"), "one-star proof exposes one explicit first-battle action")
 
-	state.stage_progress["cleared_stages"] = (
-		state.stage_progress.get("cleared_stages", []) as Array
-	) + ["stage_2_1", "stage_2_2", "stage_2_3"]
+	(state.stage_progress["cleared_stages"] as Array).append("stage_2_1")
+	state.stage_progress["highest_unlocked_stage"] = "stage_2_2"
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("proof_focus", "")).contains("第2场观察"), "second proof advances from role recognition to skill timing")
+	_check(String(hierarchy.get("proof_focus", "")).contains("共振加快"), "second proof names its stronger resonance pressure")
+
+	(state.stage_progress["cleared_stages"] as Array).append("stage_2_2")
+	state.stage_progress["highest_unlocked_stage"] = "stage_2_3"
+	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
+	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(hierarchy.get("proof_focus", "")).contains("第3场观察"), "third proof advances to sustained execution")
+	_check(String(hierarchy.get("proof_focus", "")).contains("广播增援"), "third proof names the added reinforcement pressure")
+
+	(state.stage_progress["cleared_stages"] as Array).append("stage_2_3")
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_4"
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary

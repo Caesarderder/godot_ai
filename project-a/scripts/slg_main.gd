@@ -2913,7 +2913,11 @@ func _show_result() -> void:
 			"首章胜利 · 你的成长选择通过实战验证"
 			if chapter_one_complete
 			else (
-				"阵营实战证明 %d/3 · 核心打法正在成形" % faction_proof_progress
+				(
+					"阵营实战证明 3/3 · 基础打法已经站稳"
+					if faction_proof_progress >= 3
+					else "阵营实战证明 %d/3 · 核心打法正在成形" % faction_proof_progress
+				)
 				if faction_proof_advanced
 				else (
 					"第%d章胜利 · 阵营打法通过实战验证" % completed_chapter

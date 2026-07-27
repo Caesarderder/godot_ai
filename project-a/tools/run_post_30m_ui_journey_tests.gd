@@ -237,6 +237,65 @@ func _run() -> void:
 		second_proof.pressed.emit()
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_2_2", "proof result hands off through reconnaissance to exact 2-2")
+	_check(_tree_has_text(main, "第2场观察"), "2-2 advances the lesson from role recognition to skill timing")
+	_check(_tree_has_text(main, "共振加快"), "2-2 reconnaissance names the stronger resonance pressure")
+	state = game.current_state()
+	main.set("last_battle_runtime_result", {
+		"ticks": 345,
+		"structures_destroyed": 4,
+		"enemies_defeated": 6,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 810},
+	})
+	var second_proof_settlement := main.call("_command", "settle_battle", {
+		"battle_id": "post-30m-ui-proof-2-2",
+		"stage_id": "stage_2_2",
+		"outcome": "victory",
+		"ticks": 345,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"dead_unit_ids": [],
+	}) as Dictionary
+	main.set("last_settlement", second_proof_settlement)
+	main.call("_show_result")
+	await _wait_frames(5)
+	_check(_tree_has_text(main, "阵营实战证明 2/3"), "second proof victory celebrates visible two-of-three progress")
+	_check(_tree_has_text(main, String(faction_hero.display_name) + "核心贡献 810 伤害"), "second proof preserves factual core attribution")
+	var third_proof := _button_with_text(main, "开始第3场验证")
+	_check(third_proof != null and third_proof.is_visible_in_tree(), "second result exposes one explicit third validation action")
+	if third_proof != null:
+		third_proof.pressed.emit()
+		await _wait_frames(4)
+	_check(String(main.get("selected_stage_id")) == "stage_2_3", "second result hands off through reconnaissance to exact 2-3")
+	_check(_tree_has_text(main, "第3场观察"), "2-3 advances the lesson to sustained execution")
+	_check(_tree_has_text(main, "广播增援"), "2-3 reconnaissance names its added reinforcement pressure")
+	state = game.current_state()
+	main.set("last_battle_runtime_result", {
+		"ticks": 380,
+		"structures_destroyed": 5,
+		"enemies_defeated": 8,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 880},
+	})
+	var third_proof_settlement := main.call("_command", "settle_battle", {
+		"battle_id": "post-30m-ui-proof-2-3",
+		"stage_id": "stage_2_3",
+		"outcome": "victory",
+		"ticks": 380,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"dead_unit_ids": [],
+	}) as Dictionary
+	main.set("last_settlement", third_proof_settlement)
+	main.call("_show_result")
+	await _wait_frames(5)
+	_check(_tree_has_text(main, "阵营实战证明 3/3"), "third victory closes the visible proof milestone")
+	_check(_tree_has_text(main, "基础打法已经站稳"), "three-of-three receives a completed milestone rather than an in-progress banner")
+	_check(_tree_has_text(main, "三场基础验证完成"), "third result explains why the journey now escalates")
+	var pressure_test := _button_with_text(main, "试探后段防线")
+	_check(pressure_test != null and pressure_test.is_visible_in_tree(), "3/3 result exposes one explicit late-line pressure test")
+	if pressure_test != null:
+		pressure_test.pressed.emit()
+		await _wait_frames(4)
+	_check(String(main.get("selected_stage_id")) == "stage_2_4", "3/3 result hands off to the exact 2-4 pressure test")
 
 	state = game.current_state()
 	state.stage_progress["cleared_stages"] = [

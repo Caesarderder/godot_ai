@@ -178,7 +178,10 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 				faction_name,
 				FactionCatalogScript.playstyle_for(archetype_id),
 			]
-			proof_focus = _one_star_proof_focus(archetype_id)
+			proof_focus = _one_star_proof_focus(
+				archetype_id,
+				chapter_two_clears + 1
+			)
 			small = "第%d场验证：用%d★%s攻占%s（实战证明 %d/3）" % [
 				chapter_two_clears + 1,
 				int(hero.star),
@@ -317,7 +320,15 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 	}
 
 
-static func _one_star_proof_focus(archetype_id: String) -> String:
+static func _one_star_proof_focus(
+	archetype_id: String,
+	proof_number: int
+) -> String:
+	var playstyle := FactionCatalogScript.playstyle_for(archetype_id)
+	if proof_number == 2:
+		return "第2场观察：共振加快；调整%s技能时机，避免能量被抽空。" % playstyle
+	if proof_number >= 3:
+		return "第3场观察：广播增援加入；确认%s在长战中仍能稳定兑现。" % playstyle
 	var focus_by_playstyle := {
 		"抢先爆发": "首战观察：核心是否抢在共振前完成第一轮爆发。",
 		"承炮续战": "首战观察：核心是否承住首轮压力并让队伍继续推进。",
@@ -325,7 +336,7 @@ static func _one_star_proof_focus(archetype_id: String) -> String:
 		"削弱控场": "首战观察：核心是否压低守军威胁并创造输出窗口。",
 	}
 	return String(focus_by_playstyle.get(
-		FactionCatalogScript.playstyle_for(archetype_id),
+		playstyle,
 		"首战观察：核心技能是否改变队伍的推进节奏。"
 	))
 

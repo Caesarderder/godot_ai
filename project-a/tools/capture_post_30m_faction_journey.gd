@@ -136,6 +136,60 @@ func _capture() -> void:
 	await _wait_frames(7)
 	if not _save("res://artifacts/ui-faction-proof-one-844x390.png"):
 		return
+	var second_proof := _button_with_text(main, "开始第2场验证")
+	if second_proof == null:
+		_fail("second faction proof action unavailable")
+		return
+	second_proof.pressed.emit()
+	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-proof-two-recon-844x390.png"):
+		return
+	state = game.current_state()
+	main.set("last_battle_runtime_result", {
+		"ticks": 345,
+		"structures_destroyed": 4,
+		"enemies_defeated": 6,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 810},
+	})
+	var second_proof_settlement := main.call("_command", "settle_battle", {
+		"battle_id": "capture-faction-proof-2-2",
+		"stage_id": "stage_2_2",
+		"outcome": "victory",
+		"ticks": 345,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"dead_unit_ids": [],
+	}) as Dictionary
+	main.set("last_settlement", second_proof_settlement)
+	main.call("_show_result")
+	await _wait_frames(5)
+	var third_proof := _button_with_text(main, "开始第3场验证")
+	if third_proof == null:
+		_fail("third faction proof action unavailable")
+		return
+	third_proof.pressed.emit()
+	await _wait_frames(5)
+	state = game.current_state()
+	main.set("last_battle_runtime_result", {
+		"ticks": 380,
+		"structures_destroyed": 5,
+		"enemies_defeated": 8,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"ally_damage_dealt_by_unit": {hero_id: 880},
+	})
+	var third_proof_settlement := main.call("_command", "settle_battle", {
+		"battle_id": "capture-faction-proof-2-3",
+		"stage_id": "stage_2_3",
+		"outcome": "victory",
+		"ticks": 380,
+		"deployed_unit_ids": state.formation.hero_ids(),
+		"dead_unit_ids": [],
+	}) as Dictionary
+	main.set("last_settlement", third_proof_settlement)
+	main.call("_show_result")
+	await _wait_frames(7)
+	if not _save("res://artifacts/ui-faction-proof-complete-844x390.png"):
+		return
 	state = game.current_state()
 	state.stage_progress["cleared_stages"] = [
 		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5",
@@ -448,6 +502,16 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 	for hero in state.roster:
 		if String(hero.archetype_id) == archetype_id:
 			return hero
+	return null
+
+
+func _button_with_text(node: Node, fragment: String) -> Button:
+	if node is Button and (node as Button).text.contains(fragment):
+		return node as Button
+	for child in node.get_children():
+		var match_button := _button_with_text(child, fragment)
+		if match_button != null:
+			return match_button
 	return null
 
 
