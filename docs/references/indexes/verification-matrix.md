@@ -239,6 +239,10 @@ related:
   `grabber_area_highlight` 提供真实焦点轨道，`ui-settings-slider-focus-844x390.png` 的
   Compatibility 截图证明聚焦主音量为金色白边、未聚焦音乐音量保持青色。屏幕阅读器语义仍须在
   真实浏览器/设备验证，自动测试不能替代该项。
+- Web 键盘集成：`run_web_browser_smoke.mjs` 在七档视口与方向恢复后通过 CDP
+  `Input.dispatchKeyEvent` 向 Godot Canvas 发送 `Enter`，激活 `TitleScreen` 已聚焦的主 CTA；
+  后续设置、试玩报告、备份导入、刷新和离线 PWA 继续使用触控并全部通过。工具在 Chrome
+  `SIGTERM` 超时后强制 `SIGKILL` 并等待退出，避免 PASS 后 CI 被残留子进程挂住。
 - 音乐表现基线：`run_music_director_tests.gd` 锁定标题静音、基地/战斗/Boss 状态、任意连续或
   中断淡化后只有一个 Stream voice、后台暂停/恢复和清理；Platform/Settings 测试覆盖默认值、
   旧配置回退、持久化、归一化与语义 UI 事件，UI smoke 锁定 App Shell 的标题、基地和普通战斗

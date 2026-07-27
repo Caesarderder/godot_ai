@@ -298,6 +298,11 @@ App Shell ----------------display fields----------> LegionScreen / BattleHudScre
 screen 时必须同步加入。测试需递归审计所有交互类型和动态 CTA，而不是以旧的“七个场景”数量
 宣称覆盖。焦点、字体、减少动态与 48 CSS 像素触控目标是四条独立证据。
 
+Web 集成还必须证明导出包的 Canvas 真正接收键盘事件：在标题响应式布局稳定并由
+`TitleScreen` 把焦点交给主 CTA 后，Chrome smoke 使用真实 `Enter` 激活“开始/继续战役”；
+后续设置、备份、导入与离线 PWA 流程继续使用触控。只有两条输入路径在同一候选中共存通过，
+才可声称 Web 键盘基线没有破坏手机触控主链；这仍不等于真实手柄或屏幕阅读器设备验证。
+
 ## 资产治理
 
 - 全局字体、共享 UI 主题放 `assets/fonts`、未来 `game/ui/themes`；feature-only 资产随 feature；

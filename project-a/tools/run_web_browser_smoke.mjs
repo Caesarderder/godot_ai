@@ -175,6 +175,18 @@ async function touch(cdp, x, y) {
 	await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 }
 
+async function pressKey(cdp, key, code, windowsVirtualKeyCode) {
+	for (const type of ["keyDown", "keyUp"]) {
+		await cdp.send("Input.dispatchKeyEvent", {
+			type,
+			key,
+			code,
+			windowsVirtualKeyCode,
+			nativeVirtualKeyCode: windowsVirtualKeyCode,
+		});
+	}
+}
+
 async function scrollDown(cdp) {
 	for (let step = 0; step < 4; step += 1) {
 		await cdp.send("Input.dispatchMouseEvent", {
@@ -348,7 +360,9 @@ async function main() {
 			"Boolean(document.getElementById('godot-safe-area-probe'))");
 		if (!safeAreaProbe) throw new Error("mobile safe-area probe was not installed");
 		await setViewport(cdp, 844, 390, "landscape browser viewport recovery");
-		await touch(cdp, 422, 276);
+		// TitleScreen assigns focus to the primary action after responsive layout
+		// settles. Activate that real Godot focus target through the exported Canvas.
+		await pressKey(cdp, "Enter", "Enter", 13);
 		await new Promise((accept) => setTimeout(accept, 800));
 		// The title CTA enters the factory. Open the stable top-right settings button
 		// before exercising the two-column storage and local playtest controls.
@@ -576,6 +590,7 @@ async function main() {
 				budget: LOCAL_STARTUP_BUDGET_MS,
 			},
 				serviceWorkers: registrations,
+					keyboardPrimaryAction: true,
 					touchInput: true,
 					saveBackupDownload: true,
 					saveImportPreview: true,
@@ -603,10 +618,20 @@ async function main() {
 	} finally {
 		cdp?.close();
 		chrome.kill("SIGTERM");
-		await Promise.race([
-			once(chrome, "exit"),
-			new Promise((accept) => setTimeout(accept, 2000)),
+		const exited = await Promise.race([
+			once(chrome, "exit").then(() => true),
+			new Promise((accept) => setTimeout(() => accept(false), 2000)),
 		]);
+		if (!exited && chrome.exitCode === null) {
+			chrome.kill("SIGKILL");
+			await Promise.race([
+				once(chrome, "exit"),
+				new Promise((_, reject) => setTimeout(
+					() => reject(new Error("Chrome did not terminate after SIGKILL")),
+					5000,
+				)),
+			]);
+		}
 		if (!serverClosed) await new Promise((accept) => server.close(accept));
 		await rm(profile, { recursive: true, force: true });
 		if (chrome.exitCode && chrome.exitCode !== 0 && !chrome.killed) {
@@ -615,8 +640,11 @@ async function main() {
 	}
 }
 
-main().catch((error) => {
-	console.error("WEB_BROWSER_SMOKE_FAIL");
-	console.error(error.stack ?? error.message);
-	process.exitCode = 1;
-});
+main().then(
+	() => process.exit(0),
+	(error) => {
+		console.error("WEB_BROWSER_SMOKE_FAIL");
+		console.error(error.stack ?? error.message);
+		process.exit(1);
+	},
+);

@@ -49,8 +49,9 @@ State labels:
 - [x] Candidate audit records raw and deterministic gzip-9 bytes for the initial HTML/JS/WASM/PCK payload and enforces the 30 MiB hard limit.
 - [ ] Initial compressed payload reaches the 20 MiB target; the current full CJK font keeps the candidate above target.
 - [x] PWA/application icon is an original project-owned mark, passes the safe SVG profile, and remains legible at 32/144/180/512 px.
-- [x] Google Chrome desktop HTTP smoke, including touch input, online reload, server shutdown,
-  offline PWA restart, and IndexedDB save identity (`node tools/run_web_browser_smoke.mjs`).
+- [x] Google Chrome desktop HTTP smoke, including keyboard `Enter` on the focused title CTA, touch input,
+  online reload, server shutdown, offline PWA restart, and IndexedDB save identity
+  (`node tools/run_web_browser_smoke.mjs`).
 - [ ] Firefox desktop smoke.
 - [ ] Chrome Android real-device smoke.
 - [ ] Safari iOS real-device smoke.
