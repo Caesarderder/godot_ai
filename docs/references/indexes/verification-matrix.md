@@ -283,6 +283,8 @@ related:
   结果与未就绪说明均由 `BattleHudScreen` 状态行承载，炮击警告对两者保持优先级。
   `run_battle_hud_screen_tests.gd` 覆盖警告期间拒绝反馈不抢占、警告消失后再显示；
   更新后的 `ui-first-skill-result-844x390.png` 证明实际伤害、阶段目标和战场同时可读。
+  revision `23be7a332c88` 的 Chrome 150 完整新档旅程再以 471.2 秒、702 次技能触控和三项
+  runtime/console/network 零失败验证导出候选；Boss 中段真实截图不再出现全局技能 toast。
 - 结构突破反馈：`run_battle_tests.gd` 锁定摧毁事件的 ID/名称/lane/kind，
   `run_presentation_tests.gd` 锁定普通画质的世界文字+冲击环以及低画质/减少动态的纯文字预算；
   `ui-first-breakthrough-844x390.png` 证明首战“防线突破”与 HUD 下一城市目标同时可读。

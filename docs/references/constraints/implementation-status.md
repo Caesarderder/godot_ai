@@ -254,7 +254,10 @@ related:
   `ui_root` 的“已下达技能指令”toast，会遮住阶段目标和短暂炮击预警。现在战斗接受事件仍由
   `BattleHudScreen` 显示量化结果，未就绪反馈也进入同一状态行；炮击倒计时优先于两者，全局
   toast 不再参与战斗输入反馈。HUD、UI smoke、首章完成和 14 条首 30 分钟回归通过，更新后的
-  `ui-first-skill-result-844x390.png` 证明量化技能反馈与阶段信息共存且无顶层遮挡。
+  `ui-first-skill-result-844x390.png` 证明量化技能反馈与阶段信息共存且无顶层遮挡。修复后的
+  revision `23be7a332c88` 又完成一次 Chrome 150 隔离新档首章旅程：471.2 秒、702 次技能触控，
+  全部持久化断言继续成立且 0 runtime exception、0 非预期 console error、0 failed request；
+  更新后的 Boss 中段截图完整显示阶段 3/3、核心耐久、战线与三张技能卡状态。
 
 ## 新合同状态
 
