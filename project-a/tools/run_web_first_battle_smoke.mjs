@@ -216,12 +216,21 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 	};
 })`;
 
-async function finishActiveBattle(cdp, stageId, completion, evidenceName) {
+async function finishActiveBattle(
+	cdp,
+	stageId,
+	completion,
+	evidenceName,
+	skillCardXs = [420],
+) {
 	await new Promise((accept) => setTimeout(accept, 2200));
 	let skillTouches = 0;
+	let skillCardIndex = 0;
 	const skillInput = setInterval(() => {
 		skillTouches += 1;
-		void touch(cdp, 420, 306);
+		const x = skillCardXs[skillCardIndex % skillCardXs.length];
+		skillCardIndex += 1;
+		void touch(cdp, x, 330);
 	}, 900);
 	try {
 		const settledSave = await waitFor(`${stageId} settlement persisted to IndexedDB`, async () => {
@@ -491,6 +500,7 @@ async function main() {
 				(save) => Number(save.attempts?.stage_1_4 ?? 0) === 2
 					&& save.clearedStages?.includes("stage_1_4"),
 				"browser-first-wall-counterattack-victory-844x390.png",
+				[145, 420, 700],
 			);
 		} catch (error) {
 			await screenshot(cdp, "browser-first-wall-counterattack-timeout-844x390.png");
