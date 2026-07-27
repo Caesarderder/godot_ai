@@ -345,6 +345,7 @@ func _run() -> void:
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
+	faction_hero.xp = 150
 	main.set("last_battle_runtime_result", proof_runtime)
 	main.set("last_settlement", {
 		"ok": true,
@@ -354,12 +355,21 @@ func _run() -> void:
 			"next_stage_id": "stage_3_1",
 			"reward": {"gold": 78},
 			"hero_shards": 12,
+			"hero_xp_each": 30,
+			"hero_xp_recipients": 4,
 		},
 	})
 	main.call("_show_result")
 	await _wait_frames(4)
 	_check(_tree_has_text(main, "第2章胜利"), "chapter-two boss receives a chapter-completion celebration")
 	_check(_tree_has_text(main, "电视控制"), "chapter-two result previews the next chapter's distinct threat")
+	_check(
+		_tree_has_text(main, "4名主力各 +30 XP")
+			and _tree_has_text(main, "阵营核心")
+			and _tree_has_text(main, "150/200 XP")
+			and _tree_has_text(main, "距 Lv4 还差 50"),
+		"chapter-two result turns hidden participation XP into the faction core's visible next-level progress"
+	)
 	_check(
 		_tree_has_text(main, "阵营未来")
 			and _tree_has_text(main, "第三章推进后开放")

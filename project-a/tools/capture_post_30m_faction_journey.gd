@@ -200,6 +200,7 @@ func _capture() -> void:
 		return
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
+	faction_hero.xp = 150
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
 	var metric_key := _qualitative_metric_for(archetype_id)
@@ -222,6 +223,8 @@ func _capture() -> void:
 			"reward": {"gold": 78, "porcelain": 35, "parts": 31, "sludge": 26},
 			"industrial_tech": 5,
 			"hero_shards": 12,
+			"hero_xp_each": 30,
+			"hero_xp_recipients": state.formation.hero_ids().size(),
 			"skill_chips": 3,
 		},
 	})

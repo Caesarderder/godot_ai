@@ -44,6 +44,11 @@ text = "本局高光"
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="HeroExperience" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 2
+
 [node name="Materials" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 unique_name_in_owner = true
 layout_mode = 2

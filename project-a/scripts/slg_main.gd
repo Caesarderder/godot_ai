@@ -2752,6 +2752,7 @@ func _show_result() -> void:
 		"reward_headline": "金币 +%d    军团数据 +%d" % [
 			int(reward.get("gold", 0)), legion_data_gain
 		],
+		"hero_experience": _hero_experience_copy(event, last_battle_runtime_result),
 		"materials": "工业材料由工厂设施持续生产；攻城不直接掉落",
 		"mission_progress": _onboarding_settlement_copy(event, onboarding),
 		"breakthrough": breakthrough,
@@ -3214,6 +3215,50 @@ func _growth_opportunity_copy(event: Dictionary) -> String:
 	if int(event.get("hero_shards", 0)) > 0:
 		gains.append("军团数据可用于升星与技能研究")
 	return "下一步成长：%s" % ("继续挑战或选择一项永久升级" if gains.is_empty() else "；".join(gains))
+
+
+func _hero_experience_copy(event: Dictionary, runtime_result: Dictionary) -> String:
+	var xp_each := int(event.get("hero_xp_each", 0))
+	var recipients := int(event.get("hero_xp_recipients", 0))
+	if xp_each <= 0 or recipients <= 0:
+		return ""
+	var base := "参战经验 · %d名主力各 +%d XP" % [recipients, xp_each]
+	var faction_event := RecruitmentResultProjection.latest_event_for_command(
+		game.current_state(),
+		"claim_faction_signal"
+	)
+	var core_archetype := String(
+		faction_event.get("guaranteed_duplicate_archetype", "")
+	)
+	if core_archetype.is_empty():
+		return base
+	var deployed := runtime_result.get("deployed_unit_ids", []) as Array
+	for hero in game.current_state().roster:
+		if (
+			String(hero.archetype_id) != core_archetype
+			or not deployed.has(String(hero.hero_id))
+		):
+			continue
+		if int(hero.level) >= 5:
+			return "%s · 阵营核心 %s 已满级" % [base, String(hero.display_name)]
+		var next_level := int(hero.level) + 1
+		var target_xp := int(HeroProgression.LEVEL_XP[next_level])
+		var missing_xp := maxi(0, target_xp - int(hero.xp))
+		if missing_xp == 0:
+			return "%s · 阵营核心 %s 已满足 Lv%d 经验，消耗金币即可升级" % [
+				base,
+				String(hero.display_name),
+				next_level,
+			]
+		return "%s · 阵营核心 %s %d/%d XP，距 Lv%d 还差 %d" % [
+			base,
+			String(hero.display_name),
+			int(hero.xp),
+			target_xp,
+			next_level,
+			missing_xp,
+		]
+	return base
 
 
 func _faction_tech_result_copy() -> String:

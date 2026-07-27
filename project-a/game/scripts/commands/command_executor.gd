@@ -173,10 +173,13 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 				var campaign_blueprint := _unlock_campaign_blueprint(candidate, stage_id, already_cleared)
 				if not campaign_blueprint.is_empty():
 					unlocked_blueprints.append(campaign_blueprint)
+			var hero_xp_each := 30 if outcome == "victory" else 8
+			var hero_xp_recipients := 0
 			for deployed_value in deployed_values:
 				var deployed_hero: RefCounted = candidate.hero_by_id(String(deployed_value))
 				if deployed_hero != null:
-					deployed_hero.xp = mini(320, int(deployed_hero.xp) + (30 if outcome == "victory" else 8))
+					deployed_hero.xp = mini(320, int(deployed_hero.xp) + hero_xp_each)
+					hero_xp_recipients += 1
 			var alliance_scrap_granted := 0
 			var alliance_scrap_receipt: Dictionary = {}
 			candidate.attempt_counters[stage_id] = int(candidate.attempt_counters.get(stage_id, 0)) + 1
@@ -199,6 +202,8 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 					"dead_unit_ids": [],
 					"surviving_unit_ids": candidate.formation.hero_ids(),
 					"damage_manifest": damage_manifest,
+					"hero_xp_each": hero_xp_each,
+					"hero_xp_recipients": hero_xp_recipients,
 					"hero_shards": int(StageCatalogScript.breakthrough_reward(stage_id, already_cleared).get("hero_shards", 0)) if outcome == "victory" else 0,
 					"unlocked_hero": {},
 					"campaign_completed": outcome == "victory" and stage_id == "stage_5_5",

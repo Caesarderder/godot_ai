@@ -287,6 +287,11 @@ func _test_battle_settlement() -> void:
 	var executor := CommandExecutorScript.new(GameStateScript.create_new(445, 0), Callable(self, "_record_save_success"))
 	var gold_before: int = executor.state.economy.gold
 	var books_before: int = executor.state.economy.xp_books
+	var opening_hero: RefCounted = executor.state.hero_by_id(
+		String(executor.state.formation.hero_ids()[0])
+	)
+	var opening_hero_id := String(opening_hero.hero_id)
+	var opening_xp_before := int(opening_hero.xp)
 	var victory := _exec_ok(
 		executor,
 		"battle-win-1",
@@ -297,6 +302,13 @@ func _test_battle_settlement() -> void:
 	_eq(victory["event"]["reward"], {"gold": 80, "xp_books": 0, "porcelain": 24, "parts": 16, "sludge": 12}, "opening victory reward is owned by domain reducer")
 	_eq(executor.state.economy.gold, gold_before + 80, "victory grants fixed gold")
 	_eq(executor.state.economy.xp_books, books_before, "opening victory does not accelerate Gman with a training book")
+	_eq(victory["event"]["hero_xp_each"], 30, "victory reports the exact per-hero battle experience")
+	_eq(victory["event"]["hero_xp_recipients"], 1, "victory reports how many deployed heroes gained experience")
+	_eq(
+		int(executor.state.hero_by_id(opening_hero_id).xp),
+		opening_xp_before + 30,
+		"reported victory experience matches permanent hero state"
+	)
 	_eq(executor.state.attempt_counters["stage_1_1"], 1, "victory records attempt")
 	_ok(executor.state.stage_progress["cleared_stages"].has("stage_1_1"), "victory clears stage 1-1")
 	var replay := executor.execute(_env_with_revision(
@@ -328,6 +340,7 @@ func _test_battle_settlement() -> void:
 	var defeat_executor := CommandExecutorScript.new(GameStateScript.create_new(4453, 0), Callable(self, "_record_save_success"))
 	var defeat := _exec_ok(defeat_executor, "battle-defeat-1", "settle_battle", {"battle_id": "battle-defeat-1", "outcome": "defeat", "ticks": 40}, "battle:battle-defeat-1")
 	_eq(defeat["event"]["reward"]["xp_books"], 2, "defeat grants training books for first retry growth")
+	_eq(defeat["event"]["hero_xp_each"], 8, "lossless defeat still reports its smaller participation experience")
 	var repeat_defeat := _exec_ok(defeat_executor, "battle-defeat-2", "settle_battle", {"battle_id": "battle-defeat-2", "outcome": "defeat", "ticks": 41}, "battle:battle-defeat-2")
 	_eq(repeat_defeat["event"]["reward_tier"], "repeat_defeat", "second failure is identified as repeat defeat")
 	_eq(repeat_defeat["event"]["reward"], {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}, "repeat defeat cannot generate infinite resources")

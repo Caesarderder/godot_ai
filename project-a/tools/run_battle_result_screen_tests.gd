@@ -15,6 +15,7 @@ func _run() -> void:
 	result_screen.call("configure", {
 		"outcome_banner": "胜利 · 工厂与军团获得成长",
 		"outcome_color": "green",
+		"hero_experience": "参战经验 · 3名主力各 +30 XP · 阵营核心 火箭马桶人 60/100 XP，距 Lv3 还差 40",
 		"mission_progress": "行动五完成 · 奖励已自动入账 → 新目标：行动六：工业备战",
 		"hurdle_proof": "高墙复盘 · 单人首战失败 → 三人反攻成功 · 援军分担 68% 承伤、贡献 52% 输出",
 		"primary_label": "选择工业支援",
@@ -29,6 +30,11 @@ func _run() -> void:
 	_check(fallback_factory != null and not fallback_factory.visible, "generic factory fallback is hidden when factory is primary")
 	_check(_tree_has_text(result_screen, "单人首战失败 → 三人反攻成功"), "result presents the hurdle before-after proof")
 	_check(_tree_has_text(result_screen, "68% 承伤") and _tree_has_text(result_screen, "52% 输出"), "result projects real reinforcement contribution channels")
+	_check(
+		_tree_has_text(result_screen, "3名主力各 +30 XP")
+			and _tree_has_text(result_screen, "距 Lv3 还差 40"),
+		"result makes hidden battle experience and the faction core's next level visible"
+	)
 	var requested := {"id": ""}
 	result_screen.connect("action_requested", func(action_id: String, _payload: Dictionary) -> void:
 		requested["id"] = action_id
