@@ -2921,6 +2921,13 @@ func _battle_debrief_copy(
 	outcome: String,
 	stage_id: String = ""
 ) -> String:
+	var chapter_two_mechanic := _chapter_two_mechanic_debrief(
+		runtime_result,
+		outcome,
+		stage_id
+	)
+	if not chapter_two_mechanic.is_empty():
+		return chapter_two_mechanic
 	var resonance_pulses := int(runtime_result.get("resonance_pulse_count", 0))
 	if (
 		resonance_pulses > 0
@@ -2953,6 +2960,35 @@ func _battle_debrief_copy(
 	if outcome != "victory":
 		return "攻势终止于第 %d 阶段；强化角色或工厂后可无损再战。" % (int(runtime_result.get("stage_reached", 0)) + 1)
 	return "军团完成占领并无损返回；可连战，也可立即投入战果进行成长。"
+
+
+func _chapter_two_mechanic_debrief(
+	runtime_result: Dictionary,
+	outcome: String,
+	stage_id: String
+) -> String:
+	if stage_id == "stage_2_3":
+		var waves := int(runtime_result.get("speaker_reinforcement_waves", 0))
+		if waves <= 0:
+			return ""
+		if outcome == "victory":
+			return "广播车复盘 · 击穿 %d 波临时增援；优先清理广播车可阻止战线被持续补强。" % waves
+		return "失败归因 · 广播车召来 %d 波增援；下次先集火新增目标，再推进核心。" % waves
+	if stage_id == "stage_2_4":
+		var impacts := int(runtime_result.get("speaker_echo_impact_count", 0))
+		if impacts <= 0:
+			return ""
+		var damage := int(runtime_result.get("speaker_echo_damage_dealt", 0))
+		if outcome == "victory":
+			return "双塔复盘 · 识别前后排交替轰击 %d 次、承受 %d 伤害；按黄色预警调整技能节奏。" % [
+				impacts,
+				damage,
+			]
+		return "失败归因 · 双塔交替轰击 %d 次造成 %d 伤害；黄色预警会明确点名前排或后排。" % [
+			impacts,
+			damage,
+		]
+	return ""
 
 
 func _resonance_debrief_copy(runtime_result: Dictionary, outcome: String) -> String:

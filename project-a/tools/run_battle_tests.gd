@@ -29,6 +29,7 @@ func _init() -> void:
 	_test_same_input_same_result()
 	_test_battle_has_no_time_limit()
 	_test_chapter_two_resonance_learning_curve()
+	_test_chapter_two_encounter_escalation()
 	_test_act_one_stage_catalog_and_config_start()
 	if failures.is_empty():
 		print("BATTLE TESTS PASS")
@@ -454,6 +455,92 @@ func _test_chapter_two_resonance_learning_curve() -> void:
 	for unit in session._living_main_allies():
 		energy_after += int(unit.get("energy", 0))
 	_check(energy_after < energy_before, "resonance pulse changes the real allied skill economy")
+
+
+func _test_chapter_two_encounter_escalation() -> void:
+	var convoy := StageCatalogScript.stage("stage_2_3")
+	_check(
+		int(convoy.get("speaker_reinforcement_period_ticks", 0)) == 65
+			and int(convoy.get("speaker_reinforcement_wave_limit", 0)) == 2,
+		"stage 2-3 authors two deterministic broadcast reinforcement waves"
+	)
+	var convoy_session: RefCounted = BattleSessionScript.new()
+	convoy_session.start(_siege_heroes(), "stage_2_3", convoy)
+	var enemy_count_before := (convoy_session.snapshot().get("enemies", []) as Array).size()
+	convoy_session.tick_index = 65
+	var reinforcement_events: Array[Dictionary] = []
+	convoy_session._run_chapter_mechanics(reinforcement_events)
+	var reinforcement := _first_event(reinforcement_events, &"speaker_reinforcement")
+	_check(not reinforcement.is_empty(), "stage 2-3 visibly deploys its first broadcast reinforcement wave")
+	_check(
+		(convoy_session.snapshot().get("enemies", []) as Array).size() == enemy_count_before + 1,
+		"broadcast reinforcement adds one real target to the current battle stage"
+	)
+	_check(
+		String((convoy_session.snapshot().get("enemies", []) as Array)[-1].get("display_name", "")).contains("广播车增援"),
+		"the spawned pressure is player-readable instead of an invisible multiplier"
+	)
+	var echo_config := StageCatalogScript.stage("stage_2_4")
+	_check(
+		int(echo_config.get("speaker_echo_period_ticks", 0)) == 50
+			and int(echo_config.get("speaker_echo_warning_ticks", 0)) == 10
+			and int(echo_config.get("speaker_echo_impact_limit", 0)) == 2,
+		"stage 2-4 authors a two-second alternating echo warning with two readable impacts"
+	)
+	var echo_session: RefCounted = BattleSessionScript.new()
+	echo_session.start(_siege_heroes(), "stage_2_4", echo_config)
+	echo_session.tick_index = 40
+	var echo_warning_events: Array[Dictionary] = []
+	echo_session._run_chapter_mechanics(echo_warning_events)
+	var echo_warning := _first_event(echo_warning_events, &"speaker_echo_warning")
+	_check(
+		not echo_warning.is_empty()
+			and String(echo_warning.get("rank", "")) == "front",
+		"first dual-tower echo names the front rank before impact"
+	)
+	var allies: Array[Dictionary] = echo_session._living_main_allies()
+	var split := int(ceil(float(allies.size()) / 2.0))
+	var front_hp_before := 0
+	var back_hp_before := 0
+	for index in allies.size():
+		if index < split:
+			front_hp_before += int(allies[index].get("hp", 0))
+		else:
+			back_hp_before += int(allies[index].get("hp", 0))
+	echo_session.tick_index = 50
+	var echo_impact_events: Array[Dictionary] = []
+	echo_session._run_chapter_mechanics(echo_impact_events)
+	var echo_impact := _first_event(echo_impact_events, &"speaker_echo_impact")
+	var front_hp_after := 0
+	var back_hp_after := 0
+	for index in allies.size():
+		if index < split:
+			front_hp_after += int(allies[index].get("hp", 0))
+		else:
+			back_hp_after += int(allies[index].get("hp", 0))
+	_check(
+		not echo_impact.is_empty()
+			and String(echo_impact.get("rank", "")) == "front"
+			and int(echo_impact.get("damage", 0)) > 0,
+		"dual-tower warning resolves into quantified front-rank damage"
+	)
+	_check(front_hp_after < front_hp_before, "front-rank echo changes real allied health")
+	_check(back_hp_after == back_hp_before, "front-rank echo does not secretly damage the back rank")
+	echo_session._speaker_echo_impact_count = int(echo_config["speaker_echo_impact_limit"])
+	echo_session.tick_index = 90
+	var capped_echo_events: Array[Dictionary] = []
+	echo_session._run_chapter_mechanics(capped_echo_events)
+	_check(
+		_first_event(capped_echo_events, &"speaker_echo_warning").is_empty(),
+		"completed echo lesson does not become unlimited attrition in a long battle"
+	)
+	var finale := StageCatalogScript.stage("stage_2_5")
+	_check(
+		int(finale.get("speaker_reinforcement_wave_limit", 0)) == 1
+			and int(finale.get("speaker_echo_period_ticks", 0)) > 0
+			and int(finale.get("speaker_echo_impact_limit", 0)) == 3,
+		"stage 2-5 combines one learned reinforcement wave with three alternating echoes"
+	)
 
 
 func _test_act_one_stage_catalog_and_config_start() -> void:

@@ -181,6 +181,26 @@ func _run() -> void:
 			and resonance_debrief.contains("紫色预警"),
 		"chapter-two non-boss defeat explains the authored resonance mechanic instead of mislabeling ordinary artillery as the boss cannon"
 	)
+	var reinforcement_debrief := String(main.call("_battle_debrief_copy", {
+		"speaker_reinforcement_waves": 2,
+		"resonance_pulse_count": 7,
+	}, "victory", "stage_2_3"))
+	_check(
+		reinforcement_debrief.contains("击穿 2 波临时增援")
+			and reinforcement_debrief.contains("优先清理广播车"),
+		"stage 2-3 result teaches the visible reinforcement counter instead of collapsing back into resonance copy"
+	)
+	var echo_debrief := String(main.call("_battle_debrief_copy", {
+		"speaker_echo_impact_count": 3,
+		"speaker_echo_damage_dealt": 72,
+		"resonance_pulse_count": 9,
+	}, "defeat", "stage_2_4"))
+	_check(
+		echo_debrief.contains("双塔交替轰击 3 次")
+			and echo_debrief.contains("72 伤害")
+			and echo_debrief.contains("前排或后排"),
+		"stage 2-4 defeat names the alternating-rank lesson and its measured cost"
+	)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"

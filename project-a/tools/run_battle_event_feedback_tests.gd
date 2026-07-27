@@ -61,6 +61,21 @@ func _run() -> void:
 			and StringName((received[0] as Dictionary).get("type", &"")) == &"resonance_warning",
 		"resonance warning preserves its stable event identity"
 	)
+	var echo_events: Array[Dictionary] = [{
+		"type": &"speaker_echo_warning",
+		"tick": 40,
+		"impact_tick": 50,
+		"remaining_ticks": 10,
+		"rank": "front",
+	}]
+	world.call("_apply_events", echo_events)
+	received = holder.get("events", []) as Array
+	_check(int(holder["emissions"]) == 3, "dual-tower warning crosses the presentation-to-HUD boundary")
+	_check(
+		received.size() == 1
+			and StringName((received[0] as Dictionary).get("type", &"")) == &"speaker_echo_warning",
+		"dual-tower warning preserves its stable event identity"
+	)
 	world.queue_free()
 	await process_frame
 	await _check_real_skill_request_pipeline()

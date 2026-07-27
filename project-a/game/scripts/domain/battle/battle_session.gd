@@ -57,6 +57,9 @@ var _repair_group_extra_targets: int = 0
 var _parasite_extra_summons: int = 0
 var _resonance_pulse_count: int = 0
 var _resonance_energy_drained: int = 0
+var _speaker_reinforcement_waves: int = 0
+var _speaker_echo_impact_count: int = 0
+var _speaker_echo_damage_dealt: int = 0
 var _started_solo: bool = false
 var _solo_pressure_bp: int = 10000
 
@@ -114,6 +117,9 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_parasite_extra_summons = 0
 	_resonance_pulse_count = 0
 	_resonance_energy_drained = 0
+	_speaker_reinforcement_waves = 0
+	_speaker_echo_impact_count = 0
+	_speaker_echo_damage_dealt = 0
 	_started_solo = false
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
@@ -207,7 +213,12 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 			"remaining_ticks": resonance_warning,
 			"energy_drain": int(_stage_config.get("resonance_energy_drain", 18)),
 		})
-	elif chapter == 2 and resonance_period > 0 and tick_index % resonance_period == 0:
+	elif (
+		chapter == 2
+		and resonance_period > 0
+		and tick_index > 0
+		and tick_index % resonance_period == 0
+	):
 		var affected := 0
 		var energy_drained := 0
 		var energy_drain := int(_stage_config.get("resonance_energy_drain", 18))
@@ -227,6 +238,9 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 			"energy_drained": energy_drained,
 			"weakness_ticks": weakness_ticks,
 		})
+	if chapter == 2:
+		_run_speaker_reinforcements(events)
+		_run_speaker_echo(events)
 	elif chapter == 3 and tick_index % 40 == 0:
 		var target := _lowest_hp_ally()
 		if not target.is_empty():
@@ -241,6 +255,111 @@ func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 				shielded += 1
 		if shielded > 0:
 			events.append({"type": &"alliance_coordination", "tick": tick_index, "shielded": shielded})
+
+
+func _run_speaker_reinforcements(events: Array[Dictionary]) -> void:
+	var period := int(_stage_config.get("speaker_reinforcement_period_ticks", 0))
+	var wave_limit := int(_stage_config.get("speaker_reinforcement_wave_limit", 0))
+	if (
+		period <= 0
+		or wave_limit <= 0
+		or tick_index <= 0
+		or tick_index % period != 0
+		or _speaker_reinforcement_waves >= wave_limit
+	):
+		return
+	_speaker_reinforcement_waves += 1
+	var lane := (_speaker_reinforcement_waves + _stage_index) % 3
+	var unit_id := "speaker_reinforcement_%d" % _speaker_reinforcement_waves
+	var road_position := mini(ROAD_END - 30, _front_line() + 150)
+	var spawns_unit := bool(_stage_config.get("speaker_reinforcement_spawns_unit", true))
+	if spawns_unit:
+		_units.append(_enemy(
+			unit_id,
+			"广播车增援",
+			"fighter",
+			_stage_index,
+			road_position,
+			lane,
+			70,
+			15,
+			5,
+			36,
+			7,
+			false
+		))
+	events.append({
+		"type": &"speaker_reinforcement",
+		"tick": tick_index,
+		"wave": _speaker_reinforcement_waves,
+		"wave_limit": wave_limit,
+		"unit_id": StringName(unit_id) if spawns_unit else &"",
+		"spawns_unit": spawns_unit,
+		"lane": lane,
+		"road_position": road_position,
+	})
+
+
+func _run_speaker_echo(events: Array[Dictionary]) -> void:
+	var period := int(_stage_config.get("speaker_echo_period_ticks", 0))
+	var warning_ticks := int(_stage_config.get("speaker_echo_warning_ticks", 0))
+	var impact_limit := int(_stage_config.get("speaker_echo_impact_limit", 0))
+	if (
+		period <= 0
+		or warning_ticks <= 0
+		or impact_limit <= 0
+		or _speaker_echo_impact_count >= impact_limit
+		or tick_index <= 0
+	):
+		return
+	var cycle := int(tick_index / period)
+	var targets_front := cycle % 2 == 0
+	if tick_index % period == period - warning_ticks:
+		events.append({
+			"type": &"speaker_echo_warning",
+			"tick": tick_index,
+			"impact_tick": tick_index + warning_ticks,
+			"remaining_ticks": warning_ticks,
+			"rank": "front" if targets_front else "back",
+		})
+		return
+	if tick_index % period != 0:
+		return
+	targets_front = cycle % 2 == 1
+	var allies := _living_main_allies()
+	if allies.is_empty():
+		return
+	var split := int(ceil(float(allies.size()) / 2.0))
+	var targets: Array[Dictionary] = []
+	for index in allies.size():
+		if (targets_front and index < split) or (not targets_front and index >= split):
+			targets.append(allies[index])
+	if targets.is_empty():
+		targets = allies
+	var hp_before := 0
+	var hp_after := 0
+	for ally in targets:
+		hp_before += int(ally.get("hp", 0))
+		_apply_unit_damage(
+			ally,
+			int(_stage_config.get("speaker_echo_damage", 1)),
+			&"speaker_echo_tower",
+			false,
+			events
+		)
+		hp_after += int(ally.get("hp", 0))
+	var effective_damage := maxi(0, hp_before - hp_after)
+	_speaker_echo_impact_count += 1
+	_speaker_echo_damage_dealt += effective_damage
+	events.append({
+		"type": &"speaker_echo_impact",
+		"tick": tick_index,
+		"rank": "front" if targets_front else "back",
+		"affected": targets.size(),
+		"damage": effective_damage,
+		"impact": _speaker_echo_impact_count,
+		"impact_limit": impact_limit,
+	})
 
 
 func snapshot() -> Dictionary:
@@ -853,6 +972,9 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"parasite_extra_summons": _parasite_extra_summons,
 		"resonance_pulse_count": _resonance_pulse_count,
 		"resonance_energy_drained": _resonance_energy_drained,
+		"speaker_reinforcement_waves": _speaker_reinforcement_waves,
+		"speaker_echo_impact_count": _speaker_echo_impact_count,
+		"speaker_echo_damage_dealt": _speaker_echo_damage_dealt,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,
 		"gman_max_hp": gman_max_hp,

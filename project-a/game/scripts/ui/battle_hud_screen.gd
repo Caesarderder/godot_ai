@@ -117,6 +117,26 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 			)
 			_chapter_feedback_updates = 6
 			_chapter_feedback_danger = true
+		elif event_type == &"speaker_reinforcement":
+			_chapter_feedback_copy = "广播车增援 · 第%d/%d波进入战场 · 立即集火新增目标" % [
+				int(event.get("wave", 1)),
+				int(event.get("wave_limit", 1)),
+			]
+			_chapter_feedback_updates = 8
+			_chapter_feedback_danger = false
+		elif event_type == &"speaker_echo_warning":
+			_chapter_feedback_copy = "双塔回响蓄能 · 2秒后冲击%s · 检查护盾与治疗" % (
+				"前排" if String(event.get("rank", "front")) == "front" else "后排"
+			)
+			_chapter_feedback_updates = 10
+			_chapter_feedback_danger = false
+		elif event_type == &"speaker_echo_impact":
+			_chapter_feedback_copy = "双塔回响 · %s承受 %d 伤害 · 下一次将切换排位" % [
+				"前排" if String(event.get("rank", "front")) == "front" else "后排",
+				int(event.get("damage", 0)),
+			]
+			_chapter_feedback_updates = 6
+			_chapter_feedback_danger = true
 	if not _skill_feedback_queue.is_empty():
 		_skill_confirmation_updates = 0
 	_start_next_skill_feedback()

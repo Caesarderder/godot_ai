@@ -332,6 +332,59 @@ func _run() -> void:
 			and hud.status_label.text.contains("全队损失 42 能量"),
 		"chapter-two pulse quantifies its real impact after the warning"
 	)
+	hud.apply_battle_events([{
+		"type": &"speaker_reinforcement",
+		"wave": 1,
+		"wave_limit": 2,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "广播车队",
+		"road_progress": 520,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("广播车增援")
+			and hud.status_label.text.contains("第1/2波"),
+		"stage 2-3 HUD turns a spawned enemy into readable tempo pressure"
+	)
+	hud.apply_battle_events([{
+		"type": &"speaker_echo_warning",
+		"rank": "back",
+		"remaining_ticks": 10,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "双塔回响",
+		"road_progress": 560,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("2秒后冲击后排"),
+		"stage 2-4 HUD names the threatened rank before impact"
+	)
+	hud.apply_battle_events([{
+		"type": &"speaker_echo_impact",
+		"rank": "back",
+		"damage": 38,
+	}])
+	hud.apply_snapshot({
+		"stage_index": 1,
+		"stage_count": 3,
+		"stage_name": "双塔回响",
+		"road_progress": 560,
+		"warnings": [],
+		"units": [],
+	})
+	_check(
+		hud.status_label.text.contains("后排承受 38 伤害")
+			and hud.status_label.text.contains("下一次将切换排位"),
+		"echo impact quantifies the consequence and teaches the next alternating target"
+	)
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

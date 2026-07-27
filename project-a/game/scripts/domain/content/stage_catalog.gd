@@ -222,6 +222,7 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 	var readability := _readability_fields(stage_id, chapter, stage_in_chapter, unlock_victory)
 	var recommendation := _recommendation_fields(stage_id)
 	var resonance := _resonance_profile(chapter, stage_in_chapter)
+	var encounter := _chapter_two_encounter_profile(chapter, stage_in_chapter)
 	return {
 		"stage_id": stage_id,
 		"act": 1,
@@ -255,6 +256,13 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"resonance_warning_ticks": int(resonance.get("warning_ticks", 0)),
 		"resonance_energy_drain": int(resonance.get("energy_drain", 0)),
 		"resonance_weakness_ticks": int(resonance.get("weakness_ticks", 0)),
+		"speaker_reinforcement_period_ticks": int(encounter.get("reinforcement_period_ticks", 0)),
+		"speaker_reinforcement_wave_limit": int(encounter.get("reinforcement_wave_limit", 0)),
+		"speaker_reinforcement_spawns_unit": bool(encounter.get("reinforcement_spawns_unit", true)),
+		"speaker_echo_period_ticks": int(encounter.get("echo_period_ticks", 0)),
+		"speaker_echo_warning_ticks": int(encounter.get("echo_warning_ticks", 0)),
+		"speaker_echo_damage": int(encounter.get("echo_damage", 0)),
+		"speaker_echo_impact_limit": int(encounter.get("echo_impact_limit", 0)),
 		"power_bp": power_bp,
 		"minimum_power": int(recommended_power * 85 / 100),
 		"recommended_power": recommended_power,
@@ -272,6 +280,36 @@ static func _resonance_profile(chapter: int, stage_in_chapter: int) -> Dictionar
 		5: {"period_ticks": 35, "warning_ticks": 10, "energy_drain": 18, "weakness_ticks": 8},
 	}
 	return (beats.get(stage_in_chapter, beats[5]) as Dictionary).duplicate(true)
+
+
+static func _chapter_two_encounter_profile(
+	chapter: int,
+	stage_in_chapter: int
+) -> Dictionary:
+	if chapter != 2:
+		return {}
+	var beats := {
+		3: {
+			"reinforcement_period_ticks": 65,
+			"reinforcement_wave_limit": 2,
+		},
+		4: {
+			"echo_period_ticks": 50,
+			"echo_warning_ticks": 10,
+			"echo_damage": 1,
+			"echo_impact_limit": 2,
+		},
+		5: {
+			"reinforcement_period_ticks": 70,
+			"reinforcement_wave_limit": 1,
+			"reinforcement_spawns_unit": false,
+			"echo_period_ticks": 50,
+			"echo_warning_ticks": 10,
+			"echo_damage": 1,
+			"echo_impact_limit": 3,
+		},
+	}
+	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
 
 
 static func _endless_index(stage_id: String) -> int:
