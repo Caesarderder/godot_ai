@@ -438,6 +438,30 @@ func _run() -> void:
 			and tech_preview.get_global_rect().end.y <= float(root.size.y),
 		"faction technology preview remains visible inside the 844x390 viewport"
 	)
+	var cleared := game.current_state().stage_progress.get("cleared_stages", []) as Array
+	for stage_index in range(1, 6):
+		var stage_id := "stage_3_%d" % stage_index
+		if not cleared.has(stage_id):
+			cleared.append(stage_id)
+	game.current_state().stage_progress["cleared_stages"] = cleared
+	game.current_state().stage_progress["highest_unlocked_stage"] = "stage_4_1"
+	main.call("_show_blueprints")
+	await _wait_frames(4)
+	tech_preview = main.find_child("FactionTechPreview", true, false) as Control
+	var tier_two := main.call("_active_faction_protocol", game.current_state()) as Dictionary
+	_check(
+		int(tier_two.get("tier", 0)) == 2
+			and int(tier_two.get("activation_chapter", 0)) == 4
+			and _tree_has_text(tech_preview, "Tier 2阵营科技已激活")
+			and _tree_has_text(tech_preview, "第4章起自动生效"),
+		"chapter-three completion durably upgrades the same faction protocol to Tier 2"
+	)
+	_check(
+		tech_preview != null
+			and tech_preview.get_global_rect().end.x <= float(root.size.x)
+			and tech_preview.get_global_rect().end.y <= float(root.size.y),
+		"Tier 2 technology remains fully visible inside the 844x390 viewport"
+	)
 
 	await _finish(main, game, audio_director)
 

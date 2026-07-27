@@ -87,6 +87,11 @@ Tier 1 阵营协议不增加新的存档字段：App Shell 仅在 `stage_2_5` �
 `BattleSession` 在首 tick 验证编队中至少有一名同阵营角色后，原子应用一次效果并发布
 `faction_protocol`。表现层只消费事件，不决定协议是否生效。
 
+Tier 2 沿用同一派生链：若 `stage_3_5` 已首通，App Shell 从相同 receipt 选择同阵营的 Tier 2
+定义并注入第四章及以后关卡。Tier 2 通过 `tier`、`allied_value` 与 `zone_count` 扩展同一效果
+模型，不创建第二协议槽或保存字段；BattleSession 的事件和结算结果必须保留 tier，科技蓝图则
+直接读取 `_active_faction_protocol()`，避免战斗已升级但蓝图仍显示 Tier 1 的投影分叉。
+
 ## 数据合同
 
 `hero_fragments` 使用 `archetype_id → non-negative int`，只接受 FactoryCatalog 已知可招募型号。

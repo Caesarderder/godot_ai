@@ -90,13 +90,15 @@ func _apply_view() -> void:
 	var preview := _view.get("faction_tech_preview", {}) as Dictionary
 	results_panel.visible = showing_results
 	tech_preview.visible = not showing_results and not preview.is_empty()
-	tech_identity.text = "阵营科技已激活 · %s\n%s" % [
+	tech_identity.text = "Tier %d阵营科技已激活 · %s\n%s" % [
+		int(preview.get("tier", 1)),
 		String(preview.get("faction", "阵营待形成")),
 		String(preview.get("title", "未来协议")),
 	]
-	tech_effect.text = "%s\n第3章起自动生效 · 编入同阵营角色可扩大收益" % String(
-		preview.get("effect", "")
-	)
+	tech_effect.text = "%s\n第%d章起自动生效 · 编入同阵营角色可扩大收益" % [
+		String(preview.get("effect", "")),
+		int(preview.get("activation_chapter", 3)),
+	]
 	tabs.visible = not showing_results
 	core_panel.visible = not showing_results and preview.is_empty()
 	branch_row.visible = not showing_results

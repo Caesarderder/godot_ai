@@ -320,11 +320,27 @@ func _capture() -> void:
 	await _wait_frames(2)
 	if not _save("res://artifacts/ui-chapter-three-overseer-shield-844x390.png"):
 		return
+	state = game.current_state()
+	var cleared := state.stage_progress.get("cleared_stages", []) as Array
+	for stage_index in range(1, 6):
+		var stage_id := "stage_3_%d" % stage_index
+		if not cleared.has(stage_id):
+			cleared.append(stage_id)
+	state.stage_progress["cleared_stages"] = cleared
+	state.stage_progress["highest_unlocked_stage"] = "stage_4_1"
+	main.call("_show_blueprints")
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-tier-two-tech-844x390.png"):
+		return
 	main.call("_start_stage_battle", "stage_4_1")
 	await _wait_frames(5)
 	battle_world = main.get("battle_world")
 	battle_world.set_process(false)
 	battle_session = battle_world.get("_session")
+	battle_world.call("_process", 0.2)
+	await _wait_frames(2)
+	if not _save("res://artifacts/ui-faction-tier-two-battle-844x390.png"):
+		return
 	battle_session.tick_index = 49
 	battle_world.call("_process", 0.2)
 	await _wait_frames(2)

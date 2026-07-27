@@ -1836,7 +1836,7 @@ func _blueprint_view() -> Dictionary:
 		(state.stage_progress.get("cleared_stages", []) as Array).has("stage_2_5")
 		and not faction_archetype_id.is_empty()
 	):
-		faction_tech_preview = FactionCatalog.tech_preview_for(faction_archetype_id)
+		faction_tech_preview = _active_faction_protocol(state)
 	var branches := {
 		"ordinary": {"title": "突击枝", "summary": "突破与控场，两条独立研发路线", "recipes": ["ordinary.assault", "ordinary.sonic"]},
 		"heavy": {"title": "重装枝", "summary": "承压与斩杀，两条独立研发路线", "recipes": ["heavy.armored", "heavy.saw"]},
@@ -2713,6 +2713,8 @@ func _show_result() -> void:
 		qualification = _chapter_transition_copy(completed_chapter, next_stage)
 		if completed_chapter == 2:
 			qualification += "\n%s" % _faction_tech_unlock_short_copy()
+		elif completed_chapter == 3:
+			qualification += "\n%s" % _faction_tech_unlock_short_copy()
 		primary_label = "查看第%d章新战线" % int(next_stage.get("chapter", completed_chapter + 1))
 		primary_action = "map_stage"
 		primary_payload = {"stage_id": next_stage_id}
@@ -2768,8 +2770,8 @@ func _show_result() -> void:
 		"hurdle_proof": hurdle_proof,
 		"debrief": debrief,
 		"growth": (
-			_faction_tech_result_copy()
-			if won and cleared_stage_id == "stage_2_5"
+			_faction_tech_result_copy(2 if cleared_stage_id == "stage_3_5" else 1)
+			if won and cleared_stage_id in ["stage_2_5", "stage_3_5"]
 			else (
 				protocol_growth
 				if not protocol_growth.is_empty()
@@ -2984,8 +2986,11 @@ func _faction_tech_unlock_short_copy() -> String:
 	var preview := _active_faction_protocol(game.current_state())
 	if preview.is_empty():
 		return "阵营科技解锁 · 3-1起生效"
-	return "科技解锁 · %s · 3-1起生效" % [
+	return "Tier %d科技%s · %s · %d-1起生效" % [
+		int(preview.get("tier", 1)),
+		"升级" if int(preview.get("tier", 1)) >= 2 else "解锁",
 		String(preview.get("title", "阵营协议")),
+		int(preview.get("activation_chapter", 3)),
 	]
 
 
@@ -3276,20 +3281,23 @@ func _hero_experience_copy(event: Dictionary, runtime_result: Dictionary) -> Str
 	return base
 
 
-func _faction_tech_result_copy() -> String:
+func _faction_tech_result_copy(tier: int = 1) -> String:
 	var state: RefCounted = game.current_state()
 	var event := RecruitmentResultProjection.latest_event_for_command(
 		state,
 		"claim_faction_signal"
 	)
 	var archetype_id := String(event.get("guaranteed_duplicate_archetype", ""))
-	var preview := FactionCatalog.tech_preview_for(archetype_id)
+	var preview := FactionCatalog.tech_protocol_for(archetype_id, tier)
 	if preview.is_empty():
 		return _growth_opportunity_copy({})
-	return "阵营科技解锁 · %s「%s」：%s（第3章起自动生效）" % [
+	return "Tier %d阵营科技%s · %s「%s」：%s（第%d章起自动生效）" % [
+		int(preview.get("tier", tier)),
+		"升级" if tier >= 2 else "解锁",
 		String(preview.get("faction", "阵营")),
 		String(preview.get("title", "未来协议")),
 		String(preview.get("effect", "")),
+		int(preview.get("activation_chapter", 3)),
 	]
 
 
@@ -3398,7 +3406,12 @@ func _active_faction_protocol(state: RefCounted) -> Dictionary:
 	var archetype_id := String(
 		faction_event.get("guaranteed_duplicate_archetype", "")
 	)
-	return FactionCatalog.tech_preview_for(archetype_id)
+	var tier := (
+		2
+		if (state.stage_progress.get("cleared_stages", []) as Array).has("stage_3_5")
+		else 1
+	)
+	return FactionCatalog.tech_protocol_for(archetype_id, tier)
 
 
 func _claim_output() -> void:

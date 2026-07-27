@@ -2,6 +2,7 @@ extends SceneTree
 
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const FactionCatalogScript := preload("res://game/scripts/domain/content/faction_catalog.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
 const TEST_SAFETY_TICKS: int = 5000
 
@@ -31,6 +32,7 @@ func _init() -> void:
 	_test_chapter_two_resonance_learning_curve()
 	_test_chapter_two_encounter_escalation()
 	_test_faction_protocols_create_distinct_openings()
+	_test_tier_two_faction_protocols_expand_the_formation_or_front()
 	_test_chapter_three_encounter_learning_curve()
 	_test_chapter_four_counterplay_ladder()
 	_test_act_one_stage_catalog_and_config_start()
@@ -109,6 +111,85 @@ func _test_faction_protocols_create_distinct_openings() -> void:
 				_check(int((snapshot["structures"][0] as Dictionary).get("armor_break_ticks", 0)) > 1000, "bombardment faction marks the opening structure")
 			"opening_weakness":
 				_check(int((snapshot["enemies"][0] as Dictionary).get("weakness_ticks", 0)) > 0, "disruption faction weakens the opening defenders")
+
+
+func _test_tier_two_faction_protocols_expand_the_formation_or_front() -> void:
+	var cases: Array[Dictionary] = [
+		{"hero": "assault", "ally": "sonic", "effect_id": "opening_energy"},
+		{"hero": "armored", "ally": "assault", "effect_id": "opening_shield"},
+		{"hero": "rocket", "ally": "armored", "effect_id": "opening_armor_break"},
+		{"hero": "sonic", "ally": "assault", "effect_id": "opening_weakness"},
+	]
+	for case in cases:
+		var protocol := FactionCatalogScript.tech_protocol_for(String(case["hero"]), 2)
+		var config := StageCatalogScript.stage("stage_4_1")
+		config["faction_protocol"] = protocol
+		var heroes: Array[Dictionary] = [
+			_hero(0, String(case["hero"]), "fighter", 2, 600, 80, 35),
+			_hero(1, String(case["ally"]), "fighter", 2, 600, 80, 35),
+		]
+		var session: RefCounted = BattleSessionScript.new()
+		session.start(heroes, "stage_4_1", config)
+		var events: Array[Dictionary] = session.advance_tick()
+		var protocol_events: Array = events.filter(
+			func(event: Dictionary) -> bool:
+				return String(event.get("type", "")) == "faction_protocol"
+		)
+		_check(
+			protocol_events.size() == 1
+				and int((protocol_events[0] as Dictionary).get("tier", 0)) == 2,
+			"%s Tier 2 emits one explicit upgraded protocol event" % case["effect_id"]
+		)
+		var snapshot := session.snapshot() as Dictionary
+		var result_probe := session._finish_result(false, "tier_two_probe") as Dictionary
+		_check(
+			int(result_probe.get("faction_protocol_tier", 0)) == 2,
+			"%s Tier 2 remains visible to settlement" % case["effect_id"]
+		)
+		match String(case["effect_id"]):
+			"opening_energy":
+				_check(
+					int((snapshot["units"][1] as Dictionary).get("energy", 0)) >= 20,
+					"fast Tier 2 lets the faction core energize an off-faction ally"
+				)
+			"opening_shield":
+				_check(
+					int((snapshot["units"][1] as Dictionary).get("shield", 0)) > 0,
+					"defense Tier 2 extends a smaller opening shield to the whole permanent formation"
+				)
+			"opening_armor_break":
+				var deep_marks := (snapshot.get("structures", []) as Array).filter(
+					func(structure: Dictionary) -> bool:
+						return (
+							int(structure.get("stage", -1)) == 1
+							and int(structure.get("armor_break_ticks", 0)) > 0
+						)
+				)
+				_check(not deep_marks.is_empty(), "bombardment Tier 2 marks structures in the second battle zone")
+			"opening_weakness":
+				var deep_weakness := (snapshot.get("enemies", []) as Array).filter(
+					func(enemy: Dictionary) -> bool:
+						return (
+							int(enemy.get("stage", -1)) == 1
+							and int(enemy.get("weakness_ticks", 0)) > 0
+						)
+				)
+				_check(not deep_weakness.is_empty(), "disruption Tier 2 weakens defenders in the second battle zone")
+	var replay_config := StageCatalogScript.stage("stage_3_1")
+	replay_config["faction_protocol"] = FactionCatalogScript.tech_protocol_for("armored", 2)
+	var replay_session: RefCounted = BattleSessionScript.new()
+	replay_session.start(
+		[_hero(0, "armored", "guardian", 2, 600, 80, 35)],
+		"stage_3_1",
+		replay_config
+	)
+	var replay_events: Array[Dictionary] = replay_session.advance_tick()
+	_check(
+		replay_events.filter(
+			func(event: Dictionary) -> bool: return String(event.get("type", "")) == "faction_protocol"
+		).is_empty(),
+		"Tier 2 does not leak backward into chapter-three replays before its chapter-four activation"
+	)
 
 
 func _test_damage_energy_normalization() -> void:

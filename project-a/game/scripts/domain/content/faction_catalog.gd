@@ -53,6 +53,38 @@ const TECH_PREVIEWS: Dictionary = {
 	},
 }
 
+const TIER_TWO_TECH: Dictionary = {
+	"快攻破城": {
+		"title": "全军链式点火协议",
+		"effect": "同阵营主力以50能量开局，其余永久主力也获得20能量，阵营核心带动全队进入首轮爆发",
+		"effect_id": "opening_energy",
+		"value": 50,
+		"allied_value": 20,
+	},
+	"钢铁防线": {
+		"title": "全域堡垒协议",
+		"effect": "同阵营主力获得最大生命18%的20秒护盾，其余永久主力也获得8%护盾",
+		"effect_id": "opening_shield",
+		"value": 1800,
+		"allied_value": 800,
+		"duration_ticks": 100,
+	},
+	"远程轰炸": {
+		"title": "纵深火力标定协议",
+		"effect": "前两个战区的结构整局处于火力标定状态，受到的伤害提高25%",
+		"effect_id": "opening_armor_break",
+		"zone_count": 2,
+		"duration_ticks": 1200,
+	},
+	"干扰增殖": {
+		"title": "纵深失序扩散协议",
+		"effect": "前两个战区守军开局虚弱15秒，让控制、召唤与续航阵容完整展开",
+		"effect_id": "opening_weakness",
+		"zone_count": 2,
+		"duration_ticks": 75,
+	},
+}
+
 
 static func faction_for(archetype_id: String) -> String:
 	return String(FACTIONS.get(archetype_id, "独立战术"))
@@ -66,13 +98,20 @@ static func next_star_effect(archetype_id: String, target_star: int) -> String:
 
 
 static func tech_preview_for(archetype_id: String) -> Dictionary:
+	return tech_protocol_for(archetype_id, 1)
+
+
+static func tech_protocol_for(archetype_id: String, tier: int = 1) -> Dictionary:
 	var faction := faction_for(archetype_id)
-	var preview := (TECH_PREVIEWS.get(faction, {}) as Dictionary).duplicate(true)
+	var catalog := TIER_TWO_TECH if tier >= 2 else TECH_PREVIEWS
+	var preview := (catalog.get(faction, {}) as Dictionary).duplicate(true)
 	if preview.is_empty():
 		return {}
 	preview["faction"] = faction
 	preview["archetype_id"] = archetype_id
 	preview["member_archetypes"] = archetypes_for_faction(faction)
+	preview["tier"] = 2 if tier >= 2 else 1
+	preview["activation_chapter"] = 4 if tier >= 2 else 3
 	return preview
 
 

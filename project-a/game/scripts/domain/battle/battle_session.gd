@@ -114,9 +114,13 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 		int(_stage_config.get("boss_cannon_period_ticks", DEFAULT_BOSS_CANNON_PERIOD_TICKS))
 	)
 	_solo_pressure_bp = maxi(10000, int(_stage_config.get("solo_pressure_bp", 10000)))
+	var configured_protocol := (_stage_config.get("faction_protocol", {}) as Dictionary).duplicate(true)
 	_faction_protocol = (
-		(_stage_config.get("faction_protocol", {}) as Dictionary).duplicate(true)
-		if int(_stage_config.get("chapter", 1)) >= 3
+		configured_protocol
+		if (
+			int(_stage_config.get("chapter", 1))
+			>= int(configured_protocol.get("activation_chapter", 3))
+		)
 		else {}
 	)
 	if _cannon_warning_ticks <= 0:
@@ -269,24 +273,32 @@ func _apply_faction_protocol(events: Array[Dictionary]) -> void:
 	var effect_id := String(_faction_protocol.get("effect_id", ""))
 	var affected := 0
 	var value := int(_faction_protocol.get("value", 0))
+	var allied_value := int(_faction_protocol.get("allied_value", 0))
+	var zone_count := maxi(1, int(_faction_protocol.get("zone_count", 1)))
 	match effect_id:
 		"opening_energy":
-			for ally in matching_allies:
-				ally["energy"] = mini(SKILL_COST, int(ally.get("energy", 0)) + value)
+			for ally in _living_main_allies():
+				var gain := value if matching_allies.has(ally) else allied_value
+				if gain <= 0:
+					continue
+				ally["energy"] = mini(SKILL_COST, int(ally.get("energy", 0)) + gain)
 				affected += 1
 		"opening_shield":
 			var duration := int(_faction_protocol.get("duration_ticks", 100))
-			for ally in matching_allies:
+			for ally in _living_main_allies():
+				var shield_bp := value if matching_allies.has(ally) else allied_value
+				if shield_bp <= 0:
+					continue
 				ally["shield"] = maxi(
 					int(ally.get("shield", 0)),
-					int(int(ally.get("max_hp", 1)) * value / 10000)
+					int(int(ally.get("max_hp", 1)) * shield_bp / 10000)
 				)
 				ally["shield_ticks"] = maxi(int(ally.get("shield_ticks", 0)), duration)
 				affected += 1
 		"opening_armor_break":
 			var duration := int(_faction_protocol.get("duration_ticks", 1200))
 			for structure in _structures:
-				if int(structure.get("stage", -1)) == 0:
+				if int(structure.get("stage", -1)) < zone_count:
 					structure["armor_break_ticks"] = maxi(
 						int(structure.get("armor_break_ticks", 0)),
 						duration
@@ -297,7 +309,7 @@ func _apply_faction_protocol(events: Array[Dictionary]) -> void:
 			for enemy in _units:
 				if (
 					int(enemy.get("team", TEAM_ALLY)) == TEAM_ENEMY
-					and int(enemy.get("stage", -1)) == 0
+					and int(enemy.get("stage", -1)) < zone_count
 				):
 					enemy["weakness_ticks"] = maxi(
 						int(enemy.get("weakness_ticks", 0)),
@@ -315,6 +327,9 @@ func _apply_faction_protocol(events: Array[Dictionary]) -> void:
 		"effect_id": effect_id,
 		"affected": affected,
 		"value": value,
+		"allied_value": allied_value,
+		"tier": int(_faction_protocol.get("tier", 1)),
+		"zone_count": zone_count,
 		"duration_ticks": int(_faction_protocol.get("duration_ticks", 0)),
 	})
 
@@ -1575,6 +1590,7 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"faction_protocol_id": String(_faction_protocol.get("effect_id", "")),
 		"faction_protocol_title": String(_faction_protocol.get("title", "")),
 		"faction_protocol_faction": String(_faction_protocol.get("faction", "")),
+		"faction_protocol_tier": int(_faction_protocol.get("tier", 0)),
 		"faction_protocol_affected": _faction_protocol_affected,
 		"gman_survived": gman_survived,
 		"gman_hp": gman_hp,

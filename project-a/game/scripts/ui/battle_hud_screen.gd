@@ -113,23 +113,31 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 				_skill_feedback_queue.append(copy)
 		elif event_type == &"faction_protocol":
 			var effect_id := String(event.get("effect_id", ""))
+			var tier := int(event.get("tier", 1))
 			var detail := ""
 			match effect_id:
 				"opening_energy":
-					detail = "%d名同阵营主力获得%d开局能量" % [
+					detail = "%d名主力获得开局能量，核心成员最高+%d" % [
 						int(event.get("affected", 0)),
 						int(event.get("value", 0)),
 					]
 				"opening_shield":
-					detail = "%d名同阵营主力获得开局护盾" % int(event.get("affected", 0))
+					detail = "%d名主力获得开局护盾，核心成员护盾更厚" % int(event.get("affected", 0))
 				"opening_armor_break":
-					detail = "%d座前线结构已被标定，承伤提高25%%" % int(event.get("affected", 0))
+					detail = "%d座前线结构已被标定，覆盖%d个战区" % [
+						int(event.get("affected", 0)),
+						int(event.get("zone_count", 1)),
+					]
 				"opening_weakness":
-					detail = "%d名首区守军陷入10秒虚弱" % int(event.get("affected", 0))
+					detail = "%d名守军陷入虚弱，覆盖%d个战区" % [
+						int(event.get("affected", 0)),
+						int(event.get("zone_count", 1)),
+					]
 				_:
 					detail = "阵营效果已生效"
-			_chapter_feedback_copy = "%s · %s：%s" % [
+			_chapter_feedback_copy = "%s · Tier %d「%s」：%s" % [
 				String(event.get("faction", "阵营")),
+				tier,
 				String(event.get("title", "阵营协议")),
 				detail,
 			]
