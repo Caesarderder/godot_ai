@@ -148,6 +148,32 @@ async function touch(cdp, x, y) {
 	await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 }
 
+
+async function pressEnter(cdp) {
+	for (const type of ["keyDown", "keyUp"]) {
+		await cdp.send("Input.dispatchKeyEvent", {
+			type,
+			key: "Enter",
+			code: "Enter",
+			windowsVirtualKeyCode: 13,
+			nativeVirtualKeyCode: 13,
+		});
+	}
+}
+
+
+async function click(cdp, x, y) {
+	for (const type of ["mousePressed", "mouseReleased"]) {
+		await cdp.send("Input.dispatchMouseEvent", {
+			type,
+			x,
+			y,
+			button: "left",
+			clickCount: 1,
+		});
+	}
+}
+
 async function screenshot(cdp, name) {
 	const result = await cdp.send("Page.captureScreenshot", {
 		format: "png",
@@ -374,13 +400,13 @@ async function main() {
 			throw new Error(`expected a fresh playable save: ${JSON.stringify(freshSave)}`);
 		}
 		// The current onboarding contract builds the research lab before 1-1.
-		await touch(cdp, 630, 323);
-		await new Promise((accept) => setTimeout(accept, 700));
-		await touch(cdp, 670, 350);
-		await new Promise((accept) => setTimeout(accept, 500));
+		await click(cdp, 630, 322);
+		await new Promise((accept) => setTimeout(accept, 900));
 		await touch(cdp, 280, 270);
 		await new Promise((accept) => setTimeout(accept, 500));
 		await touch(cdp, 650, 350);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-opening-research-placement-844x390.png");
 		const openingResearchWork = await waitFor(
 			"opening research construction persisted to IndexedDB",
 			async () => {

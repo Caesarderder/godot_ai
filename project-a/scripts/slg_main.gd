@@ -3174,7 +3174,10 @@ func _open_factory_task_context() -> void:
 	var state: RefCounted = game.current_state()
 	var onboarding := OnboardingService.snapshot(state)
 	var objective_id := _onboarding_objective_id(onboarding)
-	if (
+	if objective_id == "construct_research_lab":
+		_begin_facility_construction("research_lab")
+		return
+	elif (
 		String(onboarding.get("task_id", "")) == "operation.choose_growth"
 		and objective_id == "commission_resource_facility"
 	):
