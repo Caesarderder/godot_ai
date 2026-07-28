@@ -240,6 +240,8 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 						roster: (parsed.roster ?? []).map((hero) => ({
 							heroId: hero.hero_id,
 							archetypeId: hero.archetype_id,
+							level: hero.level,
+							xp: hero.xp,
 							star: hero.star,
 							activeSkillLevel: hero.active_skill_level,
 						})),
@@ -952,6 +954,120 @@ async function main() {
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-faction-star-unlocked-844x390.png");
 
+		// Continue the same player-owned save through the second-chapter payoff.
+		// This intentionally follows rendered controls instead of mutating XP,
+		// levels, stage progress, or protocol state through a test backdoor.
+		await touch(cdp, 310, 292);
+		const factionLevelTwo = await waitFor(
+			"the selected faction core reached level two through its visible cultivation action",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const hero = save?.roster?.find(
+					(candidate) => candidate.heroId === factionStar.hero.heroId,
+				);
+				return Number(hero?.level ?? 0) === 2 ? { save, hero } : null;
+			},
+			10000,
+			250,
+		);
+		await touch(cdp, 730, 350);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-level-two-goal-844x390.png");
+		await touch(cdp, 420, 252);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-breakthrough-recon-844x390.png");
+		await touch(cdp, 665, 315);
+		await new Promise((accept) => setTimeout(accept, 700));
+		const breakthroughAttemptBefore = Number(
+			factionLevelTwo.save.attempts?.stage_2_4 ?? 0,
+		);
+		const factionBreakthrough = await finishActiveBattle(
+			cdp,
+			"stage_2_4 two-star faction breakthrough",
+			(save) => Number(save.attempts?.stage_2_4 ?? 0) > breakthroughAttemptBefore,
+			"browser-faction-breakthrough-result-844x390.png",
+			[],
+			310,
+			1000,
+			180000,
+			null,
+			{
+				x: 525,
+				y: 158,
+				intervalMs: 2500,
+			},
+		);
+		factionJourneySkillTouches += factionBreakthrough.skillTouches;
+		if (!factionBreakthrough.save.clearedStages?.includes("stage_2_4")) {
+			throw new Error(
+				`the visible two-star level-two breakthrough route lost stage_2_4: ${JSON.stringify(factionBreakthrough.save)}`,
+			);
+		}
+		await touch(cdp, 650, 240);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-level-three-focus-844x390.png");
+		await touch(cdp, 310, 292);
+		const factionLevelThree = await waitFor(
+			"the selected faction core reached level three through its visible cultivation action",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const hero = save?.roster?.find(
+					(candidate) => candidate.heroId === factionStar.hero.heroId,
+				);
+				return Number(hero?.level ?? 0) === 3 ? { save, hero } : null;
+			},
+			10000,
+			250,
+		);
+		await touch(cdp, 730, 350);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-level-three-goal-844x390.png");
+		await touch(cdp, 420, 252);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-boss-validation-recon-844x390.png");
+		await touch(cdp, 665, 315);
+		await new Promise((accept) => setTimeout(accept, 700));
+		const chapterTwoBossAttemptBefore = Number(
+			factionLevelThree.save.attempts?.stage_2_5 ?? 0,
+		);
+		const chapterTwoBoss = await finishActiveBattle(
+			cdp,
+			"stage_2_5 faction boss validation",
+			(save) => Number(save.attempts?.stage_2_5 ?? 0) > chapterTwoBossAttemptBefore,
+			"browser-faction-chapter-two-complete-844x390.png",
+			[],
+			310,
+			1000,
+			180000,
+			null,
+			{
+				x: 525,
+				y: 158,
+				intervalMs: 2500,
+			},
+		);
+		factionJourneySkillTouches += chapterTwoBoss.skillTouches;
+		if (
+			!chapterTwoBoss.save.clearedStages?.includes("stage_2_5")
+				|| chapterTwoBoss.save.highestUnlockedStage !== "stage_3_1"
+		) {
+			throw new Error(
+				`the visible two-star level-three boss route lost stage_2_5: ${JSON.stringify(chapterTwoBoss.save)}`,
+			);
+		}
+		await touch(cdp, 650, 300);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-faction-chapter-three-recon-844x390.png");
+		const chapterThreeHandoff = await evaluate(cdp, READ_SAVE_EXPRESSION);
+		if (
+			Number(chapterThreeHandoff?.attempts?.stage_3_1 ?? 0) !== 0
+				|| chapterThreeHandoff?.highestUnlockedStage !== "stage_3_1"
+		) {
+			throw new Error(
+				`chapter-three reconnaissance must not auto-start battle: ${JSON.stringify(chapterThreeHandoff)}`,
+			);
+		}
+
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
 			"   at: can_process (scene/main/node.cpp:902)",
@@ -978,7 +1094,9 @@ async function main() {
 				(total, proof) => total + Number(proof.burstTouches ?? 0),
 				0,
 			)
-			+ Number(lateWall.burstTouches ?? 0);
+			+ Number(lateWall.burstTouches ?? 0)
+			+ Number(factionBreakthrough.burstTouches ?? 0)
+			+ Number(chapterTwoBoss.burstTouches ?? 0);
 		const battleActionTouchInputs = totalSkillTouches + totalBurstTouches;
 		const battleActionTouchesPerSecond = battleActionTouchInputs / (elapsedMs / 1000);
 		if (battleActionTouchesPerSecond > 1) {
@@ -996,7 +1114,7 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through chapter one, faction draw, research, formation, three battle proofs, pressure test, and duplicate-fragment two-star growth",
+			journey: "fresh profile through chapter one, faction draw, research, formation, three battle proofs, pressure test, duplicate-fragment two-star growth, level-three mastery, chapter-two boss, and chapter-three reconnaissance",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
@@ -1033,6 +1151,14 @@ async function main() {
 					: "stage_2_4",
 				fragmentBalanceBeforeStar: fragmentBalance,
 				twoStarCore: factionStar.hero,
+				levelTwoCore: factionLevelTwo.hero,
+				breakthroughStageCleared: factionBreakthrough.save.clearedStages?.includes("stage_2_4"),
+				levelThreeCore: factionLevelThree.hero,
+				chapterTwoBossCleared: chapterTwoBoss.save.clearedStages?.includes("stage_2_5"),
+				tierOneProtocolActivated:
+					chapterTwoBoss.save.clearedStages?.includes("stage_2_5") === true,
+				chapterThreeUnlocked: chapterThreeHandoff.highestUnlockedStage,
+				chapterThreeAttempts: Number(chapterThreeHandoff.attempts?.stage_3_1 ?? 0),
 			},
 			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: totalSkillTouches,
@@ -1084,6 +1210,14 @@ async function main() {
 				"artifacts/browser-faction-late-wall-result-844x390.png",
 				"artifacts/browser-faction-star-ready-844x390.png",
 				"artifacts/browser-faction-star-unlocked-844x390.png",
+				"artifacts/browser-faction-level-two-goal-844x390.png",
+				"artifacts/browser-faction-breakthrough-recon-844x390.png",
+				"artifacts/browser-faction-breakthrough-result-844x390.png",
+				"artifacts/browser-faction-level-three-focus-844x390.png",
+				"artifacts/browser-faction-level-three-goal-844x390.png",
+				"artifacts/browser-faction-boss-validation-recon-844x390.png",
+				"artifacts/browser-faction-chapter-two-complete-844x390.png",
+				"artifacts/browser-faction-chapter-three-recon-844x390.png",
 			],
 		}, null, 2));
 	} finally {
