@@ -914,7 +914,12 @@ async function main() {
 		const fragmentBalance = Number(
 			finalPressureSave.heroFragments?.[finalPressureSave.factionCore] ?? 0,
 		);
-		await touch(cdp, 430, 288);
+		// Follow the same two-step recovery path exposed to the player:
+		// the factory objective opens the exact roster entry, then its star CTA commits.
+		await touch(cdp, 630, 322);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-faction-star-focus-844x390.png");
+		await touch(cdp, 455, 292);
 		const factionStar = await waitFor(
 			"faction-specific fragments upgraded the selected core to two stars",
 			async () => {
