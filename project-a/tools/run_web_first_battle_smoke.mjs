@@ -236,6 +236,11 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 							skillChips: parsed.economy?.skill_chips,
 						},
 						heroFragments: parsed.meta_progression?.hero_fragments,
+						inventoryItems: parsed.inventory?.items,
+						welfareClaimed:
+							parsed.receipt_ledgers?.durable?.["new-player-welfare:claim:v1"] != null,
+						welfareCaseOpened:
+							parsed.receipt_ledgers?.durable?.["new-player-welfare:logistics-case:v1"] != null,
 						formation: parsed.formation,
 						roster: (parsed.roster ?? []).map((hero) => ({
 							heroId: hero.hero_id,
@@ -754,7 +759,7 @@ async function main() {
 				intervalMs: 2500,
 			},
 		);
-		await touch(cdp, 640, 248);
+		await touch(cdp, 640, 293);
 		await new Promise((accept) => setTimeout(accept, 900));
 		const chapterTwoHandoff = await evaluate(cdp, READ_SAVE_EXPRESSION);
 		if (
@@ -763,7 +768,59 @@ async function main() {
 		) {
 			throw new Error(`chapter-two reconnaissance must not auto-start battle: ${JSON.stringify(chapterTwoHandoff)}`);
 		}
+		await screenshot(cdp, "browser-chapter-one-welfare-844x390.png");
+		await touch(cdp, 417, 240);
+		const welfareClaim = await waitFor(
+			"post-chapter celebration gift persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.welfareClaimed === true
+					&& Number(save?.inventoryItems?.contraband_star_core ?? 0) === 1
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-chapter-one-welfare-claimed-844x390.png");
+		await touch(cdp, 417, 235);
+		const welfareCase = await waitFor(
+			"post-chapter logistics case persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.welfareCaseOpened === true
+					&& Number(save?.inventoryItems?.smuggled_logistics_case ?? 0) === 0
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-chapter-one-welfare-opened-844x390.png");
+		await touch(cdp, 417, 300);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-chapter-one-welfare-core-focus-844x390.png");
+		await touch(cdp, 480, 292);
+		const welfareStar = await waitFor(
+			"the recommended one-star chapter reinforcement consumed the welfare core",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const armored = save?.roster?.find((hero) => hero.archetypeId === "armored");
+				return Number(armored?.star ?? 0) === 2
+					&& Number(save?.inventoryItems?.contraband_star_core ?? 0) === 0
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		await touch(cdp, 730, 350);
+		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-chapter-one-faction-recruit-844x390.png");
+		await touch(cdp, 417, 252);
+		await new Promise((accept) => setTimeout(accept, 700));
 		await touch(cdp, 417, 223);
 		const factionTen = await waitFor(
 			"free faction ten-pull receipt persisted to IndexedDB",
@@ -1139,6 +1196,10 @@ async function main() {
 			chapterTwoUnlocked: chapterTwoHandoff.highestUnlockedStage,
 			chapterTwoReconnaissanceAutoStarted: false,
 			factionHandoff: {
+				welfareClaimed: welfareClaim.welfareClaimed,
+				welfareCaseOpened: welfareCase.welfareCaseOpened,
+				recommendedStarterStar:
+					welfareStar.roster.find((hero) => hero.archetypeId === "armored")?.star,
 				freeTenClaimed: factionTen.onboardingClaimed?.["reward.post_chapter_faction_ten"] === true,
 				selectedCore: factionChoice.factionCore,
 				chapterTwoAttemptsAfterChoice: Number(factionChoice.attempts?.stage_2_1 ?? 0),
@@ -1196,6 +1257,10 @@ async function main() {
 				"artifacts/browser-first-boss-started-844x390.png",
 				"artifacts/browser-first-boss-cannon-window-844x390.png",
 				"artifacts/browser-chapter-one-complete-844x390.png",
+				"artifacts/browser-chapter-one-welfare-844x390.png",
+				"artifacts/browser-chapter-one-welfare-claimed-844x390.png",
+				"artifacts/browser-chapter-one-welfare-opened-844x390.png",
+				"artifacts/browser-chapter-one-welfare-core-focus-844x390.png",
 				"artifacts/browser-chapter-one-faction-recruit-844x390.png",
 				"artifacts/browser-faction-recruit-result-844x390.png",
 				"artifacts/browser-faction-blueprint-focus-844x390.png",

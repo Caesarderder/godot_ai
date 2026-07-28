@@ -102,7 +102,7 @@ func _test_faction_journey_projection() -> void:
 	var hierarchy := projection.get("hierarchy", {}) as Dictionary
 	_check(
 		String(hierarchy.get("cta_label", "")).contains("选择我的阵营核心")
-			and String(hierarchy.get("target", "")) == "legion",
+			and String(hierarchy.get("target", "")) == "recruit",
 		"post-ten objective waits for the player's faction decision"
 	)
 	state.economy.recruit_tickets = 1

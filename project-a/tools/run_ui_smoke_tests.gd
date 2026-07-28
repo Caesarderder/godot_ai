@@ -1261,7 +1261,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(_tree_has_text(instance, "军团数据 +"), "boss result exposes the unified legion-data reward")
 	_ok(_tree_has_text(instance, "路线验证"), "boss result closes the chosen growth mastery loop")
 	_ok(_tree_has_text(instance, "首章解锁 · 第2章战线"), "boss result exposes the actual next campaign unlock")
-	_ok(_tree_has_button(instance, "领取阵营起手十连"), "boss result exposes the faction-starter CTA")
+	_ok(_tree_has_button(instance, "领取开服庆典礼包"), "boss result exposes the celebration gift before faction recruitment")
 	instance.call("_show_settlement_error", "存储空间不足")
 	await _wait_frames(2)
 	_ok(instance.find_child("BattleSettlementErrorPanel", true, false) != null, "failed durable settlement opens a blocking recovery screen")

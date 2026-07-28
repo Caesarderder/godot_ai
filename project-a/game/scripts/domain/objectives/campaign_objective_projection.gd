@@ -357,7 +357,7 @@ static func _faction_core_choice_journey() -> Dictionary:
 		"finished": false,
 		"actionable": true,
 		"cta_label": "选择我的阵营核心",
-		"target": "legion",
+		"target": "recruit",
 		"stage_id": "stage_2_1",
 		"hero_id": "",
 		"archetype_id": "",
@@ -511,7 +511,7 @@ static func _faction_recruit_hierarchy() -> Dictionary:
 		"finished": true,
 		"actionable": true,
 		"cta_label": "领取阵营起手十连",
-		"target": "legion",
+		"target": "recruit",
 		"stage_id": "stage_2_1",
 	}
 
