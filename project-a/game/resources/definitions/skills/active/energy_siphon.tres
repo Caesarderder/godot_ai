@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"energy_siphon"
+archetype_id = &"drain_engine"
+display_name = "虹吸引擎"
+short_label = "吸"
+role_copy = "能量支援 · 加速下一轮战术"
+effect_copy = "削弱精英并给最低能量友军充能；二星双目标，三星延长虚弱。"
+timing_copy = "精英登场且队伍技能进入空窗时释放。"

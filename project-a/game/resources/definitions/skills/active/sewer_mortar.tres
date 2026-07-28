@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"sewer_mortar"
+archetype_id = &"mortar"
+display_name = "下水道曲射炮"
+short_label = "炮"
+role_copy = "曲射攻城 · 越线拆塔"
+effect_copy = "轰击当前战区最远目标；二星溅射守军，三星持续破甲结构。"
+timing_copy = "后排塔暴露而前线拥堵时释放。"

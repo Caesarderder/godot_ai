@@ -24,7 +24,10 @@ const STAT_VARIANCE: Dictionary = {
 	"hp": 10, "attack": 3, "defense": 2, "speed_milli": 4000, "crit_bp": 50,
 }
 const ARCHETYPE_IDS: Array[String] = [
-	"gman", "assault", "sonic", "rocket", "bomber", "armored", "saw", "repair", "parasite"
+	"gman", "assault", "sonic", "rocket", "bomber", "armored", "saw", "repair", "parasite",
+	"signal_purifier", "anchor_bastion", "magnetic_conductor", "phase_tunneler", "protocol_weaver"
+	, "ram_breaker", "smoke_screen", "mortar", "interceptor", "bulwark", "crusher",
+	"echo_mimic", "drain_engine", "swarm_beacon", "chronolock"
 ]
 const INITIAL_ARCHETYPES: Array[String] = [
 	"assault", "armored", "assault", "sonic", "repair", "parasite", "armored", "armored"
@@ -116,6 +119,21 @@ static func archetype_display_name(archetype_id: String) -> String:
 		"saw": "双锯重装马桶人",
 		"repair": "维修马桶人",
 		"parasite": "寄生母体马桶人",
+		"signal_purifier": "信号净化马桶人",
+		"anchor_bastion": "锚桩堡垒马桶人",
+		"magnetic_conductor": "磁轨牵引马桶人",
+		"phase_tunneler": "相位钻袭马桶人",
+		"protocol_weaver": "协议编织母体",
+		"ram_breaker": "破盾撞角马桶人",
+		"smoke_screen": "烟幕喷射马桶人",
+		"mortar": "曲射臼炮马桶人",
+		"interceptor": "预警截击马桶人",
+		"bulwark": "联结壁垒马桶人",
+		"crusher": "液压粉碎马桶人",
+		"echo_mimic": "回声拟态母体",
+		"drain_engine": "虹吸引擎马桶人",
+		"swarm_beacon": "群落信标马桶人",
+		"chronolock": "时序锁定母体",
 	}
 	return String(names.get(archetype_id, "马桶人"))
 

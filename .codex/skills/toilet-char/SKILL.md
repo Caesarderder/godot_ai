@@ -1,6 +1,6 @@
 ---
 name: toilet-char
-description: Create, optimize, review, balance, or implement toilet-game characters and faction rosters against this repository's current Godot architecture, combat code, technology tree, progression, recruitment, stages, and production status. Use for player-faction heroes, technology-tree additions, Alliance or defending enemy units, character tables, star upgrades, skills, stats, acquisition, narrative, audiovisual briefs, stage placement, implementation plans, or character-related code and data changes.
+description: Create, implement, optimize, review, or balance playable toilet-game characters and faction rosters against this repository's current Godot architecture, combat code, technology tree, progression, recruitment, stages, and production status. Use for player-faction heroes, technology-tree additions, Alliance or defending enemy units, character tables, star upgrades, skills, stats, acquisition, narrative, audiovisual briefs, stage placement, implementation plans, or character-related code and data changes. When the user asks to add or create characters without explicitly requesting design-only work, complete the real playable runtime integration rather than stopping at Markdown.
 ---
 
 # Toilet Char
@@ -43,10 +43,51 @@ Treat the character roster as a knowledge-map surface, not a disposable answer.
    at runtime, record that mismatch rather than attributing behavior to the wrong unit.
 8. Run `python3 tools/docs_lint.py` after every profile or index change.
 
+## Require a numeric production sheet
+
+Do not accept a role description as a complete character profile. Every player profile must expose enough numbers
+to reproduce its current strength and optimize it without reopening all source files.
+
+For every player character, record:
+
+- stable ID, rating, class, faction, role, acquisition and technology-tree position;
+- level cap, XP thresholds, base attributes at every supported level, and the exact level-growth formula;
+- HP, attack, defense, speed, critical chance, displayed CP, movement per tick, attack period, range, and skill
+  cadence at the relevant level/star checkpoints;
+- 1★/2★/3★ derived stats and CP at minimum level and maximum level;
+- active-skill level 1/2/3 output multiplier, cost, research-lab gate, qualitative star changes, limits and immunity;
+- production/research cost and time, material value, battle-XP route, XP-book route, level-up coin costs,
+  archetype-fragment star costs, and total cost to the supported cap;
+- nearest-peer efficiency comparison, intended power budget, overpowered/underpowered signals, tuning levers,
+  rollback thresholds, and unresolved evidence.
+
+Separate alternative implemented routes instead of adding them together. In particular:
+
+- training books can advance XP and level directly while charging per-book gold;
+- battle XP can meet the next threshold and the explicit level-up command then charges level-up gold;
+- normal long-term star growth spends archetype fragments;
+- legacy/model-tech/merge paths must be labeled separately and excluded from the normal-growth total unless the
+  current player flow actually uses them.
+
+For every Alliance profile, record:
+
+- unscaled HP, attack, defense, range, attack period, movement, elite flag, class, spawn stage/lane, and count;
+- the stage `enemy_power_bp` formula, representative stage-scaled values, encounter role and total-wave budget;
+- stage-wide modules separately from unit-owned behavior;
+- primary counter, accessible fallback, danger signal, target time-to-kill or pressure window, tuning levers and
+  rollback thresholds;
+- no cultivation cost. Replace it with encounter-budget and content-production cost/complexity.
+
+Label each numeric row `implemented`, `derived`, `target`, `playtest hypothesis`, or `unknown`. Never present a
+target budget as live code. Recompute every affected row after changing progression, catalog, stage, battle, or
+economy formulas.
+
 ## Choose the operation
 
-- **Create player character**: find one real roster or encounter gap, place the character in an existing or
-  justified new technology-tree branch, and define acquisition before the first teaching encounter.
+- **Create player character**: unless the user explicitly says `design-only`, treat creation as implementation.
+  Find one real roster or encounter gap, place the character in an existing or justified new technology-tree
+  branch, define deterministic acquisition before the first teaching encounter, and complete the playable
+  integration gate below.
 - **Create Alliance/defender**: identify the player behavior it tests, its readable tell and counter-window, the
   existing roster answers, stage introduction, later combinations, and Boss remix. Do not use the player-character
   star template when the runtime models this unit as an enemy archetype.
@@ -56,6 +97,26 @@ Treat the character roster as a knowledge-map surface, not a disposable answer.
 - **Review/audit**: return evidence, gaps, contradictions, and a prioritized revision table. Stop before editing.
 - **Implement**: after the design contract is accepted or already explicit, modify authoritative data and runtime
   paths, update projections and docs, and run deterministic and Web-facing validation.
+
+## Require playable integration for creation
+
+Writing a JSON spec or Markdown profile is not completion when the request says add, create, implement, put into
+the game, or make playable. For every new player character, complete all applicable surfaces:
+
+1. recipe/archetype catalog, stable display identity, class, rating, faction and star effects;
+2. signal-recruit pool, duplicate fragments, deterministic campaign or welfare acquisition, research and save;
+3. active-skill Resource, catalog registration, battle known-skill gate, 1★ behavior and qualitative 2★/3★ paths;
+4. battle events, metrics, immunities, limits, target rules and deterministic failure behavior;
+5. technology-tree branch, unlock-source copy, legion role, formation, skill research and player-facing copy;
+6. authored model or a deliberately differentiated procedural fallback, skill VFX color/cue and reduced-motion cue;
+7. stage recommendation or teaching placement with at least one implemented fallback;
+8. focused character tests plus the catalog, battle, blueprint, campaign, legion, persistence and 844×390 UI gates;
+9. character profile and roster index updated from `target` to the strongest evidence actually reached.
+
+Do not add a character to the live recruit pool before its battle skill, UI, duplicate conversion and save path
+work. Do not call a character implemented merely because a catalog accepts its ID. If a runtime dependency blocks
+one role, either implement the missing shared contract or report the character as blocked; never silently downgrade
+the request to documentation.
 
 If the user's faction choice is open, compare player-side and Alliance-side opportunities against current gaps and
 recommend one. Do not silently design both full characters.
@@ -111,14 +172,15 @@ Lead with the recommendation and evidence level, then provide:
 1. current roster/stage/architecture gap;
 2. role choice and player-facing promise;
 3. full character or enemy production table;
-4. technology-tree/faction/progression placement;
-5. skill or behavior timeline and star transformations where applicable;
-6. peer/counter comparison and CP or encounter budget;
-7. stage teaching ladder and fallback paths;
-8. narrative and audiovisual brief;
-9. exact files and systems to change;
-10. deterministic tests, seed scans, 844×390 Web/UI checks, and playtest questions;
-11. risks, rollback thresholds, unknowns, and the smallest next decision.
+4. level-by-level attributes, star-by-star CP and skill-level scaling;
+5. technology-tree/faction/progression placement and complete cultivation or encounter budget;
+6. skill or behavior timeline and star transformations where applicable;
+7. peer/counter efficiency comparison and optimization recommendations;
+8. stage teaching ladder and fallback paths;
+9. narrative and audiovisual brief;
+10. exact files and systems to change;
+11. deterministic tests, seed scans, 844×390 Web/UI checks, and playtest questions;
+12. risks, rollback thresholds, unknowns, and the smallest next decision.
 
 For optimization, add a before/after table and migration impact. For implementation, report changed files and actual
 validation results. Never claim “balanced,” “fun,” or “perfect fit” beyond the evidence obtained.

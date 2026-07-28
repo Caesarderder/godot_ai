@@ -29,6 +29,7 @@ var facilities: Dictionary = {
 	"energy_station": 1,
 	"repair_center": 1,
 	"research_lab": 1,
+	"coin_mint": 0,
 }
 var facility_placements: Dictionary = {
 	"command_center": [0, -1],
@@ -43,6 +44,7 @@ var facility_output_anchors: Dictionary = {
 	"porcelain_plant": 0,
 	"parts_workshop": 0,
 	"energy_station": 0,
+	"coin_mint": 0,
 }
 var repair_orders: Array[Dictionary] = []
 var next_repair_sequence: int = 1
@@ -59,6 +61,7 @@ static func create_starting(include_built_facilities: bool = true) -> FactorySta
 			"energy_station": 0,
 			"repair_center": 0,
 			"research_lab": 0,
+			"coin_mint": 0,
 		}
 		factory.facility_placements = {"command_center": [0, -1]}
 	# 新档先建设研究所；首批两张设计图纸分别由 1-2、1-3 首通获得。
@@ -136,7 +139,10 @@ static func from_dict(data: Dictionary) -> FactoryState:
 		"energy_station": 1,
 		"repair_center": 1,
 		"research_lab": 1,
+		"coin_mint": 0,
 	}) as Dictionary).duplicate(true)
+	if not factory.facilities.has("coin_mint"):
+		factory.facilities["coin_mint"] = 0
 	factory.facility_placements = (data.get("facility_placements", {}) as Dictionary).duplicate(true)
 	if factory.facility_placements.is_empty():
 		var legacy_placements := {
@@ -158,7 +164,10 @@ static func from_dict(data: Dictionary) -> FactoryState:
 		"porcelain_plant": factory.logistics_anchor_unix,
 		"parts_workshop": factory.logistics_anchor_unix,
 		"energy_station": factory.logistics_anchor_unix,
+		"coin_mint": factory.logistics_anchor_unix,
 	}) as Dictionary).duplicate(true)
+	if not factory.facility_output_anchors.has("coin_mint"):
+		factory.facility_output_anchors["coin_mint"] = factory.logistics_anchor_unix
 	# 旧存档中的等待维修订单在迁移时直接作废；资源此前已经扣除，不再二次扣款。
 	factory.repair_orders = []
 	factory.next_repair_sequence = int(data.get("next_repair_sequence", 1))
@@ -236,7 +245,7 @@ func validate() -> Array[String]:
 			errors.append("factory.eligible_facilities contains invalid entry")
 	if production_queue.size() > 3:
 		errors.append("factory.production_queue exceeds three slots")
-	for facility_id in ["command_center", "porcelain_plant", "parts_workshop", "energy_station", "repair_center", "research_lab"]:
+	for facility_id in ["command_center", "porcelain_plant", "parts_workshop", "energy_station", "repair_center", "research_lab", "coin_mint"]:
 		var facility_level := int(facilities.get(facility_id, 0))
 		var minimum_level := 1 if facility_id == "command_center" else 0
 		if facility_level < minimum_level or facility_level > 3:
@@ -261,7 +270,7 @@ func validate() -> Array[String]:
 		occupied_cells[occupied_key] = placed_facility_id
 	if logistics_anchor_unix < 0:
 		errors.append("factory.logistics_anchor_unix must not be negative")
-	for facility_id in ["porcelain_plant", "parts_workshop", "energy_station"]:
+	for facility_id in ["porcelain_plant", "parts_workshop", "energy_station", "coin_mint"]:
 		if int(facility_output_anchors.get(facility_id, -1)) < 0:
 			errors.append("factory.facility_output_anchors.%s must be non-negative" % facility_id)
 	if next_repair_sequence < 1:
@@ -271,7 +280,7 @@ func validate() -> Array[String]:
 		var work_facility_id := String(facility_work.get("facility_id", ""))
 		if work_type not in ["construction", "upgrade"]:
 			errors.append("factory.facility_work has invalid work_type")
-		if work_facility_id not in ["command_center", "porcelain_plant", "parts_workshop", "energy_station", "repair_center", "research_lab"]:
+		if work_facility_id not in ["command_center", "porcelain_plant", "parts_workshop", "energy_station", "repair_center", "research_lab", "coin_mint"]:
 			errors.append("factory.facility_work has invalid facility_id")
 		if int(facility_work.get("completes_at_unix", -1)) < int(facility_work.get("started_at_unix", 0)):
 			errors.append("factory.facility_work completion precedes start")

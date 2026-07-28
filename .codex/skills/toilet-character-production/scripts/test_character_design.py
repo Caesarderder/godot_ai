@@ -45,6 +45,17 @@ class CharacterDesignTests(unittest.TestCase):
         result = character_design.validate(PROJECT_ROOT, self.example)
         self.assertTrue(result["ok"], result)
         self.assertEqual(result["derived"]["power"], {"1": 1419, "2": 1736, "3": 2053})
+        self.assertEqual(self.example["acquisition"]["duplicate_fragments"], 30)
+
+    def test_rejects_stale_duplicate_fragment_value(self) -> None:
+        invalid = copy.deepcopy(self.example)
+        invalid["acquisition"]["duplicate_fragments"] = 15
+        result = character_design.validate(PROJECT_ROOT, invalid)
+        self.assertFalse(result["ok"])
+        self.assertIn(
+            "A duplicate_fragments must match current recruit rule: 30",
+            result["errors"],
+        )
 
     def test_rejects_random_character_as_mandatory_boss_solution(self) -> None:
         invalid = copy.deepcopy(self.example)

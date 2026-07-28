@@ -938,8 +938,23 @@ func _unlock_campaign_blueprint(candidate: RefCounted, stage_id: String, already
 	var unlocks := {
 		"stage_1_2": "ordinary.assault",
 		"stage_1_3": "heavy.armored",
-		"stage_2_5": "flying.bomber",
-		"stage_3_5": "heavy.saw",
+		"stage_2_12": "flying.bomber",
+		"stage_3_3": "ordinary.signal_purifier",
+		"stage_3_6": "heavy.anchor_bastion",
+		"stage_3_12": "heavy.saw",
+		"stage_4_3": "flying.magnetic_conductor",
+		"stage_4_6": "ordinary.phase_tunneler",
+		"stage_4_9": "special.protocol_weaver",
+		"stage_4_4": "ordinary.ram_breaker",
+		"stage_4_5": "special.smoke_screen",
+		"stage_4_7": "flying.mortar",
+		"stage_4_8": "flying.interceptor",
+		"stage_4_10": "heavy.bulwark",
+		"stage_4_11": "heavy.crusher",
+		"stage_4_12": "special.echo_mimic",
+		"stage_5_3": "heavy.drain_engine",
+		"stage_5_6": "special.swarm_beacon",
+		"stage_5_9": "special.chronolock",
 	}
 	if not unlocks.has(stage_id):
 		return {}

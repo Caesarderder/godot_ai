@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"chrono_lock"
+archetype_id = &"chronolock"
+display_name = "时序封锁"
+short_label = "时"
+role_copy = "节奏控制 · 冻结危险齐射"
+effect_copy = "冻结当前阶段普通守军；二星延长并影响精英，三星附加防御削弱。"
+timing_copy = "多名敌人即将同时攻击时释放。"

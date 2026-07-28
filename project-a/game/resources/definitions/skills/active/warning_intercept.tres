@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"warning_intercept"
+archetype_id = &"interceptor"
+display_name = "红线截击"
+short_label = "截"
+role_copy = "预警拦截 · 把炮击变成反攻"
+effect_copy = "为两名主力建立炮击截击盾；二星覆盖全队，三星反击精英。"
+timing_copy = "红色炮击预警落下后、命中前释放。"

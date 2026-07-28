@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"signal_cleanse"
+archetype_id = &"signal_purifier"
+display_name = "白噪冲洗"
+short_label = "净"
+role_copy = "净化支援 · 抢救被控主力"
+effect_copy = "清除最低血主力的控制并提供护盾；二星覆盖全队，三星同时削弱控制源。"
+timing_copy = "电视控制或防空锁定落下后立即释放。"

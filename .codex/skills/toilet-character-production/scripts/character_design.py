@@ -211,7 +211,7 @@ def validate(project: Path, spec: dict) -> dict:
     unlock_index = _stage_index(unlock_stage)
     if unlock_index < 0:
         errors.append("acquisition.available_after_stage must be stage_1_1..stage_5_5")
-    expected_fragments = {"B": 5, "A": 15, "S": 40}.get(rating)
+    expected_fragments = {"B": 20, "A": 30, "S": 40}.get(rating)
     if isinstance(acquisition, dict) and int(acquisition.get("duplicate_fragments", -1)) != expected_fragments:
         errors.append(f"{rating} duplicate_fragments must match current recruit rule: {expected_fragments}")
     encounters = spec["encounters"]

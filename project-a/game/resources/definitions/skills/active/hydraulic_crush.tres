@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"hydraulic_crush"
+archetype_id = &"crusher"
+display_name = "液压终结"
+short_label = "压"
+role_copy = "结构处决 · 缩短攻城尾段"
+effect_copy = "重击最低生命结构；二星震击守军，三星击破结构后返能。"
+timing_copy = "结构进入残血而守军仍在增援时释放。"

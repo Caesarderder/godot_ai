@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"caustic_smokescreen"
+archetype_id = &"smoke_screen"
+display_name = "腐蚀烟幕"
+short_label = "烟"
+role_copy = "烟幕支援 · 保护濒危主力"
+effect_copy = "为最低血主力提供烟幕护盾；二星覆盖全队，三星虚弱当前精英。"
+timing_copy = "敌方集火标记出现后释放。"

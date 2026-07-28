@@ -1004,7 +1004,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	for node in instance.find_children("BlueprintNode_*", "Control", true, false):
 		if node != null:
 			blueprint_node_count += 1
-	_ok(blueprint_node_count == 2, "selected blueprint branch keeps its two research nodes visible together")
+	_ok(blueprint_node_count == 5, "selected ordinary branch keeps all five playable research nodes visible together")
 	_ok(instance.find_child("BlueprintOrdinaryTab", true, false) != null, "blueprint branches use a fixed top toggle group")
 	_ok(instance.find_child("BlueprintTreeScroll", true, false) == null, "blueprint tree no longer wraps the whole screen in a scroll view")
 	instance.call("_show_base")

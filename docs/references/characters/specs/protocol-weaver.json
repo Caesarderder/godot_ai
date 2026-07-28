@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "archetype_id": "protocol_weaver",
+  "display_name": "协议编织母体",
+  "rating": "S",
+  "class_id": "arcanist",
+  "branch": "special",
+  "faction": "干扰增殖",
+  "tactical_verb": "夺取",
+  "player_promise": "当精英获得可见强化时，玩家用夺取拆掉一个增益并把它改写成己方的短暂优势。",
+  "base_stats": {"hp": 120, "attack": 42, "defense": 17, "speed_milli": 92000, "crit_bp": 900},
+  "active_skill": {
+    "skill_id": "protocol_hijack",
+    "display_name": "敌我协议重编",
+    "one_star": "移除目标精英一个可夺取护盾、增伤或加速效果，并按类型给生命最低友军12 tick护盾、攻击或速度。",
+    "two_star": "夺取后把改写协议扩散给同阶段两名友军，但持续时间不叠加。",
+    "three_star": "每场首次夺取Boss模块增益时，将其封存在协议槽；下一次施放可免费重放己方版本但不再次移除Boss效果。",
+    "timing": "金色强化图标亮起后、敌方爆发窗口开始前释放。",
+    "weakness": "不可夺取阶段免疫、纯被动或无图标机制；无有效增益时技能只造成低额脉冲伤害。"
+  },
+  "acquisition": {"available_after_stage": "stage_4_3", "research_seconds": 5, "duplicate_fragments": 40},
+  "encounters": {
+    "safe_intro": {"stage_id": "stage_4_4", "demand": "单个精英周期获得可夺取护盾。", "feedback": "金色协议线从敌人流向己方并变为阵营色。", "fallbacks": ["sonic"]},
+    "combination_test": {"stage_id": "stage_4_5", "demand": "Boss军械模块轮换护盾与增伤，要求选夺取时机。", "feedback": "被夺取图标划除，己方HUD显示改写版本与剩余时间。", "fallbacks": ["rocket", "saw"]},
+    "spotlight": {"stage_id": "stage_5_3", "demand": "泰坦足迹给精英短暂加速，夺取可反转追击节奏。", "feedback": "敌方加速熄灭，己方推进速度出现同色轨迹。", "fallbacks": ["armored", "repair"]},
+    "boss_soft_counter": {"stage_id": "stage_5_5", "demand": "终局Boss多模块轮换，但每轮仅一个效果可夺取。", "feedback": "协议槽保存一次Boss增益并在重放后清空。", "fallbacks": ["armored", "repair", "saw"]}
+  },
+  "narrative": {
+    "origin": "特殊研究线由寄生样本反向学习联盟战术协议，但只复制公开广播的临时效果。",
+    "silhouette": "背部织机状信号环与三条发光数据丝，区别于寄生幼体轮廓。",
+    "battle_sound": "敌方提示音被倒放后接己方阵营主题的短句。",
+    "alliance_response": "联盟将终局能力拆成可夺取与不可夺取两类，并用明确图标避免规则猜测。"
+  },
+  "nearest_peers": ["sonic", "parasite"],
+  "evidence_labels": {"base_power": "derived", "skill_value": "target", "player_desirability": "unknown"}
+}

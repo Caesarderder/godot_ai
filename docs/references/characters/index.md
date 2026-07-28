@@ -22,23 +22,48 @@ related:
 
 # 角色表与知识地图索引
 
-本表只登记当前代码中的稳定角色原型。玩家侧共 9 个（1 名开局指挥官、8 名可招募/研究角色）；
-联盟侧按 `StageCatalog` 的 `enemy_archetype` 去重后共 20 个。左右路复制、同型 spawn、临时召唤物
-和建筑不单列角色。
+本表登记当前代码中的稳定角色原型。已实现玩家侧共 14 个（1 名开局指挥官、13 名可招募/研究角色）；
+联盟侧按 `StageCatalog` 的
+`enemy_archetype` 去重后共 20 个。左右路复制、同型 spawn、临时召唤物和建筑不单列角色。
+
+公共计算口径见 [角色数值与培养规则](numeric-rules.md)。其中区分当前长期成长、兼容训练命令和
+旧型号科技路径，禁止把互斥成本重复累加。
 
 ## 玩家阵营
 
-| 稳定 ID | 角色 | 评级 | 阵营 | 职责 | 证据 |
-|---|---|---:|---|---|---|
-| `gman` | [Gman 指挥官](player/gman.md) | B | 钢铁防线 | 全线攻坚/开局统帅 | implemented |
-| `assault` | [冲锋马桶人](player/assault.md) | B | 快攻破城 | 前线突破 | implemented |
-| `sonic` | [音波马桶人](player/sonic.md) | A | 干扰增殖 | 群体控制 | implemented |
-| `rocket` | [火箭飞行马桶人](player/rocket.md) | B | 远程轰炸 | 远程攻城 | implemented |
-| `bomber` | [自爆飞行马桶人](player/bomber.md) | A | 远程轰炸 | 范围爆发 | implemented |
-| `armored` | [装甲冲城马桶人](player/armored.md) | A | 钢铁防线 | 承压反炮 | implemented |
-| `saw` | [双锯重装马桶人](player/saw.md) | S | 快攻破城 | 精英斩杀 | implemented |
-| `repair` | [维修马桶人](player/repair.md) | B | 钢铁防线 | 续航救援 | implemented |
-| `parasite` | [寄生母体马桶人](player/parasite.md) | S | 干扰增殖 | 召唤策反 | implemented |
+以下CP均为无随机职业基准。所有角色等级上限Lv5；Lv1→5主路线统一为320战斗XP+420马桶币，
+技能Lv1→3统一为12军团数据+240马桶币。
+
+| 稳定 ID | 角色 | 评级 | 职责 | Lv1 CP（1/2/3★） | Lv5 CP（1/2/3★） | 满星碎片 | 生产材料价值 |
+|---|---|---:|---|---|---|---:|---:|
+| `gman` | [Gman 指挥官](player/gman.md) | B | 全线攻坚 | 1638/2049*/2460* | 2238/2821*/3414* | 当前不可正常获取 | 0 |
+| `assault` | [冲锋马桶人](player/assault.md) | B | 前线突破 | 1724/2139/2574 | 2385/2996/3617 | 60 | 112 |
+| `sonic` | [音波马桶人](player/sonic.md) | A | 群体控制 | 1644/2042/2460 | 2354/2960/3569 | 90 | 147 |
+| `rocket` | [火箭飞行马桶人](player/rocket.md) | B | 远程攻城 | 1419/1736/2053 | 1815/2203/2621 | 60 | 200 |
+| `bomber` | [自爆飞行马桶人](player/bomber.md) | A | 范围爆发 | 1419/1736/2053 | 1889/2300/2741 | 90 | 198 |
+| `armored` | [装甲冲城马桶人](player/armored.md) | A | 承压反炮 | 1638/2049/2460 | 2337/2939/3564 | 90 | 256 |
+| `saw` | [双锯重装马桶人](player/saw.md) | S | 精英斩杀 | 2294/2893/3502 | 3483/4438/5393 | 120 | 275 |
+| `repair` | [维修马桶人](player/repair.md) | B | 续航救援 | 1638/2049/2460 | 2238/2821/3414 | 60 | 242 |
+| `parasite` | [寄生母体马桶人](player/parasite.md) | S | 召唤策反 | 2168/2748/3338 | 3293/4196/5092 | 120 | 243 |
+
+`*` Gman高星仅为公式投影。生产材料价值属于兼容生产队列，不是主研究获取的首次角色成本。
+
+## 后续玩家角色（implemented）
+
+以下 5 人均已复用当前职业、评级、四阵营、专属碎片和科技分支合同接入运行时；CP为公式投影，
+技能行为有确定性测试，玩家偏好仍未由真人试玩证明。
+
+| 稳定 ID | 角色 | 评级 | 分支 / 阵营 | 新战术动词 | Lv1 CP（1/2/3★） | 首次教学 |
+|---|---|---:|---|---|---|---|
+| `signal_purifier` | [信号净化马桶人](player/signal-purifier.md) | A | ordinary / 干扰增殖 | 净化 | 1644/2042/2460 | 3-2 |
+| `anchor_bastion` | [锚桩堡垒马桶人](player/anchor-bastion.md) | B | heavy / 钢铁防线 | 锚定 | 1638/2049/2460 | 3-3 |
+| `magnetic_conductor` | [磁轨牵引马桶人](player/magnetic-conductor.md) | A | flying / 远程轰炸 | 聚拢 | 1419/1736/2053 | 4-2 |
+| `phase_tunneler` | [相位钻袭马桶人](player/phase-tunneler.md) | B | ordinary / 快攻破城 | 绕后 | 1724/2139/2574 | 4-3 |
+| `protocol_weaver` | [协议编织母体](player/protocol-weaver.md) | S | special / 干扰增殖 | 夺取 | 2168/2748/3338 | 4-4 |
+
+完整机器可校验规格位于 `docs/references/characters/specs/`。五人分别通过3-1、3-2、4-1、4-2、
+4-3首通确定性获得图纸，也进入长期信号招募；首章免费阵营十连继续只使用原基础候选，避免提前
+打乱教学。
 
 ## 联盟敌军
 
@@ -64,6 +89,11 @@ related:
 | `alliance_elite` | [联合核心近卫](alliance/alliance-elite.md) | 联合 / 四至五章 | 高耐久精英 | implemented |
 | `alliance_overseer` | [联合核心监军](alliance/alliance-overseer.md) | 联合 / 四至五章 | 模块轮换承载 | implemented |
 | `core_guard` | [核心近卫](alliance/core-guard.md) | 全章节 | 核心前最终门卫 | implemented |
+
+联盟没有等级与培养消耗。角色页按
+`基础HP/攻/防 × enemy_power_bp`列出关卡实战值，并统计同型数量后的整组HP/攻击预算。第一章
+Camera模板固定；第二章Boss倍率180%、第三章270%、第四章335%、第五章400%。射程、攻击周期和
+移动不随倍率变化。
 
 ## 重要实现边界
 

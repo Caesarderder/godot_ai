@@ -13,7 +13,10 @@ func _init() -> void:
 func _run() -> void:
 	for error in ActiveSkillCatalogScript.validate_all():
 		_check(false, String(error))
-	_check(ActiveSkillCatalogScript.DEFINITIONS.size() == 9, "catalog contains all nine active skills")
+	_check(
+		ActiveSkillCatalogScript.DEFINITIONS.size() == FactoryCatalogScript.archetypes().size(),
+		"catalog contains one active skill for every archetype"
+	)
 	for archetype_id in FactoryCatalogScript.archetypes():
 		var skill_id := FactoryCatalogScript.active_skill_for_archetype(String(archetype_id))
 		var view := ActiveSkillCatalogScript.view(skill_id)

@@ -39,7 +39,7 @@ func _init() -> void:
 		_check(bool(settlement.get("ok", false)), "%s 首通应成功结算" % stage_id)
 	_check(bool(executor.state.factory.discovered_blueprints.get("ordinary.assault", false)), "1-2 首通应提供冲锋基础图纸")
 	_check(bool(executor.state.factory.discovered_blueprints.get("heavy.armored", false)), "1-3 首通应提供装甲基础图纸")
-	_check(FactoryCatalog.recipes().size() == 8, "科技蓝图应列出全部八种马桶人")
+	_check(FactoryCatalog.recipes().size() == 13, "科技蓝图应列出全部十三种可研发马桶人")
 
 	var roster_before: int = executor.state.roster.size()
 	var unlock := _execute(executor, "blueprint:foundational:assault", "unlock_foundational_blueprint", {

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"formation_anchor"
+archetype_id = &"anchor_bastion"
+display_name = "四点落锚"
+short_label = "锚"
+role_copy = "阵型锚定 · 抵抗换位冲击"
+effect_copy = "为自身与相邻主力建立锚盾；二星覆盖全队，三星反震当前精英。"
+timing_copy = "换位、标记或Boss冲击预警出现时释放。"

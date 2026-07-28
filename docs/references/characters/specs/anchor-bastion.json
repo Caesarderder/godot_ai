@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "archetype_id": "anchor_bastion",
+  "display_name": "锚桩堡垒马桶人",
+  "rating": "B",
+  "class_id": "guardian",
+  "branch": "heavy",
+  "faction": "钢铁防线",
+  "tactical_verb": "锚定",
+  "player_promise": "当推拉或换位预警威胁阵型时，玩家用锚定保住站位并把冲击转成反击窗口。",
+  "base_stats": {"hp": 190, "attack": 21, "defense": 40, "speed_milli": 84000, "crit_bp": 800},
+  "active_skill": {
+    "skill_id": "formation_anchor",
+    "display_name": "四点落锚",
+    "one_star": "自身与相邻一名友军12 tick免疫位移，并把首次位移冲击的50%伤害转为护盾。",
+    "two_star": "落锚形成阶段锚区，区内全体友军免疫位移；成功抵抗时令最近敌人短暂失衡。",
+    "three_star": "首次抵抗精英或Boss位移后把锚链反扣施法者，延长其恢复窗口并开放一次全队集火标记。",
+    "timing": "黄色位移箭头出现后、冲击落地前释放。",
+    "weakness": "不减免纯伤害、控制或地面持续区；没有位移威胁时价值低于装甲。"
+  },
+  "acquisition": {"available_after_stage": "stage_3_2", "research_seconds": 5, "duplicate_fragments": 20},
+  "encounters": {
+    "safe_intro": {"stage_id": "stage_3_3", "demand": "一次明确的前后排交换冲击。", "feedback": "四根锚桩落地，位移箭头折断并生成护盾。", "fallbacks": ["armored"]},
+    "combination_test": {"stage_id": "stage_3_4", "demand": "换位与监军护盾组合，要求决定锚定哪一阶段。", "feedback": "保住阵位后火力继续命中原目标。", "fallbacks": ["repair", "sonic"]},
+    "spotlight": {"stage_id": "stage_4_1", "demand": "联合标记试图把被点名者推出保护区。", "feedback": "锚区保住被标记者并显示避免的位移距离。", "fallbacks": ["armored", "parasite"]},
+    "boss_soft_counter": {"stage_id": "stage_4_5", "demand": "Boss冲击波换位但仍造成伤害。", "feedback": "成功锚定只取消换位并延长恢复窗，不取消伤害。", "fallbacks": ["armored", "repair", "saw"]}
+  },
+  "narrative": {
+    "origin": "重装工坊将城墙基桩改造成可瞬时部署的阵地锚。",
+    "silhouette": "宽底盘、四根红白锚桩和低矮轮廓，与装甲高盾形成差异。",
+    "battle_sound": "四次金属入地声后接绷紧钢索声。",
+    "alliance_response": "联合军改用纯伤害与地面区逼玩家不能每关固定带锚桩。"
+  },
+  "nearest_peers": ["armored", "repair"],
+  "evidence_labels": {"base_power": "derived", "skill_value": "target", "player_desirability": "unknown"}
+}

@@ -796,14 +796,14 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 			"reason": "火箭处理防御设施，装甲维持推进；自爆作为本关后的爆发解法。",
 		},
 		"stage_2_4": {
-			"recommended": ["flying.bomber", "heavy.armored"],
-			"fallback": ["ordinary.sonic"],
-			"reason": "自爆快速削阶段目标，装甲避免队伍被精英火力打散。",
+			"recommended": ["flying.rocket", "heavy.armored", "ordinary.sonic"],
+			"fallback": ["special.repair"],
+			"reason": "火箭快速削阶段目标，装甲避免队伍被精英火力打散，音波缓解共振压力。",
 		},
 		"stage_2_5": {
-			"recommended": ["heavy.armored", "flying.bomber", "flying.rocket"],
+			"recommended": ["heavy.armored", "flying.rocket", "ordinary.sonic"],
 			"fallback": ["special.repair"],
-			"reason": "章节 Boss 需要承压、爆发和拆结构；维修作为通关后的续航答案。",
+			"reason": "中段据点需要承压、削弱和拆结构；自爆设计图留到 2-12 章节 Boss 首通后发放。",
 		},
 		"stage_3_1": {
 			"recommended": ["special.repair", "heavy.armored"],
@@ -811,19 +811,19 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 			"reason": "TV 控制会制造点杀窗口，维修和装甲提高容错。",
 		},
 		"stage_3_2": {
-			"recommended": ["special.repair", "flying.rocket"],
+			"recommended": ["special.repair", "flying.rocket", "heavy.armored"],
 			"fallback": ["heavy.armored"],
-			"reason": "维修保住被控制的低血单位，火箭远程拆核心设施。",
+			"reason": "先用维修保住被控制的低血单位，火箭远程拆核心设施；净化型号将在 3-3 精英战后获得。",
 		},
 		"stage_3_3": {
-			"recommended": ["ordinary.sonic", "special.repair"],
+			"recommended": ["ordinary.sonic", "special.repair", "heavy.armored"],
 			"fallback": ["special.parasite"],
-			"reason": "音波削弱控制链，维修兜底；寄生作为本关后反控和牵制方案。",
+			"reason": "音波削弱控制链，维修与装甲兜底；首通后获得信号净化型号。",
 		},
 		"stage_3_4": {
-			"recommended": ["special.parasite", "special.repair"],
+			"recommended": ["ordinary.signal_purifier", "special.parasite", "special.repair"],
 			"fallback": ["flying.rocket"],
-			"reason": "寄生幼体分摊精英火力，维修保证主队不被连续控制击穿。",
+			"reason": "净化解除控制，寄生幼体分摊精英火力，维修保证主队不被连续击穿。",
 		},
 		"stage_3_5": {
 			"recommended": ["special.repair", "special.parasite", "flying.rocket"],
@@ -836,19 +836,34 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 			"reason": "联合部队精英护盾增多，寄生分散仇恨，装甲承接集火。",
 		},
 		"stage_4_2": {
-			"recommended": ["ordinary.sonic", "heavy.armored"],
+			"recommended": ["ordinary.sonic", "heavy.armored", "special.repair"],
 			"fallback": ["special.repair"],
-			"reason": "地面音波与装甲不会被防空锁定，维修可维持飞行位停火期间的推进。",
+			"reason": "地面音波与装甲不会被防空锁定，维修维持推进；磁轨型号将在 4-3 精英战后获得。",
 		},
 		"stage_4_3": {
-			"recommended": ["flying.rocket", "special.repair"],
+			"recommended": ["flying.rocket", "special.repair", "ordinary.sonic"],
 			"fallback": ["ordinary.sonic"],
-			"reason": "净化只处理召唤物；火箭、维修和音波都能用永久主队稳定拆模块。",
+			"reason": "净化只处理召唤物；火箭、维修和音波用永久主队稳定拆模块，首通后获得磁轨牵引型号。",
 		},
 		"stage_4_4": {
-			"recommended": ["heavy.saw", "special.repair"],
+			"recommended": ["flying.magnetic_conductor", "heavy.saw", "special.repair"],
 			"fallback": ["flying.rocket"],
-			"reason": "双锯专门切精英，维修防止队伍在精英压力关崩盘。",
+			"reason": "磁轨聚拢守军，双锯切精英，维修防止队伍在压力关崩盘。",
+		},
+		"stage_3_7": {
+			"recommended": ["heavy.anchor_bastion", "ordinary.signal_purifier", "special.repair"],
+			"fallback": ["heavy.armored"],
+			"reason": "3-6 战力墙后的锚桩型号稳住阵线，净化处理 TV 控制链。",
+		},
+		"stage_4_7": {
+			"recommended": ["ordinary.phase_tunneler", "flying.magnetic_conductor", "special.repair"],
+			"fallback": ["heavy.saw"],
+			"reason": "4-6 战力墙后的相位型号直切后排，磁轨聚怪后形成集中突破。",
+		},
+		"stage_4_10": {
+			"recommended": ["special.protocol_weaver", "ordinary.phase_tunneler", "heavy.saw"],
+			"fallback": ["special.repair"],
+			"reason": "4-9 科技墙后的协议型号夺取敌方护盾，相位与双锯负责完成收束。",
 		},
 		"stage_4_5": {
 			"recommended": ["heavy.saw", "flying.rocket", "special.repair"],

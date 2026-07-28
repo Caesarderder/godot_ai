@@ -76,6 +76,7 @@ const FACILITY_NAMES := {
 	"energy_station": "动力加工站",
 	"repair_center": "训练中心",
 	"research_lab": "研究所",
+	"coin_mint": "金币铸造厂",
 }
 const FACILITY_COPY := {
 	"command_center": "决定全局等级与城区权限",
@@ -84,11 +85,13 @@ const FACILITY_COPY := {
 	"energy_station": "为工业材料产线提供动力",
 	"repair_center": "强化角色训练效率与成长规划",
 	"research_lab": "以研究所等级解锁更高阶技能研究",
+	"coin_mint": "熔铸战利品合金，离线持续生产角色成长所需金币",
 }
 const FACTORY_RESOURCE_NAMES := {
 	"porcelain_plant": "工业材料",
 	"parts_workshop": "工业材料",
 	"energy_station": "工业材料",
+	"coin_mint": "金币",
 }
 const FACTORY_BUILDING_POSITIONS := {
 	"command_center": Vector3(0.0, 0.0, -1.2),
@@ -97,6 +100,7 @@ const FACTORY_BUILDING_POSITIONS := {
 	"energy_station": Vector3(-5.0, 0.0, 2.8),
 	"repair_center": Vector3(0.0, 0.0, 3.4),
 	"research_lab": Vector3(5.0, 0.0, 2.7),
+	"coin_mint": Vector3(0.0, 0.0, 5.8),
 }
 const FACTORY_GRID_RADIUS := 2
 const FACTORY_GRID_SPACING := 3.05
@@ -114,6 +118,7 @@ const FACTORY_BUILDING_COLORS := {
 	"energy_station": Color("#567d58"),
 	"repair_center": Color("#9b4942"),
 	"research_lab": Color("#66577f"),
+	"coin_mint": Color("#b8872f"),
 }
 
 @onready var world_host: Node3D = $WorldHost
@@ -879,7 +884,10 @@ func _factory_view() -> Dictionary:
 		var cost := (
 			LogisticsService.FACILITY_BUILD_COSTS.get(facility_id, {}) as Dictionary
 		).duplicate(true)
-		var eligible: bool = facility_id != "research_lab" or bool(state.factory.eligible_facilities.get("research_lab", false))
+		var eligible: bool = (
+			facility_id not in ["research_lab", "coin_mint"]
+			or bool(state.factory.eligible_facilities.get(facility_id, false))
+		)
 		construction_options.append({
 			"facility_id": facility_id,
 			"name": String(FACILITY_NAMES[facility_id]),
@@ -890,7 +898,7 @@ func _factory_view() -> Dictionary:
 					String(FACILITY_COPY[facility_id]),
 					int(LogisticsService.FACILITY_BUILD_SECONDS.get(facility_id, 5)),
 				]
-				if eligible else "先挑战 1-4，让首败战报定位研究所方案。"
+				if eligible else _facility_eligibility_copy(facility_id)
 			),
 			"build_seconds": int(LogisticsService.FACILITY_BUILD_SECONDS.get(facility_id, 5)),
 			"growth_copy": (
@@ -984,7 +992,10 @@ func _factory_facility_view(state: RefCounted, facility_id: String, now_unix: in
 	var build_cost := (
 		LogisticsService.FACILITY_BUILD_COSTS.get(facility_id, {}) as Dictionary
 	).duplicate(true)
-	var eligible: bool = facility_id != "research_lab" or bool(state.factory.eligible_facilities.get("research_lab", false))
+	var eligible: bool = (
+		facility_id not in ["research_lab", "coin_mint"]
+		or bool(state.factory.eligible_facilities.get(facility_id, false))
+	)
 	var kind := "global"
 	var resource_name := ""
 	var output := 0
@@ -1003,7 +1014,7 @@ func _factory_facility_view(state: RefCounted, facility_id: String, now_unix: in
 		"level": level,
 		"work": work,
 		"eligible": eligible,
-		"eligibility_copy": "先带领 Gman 挑战 1-4；首败战报会指出研究所的援军方案。",
+		"eligibility_copy": _facility_eligibility_copy(facility_id),
 		"build_cost": build_cost,
 		"build_cost_copy": _industrial_material_cost_copy(build_cost),
 		"enough_materials": state.factory.can_spend(build_cost),
@@ -1065,7 +1076,7 @@ func _set_factory_hud_panel(panel_id: String) -> void:
 
 func _facility_upgrade_preview(facility_id: String, level: int) -> String:
 	match facility_id:
-		"porcelain_plant", "parts_workshop", "energy_station":
+		"porcelain_plant", "parts_workshop", "energy_station", "coin_mint":
 			return "升级收益：产速与库存容量提升至当前的 %.1f 倍" % (float(level + 1) / float(level))
 		"repair_center":
 			return "升级收益：强化角色培养设施与后续训练扩展"
@@ -1073,6 +1084,12 @@ func _facility_upgrade_preview(facility_id: String, level: int) -> String:
 			return "升级收益：开放更高阶技能研究"
 		_:
 			return "升级收益：提高工厂全局等级与容量"
+
+
+func _facility_eligibility_copy(facility_id: String) -> String:
+	if facility_id == "coin_mint":
+		return "首次攻克 2-5 后解锁金币铸造技术。"
+	return "该设施尚未取得建造资格。"
 
 
 func _industrial_material_cost_copy(cost: Dictionary) -> String:
@@ -1974,6 +1991,21 @@ func _legion_role(archetype_id: String) -> String:
 		"sonic": "控制 · 打断压制",
 		"parasite": "召唤 · 持续增援",
 		"saw": "近战 · 单体处决",
+		"signal_purifier": "支援 · 净化控制",
+		"anchor_bastion": "重装 · 锚定阵型",
+		"magnetic_conductor": "远程 · 聚拢敌阵",
+		"phase_tunneler": "突击 · 绕后拆塔",
+		"protocol_weaver": "控制 · 夺取增益",
+		"ram_breaker": "突击 · 撞碎护盾",
+		"smoke_screen": "支援 · 烟幕保命",
+		"mortar": "远程 · 曲射拆塔",
+		"interceptor": "远程 · 预警截击",
+		"bulwark": "重装 · 联结承伤",
+		"crusher": "突击 · 处决结构",
+		"echo_mimic": "控制 · 技能回响",
+		"drain_engine": "重装 · 虹吸充能",
+		"swarm_beacon": "召唤 · 诱饵增殖",
+		"chronolock": "控制 · 时序冻结",
 	}
 	return String(roles.get(archetype_id, "战斗成员"))
 
@@ -2068,10 +2100,10 @@ func _blueprint_view() -> Dictionary:
 				faction_archetype_id
 			)
 	var branches := {
-		"ordinary": {"title": "突击枝", "summary": "突破与控场，两条独立研发路线", "recipes": ["ordinary.assault", "ordinary.sonic"]},
-		"heavy": {"title": "重装枝", "summary": "承压与斩杀，两条独立研发路线", "recipes": ["heavy.armored", "heavy.saw"]},
-		"flying": {"title": "飞行枝", "summary": "拆城与爆发，两条独立研发路线", "recipes": ["flying.rocket", "flying.bomber"]},
-		"special": {"title": "支援枝", "summary": "续航与牵制，两条独立研发路线", "recipes": ["special.repair", "special.parasite"]},
+		"ordinary": {"title": "突击枝", "summary": "突破、控场、净化、绕后与碎盾", "recipes": ["ordinary.assault", "ordinary.sonic", "ordinary.signal_purifier", "ordinary.phase_tunneler", "ordinary.ram_breaker"]},
+		"heavy": {"title": "重装枝", "summary": "承压、斩杀、锚定、联结与处决", "recipes": ["heavy.armored", "heavy.saw", "heavy.anchor_bastion", "heavy.bulwark", "heavy.crusher", "heavy.drain_engine"]},
+		"flying": {"title": "飞行枝", "summary": "拆城、爆发、聚拢、曲射与截击", "recipes": ["flying.rocket", "flying.bomber", "flying.magnetic_conductor", "flying.mortar", "flying.interceptor"]},
+		"special": {"title": "支援枝", "summary": "续航、牵制、烟幕、回响、诱饵与时序", "recipes": ["special.repair", "special.parasite", "special.protocol_weaver", "special.smoke_screen", "special.echo_mimic", "special.swarm_beacon", "special.chronolock"]},
 	}
 	var branch_data := branches.get(blueprint_branch, branches["ordinary"]) as Dictionary
 	var nodes: Array[Dictionary] = []
@@ -2167,8 +2199,23 @@ func _blueprint_unlock_source(recipe_id: String) -> String:
 	var sources := {
 		"ordinary.assault": "1-2 首通或信号招募",
 		"heavy.armored": "1-3 首通或信号招募",
-		"flying.bomber": "2-5 首通或信号招募",
-		"heavy.saw": "3-5 首通或信号招募",
+		"flying.bomber": "2-12 首通或信号招募",
+		"ordinary.signal_purifier": "3-3 首通或信号招募",
+		"heavy.anchor_bastion": "3-6 首通或信号招募",
+		"heavy.saw": "3-12 首通或信号招募",
+		"flying.magnetic_conductor": "4-3 首通或信号招募",
+		"ordinary.phase_tunneler": "4-6 首通或信号招募",
+		"special.protocol_weaver": "4-9 首通或信号招募",
+		"ordinary.ram_breaker": "4-4 首通后信号招募",
+		"special.smoke_screen": "4-4 首通后信号招募",
+		"flying.mortar": "4-5 首通后信号招募",
+		"flying.interceptor": "4-5 首通后信号招募",
+		"heavy.bulwark": "5-1 首通后信号招募",
+		"heavy.crusher": "5-1 首通后信号招募",
+		"special.echo_mimic": "5-2 首通后信号招募",
+		"heavy.drain_engine": "5-2 首通后信号招募",
+		"special.swarm_beacon": "5-3 首通后信号招募",
+		"special.chronolock": "5-4 首通后信号招募",
 	}
 	return String(sources.get(recipe_id, "信号招募"))
 
@@ -4966,6 +5013,14 @@ func _add_building_silhouette(root: Node3D, facility_id: String, color: Color, h
 			var dome := _factory_cylinder(0.85, 0.62, 1.2, color.lightened(0.2))
 			dome.position = Vector3(0.0, height + 0.58, 0.0)
 			root.add_child(dome)
+		"coin_mint":
+			var furnace := _factory_cylinder(0.78, 0.92, 1.5, color.lightened(0.12))
+			furnace.position = Vector3(0.0, height + 0.72, 0.0)
+			root.add_child(furnace)
+			for x in [-0.72, 0.72]:
+				var stack := _factory_cylinder(0.18, 0.24, 1.8, Color("#72552b"))
+				stack.position = Vector3(x, height + 1.05, 0.25)
+				root.add_child(stack)
 
 
 func _add_factory_activity(root: Node3D, facility_id: String, color: Color, height: float) -> void:

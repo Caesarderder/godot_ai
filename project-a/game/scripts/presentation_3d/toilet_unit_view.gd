@@ -188,6 +188,17 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 		_add_part("RightSaw", "saw", accent_key, Vector3(0.76, 0.74, -0.04))
 	if archetype_id == "bomber":
 		_add_part("BombPack", "bomb", "danger", Vector3(0.0, 1.02, 0.72))
+	if archetype_id == "signal_purifier":
+		_add_part("NoiseScreen", "armor", "ally_porcelain", Vector3(0.0, 1.48, 0.32))
+	if archetype_id == "anchor_bastion":
+		_add_part("LeftAnchor", "saw", accent_key, Vector3(-0.72, 0.35, 0.16))
+		_add_part("RightAnchor", "saw", accent_key, Vector3(0.72, 0.35, 0.16))
+	if archetype_id == "magnetic_conductor":
+		_add_part("MagneticCoil", "rim", accent_key, Vector3(0.0, 1.82, 0.08))
+	if archetype_id == "phase_tunneler":
+		_add_part("PhaseDrill", "bomb", "danger", Vector3(0.0, 0.72, -0.72))
+	if archetype_id == "protocol_weaver":
+		_add_part("ProtocolLoom", "rim", accent_key, Vector3(0.0, 1.92, 0.10))
 	if elite:
 		_add_part("EliteCrest", "crest", "danger", Vector3(0.0, 1.95, -0.03))
 		_body_pivot.scale = Vector3(1.18, 1.18, 1.18)
@@ -474,4 +485,9 @@ static func _skill_color(skill_id: String) -> Color:
 		"saw_rush": Color("#f7d56d"),
 		"field_repair": Color("#77f2a2"),
 		"parasite_swarm": Color("#b489ff"),
+		"signal_cleanse": Color("#f1fbff"),
+		"formation_anchor": Color("#e2b35f"),
+		"magnetic_convergence": Color("#4fe3d4"),
+		"phase_breach": Color("#ffd34f"),
+		"protocol_hijack": Color("#d67cff"),
 	}.get(skill_id, Color.WHITE)

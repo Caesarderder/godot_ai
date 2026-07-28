@@ -51,8 +51,8 @@ static func _major_reward(stage_id: String, is_boss: bool) -> Dictionary:
 	}
 	var milestone_blueprints := {
 		"stage_1_5": "ordinary.sonic",
-		"stage_2_5": "flying.bomber",
-		"stage_3_5": "heavy.saw",
+		"stage_2_12": "flying.bomber",
+		"stage_3_12": "heavy.saw",
 	}
 	if milestone_blueprints.has(stage_id):
 		reward["blueprint_id"] = String(milestone_blueprints[stage_id])

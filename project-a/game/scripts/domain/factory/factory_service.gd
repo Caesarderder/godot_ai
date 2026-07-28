@@ -169,8 +169,15 @@ static func offline_summary(state: RefCounted, now_unix: int) -> Dictionary:
 
 
 static func apply_battle_unlocks(state: RefCounted, outcome: String, attempt_count: int, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID) -> Array[String]:
-	# 研究所从新档开始即可建设；战斗不再负责补发建造资格。
-	return []
+	var unlocked: Array[String] = []
+	if (
+		outcome == "victory"
+		and stage_id == "stage_2_12"
+		and not bool(state.factory.eligible_facilities.get("coin_mint", false))
+	):
+		state.factory.eligible_facilities["coin_mint"] = true
+		unlocked.append("coin_mint")
+	return unlocked
 
 
 static func unlock_foundational_blueprint(

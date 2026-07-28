@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"ram_shatter"
+archetype_id = &"ram_breaker"
+display_name = "碎盾撞角"
+short_label = "碎"
+role_copy = "破盾突击 · 打开精英窗口"
+effect_copy = "撞碎当前敌人的护盾并造成冲击；二星波及全阶段，三星碎盾后返能。"
+timing_copy = "精英护盾亮起时释放。"

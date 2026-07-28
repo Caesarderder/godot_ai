@@ -13,6 +13,7 @@ const FACILITY_IDS: Array[String] = [
 	"energy_station",
 	"repair_center",
 	"research_lab",
+	"coin_mint",
 ]
 const FACILITY_BUILD_COSTS: Dictionary = {
 	# 旧三材料按各自产速折算为统一工业材料：
@@ -23,6 +24,7 @@ const FACILITY_BUILD_COSTS: Dictionary = {
 	"energy_station": {"porcelain": 26, "parts": 0, "sludge": 0},
 	"repair_center": {"porcelain": 34, "parts": 0, "sludge": 0},
 	"research_lab": {"porcelain": 30, "parts": 0, "sludge": 0},
+	"coin_mint": {"porcelain": 60, "parts": 0, "sludge": 0},
 }
 const OUTPUT_PER_MINUTE: Dictionary = {
 	"porcelain": 3,
@@ -32,6 +34,10 @@ const RESOURCE_BY_FACILITY: Dictionary = {
 	"parts_workshop": "porcelain",
 	"energy_station": "porcelain",
 }
+const CURRENCY_BY_FACILITY: Dictionary = {
+	"coin_mint": "toilet_coins",
+}
+const COIN_OUTPUT_PER_HOUR: int = 30
 const MAX_OFFLINE_SECONDS: int = 12 * 60 * 60
 const DEBUG_TIMED_WORK_SECONDS: int = 5
 const EARLY_FACILITY_BUILD_SECONDS: int = DEBUG_TIMED_WORK_SECONDS
@@ -41,6 +47,7 @@ const FACILITY_BUILD_SECONDS: Dictionary = {
 	"energy_station": EARLY_FACILITY_BUILD_SECONDS,
 	"repair_center": EARLY_FACILITY_BUILD_SECONDS,
 	"research_lab": EARLY_FACILITY_BUILD_SECONDS,
+	"coin_mint": EARLY_FACILITY_BUILD_SECONDS,
 }
 const STAR_COSTS: Dictionary = {
 	"B": {2: 20, 3: 40},
@@ -57,20 +64,26 @@ const SPECIALTY_FACILITY: Dictionary = {
 
 static func claim_output(state: RefCounted, now_unix: int) -> Dictionary:
 	var output := {"porcelain": 0, "parts": 0, "sludge": 0}
+	var currencies := {"toilet_coins": 0}
 	var elapsed_max := 0
-	for facility_id in RESOURCE_BY_FACILITY.keys():
+	for facility_id in _output_facility_ids():
 		var preview := facility_output_preview(state, String(facility_id), now_unix)
-		var material_id := String(preview.get("material_id", ""))
 		var amount := int(preview.get("amount", 0))
 		if amount <= 0:
 			continue
-		output[material_id] = int(output.get(material_id, 0)) + amount
+		var material_id := String(preview.get("material_id", ""))
+		var currency_id := String(preview.get("currency_id", ""))
+		if not material_id.is_empty():
+			output[material_id] = int(output.get(material_id, 0)) + amount
+		elif not currency_id.is_empty():
+			currencies[currency_id] = int(currencies.get(currency_id, 0)) + amount
 		elapsed_max = maxi(elapsed_max, int(preview.get("elapsed_seconds", 0)))
 		state.factory.facility_output_anchors[facility_id] = now_unix
 	if elapsed_max <= 0:
 		return {"ok": false, "error": "NO_FACTORY_OUTPUT_READY"}
 	var before := (state.factory.materials as Dictionary).duplicate(true)
 	state.factory.grant(output)
+	state.economy.grant(currencies)
 	var accepted := {"porcelain": 0, "parts": 0, "sludge": 0}
 	var overflow := {"porcelain": 0, "parts": 0, "sludge": 0}
 	for material_id in output.keys():
@@ -86,18 +99,34 @@ static func claim_output(state: RefCounted, now_unix: int) -> Dictionary:
 				"materials": accepted,
 				"produced": output,
 				"overflow": overflow,
+				"currencies": currencies,
 			"request_id": "factory-output:%d" % now_unix,
 		},
 	}
 
 
 static func claim_facility_output(state: RefCounted, facility_id: String, now_unix: int) -> Dictionary:
-	if not RESOURCE_BY_FACILITY.has(facility_id):
+	if not RESOURCE_BY_FACILITY.has(facility_id) and not CURRENCY_BY_FACILITY.has(facility_id):
 		return {"ok": false, "error": "FACILITY_HAS_NO_OUTPUT"}
 	var preview := facility_output_preview(state, facility_id, now_unix)
 	var amount := int(preview.get("amount", 0))
 	if amount <= 0:
 		return {"ok": false, "error": "NO_FACTORY_OUTPUT_READY"}
+	if CURRENCY_BY_FACILITY.has(facility_id):
+		var currency_id := String(preview["currency_id"])
+		state.economy.grant({currency_id: amount})
+		state.factory.facility_output_anchors[facility_id] = now_unix
+		state.factory.logistics_anchor_unix = now_unix
+		return {"ok": true, "event": {
+			"type": "factory_output_claimed",
+			"facility_id": facility_id,
+			"elapsed_seconds": int(preview["elapsed_seconds"]),
+			"materials": {},
+			"currencies": {currency_id: amount},
+			"produced": {currency_id: amount},
+			"overflow": {},
+			"request_id": "facility-output:%s:%d" % [facility_id, now_unix],
+		}}
 	var material_id := String(preview["material_id"])
 	var output := {material_id: amount}
 	var before := int(state.factory.materials.get(material_id, 0))
@@ -118,12 +147,15 @@ static func claim_facility_output(state: RefCounted, facility_id: String, now_un
 
 
 static func facility_output_preview(state: RefCounted, facility_id: String, now_unix: int) -> Dictionary:
-	if not RESOURCE_BY_FACILITY.has(facility_id):
+	if not RESOURCE_BY_FACILITY.has(facility_id) and not CURRENCY_BY_FACILITY.has(facility_id):
 		return {}
+	var material_id := String(RESOURCE_BY_FACILITY.get(facility_id, ""))
+	var currency_id := String(CURRENCY_BY_FACILITY.get(facility_id, ""))
 	if int(state.factory.facilities.get(facility_id, 0)) <= 0:
 		return {
 			"facility_id": facility_id,
-			"material_id": String(RESOURCE_BY_FACILITY[facility_id]),
+			"material_id": material_id,
+			"currency_id": currency_id,
 			"elapsed_seconds": 0,
 			"amount": 0,
 		}
@@ -134,16 +166,19 @@ static func facility_output_preview(state: RefCounted, facility_id: String, now_
 	if anchor <= 0:
 		anchor = now_unix - 300
 	var elapsed := clampi(now_unix - anchor, 0, MAX_OFFLINE_SECONDS)
-	var material_id := String(RESOURCE_BY_FACILITY[facility_id])
 	return {
 		"facility_id": facility_id,
 		"material_id": material_id,
+		"currency_id": currency_id,
 		"elapsed_seconds": elapsed,
 		"amount": 0 if elapsed <= 0 else _facility_output(state, elapsed, material_id, facility_id),
 	}
 
 
 static func _facility_output(state: RefCounted, elapsed: int, material_id: String, facility_id: String) -> int:
+	if CURRENCY_BY_FACILITY.has(facility_id):
+		var level := maxi(0, int(state.factory.facilities.get(facility_id, 0)))
+		return int(floor(float(elapsed * COIN_OUTPUT_PER_HOUR * level) / 3600.0))
 	var per_minute := facility_rate_per_minute(state, facility_id)
 	var base := float(elapsed) * float(per_minute) / 60.0
 	return maxi(1, int(floor(base)))
@@ -170,6 +205,15 @@ static func facility_rate_per_minute(state: RefCounted, facility_id: String) -> 
 		if String(hero.assigned_facility_id) == facility_id:
 			specialty_multiplier += 0.2
 	return float(int(OUTPUT_PER_MINUTE["porcelain"]) * level) * specialty_multiplier
+
+
+static func _output_facility_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for facility_id in RESOURCE_BY_FACILITY:
+		ids.append(String(facility_id))
+	for facility_id in CURRENCY_BY_FACILITY:
+		ids.append(String(facility_id))
+	return ids
 
 
 static func seconds_until_full(state: RefCounted, material_id: String) -> int:
@@ -445,7 +489,7 @@ static func construct_facility(
 		return {"ok": false, "error": "FACILITY_ALREADY_BUILT"}
 	if not state.factory.facility_work.is_empty():
 		return {"ok": false, "error": "FACILITY_WORK_BUSY"}
-	if facility_id == "research_lab" and not bool(state.factory.eligible_facilities.get("research_lab", false)):
+	if facility_id in ["research_lab", "coin_mint"] and not bool(state.factory.eligible_facilities.get(facility_id, false)):
 		return {"ok": false, "error": "FACILITY_NOT_ELIGIBLE"}
 	if abs(grid_x) > 2 or abs(grid_z) > 2:
 		return {"ok": false, "error": "FACILITY_GRID_CELL_OUT_OF_BOUNDS"}
@@ -502,6 +546,8 @@ static func claim_facility_work(state: RefCounted, now_unix: int) -> Dictionary:
 			# A newly commissioned producer exposes one real minute of output immediately.
 			# This teaches the collect loop without turning the first session into a wait gate.
 			state.factory.facility_output_anchors[facility_id] = now_unix - 60
+		elif CURRENCY_BY_FACILITY.has(facility_id):
+			state.factory.facility_output_anchors[facility_id] = now_unix
 	state.factory.facility_work = {}
 	state.factory.refresh_capacities()
 	return {"ok": true, "event": {

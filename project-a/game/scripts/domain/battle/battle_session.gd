@@ -57,6 +57,12 @@ var _armored_group_shield_extra_targets: int = 0
 var _saw_followup_hits: int = 0
 var _repair_group_extra_targets: int = 0
 var _parasite_extra_summons: int = 0
+var _purifier_cleanse_targets: int = 0
+var _anchor_protected_targets: int = 0
+var _magnetic_grouped_targets: int = 0
+var _phase_backline_hits: int = 0
+var _protocol_hijack_targets: int = 0
+var _new_character_effects: int = 0
 var _resonance_pulse_count: int = 0
 var _resonance_energy_drained: int = 0
 var _speaker_reinforcement_waves: int = 0
@@ -149,6 +155,12 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_saw_followup_hits = 0
 	_repair_group_extra_targets = 0
 	_parasite_extra_summons = 0
+	_purifier_cleanse_targets = 0
+	_anchor_protected_targets = 0
+	_magnetic_grouped_targets = 0
+	_phase_backline_hits = 0
+	_protocol_hijack_targets = 0
+	_new_character_effects = 0
 	_resonance_pulse_count = 0
 	_resonance_energy_drained = 0
 	_speaker_reinforcement_waves = 0
@@ -1385,6 +1397,218 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 				unit["attack"] = base_attack
 				return
 			_summon_parasites(unit, star, events)
+		"signal_cleanse":
+			var cleanse_targets := _living_main_allies()
+			cleanse_targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				return int(a["hp"]) * int(b["max_hp"]) < int(b["hp"]) * int(a["max_hp"])
+			)
+			var cleanse_count := cleanse_targets.size() if star >= 2 else mini(1, cleanse_targets.size())
+			for index in cleanse_count:
+				var ally := cleanse_targets[index]
+				var removed_ticks := int(ally.get("stun_ticks", 0)) + int(ally.get("weakness_ticks", 0))
+				ally["stun_ticks"] = 0
+				ally["weakness_ticks"] = 0
+				ally["shield"] = int(ally.get("shield", 0)) + maxi(16, int(unit["attack"]) / 2)
+				ally["shield_ticks"] = maxi(int(ally.get("shield_ticks", 0)), 20)
+				_purifier_cleanse_targets += 1
+				events.append({"type": &"status_cleansed", "tick": tick_index, "unit_id": ally["unit_id"], "source_id": unit["unit_id"], "removed_ticks": removed_ticks})
+			if star >= 3:
+				var control_source := _elite_enemy_target()
+				if control_source.is_empty():
+					control_source = _first_living_enemy()
+				if not control_source.is_empty():
+					control_source["weakness_ticks"] = maxi(int(control_source.get("weakness_ticks", 0)), 20)
+		"formation_anchor":
+			var anchor_targets := _living_main_allies()
+			if star < 2 and anchor_targets.size() > 2:
+				anchor_targets = anchor_targets.slice(0, 2)
+			for ally in anchor_targets:
+				ally["shield"] = int(ally.get("shield", 0)) + maxi(18, int(ally["max_hp"]) * 18 / 100)
+				ally["shield_ticks"] = maxi(int(ally.get("shield_ticks", 0)), 60)
+				ally["cannon_guard_ticks"] = maxi(int(ally.get("cannon_guard_ticks", 0)), 60)
+				ally["anchor_ticks"] = maxi(int(ally.get("anchor_ticks", 0)), 60)
+				_anchor_protected_targets += 1
+				events.append({"type": &"formation_anchored", "tick": tick_index, "unit_id": ally["unit_id"], "source_id": unit["unit_id"], "duration_ticks": 60})
+			if star >= 3:
+				var anchor_enemy := _elite_enemy_target()
+				if not anchor_enemy.is_empty():
+					_damage_target(anchor_enemy, int(unit["attack"]) * 2, unit["unit_id"], true, events)
+					anchor_enemy["stun_ticks"] = maxi(int(anchor_enemy.get("stun_ticks", 0)), 6)
+		"magnetic_convergence":
+			var magnetic_targets := _living_stage_enemies()
+			if star < 2 and magnetic_targets.size() > 2:
+				magnetic_targets = magnetic_targets.slice(0, 2)
+			var killed_target := false
+			for enemy in magnetic_targets:
+				enemy["lane"] = int(unit["lane"])
+				var was_alive := bool(enemy["alive"])
+				_damage_target(enemy, maxi(12, int(unit["attack"]) * (14 if star >= 2 else 10) / 10), unit["unit_id"], true, events)
+				killed_target = killed_target or (was_alive and not bool(enemy["alive"]))
+				_magnetic_grouped_targets += 1
+				events.append({"type": &"enemy_grouped", "tick": tick_index, "enemy_id": enemy["unit_id"], "source_id": unit["unit_id"], "lane": int(unit["lane"])})
+			if star >= 3 and killed_target:
+				unit["energy"] = 40
+		"phase_breach":
+			var phase_targets := _current_stage_targets()
+			var phase_target: Dictionary = {}
+			for candidate in phase_targets:
+				if phase_target.is_empty() or int(candidate.get("road_position", 0)) > int(phase_target.get("road_position", 0)):
+					phase_target = candidate
+			if not phase_target.is_empty():
+				var was_alive := bool(phase_target.get("alive", true))
+				_damage_target(phase_target, int(unit["attack"]) * (4 if star >= 2 else 3), unit["unit_id"], true, events)
+				_phase_backline_hits += 1
+				events.append({"type": &"phase_breach_hit", "tick": tick_index, "unit_id": unit["unit_id"], "target_id": _target_id(phase_target)})
+				if star >= 2:
+					for enemy in _living_stage_enemies():
+						enemy["weakness_ticks"] = maxi(int(enemy.get("weakness_ticks", 0)), 8)
+				if star >= 3 and was_alive and not bool(phase_target.get("alive", true)):
+					unit["energy"] = 50
+		"protocol_hijack":
+			var hijack_target := _elite_enemy_target()
+			if hijack_target.is_empty():
+				hijack_target = _first_living_enemy()
+			if not hijack_target.is_empty():
+				var stolen := maxi(20, int(hijack_target.get("shield", 0)))
+				hijack_target["shield"] = 0
+				hijack_target["shield_ticks"] = 0
+				var hijack_allies := _living_main_allies()
+				hijack_allies.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+					return int(a["hp"]) * int(b["max_hp"]) < int(b["hp"]) * int(a["max_hp"])
+				)
+				var hijack_count := hijack_allies.size() if star >= 2 else mini(1, hijack_allies.size())
+				for index in hijack_count:
+					var ally := hijack_allies[index]
+					ally["shield"] = int(ally.get("shield", 0)) + stolen
+					ally["shield_ticks"] = maxi(int(ally.get("shield_ticks", 0)), 60)
+					_protocol_hijack_targets += 1
+				if star >= 3 and not bool(unit.get("protocol_replayed", false)):
+					unit["protocol_replayed"] = true
+					unit["energy"] = 100
+				events.append({"type": &"protocol_hijacked", "tick": tick_index, "enemy_id": hijack_target["unit_id"], "source_id": unit["unit_id"], "shield": stolen, "affected": hijack_count})
+		"ram_shatter":
+			var ram_targets := _living_stage_enemies()
+			if star < 2 and ram_targets.size() > 1:
+				ram_targets = ram_targets.slice(0, 1)
+			for enemy in ram_targets:
+				var removed_shield := int(enemy.get("shield", 0))
+				enemy["shield"] = 0
+				enemy["shield_ticks"] = 0
+				_damage_target(enemy, int(unit["attack"]) * (3 if removed_shield > 0 else 2), unit["unit_id"], true, events)
+				_new_character_effects += 1
+				if star >= 3 and removed_shield > 0:
+					unit["energy"] = 40
+				events.append({"type": &"shield_shattered", "tick": tick_index, "enemy_id": enemy["unit_id"], "source_id": unit["unit_id"], "removed_shield": removed_shield})
+		"caustic_smokescreen":
+			var smoke_targets := _living_main_allies()
+			smoke_targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+				return int(a["hp"]) * int(b["max_hp"]) < int(b["hp"]) * int(a["max_hp"])
+			)
+			if star < 2 and smoke_targets.size() > 1:
+				smoke_targets = smoke_targets.slice(0, 1)
+			for ally in smoke_targets:
+				ally["shield"] = int(ally.get("shield", 0)) + maxi(20, int(ally["max_hp"]) / 5)
+				ally["shield_ticks"] = maxi(int(ally.get("shield_ticks", 0)), 45)
+				_new_character_effects += 1
+			if star >= 3:
+				var smoke_enemy := _elite_enemy_target()
+				if not smoke_enemy.is_empty():
+					smoke_enemy["weakness_ticks"] = maxi(int(smoke_enemy.get("weakness_ticks", 0)), 18)
+			events.append({"type": &"smokescreen_deployed", "tick": tick_index, "source_id": unit["unit_id"], "affected": smoke_targets.size()})
+		"sewer_mortar":
+			var mortar_targets := _current_stage_targets()
+			var mortar_target: Dictionary = {}
+			for candidate in mortar_targets:
+				if mortar_target.is_empty() or int(candidate.get("road_position", 0)) > int(mortar_target.get("road_position", 0)):
+					mortar_target = candidate
+			if not mortar_target.is_empty():
+				_damage_target(mortar_target, int(unit["attack"]) * 4, unit["unit_id"], true, events)
+				if mortar_target.has("structure_id") and star >= 3:
+					mortar_target["armor_break_ticks"] = 45
+				if star >= 2:
+					for enemy in _living_stage_enemies():
+						_damage_target(enemy, int(unit["attack"]), unit["unit_id"], true, events)
+				_new_character_effects += 1
+				events.append({"type": &"mortar_impact", "tick": tick_index, "source_id": unit["unit_id"], "target_id": _target_id(mortar_target)})
+		"warning_intercept":
+			var intercept_targets := _living_main_allies()
+			if star < 2 and intercept_targets.size() > 2:
+				intercept_targets = intercept_targets.slice(0, 2)
+			for ally in intercept_targets:
+				ally["shield"] = int(ally.get("shield", 0)) + maxi(22, int(ally["max_hp"]) / 4)
+				ally["shield_ticks"] = 35
+				ally["cannon_guard_ticks"] = maxi(int(ally.get("cannon_guard_ticks", 0)), 90)
+				_new_character_effects += 1
+			if star >= 3:
+				var intercept_enemy := _elite_enemy_target()
+				if not intercept_enemy.is_empty():
+					_damage_target(intercept_enemy, int(unit["attack"]) * 2, unit["unit_id"], true, events)
+			events.append({"type": &"warning_intercepted", "tick": tick_index, "source_id": unit["unit_id"], "affected": intercept_targets.size()})
+		"linked_bulwark":
+			var link_targets := _living_main_allies()
+			link_targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["hp"]) < int(b["hp"]))
+			if star < 2 and link_targets.size() > 2:
+				link_targets = link_targets.slice(0, 2)
+			for ally in link_targets:
+				ally["shield"] = int(ally.get("shield", 0)) + maxi(25, int(ally["max_hp"]) / 5)
+				ally["shield_ticks"] = 55
+				if star >= 3:
+					ally["hp"] = mini(int(ally["max_hp"]), int(ally["hp"]) + maxi(10, int(unit["attack"])))
+				_new_character_effects += 1
+			events.append({"type": &"bulwark_linked", "tick": tick_index, "source_id": unit["unit_id"], "affected": link_targets.size()})
+		"hydraulic_crush":
+			var crush_target := _current_target()
+			if not crush_target.is_empty():
+				var was_alive := bool(crush_target.get("alive", true))
+				_damage_target(crush_target, int(unit["attack"]) * (6 if crush_target.has("structure_id") else 3), unit["unit_id"], true, events)
+				if star >= 2:
+					for enemy in _living_stage_enemies():
+						enemy["stun_ticks"] = maxi(int(enemy.get("stun_ticks", 0)), 4)
+				if star >= 3 and was_alive and not bool(crush_target.get("alive", true)):
+					unit["energy"] = 50
+				_new_character_effects += 1
+				events.append({"type": &"hydraulic_crush", "tick": tick_index, "source_id": unit["unit_id"], "target_id": _target_id(crush_target)})
+		"allied_echo":
+			var echo_targets := _current_stage_targets()
+			if star < 2 and echo_targets.size() > 1:
+				echo_targets = echo_targets.slice(0, 1)
+			for target in echo_targets:
+				_damage_target(target, int(unit["attack"]) * 2, unit["unit_id"], true, events)
+				_new_character_effects += 1
+			if star >= 3 and not bool(unit.get("echo_recharged", false)):
+				unit["echo_recharged"] = true
+				unit["energy"] = 100
+			events.append({"type": &"allied_skill_echoed", "tick": tick_index, "source_id": unit["unit_id"], "affected": echo_targets.size()})
+		"energy_siphon":
+			var siphon_enemy := _elite_enemy_target()
+			if siphon_enemy.is_empty():
+				siphon_enemy = _first_living_enemy()
+			if not siphon_enemy.is_empty():
+				siphon_enemy["weakness_ticks"] = maxi(int(siphon_enemy.get("weakness_ticks", 0)), 24 if star >= 3 else 12)
+			var energy_targets := _living_main_allies()
+			energy_targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["energy"]) < int(b["energy"]))
+			var energy_count := mini(2 if star >= 2 else 1, energy_targets.size())
+			for index in energy_count:
+				energy_targets[index]["energy"] = mini(100, int(energy_targets[index]["energy"]) + 45)
+				_new_character_effects += 1
+			events.append({"type": &"energy_siphoned", "tick": tick_index, "source_id": unit["unit_id"], "affected": energy_count})
+		"decoy_bloom":
+			var summon_count := 2 if star >= 2 else 1
+			for index in summon_count:
+				_units.append(_make_summon(unit, _units.size() + index, "诱饵幼体"))
+				_new_character_effects += 1
+			if star >= 3:
+				for enemy in _living_stage_enemies():
+					enemy["weakness_ticks"] = maxi(int(enemy.get("weakness_ticks", 0)), 12)
+			events.append({"type": &"decoy_bloomed", "tick": tick_index, "source_id": unit["unit_id"], "count": summon_count})
+		"chrono_lock":
+			for enemy in _living_stage_enemies():
+				if star >= 2 or not bool(enemy.get("elite", false)):
+					enemy["stun_ticks"] = maxi(int(enemy.get("stun_ticks", 0)), 18 if star >= 2 else 10)
+					if star >= 3:
+						enemy["weakness_ticks"] = maxi(int(enemy.get("weakness_ticks", 0)), 20)
+					_new_character_effects += 1
+			events.append({"type": &"time_locked", "tick": tick_index, "source_id": unit["unit_id"], "affected": _new_character_effects})
 		_:
 			push_error("Unhandled known battle skill: %s" % skill_id)
 	unit["attack"] = base_attack
@@ -1611,6 +1835,12 @@ func _finish_result(victory: bool, reason: String) -> Dictionary:
 		"saw_followup_hits": _saw_followup_hits,
 		"repair_group_extra_targets": _repair_group_extra_targets,
 		"parasite_extra_summons": _parasite_extra_summons,
+		"purifier_cleanse_targets": _purifier_cleanse_targets,
+		"anchor_protected_targets": _anchor_protected_targets,
+		"magnetic_grouped_targets": _magnetic_grouped_targets,
+		"phase_backline_hits": _phase_backline_hits,
+		"protocol_hijack_targets": _protocol_hijack_targets,
+		"new_character_effects": _new_character_effects,
 		"resonance_pulse_count": _resonance_pulse_count,
 		"resonance_energy_drained": _resonance_energy_drained,
 		"speaker_reinforcement_waves": _speaker_reinforcement_waves,
@@ -1910,6 +2140,8 @@ func _make_ally(hero: Dictionary, slot: int) -> Dictionary:
 		"taunt_ticks": 0,
 		"taunt_target_id": &"",
 		"auto_skill": bool(hero.get("auto_skill", hero.get("auto_skill_enabled", false))),
+		"anchor_ticks": 0,
+		"protocol_replayed": false,
 		"temporary": false,
 		"alive": true,
 	}
@@ -2085,6 +2317,21 @@ func _known_skill_ids() -> Array[String]:
 		"saw_rush",
 		"field_repair",
 		"parasite_swarm",
+		"signal_cleanse",
+		"formation_anchor",
+		"magnetic_convergence",
+		"phase_breach",
+		"protocol_hijack",
+		"ram_shatter",
+		"caustic_smokescreen",
+		"sewer_mortar",
+		"warning_intercept",
+		"linked_bulwark",
+		"hydraulic_crush",
+		"allied_echo",
+		"energy_siphon",
+		"decoy_bloom",
+		"chrono_lock",
 	]
 
 
@@ -2098,7 +2345,7 @@ func _skill_tier(unit: Dictionary) -> int:
 
 
 func _range_for_archetype(archetype_id: String, class_id: String) -> int:
-	if archetype_id in ["gman", "rocket", "sonic", "parasite"]:
+	if archetype_id in ["gman", "rocket", "sonic", "parasite", "signal_purifier", "magnetic_conductor", "protocol_weaver", "smoke_screen", "mortar", "interceptor", "echo_mimic", "swarm_beacon", "chronolock"]:
 		return 110
 	if class_id in ["ranger", "arcanist"]:
 		return 86

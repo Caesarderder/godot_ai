@@ -1,7 +1,7 @@
 ---
 contract_version: 11
 project_id: toilet-factory-siege
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 km_id: reference.game-contract
 km_type: reference
 domain: product
@@ -89,8 +89,8 @@ related:
 ## GC-003: 工厂后勤与设施
 - owner: game-design
 - status: accepted
-- accepted_intent: 工厂以进度事件逐步取得建筑资格，所有资源产线统一生产工业材料；研究所把信号图纸转化为确定性永久援军和角色研究，不生产或消耗库存单位。
-- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；新档直接取得研究所建造资格，但必须由玩家主动选址、施工和验收；初始 20 金币与 30 工业材料只支持研究所开工，后续资源按研究所落成、1-3 首通、1-5 首通三个里程碑通过手动礼包领取；1-2、1-3 首通分别固定入库冲锋与装甲图纸，不直接授予角色；研究所消费已拥有图纸和时间，研发完成后才授予对应唯一永久角色；重复图纸转为该型号专属碎片，供已解锁角色升星。免费十连位于信号招募页，且只有信号招募正式解锁后开放，并推进同一长期保底。调试阶段所有设施建造、设施升级和蓝图研发统一为 5 秒；资源生产、建造、研发、升级和礼包领取 exact-once。
+- accepted_intent: 工厂以进度事件逐步取得建筑资格；基础资源产线统一生产工业材料，2-5 首通后可建设金币铸造厂，把后期工业扩张转化为持续金币收入；研究所把信号图纸转化为确定性永久援军和角色研究，不生产或消耗库存单位。
+- acceptance_criteria: 建筑至少具有 locked、eligible、built 三态；新档直接取得研究所建造资格，但必须由玩家主动选址、施工和验收；金币铸造厂在第二章最终 Boss 2-12 首通后取得资格，消耗 60 工业材料，Lv.1 每小时生产 30 金币、随等级线性增长并最多离线累计 12 小时，单栋与全部领取均 exact-once；初始 20 金币与 30 工业材料只支持研究所开工，后续资源按研究所落成、1-3 首通、1-5 首通三个里程碑通过手动礼包领取；1-2、1-3 首通分别固定入库冲锋与装甲图纸，不直接授予角色；研究所消费已拥有图纸和时间，研发完成后才授予对应唯一永久角色；重复图纸转为该型号专属碎片，供已解锁角色升星。免费十连位于信号招募页，且只有信号招募正式解锁后开放，并推进同一长期保底。调试阶段所有设施建造、设施升级和蓝图研发统一为 5 秒；资源生产、建造、研发、升级和礼包领取 exact-once。
 - implementation_reference: project-a/game/scripts/domain/factory/logistics_service.gd, project-a/game/scripts/domain/meta/starter_gift_service.gd, project-a/game/scripts/domain/recruitment/research_breakthrough_service.gd, project-a/scripts/slg_main.gd
 - verification_evidence: project-a/tools/run_slg_loop_tests.gd, project-a/tools/run_research_breakthrough_tests.gd, project-a/tools/run_starter_gift_tests.gd
 - conflict_references: project-a/game/scripts/domain/factory/factory_service.gd, project-a/game/scripts/state/factory_state.gd
@@ -101,9 +101,9 @@ related:
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
 - deviation: 新入口已实现六座可点击 3D 建筑、5×5 有界放置和后勤服务；研究所已接通 eligible、built 状态并在新档开放建造，
-  1-2、1-3 首通确定性入库冲锋/装甲图纸，研究所逐张研发后两名永久角色才入列。免费十连与长期信号招募统一在招募功能解锁后出现；
+  1-2、1-3 首通确定性入库冲锋/装甲图纸，研究所逐张研发后两名永久角色才入列。2-5 首通后解锁金币铸造厂，真实接入网格建造、离线计时、金币账本、单栋/全部领取与存档。免费十连与长期信号招募统一在招募功能解锁后出现；
   信号只产 B/A/S 图纸；长期重复图纸目标改为型号专属碎片，当前代码尚待本轮迁移完成。量产兵和单位订单属于已取消旧方向。
-- last_updated: 2026-07-28
+- last_updated: 2026-07-29
 - last_verified: —
 
 ## GC-004: 城镇攻坚与无损结算
@@ -128,8 +128,8 @@ related:
 ## GC-005: 经济分层与反死锁
 - owner: game-design
 - status: accepted
-- accepted_intent: 当前玩家只管理金币、军团数据、工业材料、招募券四种可消费核心资源。金币与军团数据服务角色成长，工业材料只服务设施建造与升级，招募券只服务信号招募；战斗经验与设计图纸是进度/解锁条件，不是通用货币。
-- acceptance_criteria: 角色升级消耗金币并检查战斗经验；长期升星只消耗该角色型号的专属碎片，教学核心可以 exact-once 免除一次 1★→2★ 碎片成本；技能研究仍消耗金币与受控研究数据；设施建造与升级只消耗工业材料；信号招募只消耗招募券，首章完成免费十连除外。常规战斗不直接掉落工业材料。schema v11 必须新增专属碎片账本而不把无法追溯来源的旧通用数据伪造成任一角色碎片。
+- accepted_intent: 当前玩家只管理金币、军团数据、工业材料、招募券四种可消费核心资源。金币由战斗、里程碑与后期金币铸造厂提供，并与军团数据共同服务角色成长；工业材料只服务设施建造与升级，招募券只服务信号招募；战斗经验与设计图纸是进度/解锁条件，不是通用货币。
+- acceptance_criteria: 角色升级消耗金币并检查战斗经验；长期升星只消耗该角色型号的专属碎片，教学核心可以 exact-once 免除一次 1★→2★ 碎片成本；技能研究仍消耗金币与受控研究数据；设施建造与升级只消耗工业材料，2-5 后的金币铸造厂可以把时间转化为金币但不改变设施成本；信号招募只消耗招募券，首章完成免费十连除外。常规战斗不直接掉落工业材料。schema v11 必须新增专属碎片账本而不把无法追溯来源的旧通用数据伪造成任一角色碎片。
 - implementation_reference: project-a/game/scripts/state/economy_state.gd, project-a/game/scripts/domain/factory/logistics_service.gd
 - verification_evidence: project-a/tools/run_slg_loop_tests.gd
 - conflict_references: project-a/game/scripts/state/economy_state.gd, project-a/game/scripts/domain/economy/economy_valuation.gd

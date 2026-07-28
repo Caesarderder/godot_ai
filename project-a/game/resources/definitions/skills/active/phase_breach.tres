@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"phase_breach"
+archetype_id = &"phase_tunneler"
+display_name = "下水道相位钻"
+short_label = "钻"
+role_copy = "后排钻袭 · 越过前线拆结构"
+effect_copy = "突袭当前战区最远目标；二星追加泄压冲击，三星击破后返还能量。"
+timing_copy = "后排结构或支援单位暴露时释放。"

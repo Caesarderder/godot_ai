@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"decoy_bloom"
+archetype_id = &"swarm_beacon"
+display_name = "诱饵群落"
+short_label = "诱"
+role_copy = "诱饵增殖 · 分散敌方火力"
+effect_copy = "投放一只诱饵幼体；二星投放两只，三星登场时虚弱守军。"
+timing_copy = "敌军集火前排或远程主力时释放。"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"linked_bulwark"
+archetype_id = &"bulwark"
+display_name = "联结壁垒"
+short_label = "联"
+role_copy = "伤害联结 · 平滑集火压力"
+effect_copy = "联结两名低血主力并提供护盾；二星覆盖全队，三星立即恢复生命。"
+timing_copy = "两名以上主力同时掉血时释放。"

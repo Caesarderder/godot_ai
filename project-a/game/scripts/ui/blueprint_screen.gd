@@ -40,7 +40,7 @@ const BRANCHES := [
 @onready var branch_row: HBoxContainer = %BlueprintBranchRow
 @onready var branch_panel: PanelContainer = %BlueprintBranchPanel
 @onready var branch_heading: Label = %BlueprintBranchHeading
-@onready var node_row: HBoxContainer = %BlueprintNodeRow
+@onready var node_row: GridContainer = %BlueprintNodeRow
 @onready var back_button: Button = %BlueprintBackButton
 
 var _view: Dictionary = {}

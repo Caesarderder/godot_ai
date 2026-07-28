@@ -10,9 +10,13 @@ const S_PITY: int = 60
 const A_PITY: int = 10
 const TARGET_S: String = "parasite"
 const POOLS: Dictionary = {
+	"B": ["assault", "rocket", "repair", "anchor_bastion", "phase_tunneler", "ram_breaker", "mortar", "bulwark", "swarm_beacon"],
+	"A": ["sonic", "armored", "bomber", "signal_purifier", "magnetic_conductor", "smoke_screen", "interceptor", "crusher", "drain_engine"],
+	"S": ["parasite", "saw", "protocol_weaver", "echo_mimic", "chronolock"],
+}
+const FACTION_CORE_POOLS: Dictionary = {
 	"B": ["assault", "rocket", "repair"],
 	"A": ["sonic", "armored", "bomber"],
-	"S": ["parasite", "saw"],
 }
 const DUPLICATE_FRAGMENTS: Dictionary = {"B": 20, "A": 30, "S": 40}
 # Compatibility alias for authored onboarding cards. The value now means
@@ -99,7 +103,7 @@ static func _draw_forced_new_design(
 	rarity: String
 ) -> Dictionary:
 	var available: Array[Dictionary] = []
-	for archetype_value in POOLS[rarity]:
+	for archetype_value in FACTION_CORE_POOLS.get(rarity, POOLS[rarity]):
 		var archetype_id := String(archetype_value)
 		if excluded_archetypes.has(archetype_id):
 			continue
@@ -115,8 +119,9 @@ static func _draw_forced_new_design(
 				"rarity": rarity,
 			})
 	if available.is_empty():
-		var fallback_archetype := String((POOLS[rarity] as Array)[0])
-		for archetype_value in POOLS[rarity]:
+		var core_pool := FACTION_CORE_POOLS.get(rarity, POOLS[rarity]) as Array
+		var fallback_archetype := String(core_pool[0])
+		for archetype_value in core_pool:
 			var archetype_id := String(archetype_value)
 			if not excluded_archetypes.has(archetype_id):
 				fallback_archetype = archetype_id
@@ -173,7 +178,7 @@ static func _faction_core_rarity(state: RefCounted) -> String:
 
 static func _new_design_count(state: RefCounted, rarity: String) -> int:
 	var count := 0
-	for archetype_value in POOLS[rarity]:
+	for archetype_value in FACTION_CORE_POOLS.get(rarity, POOLS[rarity]):
 		var recipe := FactoryCatalogScript.recipe_for_archetype(String(archetype_value))
 		var recipe_id := String(recipe.get("recipe_id", ""))
 		if (

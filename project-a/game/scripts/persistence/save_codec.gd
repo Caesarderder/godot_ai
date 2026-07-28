@@ -206,7 +206,10 @@ static func _upgrade_legacy_v5_factory_loop(data: Dictionary) -> Dictionary:
 		"energy_station": 1,
 		"repair_center": 1,
 		"research_lab": 1,
+		"coin_mint": 0,
 	}) as Dictionary).duplicate(true)
+	if not (factory["facilities"] as Dictionary).has("coin_mint"):
+		(factory["facilities"] as Dictionary)["coin_mint"] = 0
 	factory["eligible_facilities"] = (factory.get("eligible_facilities", {}) as Dictionary).duplicate(true)
 	if not factory.has("facility_placements"):
 		var legacy_placements := {
@@ -226,7 +229,10 @@ static func _upgrade_legacy_v5_factory_loop(data: Dictionary) -> Dictionary:
 		"porcelain_plant": factory["logistics_anchor_unix"],
 		"parts_workshop": factory["logistics_anchor_unix"],
 		"energy_station": factory["logistics_anchor_unix"],
+		"coin_mint": factory["logistics_anchor_unix"],
 	}) as Dictionary).duplicate(true)
+	if not (factory["facility_output_anchors"] as Dictionary).has("coin_mint"):
+		(factory["facility_output_anchors"] as Dictionary)["coin_mint"] = factory["logistics_anchor_unix"]
 	factory["repair_orders"] = (factory.get("repair_orders", []) as Array).duplicate(true)
 	factory["next_repair_sequence"] = int(factory.get("next_repair_sequence", 1))
 	if not factory.has("capacities"):
@@ -672,7 +678,7 @@ static func _validate_factory_schema(value: Variant) -> String:
 			return "Factory.eligible_facilities entries must be true"
 	var facilities_error := _validate_int_dict(factory["facilities"], [
 		"command_center", "porcelain_plant", "parts_workshop",
-		"energy_station", "repair_center", "research_lab"
+		"energy_station", "repair_center", "research_lab", "coin_mint"
 	], "Factory.facilities")
 	if not facilities_error.is_empty():
 		return facilities_error
@@ -699,7 +705,7 @@ static func _validate_factory_schema(value: Variant) -> String:
 	if typeof(factory["logistics_anchor_unix"]) != TYPE_INT:
 		return "Factory.logistics_anchor_unix must be int"
 	var anchors_error := _validate_int_dict(factory["facility_output_anchors"], [
-		"porcelain_plant", "parts_workshop", "energy_station"
+		"porcelain_plant", "parts_workshop", "energy_station", "coin_mint"
 	], "Factory.facility_output_anchors")
 	if not anchors_error.is_empty():
 		return anchors_error

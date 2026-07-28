@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "archetype_id": "phase_tunneler",
+  "display_name": "相位钻袭马桶人",
+  "rating": "B",
+  "class_id": "fighter",
+  "branch": "ordinary",
+  "faction": "快攻破城",
+  "tactical_verb": "绕后",
+  "player_promise": "当后排结构被前排保护时，玩家用绕后短暂跳过阻挡并迫使敌阵回头。",
+  "base_stats": {"hp": 150, "attack": 36, "defense": 28, "speed_milli": 92000, "crit_bp": 900},
+  "active_skill": {
+    "skill_id": "phase_breach",
+    "display_name": "下水道相位钻",
+    "one_star": "钻入地下并在当前阶段最远非Boss、非核心目标旁出现，进行一次攻击后返回原阵位。",
+    "two_star": "落点留下8 tick泄压口，附近普通敌人转向攻击泄压口，为正面创造短暂减压。",
+    "three_star": "若绕后摧毁结构或支援单位，返回时沿路径再斩一次并把本次技能能量返还50%。",
+    "timing": "后排支援或结构暴露、且敌方反潜预警未激活时释放。",
+    "weakness": "Boss核心、封闭区和反潜场不可选；深入期间无法被维修且可能承受集中火力。"
+  },
+  "acquisition": {"available_after_stage": "stage_4_2", "research_seconds": 5, "duplicate_fragments": 20},
+  "encounters": {
+    "safe_intro": {"stage_id": "stage_4_3", "demand": "一座低耐久防空台位于盾卫后方。", "feedback": "地面钻线直达后排，摧毁后原路亮线返回。", "fallbacks": ["rocket"]},
+    "combination_test": {"stage_id": "stage_4_4", "demand": "净化装置与前排混编，要求选择绕后目标。", "feedback": "泄压口吸引回头单位并显示正面减压tick。", "fallbacks": ["parasite", "bomber"]},
+    "spotlight": {"stage_id": "stage_4_4", "demand": "轮换防线的后排支援只有短暂暴露窗。", "feedback": "窗口内击破后返还能量并标记路径斩击。", "fallbacks": ["saw", "rocket"]},
+    "boss_soft_counter": {"stage_id": "stage_4_5", "demand": "Boss核心不可绕后，但三个军械模块可被逐一钻袭。", "feedback": "模块摧毁减少Boss下一轮军械组合。", "fallbacks": ["rocket", "saw", "armored"]}
+  },
+  "narrative": {
+    "origin": "普通工坊把污水钻头与短距相位模块拼成一次性突入装置。",
+    "silhouette": "长锥钻头、低伏姿态和黄色地下轨迹。",
+    "battle_sound": "入地轰鸣、位置移动的左右声像和出土爆响。",
+    "alliance_response": "联盟在后续关卡布置可读反潜脉冲，迫使玩家等待窗口。"
+  },
+  "nearest_peers": ["assault", "rocket"],
+  "evidence_labels": {"base_power": "derived", "skill_value": "target", "player_desirability": "unknown"}
+}

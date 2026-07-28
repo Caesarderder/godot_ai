@@ -12,6 +12,21 @@ const FACTIONS: Dictionary = {
 	"sonic": "干扰增殖",
 	"parasite": "干扰增殖",
 	"saw": "快攻破城",
+	"signal_purifier": "干扰增殖",
+	"anchor_bastion": "钢铁防线",
+	"magnetic_conductor": "远程轰炸",
+	"phase_tunneler": "快攻破城",
+	"protocol_weaver": "干扰增殖",
+	"ram_breaker": "快攻破城",
+	"smoke_screen": "干扰增殖",
+	"mortar": "远程轰炸",
+	"interceptor": "远程轰炸",
+	"bulwark": "钢铁防线",
+	"crusher": "快攻破城",
+	"echo_mimic": "干扰增殖",
+	"drain_engine": "钢铁防线",
+	"swarm_beacon": "干扰增殖",
+	"chronolock": "干扰增殖",
 }
 
 const PLAYSTYLES: Dictionary = {
@@ -30,6 +45,21 @@ const STAR_EFFECTS: Dictionary = {
 	"saw": {2: "连续斩击精英", 3: "击杀后返还能量"},
 	"repair": {2: "维修扩展为群体效果", 3: "首次拉起一名倒下主力"},
 	"parasite": {2: "召唤更多寄生幼体", 3: "短暂策反普通守军"},
+	"signal_purifier": {2: "净化扩展至同阶段全队", 3: "净化后反向封锁控制源"},
+	"anchor_bastion": {2: "锚区覆盖同阶段全队", 3: "抵抗冲击后开放集火窗口"},
+	"magnetic_conductor": {2: "聚拢当前阶段全部普通守军", 3: "击破聚焦目标后返还能量"},
+	"phase_tunneler": {2: "钻出位置留下泄压诱饵", 3: "击破后排后回程追斩并返能"},
+	"protocol_weaver": {2: "夺取协议扩散至更多友军", 3: "每场首次夺取后额外重放"},
+	"ram_breaker": {2: "碎盾冲击波及同阶段目标", 3: "成功碎盾后返还能量"},
+	"smoke_screen": {2: "烟幕覆盖全队", 3: "烟幕反噬并虚弱精英"},
+	"mortar": {2: "落点溅射同阶段目标", 3: "弹坑持续破甲结构"},
+	"interceptor": {2: "截击盾覆盖全队", 3: "成功拦截后反击精英"},
+	"bulwark": {2: "联结覆盖全部主力", 3: "联结结束时恢复生命"},
+	"crusher": {2: "粉碎冲击震击同阶段守军", 3: "处决结构后返还能量"},
+	"echo_mimic": {2: "回响扩散至多个目标", 3: "每场首次回响立即再蓄能"},
+	"drain_engine": {2: "能量灌注两名友军", 3: "虹吸同时虚弱精英"},
+	"swarm_beacon": {2: "额外投放诱饵幼体", 3: "幼体登场时削弱守军"},
+	"chronolock": {2: "冻结延长并影响精英", 3: "冻结结束开放集火窗口"},
 }
 
 const TECH_PREVIEWS: Dictionary = {

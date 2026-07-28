@@ -109,7 +109,7 @@ func _run_contract() -> void:
 	_expect_ok(_settle("stage_1_5", "victory", executor.state.formation.hero_ids()), "chapter boss settles with breakthrough rewards")
 	var snapshot := OnboardingService.snapshot(executor.state)
 	_expect(bool(snapshot.get("finished", false)), "seven-operation first chapter guidance completes")
-	var chapter_two_boss := _settle("stage_2_5", "victory", executor.state.formation.hero_ids())
+	var chapter_two_boss := _settle("stage_2_12", "victory", executor.state.formation.hero_ids())
 	_expect_ok(chapter_two_boss, "second chapter boss settles")
 	var chapter_two_blueprints := chapter_two_boss["event"]["unlocked_blueprints"] as Array
 	_expect(chapter_two_blueprints.size() == 1 and String((chapter_two_blueprints[0] as Dictionary).get("recipe_id", "")) == "flying.bomber", "second chapter boss grants the bomber design blueprint")
@@ -119,7 +119,7 @@ func _run_contract() -> void:
 	}), "research lab starts the boss-earned bomber design")
 	_expect_ok(_command("claim_blueprint_research", {"now_unix": 1245}), "research lab creates the permanent bomber")
 	_expect(executor.state.roster.size() == 4 and executor.state.formation.hero_ids().size() == 3, "researched bomber joins the roster without silently changing formation")
-	var chapter_three_boss := _settle("stage_3_5", "victory", executor.state.formation.hero_ids())
+	var chapter_three_boss := _settle("stage_3_12", "victory", executor.state.formation.hero_ids())
 	_expect_ok(chapter_three_boss, "third chapter boss settles")
 	var chapter_three_blueprints := chapter_three_boss["event"]["unlocked_blueprints"] as Array
 	_expect(chapter_three_blueprints.size() == 1 and String((chapter_three_blueprints[0] as Dictionary).get("recipe_id", "")) == "heavy.saw", "third chapter boss grants the saw design blueprint")
@@ -135,7 +135,7 @@ func _run_contract() -> void:
 		unique_unlocked_ids[unlocked_id] = true
 	_expect(unique_unlocked_ids.size() == unlocked_ids.size(), "campaign unlock paths allocate unique stable hero ids")
 	_expect(int(executor.state.factory.next_hero_sequence) > executor.state.roster.size(), "hero sequence advances beyond every allocated campaign hero")
-	_expect_ok(_settle("stage_3_5", "victory", executor.state.formation.hero_ids()), "replaying the third boss is safe")
+	_expect_ok(_settle("stage_3_12", "victory", executor.state.formation.hero_ids()), "replaying the third boss is safe")
 	_expect(executor.state.roster.size() == 5, "boss replay never duplicates permanent hero unlocks")
 
 
@@ -196,6 +196,7 @@ func _verify_independent_facility_collection() -> void:
 		"porcelain_plant": 1000,
 		"parts_workshop": 1000,
 		"energy_station": 1000,
+		"coin_mint": 1000,
 	}
 	var before := (probe.state.factory.materials as Dictionary).duplicate(true)
 	var porcelain := probe.execute({

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+skill_id = &"protocol_hijack"
+archetype_id = &"protocol_weaver"
+display_name = "敌我协议重编"
+short_label = "夺"
+role_copy = "增益夺取 · 反转精英强化"
+effect_copy = "夺取精英护盾并转给最低血友军；二星扩散全队，三星每场首次额外重放。"
+timing_copy = "精英护盾或Boss强化图标亮起时释放。"

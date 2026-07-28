@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "archetype_id": "signal_purifier",
+  "display_name": "信号净化马桶人",
+  "rating": "A",
+  "class_id": "arcanist",
+  "branch": "ordinary",
+  "faction": "干扰增殖",
+  "tactical_verb": "净化",
+  "player_promise": "当控制预警锁定主力时，玩家用净化保住一次关键行动并反向暴露施法者。",
+  "base_stats": {"hp": 120, "attack": 42, "defense": 17, "speed_milli": 92000, "crit_bp": 900},
+  "active_skill": {
+    "skill_id": "signal_cleanse",
+    "display_name": "白噪冲洗",
+    "one_star": "清除生命比例最低友军的一个可驱散控制或虚弱，并给予10 tick控制抗性；无负面状态时转为小型护盾。",
+    "two_star": "扩展至同阶段全部友军，并把首个被清除效果的来源标记为暴露目标。",
+    "three_star": "本次净化若阻止控制生效，立即复制一次弱化版白噪脉冲，使暴露目标20 tick无法再次施加同类控制。",
+    "timing": "紫色控制预警进入最后6 tick或主力已被虚弱时释放。",
+    "weakness": "不能移除Boss不可驱散阶段规则、阵亡或结构伤害；提前空放只得到较弱护盾。"
+  },
+  "acquisition": {"available_after_stage": "stage_3_1", "research_seconds": 5, "duplicate_fragments": 30},
+  "encounters": {
+    "safe_intro": {"stage_id": "stage_3_2", "demand": "单次慢速控制锁定前排。", "feedback": "白色扫描线洗掉紫色状态并显示“已净化”。", "fallbacks": ["armored"]},
+    "combination_test": {"stage_id": "stage_3_3", "demand": "换位与控制错峰出现，要求保留净化给关键目标。", "feedback": "暴露施法者出现白色准星，集火路径可见。", "fallbacks": ["sonic", "repair"]},
+    "spotlight": {"stage_id": "stage_3_4", "demand": "监军护盾期间重复点控，净化可切断第二次控制。", "feedback": "阻断次数和保存的行动tick进入结算。", "fallbacks": ["parasite", "saw"]},
+    "boss_soft_counter": {"stage_id": "stage_3_5", "demand": "Boss三模块错峰轮换，只有可驱散控制可被反制。", "feedback": "被净化模块延后下一次控制，但Boss阶段规则保持。", "fallbacks": ["armored", "repair", "sonic"]}
+  },
+  "narrative": {
+    "origin": "普通工坊用截获的电视雪花信号制造可控白噪发生器。",
+    "silhouette": "圆形白噪屏和背部旋转天线，避免与音波喇叭混淆。",
+    "battle_sound": "短促电视雪花后接干净的确认钟声。",
+    "alliance_response": "电视军团把部分Boss阶段写入不可驱散协议，保留读招与走位要求。"
+  },
+  "nearest_peers": ["sonic", "repair"],
+  "evidence_labels": {"base_power": "derived", "skill_value": "target", "player_desirability": "unknown"}
+}

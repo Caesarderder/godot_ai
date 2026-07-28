@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ActiveSkillDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://game/scripts/content/active_skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+skill_id = &"allied_echo"
+archetype_id = &"echo_mimic"
+display_name = "战术回声"
+short_label = "响"
+role_copy = "技能回响 · 延长爆发连锁"
+effect_copy = "回放最近友军造成的战术冲击；二星扩散，三星每场首次回响立即再蓄能。"
+timing_copy = "高价值友军技能刚命中后释放。"

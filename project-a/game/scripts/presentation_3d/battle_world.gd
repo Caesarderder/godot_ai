@@ -1169,6 +1169,16 @@ func _spawn_skill_vfx(event: Dictionary) -> void:
 			_spawn_pulse_ring(origin, Color("#77f2a2"), 1.2)
 		"parasite_swarm":
 			_spawn_pulse_ring(origin, Color("#b489ff"), 1.7)
+		"signal_cleanse":
+			_spawn_pulse_ring(origin, Color("#f1fbff"), 1.8)
+		"formation_anchor":
+			_spawn_pulse_ring(origin, Color("#e2b35f"), 1.5)
+		"magnetic_convergence":
+			_spawn_pulse_ring(origin, Color("#4fe3d4"), 2.4)
+		"phase_breach":
+			_spawn_dash_streak(origin, Color("#ffd34f"))
+		"protocol_hijack":
+			_spawn_pulse_ring(origin, Color("#d67cff"), 2.0)
 		_:
 			_spawn_pulse_ring(origin, Color("#ffffff"), 1.0)
 

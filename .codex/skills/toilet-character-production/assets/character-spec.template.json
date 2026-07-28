@@ -27,7 +27,7 @@
   "acquisition": {
     "available_after_stage": "stage_2_1",
     "research_seconds": 5,
-    "duplicate_fragments": 15
+    "duplicate_fragments": 30
   },
   "encounters": {
     "safe_intro": {
