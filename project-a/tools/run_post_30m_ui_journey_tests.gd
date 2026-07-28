@@ -217,6 +217,11 @@ func _run() -> void:
 		await _wait_frames(4)
 	state = game.current_state()
 	_check(String(state.formation.slots.get("troop_3", "")) == hero_id, "candidate click persists the faction hero in formation")
+	_check(
+		String(main.get("selected_stage_id")) == "stage_2_1"
+			and int(main.get("selected_chapter")) == 2,
+		"first core deployment preselects chapter two without auto-starting combat"
+	)
 	var formation_toast := main.get("toast") as Label
 	_check(
 		formation_toast != null

@@ -235,6 +235,7 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 							industrialTech: parsed.economy?.industrial_tech,
 							skillChips: parsed.economy?.skill_chips,
 						},
+						heroFragments: parsed.meta_progression?.hero_fragments,
 						formation: parsed.formation,
 						roster: (parsed.roster ?? []).map((hero) => ({
 							heroId: hero.hero_id,
@@ -782,6 +783,152 @@ async function main() {
 		}
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-faction-blueprint-focus-844x390.png");
+		await pressEnter(cdp);
+		const factionResearch = await waitFor(
+			"selected faction blueprint research persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return String(save?.blueprintResearch?.recipe_id ?? "").length > 0
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
+		const factionRecipeId = String(factionResearch.blueprintResearch.recipe_id);
+		const factionResearchCompletesAt = Number(
+			factionResearch.blueprintResearch?.completes_at_unix ?? 0
+		);
+		const factionResearchWaitMs = Math.max(
+			0,
+			factionResearchCompletesAt * 1000 - Date.now() + 1200,
+		);
+		if (factionResearchCompletesAt <= 0 || factionResearchWaitMs > 15000) {
+			throw new Error(`faction research wait is invalid: ${factionResearchWaitMs}ms`);
+		}
+		await screenshot(cdp, "browser-faction-research-started-844x390.png");
+		await new Promise((accept) => setTimeout(accept, factionResearchWaitMs));
+		await new Promise((accept) => setTimeout(accept, 500));
+		await screenshot(cdp, "browser-faction-research-ready-844x390.png");
+		await pressEnter(cdp);
+		const factionHeroReady = await waitFor(
+			"selected faction hero became permanent",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const hero = save?.roster?.find(
+					(candidate) => candidate.archetypeId === save.factionCore,
+				);
+				return hero && Object.keys(save?.blueprintResearch ?? {}).length === 0
+					? { save, hero }
+					: null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-formation-focus-844x390.png");
+		await touch(cdp, 120, 250);
+		const factionFormation = await waitFor(
+			"selected faction hero joined the formation",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return Object.values(save?.formation ?? {}).includes(
+					factionHeroReady.hero.heroId,
+				) ? save : null;
+			},
+			10000,
+			250,
+		);
+		await screenshot(cdp, "browser-faction-formation-committed-844x390.png");
+		await touch(cdp, 315, 335);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await touch(cdp, 245, 100);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-proof-one-recon-844x390.png");
+
+		const factionProofs = [];
+		let factionJourneySkillTouches = 0;
+		for (const [index, stageId] of ["stage_2_1", "stage_2_2", "stage_2_3"].entries()) {
+			await touch(cdp, 665, 315);
+			await new Promise((accept) => setTimeout(accept, 700));
+			const proof = await finishActiveBattle(
+				cdp,
+				`${stageId} faction proof`,
+				(save) => save.clearedStages?.includes(stageId),
+				`browser-faction-proof-${index + 1}-result-844x390.png`,
+				[110, 315, 520, 725],
+				330,
+				260,
+				180000,
+			);
+			factionProofs.push(proof);
+			factionJourneySkillTouches += proof.skillTouches;
+			if (index < 2) {
+				await touch(cdp, 650, 300);
+				await new Promise((accept) => setTimeout(accept, 700));
+				await screenshot(
+					cdp,
+					`browser-faction-proof-${index + 2}-recon-844x390.png`,
+				);
+			}
+		}
+		await touch(cdp, 650, 300);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-late-wall-recon-844x390.png");
+		await touch(cdp, 665, 315);
+		await new Promise((accept) => setTimeout(accept, 700));
+		const lateWall = await finishActiveBattle(
+			cdp,
+			"stage_2_4 one-star faction pressure test",
+			(save) => Number(save?.attempts?.stage_2_4 ?? 0) > 0,
+			"browser-faction-late-wall-result-844x390.png",
+			[110, 315, 520, 725],
+			330,
+			260,
+			180000,
+		);
+		factionJourneySkillTouches += lateWall.skillTouches;
+		let finalPressureSave = lateWall.save;
+		if (lateWall.save.clearedStages?.includes("stage_2_4")) {
+			await touch(cdp, 650, 300);
+			await new Promise((accept) => setTimeout(accept, 700));
+			await screenshot(cdp, "browser-faction-boss-pressure-recon-844x390.png");
+			await touch(cdp, 665, 315);
+			await new Promise((accept) => setTimeout(accept, 700));
+			const bossPressure = await finishActiveBattle(
+				cdp,
+				"stage_2_5 one-star faction pressure test",
+				(save) => Number(save?.attempts?.stage_2_5 ?? 0) > 0,
+				"browser-faction-boss-pressure-result-844x390.png",
+				[110, 315, 520, 725],
+				330,
+				260,
+				180000,
+			);
+			factionJourneySkillTouches += bossPressure.skillTouches;
+			finalPressureSave = bossPressure.save;
+		}
+		await touch(cdp, 650, 300);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-star-ready-844x390.png");
+		const fragmentBalance = Number(
+			finalPressureSave.heroFragments?.[finalPressureSave.factionCore] ?? 0,
+		);
+		await touch(cdp, 430, 288);
+		const factionStar = await waitFor(
+			"faction-specific fragments upgraded the selected core to two stars",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const hero = save?.roster?.find(
+					(candidate) => candidate.archetypeId === save.factionCore,
+				);
+				return Number(hero?.star ?? 0) === 2 ? { save, hero } : null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-star-unlocked-844x390.png");
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',
@@ -805,7 +952,7 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through every chapter-one core loop, boss victory, free faction ten-pull, and explicit faction-core choice",
+			journey: "fresh profile through chapter one, faction draw, research, formation, three battle proofs, pressure test, and duplicate-fragment two-star growth",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
@@ -833,6 +980,15 @@ async function main() {
 				freeTenClaimed: factionTen.onboardingClaimed?.["reward.post_chapter_faction_ten"] === true,
 				selectedCore: factionChoice.factionCore,
 				chapterTwoAttemptsAfterChoice: Number(factionChoice.attempts?.stage_2_1 ?? 0),
+				researchedRecipe: factionRecipeId,
+				permanentHeroId: factionHeroReady.hero.heroId,
+				formation: factionFormation.formation,
+				proofStages: factionProofs.map((proof) => proof.save.clearedStages),
+				lateWallStage: lateWall.save.clearedStages?.includes("stage_2_4")
+					? "stage_2_5"
+					: "stage_2_4",
+				fragmentBalanceBeforeStar: fragmentBalance,
+				twoStarCore: factionStar.hero,
 			},
 			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: skillTouches
@@ -840,7 +996,8 @@ async function main() {
 				+ stage13.skillTouches
 				+ firstWall.skillTouches
 				+ counterattack.skillTouches
-				+ chapterOne.skillTouches,
+				+ chapterOne.skillTouches
+				+ factionJourneySkillTouches,
 			elapsedMs: Date.now() - startedAt,
 			runtimeExceptions: exceptions.length,
 			unexpectedConsoleErrors: unexpectedConsoleErrors.length,
@@ -875,6 +1032,17 @@ async function main() {
 				"artifacts/browser-chapter-one-faction-recruit-844x390.png",
 				"artifacts/browser-faction-recruit-result-844x390.png",
 				"artifacts/browser-faction-blueprint-focus-844x390.png",
+				"artifacts/browser-faction-research-started-844x390.png",
+				"artifacts/browser-faction-research-ready-844x390.png",
+				"artifacts/browser-faction-formation-focus-844x390.png",
+				"artifacts/browser-faction-formation-committed-844x390.png",
+				"artifacts/browser-faction-proof-1-result-844x390.png",
+				"artifacts/browser-faction-proof-2-result-844x390.png",
+				"artifacts/browser-faction-proof-3-result-844x390.png",
+				"artifacts/browser-faction-late-wall-recon-844x390.png",
+				"artifacts/browser-faction-late-wall-result-844x390.png",
+				"artifacts/browser-faction-star-ready-844x390.png",
+				"artifacts/browser-faction-star-unlocked-844x390.png",
 			],
 		}, null, 2));
 	} finally {

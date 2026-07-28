@@ -2491,6 +2491,17 @@ func _achievement_row(state: RefCounted, definition: Dictionary) -> Control:
 
 
 func _start_battle() -> void:
+	if (
+		selected_stage_id == "stage_1_5"
+		and not (game.current_state().stage_progress.get("cleared_stages", []) as Array).has(
+			selected_stage_id
+		)
+		and _boss_growth_route_id().is_empty()
+	):
+		legion_tab = "roster"
+		_notify("核心巨炮需要首次成长验证：先把冲锋或装甲升至2★")
+		_show_legion()
+		return
 	var snapshots := _battle_snapshots()
 	if snapshots.is_empty():
 		_notify("当前编队没有可出战角色")
@@ -4106,6 +4117,15 @@ func _assign_formation_slot(slot: String, hero_id: String) -> void:
 		and deployed_hero != null
 		and String(deployed_hero.archetype_id) == selected_core
 	):
+		selected_stage_id = String(
+			game.current_state().stage_progress.get(
+				"highest_unlocked_stage",
+				"stage_2_1"
+			)
+		)
+		selected_chapter = int(
+			StageCatalog.stage(selected_stage_id).get("chapter", 2)
+		)
 		_notify("阵营初阵已成 · %s已部署 · 去2-1验证%s" % [
 			String(deployed_hero.display_name),
 			FactionCatalog.playstyle_for(selected_core),
