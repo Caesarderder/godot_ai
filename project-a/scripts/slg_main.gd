@@ -132,6 +132,8 @@ var goals_tab: String = "action"
 var legion_tab: String = "formation"
 var legion_selected_hero_id: String = ""
 var blueprint_branch: String = "ordinary"
+var blueprint_focus_recipe_id: String = ""
+var blueprint_focus_label: String = ""
 var factory_hud_panel: String = "mission"
 var ui_scroll_positions: Dictionary = {}
 var ui_rebuild_generation: int = 0
@@ -1326,6 +1328,11 @@ func _legion_view() -> Dictionary:
 	var deployed_hero: RefCounted = state.hero_by_id(deployed_id)
 	var deployed_power := CombatPower.hero_power(deployed_hero) if deployed_hero != null else 0
 	var deployed_archetypes: Array[String] = []
+	var formation_focus_hero_id := (
+		legion_selected_hero_id
+		if legion_tab == "formation" and bool(onboarding.get("finished", false))
+		else ""
+	)
 	for deployed_hero_id in state.formation.hero_ids():
 		var formation_hero: RefCounted = state.hero_by_id(String(deployed_hero_id))
 		if formation_hero != null:
@@ -1471,6 +1478,14 @@ func _legion_view() -> Dictionary:
 			next_growth = "升至 3★ 触发技能质变"
 		elif int(hero.active_skill_level) < 3:
 			next_growth = "研究主动技能"
+		var selected_formation_focus := (
+			not formation_focus_hero_id.is_empty()
+			and String(hero.hero_id) == formation_focus_hero_id
+		)
+		var faction_journey_focus := (
+			not focus_archetype.is_empty()
+			and String(hero.archetype_id) == focus_archetype
+		)
 		candidates.append({
 			"hero_id": String(hero.hero_id),
 			"archetype_id": String(hero.archetype_id),
@@ -1483,9 +1498,11 @@ func _legion_view() -> Dictionary:
 			"power_delta": power - deployed_power,
 			"current": deployed_id == String(hero.hero_id),
 			"recommended": String(hero.archetype_id) == recommended_archetype,
-			"journey_focus": (
-				not focus_archetype.is_empty()
-				and String(hero.archetype_id) == focus_archetype
+			"journey_focus": selected_formation_focus or faction_journey_focus,
+			"journey_focus_label": (
+				"阵营核心"
+				if faction_journey_focus
+				else "新获角色"
 			),
 		})
 		roster.append({
@@ -1985,6 +2002,11 @@ func _blueprint_view() -> Dictionary:
 		RecruitmentResultProjection.selected_faction_core(state)
 	)
 	var faction_focus_recipe_id := String(faction_focus_recipe.get("recipe_id", ""))
+	var active_focus_recipe_id := (
+		blueprint_focus_recipe_id
+		if not blueprint_focus_recipe_id.is_empty()
+		else faction_focus_recipe_id
+	)
 	var faction_archetype_id := RecruitmentResultProjection.selected_faction_core(state)
 	var faction_tech_preview := {}
 	var faction_tech_choices: Array[Dictionary] = []
@@ -2038,7 +2060,12 @@ func _blueprint_view() -> Dictionary:
 			"action_label": "",
 			"action_name": "",
 			"disabled": false,
-			"journey_focus": recipe_id == faction_focus_recipe_id,
+			"journey_focus": recipe_id == active_focus_recipe_id,
+			"journey_focus_label": (
+				blueprint_focus_label
+				if not blueprint_focus_label.is_empty()
+				else "★ 本轮十连阵营核心"
+			),
 		}
 		if unlocked:
 			node["status_id"] = "unlocked"
@@ -2067,6 +2094,7 @@ func _blueprint_view() -> Dictionary:
 		"branch_title": String(branch_data.get("title", "研究分支")),
 		"branch_summary": String(branch_data.get("summary", "比较职责与成长质变")),
 		"journey_focus_recipe_id": faction_focus_recipe_id,
+		"focus_recipe_id": active_focus_recipe_id,
 		"core_status": (
 			"选择已获得的设计图纸 · 研发完成后永久角色入列"
 			if not state.factory.discovered_blueprints.is_empty()
@@ -2138,6 +2166,8 @@ func _set_blueprint_branch(branch_id: String) -> void:
 	if branch_id == blueprint_branch:
 		return
 	blueprint_branch = branch_id
+	blueprint_focus_recipe_id = ""
+	blueprint_focus_label = ""
 	_show_blueprints()
 
 
@@ -2168,7 +2198,10 @@ func _claim_foundational_blueprint() -> void:
 			])
 			_open_blueprint_for_archetype(String(next_recipe.get("archetype_id", "")))
 			return
+		blueprint_focus_recipe_id = ""
+		blueprint_focus_label = ""
 		legion_tab = "formation"
+		legion_selected_hero_id = hero_id
 		formation_edit_slot = "troop_1"
 		for slot_id in ["troop_1", "troop_2", "troop_3", "troop_4", "troop_5"]:
 			if String(game.current_state().formation.slots.get(slot_id, "")).is_empty():
@@ -2962,9 +2995,16 @@ func _show_result() -> void:
 			or String(onboarding.get("target", "")) != "expedition"
 		)
 	):
+		var next_blueprint := unlocked_blueprints[0] as Dictionary
+		var next_blueprint_recipe := FactoryCatalog.recipe(String(
+			next_blueprint.get("recipe_id", "")
+		))
 		qualification = "新设计图纸已入库，角色尚未研发"
 		primary_label = "前往研究所研发"
-		primary_action = "research_lab"
+		primary_action = "blueprints"
+		primary_payload = {
+			"archetype_id": String(next_blueprint_recipe.get("archetype_id", "")),
+		}
 	elif chapter_one_complete and bool(welfare_snapshot.get("claimable", false)):
 		qualification = "%s\n开服庆典礼包已解锁 · 黑金升星核心可强化一名自选1★角色" % (
 			_chapter_one_unlock_copy(next_stage_id)
@@ -3248,7 +3288,10 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 		"faction_doctrine":
 			_show_blueprints()
 		"blueprints":
-			_open_blueprint_for_archetype(String(payload.get("archetype_id", "")))
+			_open_blueprint_for_archetype(
+				String(payload.get("archetype_id", "")),
+				"★ 本章新获图纸"
+			)
 		"next_stage":
 			_start_stage_battle(String(payload.get("stage_id", "")))
 		"map_stage":
@@ -4244,11 +4287,16 @@ func _follow_task(
 			_show_map()
 
 
-func _open_blueprint_for_archetype(archetype_id: String) -> void:
+func _open_blueprint_for_archetype(
+	archetype_id: String,
+	focus_label: String = "★ 本轮十连阵营核心"
+) -> void:
 	var recipe := FactoryCatalog.recipe_for_archetype(archetype_id)
 	var recipe_id := String(recipe.get("recipe_id", ""))
 	if not recipe_id.is_empty():
 		blueprint_branch = recipe_id.get_slice(".", 0)
+		blueprint_focus_recipe_id = recipe_id
+		blueprint_focus_label = focus_label
 	_show_blueprints()
 
 
