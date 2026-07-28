@@ -608,8 +608,8 @@ async function main() {
 					&& save.clearedStages?.includes("stage_1_4"),
 				"browser-first-wall-counterattack-victory-844x390.png",
 				[145, 420, 700],
-				330,
-				300,
+				310,
+				1000,
 				120000,
 			);
 		} catch (error) {
@@ -727,8 +727,8 @@ async function main() {
 				&& save.highestUnlockedStage === "stage_2_1",
 			"browser-chapter-one-complete-844x390.png",
 			[145, 420, 700],
-			330,
-			300,
+			310,
+			1000,
 			150000,
 			{
 				delayMs: 55000,
@@ -947,6 +947,20 @@ async function main() {
 				failedRequests,
 			})}`);
 		}
+		const elapsedMs = Date.now() - startedAt;
+		const totalSkillTouches = skillTouches
+			+ stage12.skillTouches
+			+ stage13.skillTouches
+			+ firstWall.skillTouches
+			+ counterattack.skillTouches
+			+ chapterOne.skillTouches
+			+ factionJourneySkillTouches;
+		const skillTouchesPerSecond = totalSkillTouches / (elapsedMs / 1000);
+		if (skillTouchesPerSecond > 1) {
+			throw new Error(
+				`skill input rate exceeds the human-scale ceiling: ${skillTouchesPerSecond.toFixed(3)}/s`,
+			);
+		}
 		const browserVersion = await cdp.send("Browser.getVersion");
 		console.log("WEB_FIRST_CHAPTER_SMOKE_PASS");
 		console.log(JSON.stringify({
@@ -996,14 +1010,9 @@ async function main() {
 				twoStarCore: factionStar.hero,
 			},
 			clearedStages: chapterOne.save.clearedStages,
-			skillCardTouchInputs: skillTouches
-				+ stage12.skillTouches
-				+ stage13.skillTouches
-				+ firstWall.skillTouches
-				+ counterattack.skillTouches
-				+ chapterOne.skillTouches
-				+ factionJourneySkillTouches,
-			elapsedMs: Date.now() - startedAt,
+			skillCardTouchInputs: totalSkillTouches,
+			skillTouchesPerSecond,
+			elapsedMs,
 			runtimeExceptions: exceptions.length,
 			unexpectedConsoleErrors: unexpectedConsoleErrors.length,
 			failedRequests: failedRequests.length,
