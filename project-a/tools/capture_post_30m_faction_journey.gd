@@ -283,6 +283,14 @@ func _capture() -> void:
 	await _wait_frames(2)
 	if not _save("res://artifacts/ui-faction-star-unlocked-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(3)
+	if not _save("res://artifacts/ui-faction-star-unlocked-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(5)
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	faction_hero.xp = 90

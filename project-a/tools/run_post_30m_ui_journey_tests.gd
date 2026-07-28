@@ -447,6 +447,25 @@ func _run() -> void:
 		star.pressed.emit()
 		await _wait_frames(4)
 	_check(_tree_has_text(main, "质变解锁"), "star success immediately names the unlocked qualitative effect")
+	var star_toast := main.get("toast") as Label
+	var member_tab := main.find_child("LegionRosterTab", true, false) as Button
+	_check(
+		star_toast != null
+			and star_toast.visible
+			and star_toast.text.contains("质变解锁")
+			and star_toast.get_global_rect().position.y >= 16.0
+			and star_toast.get_global_rect().end.y
+				<= (
+					member_tab.get_global_rect().position.y - 4.0
+					if member_tab != null
+					else 76.0
+				)
+			and (
+				(star_toast.get_theme_stylebox("normal") as StyleBoxFlat).bg_color.a
+					>= 0.95
+			),
+		"star breakthrough uses an opaque safe-header celebration instead of overlapping tabs"
+	)
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	_check(faction_hero != null and int(faction_hero.star) == 2, "star click applies the faction core's qualitative two-star state")

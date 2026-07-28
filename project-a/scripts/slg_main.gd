@@ -138,6 +138,8 @@ var ui_rebuild_generation: int = 0
 var last_recruit_results: Array[Dictionary] = []
 var formation_edit_slot: String = ""
 var toast: Label
+var toast_tween: Tween
+var toast_generation := 0
 var factory_camera: Camera3D
 var selected_facility_id: String = "command_center"
 var construction_facility_id: String = ""
@@ -4272,11 +4274,20 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	toast.anchor_right = 0.5
 	toast.offset_left = -210
 	toast.offset_right = 210
-	toast.offset_top = 72
-	toast.offset_bottom = 98
+	toast.offset_top = 18
+	toast.offset_bottom = 70
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	toast.add_theme_constant_override("outline_size", 4)
-	toast.add_theme_color_override("font_outline_color", Color(BG, 0.9))
+	toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	toast.max_lines_visible = 2
+	toast.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	toast.z_index = 100
+	var toast_style := _box(Color("#10252a"), 9, Color(CYAN, 0.95))
+	toast_style.content_margin_left = 12
+	toast_style.content_margin_right = 12
+	toast_style.content_margin_top = 5
+	toast_style.content_margin_bottom = 5
+	toast.add_theme_stylebox_override("normal", toast_style)
 	ui_root.add_child(toast)
 	_apply_mobile_interactive_targets.call_deferred()
 	return root
@@ -5116,15 +5127,26 @@ func _show_fatal(message: String) -> void:
 
 func _notify(message: String) -> void:
 	if toast != null and is_instance_valid(toast):
+		toast_generation += 1
+		var generation := toast_generation
+		if toast_tween != null and toast_tween.is_valid():
+			toast_tween.kill()
+		toast_tween = null
 		toast.text = message
 		toast.visible = true
 		toast.modulate = Color.WHITE
-		var tween := toast.create_tween()
-		tween.tween_interval(1.6)
-		tween.tween_property(toast, "modulate:a", 0.0, 0.35)
-		tween.tween_callback(func() -> void:
-			if toast != null and is_instance_valid(toast):
+		toast_tween = toast.create_tween()
+		toast_tween.tween_interval(1.95 if settings_store.reduced_motion else 1.6)
+		if not settings_store.reduced_motion:
+			toast_tween.tween_property(toast, "modulate:a", 0.0, 0.35)
+		toast_tween.tween_callback(func() -> void:
+			if (
+				generation == toast_generation
+				and toast != null
+				and is_instance_valid(toast)
+			):
 				toast.visible = false
+				toast_tween = null
 		)
 
 
