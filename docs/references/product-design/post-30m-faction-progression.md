@@ -285,9 +285,9 @@ Tier 1 科技协议，再揭示第三章
 
 ### 当前自动 Web 证据边界（2026-07-28）
 
-干净候选 `43f3e1d` 已在 Chrome 150、844×390、全新隔离 profile 中只通过导出 Canvas 输入完成
+干净候选 `7c7497d` 已在 Chrome 150、844×390、全新隔离 profile 中只通过导出 Canvas 输入完成
 同一存档的首章、阵营十连、核心选择、定向研发、编队、2-1～2-3 三场证明、2-4 一星压力失败，
-再按战报主目标进入音波核心成员页，以 60/20 专属碎片升至 2★。完整旅程 715.266 秒，
+再按战报主目标进入音波核心成员页，以 60/20 专属碎片升至 2★。完整旅程 736.866 秒，
 IndexedDB 最终角色为同一永久 `sonic` hero、`star = 2`，且 0 运行时异常、0 非预期控制台错误、
 0 请求失败。截图证据包含 `browser-faction-formation-committed-844x390.png`、
 `browser-faction-late-wall-result-844x390.png`、`browser-faction-star-focus-844x390.png` 和
