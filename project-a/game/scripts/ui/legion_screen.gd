@@ -300,22 +300,33 @@ func _formation_panel() -> Control:
 func _candidate_panel(slot_id: String) -> Control:
 	var slot_name := String(SLOT_NAMES.get(slot_id, slot_id))
 	var target_empty := _formation_slot_is_empty(slot_id)
+	var journey_candidate := _journey_focus_candidate()
 	var panel := _panel(
-		"%s为空 · 部署阵营核心" % slot_name
+		"永久角色已入列 · %s" % String(journey_candidate.get("display_name", "阵营核心"))
+		if target_empty and not journey_candidate.is_empty()
+		else "%s为空 · 部署阵营核心" % slot_name
 		if target_empty
 		else "替换 %s · 比较职责与战力变化" % slot_name
 	)
 	panel.name = "FormationCandidatePanel"
 	if target_empty:
 		panel.add_child(_label(
-			"部署后形成%d人军团 · 下一步：用阵营核心完成3场实战证明" % (
+			"%s · %s · 1★主动「%s」\n目标%s · 部署后%d人军团 · 接下来完成3场实战证明" % [
+				String(journey_candidate.get("faction", "阵营待确认")),
+				String(journey_candidate.get("playstyle", "灵活应战")),
+				String(journey_candidate.get("skill_name", "待命")),
+				slot_name,
+				_formation_deployed_count() + 1,
+			]
+			if not journey_candidate.is_empty()
+			else "部署后形成%d人军团 · 下一步：完成3场实战证明" % (
 				_formation_deployed_count() + 1
 			),
 			11,
 			CYAN
 		))
 	var candidates := GridContainer.new()
-	candidates.columns = 3
+	candidates.columns = 1 if get_viewport_rect().size.x < 720.0 else 3
 	candidates.add_theme_constant_override("h_separation", 6)
 	candidates.add_theme_constant_override("v_separation", 6)
 	var ordered_candidates: Array = []
@@ -362,6 +373,14 @@ func _candidate_panel(slot_id: String) -> Control:
 			MUTED
 		))
 	return panel
+
+
+func _journey_focus_candidate() -> Dictionary:
+	for candidate_value in _view.get("candidates", []):
+		var candidate := candidate_value as Dictionary
+		if bool(candidate.get("journey_focus", false)) and not bool(candidate.get("current", false)):
+			return candidate
+	return {}
 
 
 func _formation_slot_is_empty(slot_id: String) -> bool:

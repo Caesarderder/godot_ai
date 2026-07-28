@@ -180,13 +180,25 @@ func _run() -> void:
 	_check(candidate != null and not candidate.disabled, "new faction hero is immediately visible as a formation candidate")
 	_check(candidate != null and candidate.text.contains("阵营核心"), "formation preserves the ten-pull core identity")
 	var candidate_panel := main.find_child("FormationCandidatePanel", true, false) as Control
-	_check(
-		candidate_panel != null
-			and _tree_has_text(candidate_panel, "后排 1为空 · 部署阵营核心")
-			and _tree_has_text(candidate_panel, "部署后形成4人军团")
-			and _tree_has_text(candidate_panel, "完成3场实战证明"),
-		"formation handoff keeps the target slot, immediate consequence, and next proof goal together"
-	)
+	_check(candidate_panel != null, "formation handoff renders its candidate panel")
+	if candidate_panel != null:
+		_check(
+			_tree_has_text(candidate_panel, "永久角色已入列")
+				and _tree_has_text(candidate_panel, String(faction_hero.display_name)),
+			"formation handoff confirms permanent ownership and the exact new hero"
+		)
+		_check(
+			_tree_has_text(candidate_panel, FactionCatalogScript.faction_for(archetype_id))
+				and _tree_has_text(candidate_panel, FactionCatalogScript.playstyle_for(archetype_id))
+				and _tree_has_text(candidate_panel, "1★主动"),
+			"formation handoff preserves the new hero's faction, playstyle, and one-star ability"
+		)
+		_check(
+			_tree_has_text(candidate_panel, "目标后排 1")
+				and _tree_has_text(candidate_panel, "部署后4人军团")
+				and _tree_has_text(candidate_panel, "完成3场实战证明"),
+			"formation handoff keeps the target slot, immediate consequence, and next proof goal together"
+		)
 	var formation_scroll := main.find_child("LegionContentScroll_formation", true, false) as ScrollContainer
 	_check(
 		formation_scroll != null and formation_scroll.scroll_vertical > 0,

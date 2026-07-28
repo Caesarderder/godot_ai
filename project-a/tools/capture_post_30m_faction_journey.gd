@@ -94,6 +94,14 @@ func _capture() -> void:
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-formation-focus-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-formation-focus-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 
 	state = game.current_state()
 	var faction_hero: RefCounted = _hero_for(state, archetype_id)
