@@ -57,11 +57,12 @@ State labels:
   reinforcements, then clicks the rendered counterattack CTA and operates all three hero cards until the second
   1-4 attempt wins. The same journey chooses and commissions a resource facility, claims its first real output,
   compares both verified growth routes, commits an assault two-star choice, defeats 1-5, records the role and
-  cannon-suppression contribution, and opens chapter-two reconnaissance without auto-starting 2-1. It then
-  follows the safe growth route, researches G-Man skill II through the rendered member card, proves the exact
-  80/6/1/24/16/20 transaction, and returns to 2-1 reconnaissance; IndexedDB proves every chapter-one clear,
-  one boss attempt, the 2-1 unlock, permanent skill level two, and zero 2-1 attempts with no runtime, console,
-  or network failures
+  cannon-suppression contribution, and opens chapter-two reconnaissance without auto-starting 2-1. It then claims
+  the faction ten-pull, chooses one of two equal-rarity cores, completes that core's timed research, deploys the
+  permanent hero, clears 2-1/2-2/2-3, and reaches a real one-star pressure result at 2-4 or 2-5. The visible
+  recovery objective focuses the exact roster card and spends only that archetype's fragments to reach two stars.
+  Candidate `43f3e1d` selected Sonic, recorded 60 fragments before a 20-fragment upgrade, and finished with the
+  same permanent hero at two stars after 715.266 seconds, with no runtime, console, or network failures
   (`node tools/run_web_first_battle_smoke.mjs`).
 - [ ] Firefox desktop smoke.
 - [ ] Optional desktop Safari `WEBKIT_PREFLIGHT` against the frozen candidate; record the exact Safari version.
