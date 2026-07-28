@@ -118,8 +118,10 @@ func _apply_configuration() -> void:
 	var action_id := String(action.get("id", "attack"))
 	var needs_preparation := action_id in ["upgrade", "research", "recruit", "formation"] and _unlocked and not _cleared
 	var needs_discovery := action_id == "discover" and _unlocked and not _cleared
-	var force_probe := bool(faction_proof.get("force_probe", false))
-	if force_probe:
+	var force_primary_attack := bool(
+		faction_proof.get("force_primary_attack", false)
+	)
+	if force_primary_attack:
 		needs_preparation = false
 		needs_discovery = false
 	_preparation_action_id = action_id
@@ -144,7 +146,7 @@ func _apply_configuration() -> void:
 			else ("试探炮台防线" if needs_discovery else ("立即出击" if _unlocked else "尚未侦测"))
 		)
 	)
-	if force_probe:
+	if force_primary_attack:
 		_style_pressure_test_action()
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = PANEL

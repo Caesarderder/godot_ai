@@ -209,6 +209,7 @@ func _test_faction_journey_projection() -> void:
 	hero.level = 2
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(projection.get("faction_phase", "")) == "breakthrough_gate", "projection exposes the two-star growth-validation phase")
 	_check(String(hierarchy.get("target", "")) == "map", "two-star level-two core routes back to the exact 2-4 validation")
 	_check(String(hierarchy.get("stage_id", "")) == "stage_2_4", "level-two validation does not skip the encountered gate")
 
@@ -221,6 +222,7 @@ func _test_faction_journey_projection() -> void:
 	hero.level = 3
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
+	_check(String(projection.get("faction_phase", "")) == "breakthrough", "projection exposes the chapter-boss validation phase")
 	_check(String(hierarchy.get("target", "")) == "map", "two-star level-three core routes to final chapter-two validation")
 	_check(String(hierarchy.get("small", "")).contains("击毁2-5核心"), "final faction step names the chapter boss proof")
 

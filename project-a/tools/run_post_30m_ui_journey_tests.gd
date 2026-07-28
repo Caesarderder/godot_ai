@@ -9,6 +9,9 @@ const OnboardingCatalogScript := preload(
 const RecruitmentResultProjectionScript := preload(
 	"res://game/scripts/domain/recruitment/recruitment_result_projection.gd"
 )
+const FactionCatalogScript := preload(
+	"res://game/scripts/domain/content/faction_catalog.gd"
+)
 
 var failures: Array[String] = []
 
@@ -422,6 +425,19 @@ func _run() -> void:
 		gate_cta != null and gate_cta.text.contains("2-4"),
 		"level-two success keeps one visible 2-4 continuation instead of stranding the player in roster"
 	)
+	if gate_cta != null:
+		gate_cta.pressed.emit()
+		await _wait_frames(4)
+	_check(String(main.get("selected_stage_id")) == "stage_2_4", "growth validation focuses the exact encountered wall")
+	_check(
+		_tree_has_text(main, "2★Lv2成长兑现")
+			and _tree_has_text(main, FactionCatalogScript.next_star_effect(archetype_id, 2)),
+		"2-4 reconnaissance names the exact new qualitative effect being validated"
+	)
+	var breakthrough_attack := _button_with_text(main, "验证2★质变")
+	_check(breakthrough_attack != null and breakthrough_attack.is_visible_in_tree(), "grown core receives one explicit 2-4 validation action")
+	var redundant_growth := _button_with_text(main, "先培养军团")
+	_check(redundant_growth == null or not redundant_growth.is_visible_in_tree(), "completed prescribed growth cannot be contradicted by generic readiness")
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_5"
 	faction_hero.xp = 120
@@ -451,6 +467,17 @@ func _run() -> void:
 		boss_cta != null and boss_cta.text.contains("2-5"),
 		"level-three success keeps one visible boss continuation instead of stranding the player in roster"
 	)
+	if boss_cta != null:
+		boss_cta.pressed.emit()
+		await _wait_frames(4)
+	_check(String(main.get("selected_stage_id")) == "stage_2_5", "final validation focuses the exact chapter boss")
+	_check(
+		_tree_has_text(main, "章节终验 · 2★Lv3")
+			and _tree_has_text(main, FactionCatalogScript.next_star_effect(archetype_id, 2)),
+		"2-5 reconnaissance names the exact matured qualitative effect"
+	)
+	var boss_attack := _button_with_text(main, "检验2★质变")
+	_check(boss_attack != null and boss_attack.is_visible_in_tree(), "chapter boss receives one explicit qualitative validation action")
 	var proof_runtime := {
 		"deployed_unit_ids": [hero_id],
 	}

@@ -1171,7 +1171,10 @@ func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictio
 	if (
 		String(hierarchy.get("target", "")) != "map"
 		or String(hierarchy.get("stage_id", "")) != stage_id
-		or (proof_focus.is_empty() and phase != "probe_late_wall")
+		or (
+			proof_focus.is_empty()
+			and phase not in ["probe_late_wall", "breakthrough_gate", "breakthrough"]
+		)
 	):
 		return {}
 	var hero: RefCounted = state.hero_by_id(String(hierarchy.get("hero_id", "")))
@@ -1187,7 +1190,24 @@ func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictio
 			"focus": "观察目标：记录推进阶段、声塔命中与共振能量损失；失败无永久损失。",
 			"attack_label": "开始1★无损试探",
 			"hero_id": String(hero.hero_id),
-			"force_probe": true,
+			"force_primary_attack": true,
+		}
+	var star_effect := FactionCatalog.next_star_effect(archetype_id, 2)
+	if phase == "breakthrough_gate":
+		return {
+			"headline": "2★Lv2成长兑现 · %s核心" % String(hero.display_name),
+			"focus": "验证：让“%s”真实触发；失败无损。" % star_effect,
+			"attack_label": "验证2★质变",
+			"hero_id": String(hero.hero_id),
+			"force_primary_attack": true,
+		}
+	if phase == "breakthrough":
+		return {
+			"headline": "章节终验 · 2★Lv3 %s核心" % String(hero.display_name),
+			"focus": "终验：持续触发“%s”并击毁核心；失败无损。" % star_effect,
+			"attack_label": "检验2★质变",
+			"hero_id": String(hero.hero_id),
+			"force_primary_attack": true,
 		}
 	return {
 		"headline": "阵营验证 · %s核心已上阵 · %s" % [

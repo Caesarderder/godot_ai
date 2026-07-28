@@ -273,6 +273,14 @@ func _capture() -> void:
 	await _wait_frames(5)
 	if not _save("res://artifacts/ui-faction-level-two-handoff-844x390.png"):
 		return
+	var breakthrough_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	if breakthrough_cta == null or not breakthrough_cta.text.contains("2-4"):
+		_fail("two-star breakthrough action unavailable")
+		return
+	breakthrough_cta.pressed.emit()
+	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-breakthrough-recon-844x390.png"):
+		return
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
 	state.stage_progress["cleared_stages"].append("stage_2_4")
@@ -295,6 +303,14 @@ func _capture() -> void:
 	upgrade.pressed.emit()
 	await _wait_frames(5)
 	if not _save("res://artifacts/ui-faction-level-three-handoff-844x390.png"):
+		return
+	var boss_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	if boss_cta == null or not boss_cta.text.contains("2-5"):
+		_fail("two-star boss validation action unavailable")
+		return
+	boss_cta.pressed.emit()
+	await _wait_frames(5)
+	if not _save("res://artifacts/ui-faction-boss-validation-recon-844x390.png"):
 		return
 	state = game.current_state()
 	faction_hero = state.hero_by_id(hero_id)
