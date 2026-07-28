@@ -1203,7 +1203,10 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	await _wait_frames(3)
 	_ok(instance.find_child("RosterResourceContext", true, false) == null, "roster no longer spends scroll space on the global resource balance")
 	_ok(instance.find_child("GlobalCoreResourceHUD", true, false) != null, "roster retains the top-right core-resource bar")
-	_ok(_tree_has_button(instance, "升星"), "legion screen exposes star progression")
+	_ok(
+		_tree_has_button(instance, "升至2★"),
+		"legion screen exposes an explicit target-star progression action"
+	)
 	_ok(_tree_has_button(instance, "研究技能 Lv.2"), "legion screen exposes active-skill research")
 	_ok(_tree_has_text(instance, "无损可出征"), "legion screen exposes lossless permanent heroes")
 	instance.call("_set_legion_tab", "recruit")

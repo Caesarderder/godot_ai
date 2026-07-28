@@ -445,6 +445,13 @@ func _run() -> void:
 	_check(not _tree_has_text(legion, "陶瓷"), "hero growth omits factory materials")
 	_check(not _tree_has_text(legion, "招募券"), "roster omits resources unrelated to growth decisions")
 	var welfare_core := legion.find_child("WelfareStarCore_hero_armored", true, false) as Button
+	var normal_star := legion.find_child("CultivationAction_star", true, false) as Button
+	_check(
+		normal_star != null
+			and normal_star.text.contains("升至2★")
+			and normal_star.text.contains("炮击格挡、冲门与反震"),
+		"normal star action names both the target star and qualitative unlock before spending fragments"
+	)
 	_check(
 		welfare_core != null and welfare_core.text.contains("本次专属碎片全免"),
 		"one-star hero card exposes the contraband fragment-waiver action"

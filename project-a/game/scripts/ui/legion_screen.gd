@@ -1016,9 +1016,13 @@ func _hero_card(hero: Dictionary) -> Control:
 		not prioritize_star
 	)
 	if int(hero.get("star", 1)) < 3:
+		var target_star := int(hero.get("star", 1)) + 1
 		_add_cultivation_action(
 			cultivation,
-			"升星",
+			"升至%d★\n解锁 · %s" % [
+				target_star,
+				String(hero.get("next_star_effect", "职责质变")),
+			],
 			"star",
 			hero,
 			hero.get("star_resource_context", {}) as Dictionary,

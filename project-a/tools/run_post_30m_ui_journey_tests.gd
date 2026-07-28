@@ -435,7 +435,13 @@ func _run() -> void:
 	_check(String(main.get("legion_tab")) == "roster", "star action opens the cultivation roster")
 	_check(String(main.get("legion_selected_hero_id")) == hero_id, "star action focuses the exact hero from the durable ten-pull")
 	var star := main.find_child("CultivationAction_star", true, false) as Button
-	_check(star != null and not star.disabled, "guaranteed duplicate fragments fund the focused hero's two-star action")
+	_check(
+		star != null
+			and not star.disabled
+			and star.text.contains("升至2★")
+			and star.text.contains(FactionCatalogScript.next_star_effect(archetype_id, 2)),
+		"guaranteed fragments fund an action that names the exact two-star qualitative unlock"
+	)
 	var fragments_before := int(state.meta_progression.hero_fragments.get(archetype_id, 0))
 	if star != null:
 		star.pressed.emit()

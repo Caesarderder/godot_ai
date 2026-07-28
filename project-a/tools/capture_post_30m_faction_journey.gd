@@ -267,6 +267,14 @@ func _capture() -> void:
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-star-ready-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-star-ready-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	var star := main.find_child("CultivationAction_star", true, false) as Button
 	if star == null or star.disabled:
 		_fail("faction star action unavailable")
