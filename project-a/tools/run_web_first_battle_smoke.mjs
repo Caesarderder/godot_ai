@@ -1114,38 +1114,40 @@ async function main() {
 		}
 		await touch(cdp, 638, 239);
 		await new Promise((accept) => setTimeout(accept, 700));
-		await screenshot(cdp, "browser-chapter-three-repair-blueprint-focus-844x390.png");
+		await screenshot(cdp, "browser-chapter-three-reward-blueprint-focus-844x390.png");
 		await pressEnter(cdp);
-		const repairResearch = await waitFor(
+		const chapterThreeRewardResearch = await waitFor(
 			"chapter-two reward blueprint research persisted to IndexedDB",
 			async () => {
 				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
-				return save?.blueprintResearch?.recipe_id === "special.repair"
+				return save?.blueprintResearch?.recipe_id === "flying.bomber"
 					? save
 					: null;
 			},
 			10000,
 			250,
 		);
-		const repairResearchWaitMs = Math.max(
+		const chapterThreeRewardResearchWaitMs = Math.max(
 			0,
-			Number(repairResearch.blueprintResearch?.completes_at_unix ?? 0) * 1000
+			Number(chapterThreeRewardResearch.blueprintResearch?.completes_at_unix ?? 0) * 1000
 				- Date.now()
 				+ 1200,
 		);
-		if (repairResearchWaitMs > 15000) {
-			throw new Error(`repair research wait is invalid: ${repairResearchWaitMs}ms`);
+		if (chapterThreeRewardResearchWaitMs > 15000) {
+			throw new Error(
+				`chapter-three reward research wait is invalid: ${chapterThreeRewardResearchWaitMs}ms`,
+			);
 		}
-		await screenshot(cdp, "browser-chapter-three-repair-research-started-844x390.png");
-		await new Promise((accept) => setTimeout(accept, repairResearchWaitMs));
+		await screenshot(cdp, "browser-chapter-three-reward-research-started-844x390.png");
+		await new Promise((accept) => setTimeout(accept, chapterThreeRewardResearchWaitMs));
 		await new Promise((accept) => setTimeout(accept, 500));
 		await pressEnter(cdp);
-		const repairHeroReady = await waitFor(
-			"chapter-two repair blueprint became a permanent hero",
+		const chapterThreeRewardHeroReady = await waitFor(
+			"chapter-two reward blueprint became a permanent hero",
 			async () => {
 				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
 				const hero = save?.roster?.find(
-					(candidate) => candidate.archetypeId === "repair",
+					(candidate) => candidate.archetypeId === "bomber",
 				);
 				return hero && Object.keys(save?.blueprintResearch ?? {}).length === 0
 					? { save, hero }
@@ -1155,20 +1157,20 @@ async function main() {
 			250,
 		);
 		await new Promise((accept) => setTimeout(accept, 700));
-		await screenshot(cdp, "browser-chapter-three-repair-formation-focus-844x390.png");
+		await screenshot(cdp, "browser-chapter-three-reward-formation-focus-844x390.png");
 		await touch(cdp, 120, 250);
-		const repairFormation = await waitFor(
-			"repair hero joined the permanent formation",
+		const chapterThreeRewardFormation = await waitFor(
+			"chapter-two reward hero joined the permanent formation",
 			async () => {
 				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
 				return Object.values(save?.formation ?? {}).includes(
-					repairHeroReady.hero.heroId,
+					chapterThreeRewardHeroReady.hero.heroId,
 				) ? save : null;
 			},
 			10000,
 			250,
 		);
-		await screenshot(cdp, "browser-chapter-three-repair-formation-committed-844x390.png");
+		await screenshot(cdp, "browser-chapter-three-reward-formation-committed-844x390.png");
 		await touch(cdp, 730, 350);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-chapter-three-goal-844x390.png");
@@ -1280,8 +1282,8 @@ async function main() {
 					chapterTwoBoss.save.clearedStages?.includes("stage_2_5") === true,
 				chapterThreeUnlocked: chapterThreeHandoff.highestUnlockedStage,
 				chapterThreeAttempts: Number(chapterThreeHandoff.attempts?.stage_3_1 ?? 0),
-				repairHeroId: repairHeroReady.hero.heroId,
-				repairFormation: repairFormation.formation,
+				chapterThreeRewardHeroId: chapterThreeRewardHeroReady.hero.heroId,
+				chapterThreeRewardFormation: chapterThreeRewardFormation.formation,
 			},
 			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: totalSkillTouches,
@@ -1344,10 +1346,10 @@ async function main() {
 				"artifacts/browser-faction-level-three-goal-844x390.png",
 				"artifacts/browser-faction-boss-validation-recon-844x390.png",
 				"artifacts/browser-faction-chapter-two-complete-844x390.png",
-				"artifacts/browser-chapter-three-repair-blueprint-focus-844x390.png",
-				"artifacts/browser-chapter-three-repair-research-started-844x390.png",
-				"artifacts/browser-chapter-three-repair-formation-focus-844x390.png",
-				"artifacts/browser-chapter-three-repair-formation-committed-844x390.png",
+				"artifacts/browser-chapter-three-reward-blueprint-focus-844x390.png",
+				"artifacts/browser-chapter-three-reward-research-started-844x390.png",
+				"artifacts/browser-chapter-three-reward-formation-focus-844x390.png",
+				"artifacts/browser-chapter-three-reward-formation-committed-844x390.png",
 				"artifacts/browser-chapter-three-goal-844x390.png",
 				"artifacts/browser-faction-chapter-three-recon-844x390.png",
 			],

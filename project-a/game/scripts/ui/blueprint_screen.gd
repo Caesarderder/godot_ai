@@ -253,7 +253,10 @@ func _build_node(view: Dictionary) -> PanelContainer:
 	if journey_focus:
 		var focus_badge := Label.new()
 		focus_badge.name = "FactionJourneyBlueprintBadge"
-		focus_badge.text = "★ 本轮十连阵营核心"
+		focus_badge.text = String(view.get(
+			"journey_focus_label",
+			"★ 本轮十连阵营核心"
+		))
 		focus_badge.add_theme_font_override("font", CJK_FONT)
 		focus_badge.add_theme_font_size_override("font_size", 10)
 		focus_badge.add_theme_color_override("font_color", GOLD)
@@ -302,6 +305,7 @@ func _build_node(view: Dictionary) -> PanelContainer:
 		button.custom_minimum_size.y = 32
 		button.name = String(view.get("action_name", "BlueprintNodeAction"))
 		button.set_meta("primary_blueprint_action", true)
+		button.set_meta("recipe_id", String(view.get("recipe_id", "")))
 		button.disabled = bool(view.get("disabled", false))
 		button.pressed.connect(action_requested.emit.bind(action_id, {
 			"recipe_id": String(view.get("recipe_id", "")),
@@ -336,6 +340,17 @@ func _focus_primary_after_layout() -> void:
 	if results_panel.visible:
 		%BlueprintResultsLegionButton.grab_focus()
 		return
+	var focus_recipe_id := String(_view.get("focus_recipe_id", ""))
+	if not focus_recipe_id.is_empty():
+		for focused_action_value in find_children("*", "Button", true, false):
+			var focused_action := focused_action_value as Button
+			if (
+				String(focused_action.get_meta("recipe_id", "")) == focus_recipe_id
+				and focused_action.visible
+				and not focused_action.disabled
+			):
+				focused_action.grab_focus()
+				return
 	for action_value in find_children("*", "Button", true, false):
 		var action := action_value as Button
 		if (

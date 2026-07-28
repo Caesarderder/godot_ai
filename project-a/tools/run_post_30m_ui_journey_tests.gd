@@ -656,6 +656,7 @@ func _run() -> void:
 	state.stage_progress["cleared_stages"].append("stage_2_4")
 	state.stage_progress["cleared_stages"].append("stage_2_5")
 	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
+	state.factory.discovered_blueprints["flying.bomber"] = true
 	faction_hero.xp = 150
 	main.set("last_battle_runtime_result", proof_runtime)
 	main.set("last_settlement", {
@@ -670,7 +671,7 @@ func _run() -> void:
 			"hero_xp_recipients": 4,
 			"unlocked_blueprints": [{
 				"kind": "blueprint",
-				"recipe_id": "special.repair",
+				"recipe_id": "flying.bomber",
 			}],
 		},
 	})
@@ -686,8 +687,23 @@ func _run() -> void:
 		await _wait_frames(4)
 	_check(
 		main.find_child("BlueprintScreen", true, false) != null
-			and String(main.get("blueprint_branch")) == "special",
-		"chapter-two reward opens the exact repair technology branch without an extra facility-screen hop"
+			and String(main.get("blueprint_branch")) == "flying",
+		"chapter-two reward opens the exact bomber technology branch without an extra facility-screen hop"
+	)
+	var bomber_research := main.find_child(
+		"UnlockFoundationalBlueprint_flying_bomber",
+		true,
+		false
+	) as Button
+	_check(
+		bomber_research != null
+			and bomber_research.has_focus()
+			and _tree_has_text(main, "本章新获图纸"),
+		"chapter reward distinguishes and focuses the exact bomber action when its branch has two available designs | button=%s focus=%s label=%s" % [
+			"present" if bomber_research != null else "missing",
+			str(bomber_research != null and bomber_research.has_focus()),
+			str(_tree_has_text(main, "本章新获图纸")),
+		]
 	)
 	var chapter_two_event := (
 		(main.get("last_settlement") as Dictionary).get("event", {}) as Dictionary
