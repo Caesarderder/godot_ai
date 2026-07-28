@@ -163,7 +163,7 @@ func _boss_ready_panel(boss_ready: Dictionary) -> Control:
 
 
 func _growth_choice_panel(first_growth: Dictionary) -> Control:
-	var panel := _panel("首次战斗成长 · 二选一挑战 %s" % String(first_growth.get("target_stage", "章节 Boss")))
+	var panel := _panel("首次战斗成长 · 冲锋/装甲二选一升至 2★ · 挑战 %s" % String(first_growth.get("target_stage", "章节 Boss")))
 	panel.name = "FirstGrowthChoice"
 	var choices := first_growth.get("choices", []) as Array
 	var grid := GridContainer.new()
@@ -176,7 +176,7 @@ func _growth_choice_panel(first_growth: Dictionary) -> Control:
 		var choice := choice_value as Dictionary
 		var frame := PanelContainer.new()
 		frame.name = "GrowthRoute_%s" % String(choice.get("archetype_id", ""))
-		frame.custom_minimum_size.x = 360
+		frame.custom_minimum_size.x = 250
 		frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		frame.add_theme_stylebox_override("panel", _box(PANEL_2, LINE))
 		var margin := MarginContainer.new()

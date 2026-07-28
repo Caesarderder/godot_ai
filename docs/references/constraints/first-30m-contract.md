@@ -216,10 +216,11 @@ Boss 压炮达到阈值时，领域结果仍在当 tick 生效并取消炮击，
 
 行动六先进入首次成长专注态，用反攻获得的军团数据完成一条二星路线；随后独立打开三座工业产线
 的建造选择，使用工业材料完成建设并收取首批产出。专注态在 844×390 首屏并列展示冲锋快攻与
-装甲守势，包含战术结果、7-seed 验证、真实 `CombatPower` 前后值和同一领域成本，两个升星
-按钮均可操作，不显示招募、派驻等无关分支。证据为 `run_first_growth_flow_tests.gd`、
+装甲守势，包含战术结果、7-seed 验证、真实 `CombatPower` 前后值和同一领域成本；战报入口明确
+写为“比较冲锋/装甲2★路线”，成长页再次说明这是二选一升星，两个升星按钮均可操作，不显示
+招募、派驻等无关分支。证据为 `run_first_growth_flow_tests.gd`、
 `artifacts/ui-first-industrial-choice-844x390.png` 与
-`artifacts/ui-first-growth-choice-844x390.png`。
+`artifacts/ui-first-growth-choice-844x390.png`、`artifacts/ui-first-growth-choice-568x320.png`。
 
 升星命令成功后不恢复成完整成员管理页，而进入“成长已生效”验证态：显示玩家所选英雄与路线、
 真实军团/推荐战力、对应的 5 秒巨炮技能时机和唯一“验证成长 · 进攻 1-5”按钮。1-5 失败结算

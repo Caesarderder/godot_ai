@@ -9,4 +9,4 @@ label = "选择冲锋或装甲马桶人升到二星"
 event_types = PackedStringArray("hero_star_upgraded", "permanent_hero_star_upgraded")
 archetype_ids = PackedStringArray("assault", "armored")
 target = "legion"
-cta_label = "比较两名援军"
+cta_label = "比较冲锋/装甲2★路线"

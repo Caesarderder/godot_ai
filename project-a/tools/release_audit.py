@@ -12,6 +12,7 @@ import argparse
 import gzip
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -164,6 +165,15 @@ def _check_source() -> tuple[list[str], list[str], dict]:
             passed.append(label)
         else:
             failed.append(f"missing project setting: {snippet}")
+    project_version_match = re.search(
+        r'^config/version="([^"]+)"$',
+        project_text,
+        flags=re.MULTILINE,
+    )
+    project_version = project_version_match.group(1) if project_version_match else ""
+    evidence["project_version"] = project_version
+    if not project_version:
+        failed.append("project.godot missing application config/version")
 
     release_dir = PROJECT_ROOT / "release"
     for relative in REQUIRED_RELEASE_FILES:
@@ -186,6 +196,12 @@ def _check_source() -> tuple[list[str], list[str], dict]:
                 passed.append("version.json declares privacy claim")
             else:
                 failed.append("version.json missing privacy claim")
+            if project_version and version_data.get("version") == project_version:
+                passed.append("version.json matches project.godot application version")
+            else:
+                failed.append(
+                    "version.json version does not match project.godot application version"
+                )
         except json.JSONDecodeError as exc:
             failed.append(f"version.json is invalid JSON: {exc}")
 

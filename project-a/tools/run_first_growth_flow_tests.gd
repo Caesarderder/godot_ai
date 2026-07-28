@@ -10,6 +10,13 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var growth_objective := load(
+		"res://game/resources/definitions/onboarding/objectives/complete_combat_growth.tres"
+	)
+	_check(
+		String(growth_objective.cta_label) == "比较冲锋/装甲2★路线",
+		"the battle-result handoff names both routes and the two-star decision"
+	)
 	change_scene_to_file("res://scenes/screens/main.tscn")
 	for _frame in 8:
 		await process_frame
@@ -43,6 +50,10 @@ func _run() -> void:
 	await _wait_frames(3)
 	var choice_panel := main.find_child("FirstGrowthChoice", true, false)
 	_check(choice_panel != null, "battle-earned data opens the focused combat growth choice first")
+	_check(
+		_tree_has_text(choice_panel, "冲锋/装甲二选一升至 2★"),
+		"the focused screen restates the exact decision before either irreversible action"
+	)
 	_check(_tree_has_text(choice_panel, "快攻") and _tree_has_text(choice_panel, "守势"), "both verified boss routes remain visible")
 	_check(_tree_has_text(choice_panel, "实测 7/7 通关"), "route evidence is visible before the irreversible choice")
 	_check(_tree_has_text(choice_panel, "战力") and _tree_has_text(choice_panel, "消耗"), "the choice exposes power impact and exact cost")
