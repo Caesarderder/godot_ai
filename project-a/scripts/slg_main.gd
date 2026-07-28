@@ -3227,9 +3227,9 @@ func _chapter_one_unlock_copy(next_stage_id: String) -> String:
 func _chapter_transition_copy(completed_chapter: int, next_stage: Dictionary) -> String:
 	var next_chapter := int(next_stage.get("chapter", completed_chapter + 1))
 	var previews := {
-		3: "新威胁：电视控制关键成员；补充续航或反控制。",
-		4: "新威胁：联合精英组合护盾与集火；完善六人职责。",
-		5: "最终战线：全部防御协议启动；验证完整阵营解法。",
+		3: "新威胁 · 电视控制关键成员",
+		4: "新威胁 · 联合精英护盾与集火",
+		5: "最终战线 · 全部防御协议启动",
 	}
 	return "第%d章完成 · %s开放\n%s" % [
 		completed_chapter,
@@ -3241,9 +3241,8 @@ func _chapter_transition_copy(completed_chapter: int, next_stage: Dictionary) ->
 func _faction_tech_unlock_short_copy() -> String:
 	var preview := _active_faction_protocol(game.current_state())
 	if preview.is_empty():
-		return "阵营科技解锁 · 3-1起生效"
-	return "Tier %d科技%s · %s · %d-1起生效" % [
-		int(preview.get("tier", 1)),
+		return "科技解锁 · 阵营协议 · 3-1生效"
+	return "科技%s · %s · %d-1生效" % [
 		"升级" if int(preview.get("tier", 1)) >= 2 else "解锁",
 		String(preview.get("title", "阵营协议")),
 		int(preview.get("activation_chapter", 3)),

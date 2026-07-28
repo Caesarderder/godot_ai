@@ -597,9 +597,10 @@ func _run() -> void:
 		qualification != null
 			and qualification.visible
 			and qualification.text.contains("科技解锁")
-			and qualification.text.contains("3-1起生效")
+			and qualification.text.contains("3-1生效")
+			and qualification.text.split("\n").size() == 3
 			and qualification.get_global_rect().end.y <= float(root.size.y),
-		"chapter-two reward is visible beside the chapter-three action instead of falling below the report fold"
+		"chapter-two reward fits exactly three visible promise lines beside the chapter-three action"
 	)
 	result_factory = main.find_child("FactoryAction", true, false) as Button
 	_check(
