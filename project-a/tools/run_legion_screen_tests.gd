@@ -124,6 +124,34 @@ func _run() -> void:
 			"display_name": "冲锋马桶人",
 			"amount": 20,
 		}],
+		"recruit_reward_summary": {
+			"draw_count": 10,
+			"new_blueprints": 2,
+			"fragment_total": 60,
+			"highest_rating": "A",
+		},
+		"recruit_core_choices": [
+			{
+				"archetype_id": "assault",
+				"display_name": "冲锋马桶人",
+				"rating": "B",
+				"faction": "高速突袭",
+				"playstyle": "抢先破城",
+				"synergy_summary": "已有搭档：Gman",
+				"fragments": 20,
+				"next_star_effect": "顺劈多个目标",
+			},
+			{
+				"archetype_id": "rocket",
+				"display_name": "火箭飞行马桶人",
+				"rating": "B",
+				"faction": "远程轰炸",
+				"playstyle": "后排拆塔",
+				"synergy_summary": "阵容变化：补足后排拆塔",
+				"fragments": 20,
+				"next_star_effect": "齐射多个目标",
+			},
+		],
 		"recruit_focus": {
 			"archetype_id": "assault",
 			"hero_id": "",
@@ -136,6 +164,18 @@ func _run() -> void:
 		},
 	})
 	await process_frame
+	_check(
+		_tree_has_text(legion, "十连战果已锁定 · 新角色图纸 2 · 专属碎片 +60"),
+		"faction choice first names the concrete ten-pull haul"
+	)
+	_check(
+		_tree_has_text(legion, "研发 → 入队 → 3场实战 → 质变突破"),
+		"faction choice previews the next playable proof loop"
+	)
+	_check(
+		_tree_has_text(legion, "新角色设计 · B级 · 冲锋马桶人"),
+		"faction choice frames each candidate as a newly unlocked character design"
+	)
 	_check(_tree_has_text(legion, "冲锋马桶人专属碎片 +20"), "duplicate signal result projects archetype-specific fragments")
 	_check(not _tree_has_text(legion, "设计数据"), "recruitment no longer projects blueprint data as a resource")
 	_check(_tree_has_text(legion, "阵营核心 · 高速突袭"), "recruit result identifies the faction core")

@@ -423,8 +423,21 @@ func _recruit_panel() -> Control:
 		)
 		result_panel.name = "SignalRecruitResultPanel"
 		if not core_choices.is_empty():
-			var choice_panel := _panel("同评级二选一 · 选择后永久保留")
+			var reward_summary := _view.get("recruit_reward_summary", {}) as Dictionary
+			var choice_panel := _panel(
+				"十连战果已锁定 · 新角色图纸 %d · 专属碎片 +%d" % [
+					int(reward_summary.get("new_blueprints", 0)),
+					int(reward_summary.get("fragment_total", 0)),
+				]
+			)
 			choice_panel.name = "RecruitFactionCoreChoice"
+			var journey := _label(
+				"两套2★路线均已就绪 · 选定后：研发 → 入队 → 3场实战 → 质变突破",
+				12,
+				CYAN
+			)
+			journey.name = "RecruitFactionJourneyPromise"
+			choice_panel.add_child(journey)
 			var choice_grid := GridContainer.new()
 			choice_grid.columns = 2
 			choice_grid.add_theme_constant_override("h_separation", 8)
@@ -434,13 +447,12 @@ func _recruit_panel() -> Control:
 				var card := _panel("")
 				card.custom_minimum_size.x = 350
 				card.add_child(_label(
-					"%s级 · %s · %s\n%s\n2★：%s · 碎片%d已满足" % [
+					"新角色设计 · %s级 · %s · %s\n%s · 2★%s（碎片已齐）" % [
 						String(choice.get("rating", "B")),
 						String(choice.get("display_name", "")),
 						String(choice.get("faction", "")),
 						String(choice.get("synergy_summary", "")),
 						String(choice.get("next_star_effect", "")),
-						int(choice.get("fragments", 0)),
 					],
 					12,
 					GOLD

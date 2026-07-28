@@ -102,6 +102,27 @@ func _run() -> void:
 			and second_choice.get_global_rect().end.y <= 310.0,
 		"both faction candidates expose distinct playstyle promises above the bottom navigation"
 	)
+	var reward_summary := main.call("_legion_view").get(
+		"recruit_reward_summary",
+		{}
+	) as Dictionary
+	_check(
+		int(reward_summary.get("draw_count", 0)) == 10
+			and int(reward_summary.get("new_blueprints", 0)) >= 2
+			and int(reward_summary.get("fragment_total", 0)) > 0,
+		"free ten exposes the actual new-blueprint and dedicated-fragment haul"
+	)
+	var journey_promise := main.find_child(
+		"RecruitFactionJourneyPromise",
+		true,
+		false
+	) as Label
+	_check(
+		journey_promise != null
+			and journey_promise.text.contains("研发 → 入队 → 3场实战 → 质变突破")
+			and journey_promise.get_global_rect().end.y <= 310.0,
+		"the reward moment keeps the immediate faction journey visible above navigation"
+	)
 	if second_choice != null:
 		second_choice.pressed.emit()
 		await _wait_frames(4)

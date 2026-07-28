@@ -1569,6 +1569,28 @@ func _legion_view() -> Dictionary:
 			"archetype_id": String(draw.get("archetype_id", "")),
 			"pity_bonus": _recruit_result_view(draw.get("pity_bonus", {}) as Dictionary),
 		})
+	var recruit_reward_summary := {
+		"draw_count": recruit_results.size(),
+		"new_blueprints": 0,
+		"fragment_total": 0,
+		"highest_rating": "B",
+	}
+	var rating_rank := {"B": 1, "A": 2, "S": 3}
+	for result in recruit_results:
+		if String(result.get("kind", "")) == "blueprint":
+			recruit_reward_summary["new_blueprints"] = (
+				int(recruit_reward_summary["new_blueprints"]) + 1
+			)
+		elif String(result.get("kind", "")) == "hero_fragments":
+			recruit_reward_summary["fragment_total"] = (
+				int(recruit_reward_summary["fragment_total"])
+				+ int(result.get("amount", 0))
+			)
+		var rating := String(result.get("rarity", "B"))
+		if int(rating_rank.get(rating, 0)) > int(
+			rating_rank.get(String(recruit_reward_summary["highest_rating"]), 0)
+		):
+			recruit_reward_summary["highest_rating"] = rating
 	var recruit_focus: Dictionary = {}
 	var recruit_core_choices: Array[Dictionary] = []
 	if (
@@ -1732,6 +1754,7 @@ func _legion_view() -> Dictionary:
 		"recruit_s_pity": int(state.meta_progression.recruit_s_pity),
 		"recruit_target_guaranteed": bool(state.meta_progression.recruit_target_guaranteed),
 		"recruit_results": recruit_results,
+		"recruit_reward_summary": recruit_reward_summary,
 		"recruit_focus": recruit_focus,
 		"recruit_core_choices": recruit_core_choices,
 		"codex": codex,

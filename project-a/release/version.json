@@ -3,7 +3,7 @@
   "product_name": "马桶人工厂攻城",
   "release_channel": "local-web-candidate",
   "source_state": "local_verified",
-  "version": "0.13.35-chapter-finale-promise.1",
+  "version": "0.13.36-faction-reward-moment.1",
   "save_schema_version": 11,
   "godot_required": "4.6.3-stable",
   "renderer_contract": "Compatibility / WebGL2",
