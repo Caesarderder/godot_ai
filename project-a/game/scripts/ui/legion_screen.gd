@@ -352,7 +352,9 @@ func _candidate_panel(slot_id: String) -> Control:
 				String(candidate.get("display_name", "")),
 				" ✓" if current else "",
 				" · 推荐下一步" if recommended else "",
-				" · ★阵营核心" if journey_focus else "",
+				" · ★%s" % String(candidate.get("journey_focus_label", "阵营核心"))
+					if journey_focus
+					else "",
 				String(candidate.get("role", "")),
 				int(candidate.get("power", 0)),
 				("%+d" % delta) if delta != 0 else "不变",

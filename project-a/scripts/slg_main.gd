@@ -1355,6 +1355,11 @@ func _legion_view() -> Dictionary:
 	)
 	var recruit_event := RecruitmentResultProjection.latest_event(state)
 	var focus_archetype := RecruitmentResultProjection.selected_faction_core(state)
+	var formation_focus_hero_id := (
+		legion_selected_hero_id
+		if legion_tab == "formation"
+		else ""
+	)
 	if focus_archetype.is_empty() and not bool(recruit_event.get("requires_core_choice", false)):
 		for result_value in recruit_event.get("results", []):
 			var result := result_value as Dictionary
@@ -1473,6 +1478,14 @@ func _legion_view() -> Dictionary:
 			next_growth = "升至 3★ 触发技能质变"
 		elif int(hero.active_skill_level) < 3:
 			next_growth = "研究主动技能"
+		var selected_formation_focus := (
+			not formation_focus_hero_id.is_empty()
+			and String(hero.hero_id) == formation_focus_hero_id
+		)
+		var faction_journey_focus := (
+			not focus_archetype.is_empty()
+			and String(hero.archetype_id) == focus_archetype
+		)
 		candidates.append({
 			"hero_id": String(hero.hero_id),
 			"archetype_id": String(hero.archetype_id),
@@ -1485,9 +1498,11 @@ func _legion_view() -> Dictionary:
 			"power_delta": power - deployed_power,
 			"current": deployed_id == String(hero.hero_id),
 			"recommended": String(hero.archetype_id) == recommended_archetype,
-			"journey_focus": (
-				not focus_archetype.is_empty()
-				and String(hero.archetype_id) == focus_archetype
+			"journey_focus": selected_formation_focus or faction_journey_focus,
+			"journey_focus_label": (
+				"阵营核心"
+				if faction_journey_focus
+				else "新获角色"
 			),
 		})
 		roster.append({
@@ -2186,6 +2201,7 @@ func _claim_foundational_blueprint() -> void:
 		blueprint_focus_recipe_id = ""
 		blueprint_focus_label = ""
 		legion_tab = "formation"
+		legion_selected_hero_id = hero_id
 		formation_edit_slot = "troop_1"
 		for slot_id in ["troop_1", "troop_2", "troop_3", "troop_4", "troop_5"]:
 			if String(game.current_state().formation.slots.get(slot_id, "")).is_empty():
