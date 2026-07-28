@@ -165,13 +165,13 @@ autowrap_mode = 2
 
 [node name="CoordinationChoice" type="Button" parent="BlueprintTree/FactionTechPreview/Margin/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(132, 48)
+custom_minimum_size = Vector2(154, 52)
 layout_mode = 2
 text = "选择全队协同"
 
 [node name="SpecializationChoice" type="Button" parent="BlueprintTree/FactionTechPreview/Margin/Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(132, 48)
+custom_minimum_size = Vector2(154, 52)
 layout_mode = 2
 text = "选择阵营专精"
 

@@ -521,10 +521,14 @@ Shell 只在 command 刚返回且 `last_recruit_results` 存在时投影一次�
 第三章原本只有遭遇变化，随后虽会自动获得 Tier 2，却仍没有玩家决策。现在 3-5 首通只开放
 “全队协同 / 阵营专精”二选一：前者扩散收益，后者牺牲覆盖换取更高强度或时长；选择写入 durable
 command receipt 且不能被第二次选择覆盖，未选择时第四章不会越权获得 Tier 2。
+选择首屏不再把两条完整效果压成细小段落：四个阵营都由权威协议数据额外投影两行决策摘要，
+在两个等权按钮内直接比较覆盖对象/战区与能量、护盾、承伤或虚弱时长的真实数值；按钮旁明确
+“永久选择 · 不可更改”和“广覆盖 vs 高强度”，不改变任何协议数值或 command receipt。
 `run_battle_tests.gd` 分别验证八个协议边界，`run_post_30m_faction_tests.gd` 验证锁定、互斥和
 save roundtrip，`run_campaign_objective_projection_tests.gd` 验证刷新后的标题/基地/目标恢复，
-`run_post_30m_ui_journey_tests.gd` 验证 3-5 唯一 CTA、两个 48px 按钮和 4-1 交接；
-`ui-faction-tier-two-choice-844x390.png`、`ui-faction-tier-two-tech-844x390.png` 与
+`run_post_30m_ui_journey_tests.gd` 验证 3-5 唯一 CTA、两个 52px 数值选择按钮和 4-1 交接；
+`ui-faction-tier-two-choice-844x390.png`、`ui-faction-tier-two-choice-568x320.png`、
+`ui-faction-tier-two-tech-844x390.png` 与
 `ui-faction-tier-two-battle-844x390.png` 提供连续视觉证据。路线偏好仍需真人盲测，不能由确定性
 测试宣称两者主观价值相等。
 2026-07-28 第三章已从 3-1～3-5 共用“每 8 秒眩晕最低血角色”拆成五段可学习遭遇：信号消失、

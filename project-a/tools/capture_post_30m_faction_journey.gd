@@ -494,6 +494,14 @@ func _capture() -> void:
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-tier-two-choice-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-tier-two-choice-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	var doctrine_choice := main.find_child("CoordinationChoice", true, false) as Button
 	if doctrine_choice == null:
 		_fail("Tier 2 doctrine choice unavailable")

@@ -106,10 +106,16 @@ func _apply_view() -> void:
 		)
 		var coordination := choices[0] as Dictionary
 		var specialization := choices[1] as Dictionary
-		tech_effect.text = "全队协同：%s\n阵营专精：%s" % [
-			String(coordination.get("effect", "")),
-			String(specialization.get("effect", "")),
-		]
+		tech_effect.text = "永久选择 · 不可更改\n广覆盖 vs 高强度"
+		coordination_choice.text = String(
+			coordination.get("choice_summary", coordination.get("action_label", "选择全队协同"))
+		)
+		specialization_choice.text = String(
+			specialization.get(
+				"choice_summary",
+				specialization.get("action_label", "选择阵营专精")
+			)
+		)
 	else:
 		tech_identity.text = "Tier %d阵营科技已激活 · %s\n%s" % [
 			int(preview.get("tier", 1)),
@@ -333,11 +339,13 @@ func _apply_theme() -> void:
 	tech_identity.add_theme_color_override("font_color", GOLD)
 	tech_identity.add_theme_font_size_override("font_size", 11)
 	tech_effect.add_theme_color_override("font_color", CYAN)
-	tech_effect.add_theme_font_size_override("font_size", 9)
+	tech_effect.add_theme_font_size_override("font_size", 11)
 	branch_heading.add_theme_font_size_override("font_size", 16)
 	branch_heading.add_theme_color_override("font_color", CYAN)
 	for button_node in find_children("*", "Button", true, false):
 		_style_button(button_node as Button, button_node == breakthrough_button)
+	for doctrine_button in [coordination_choice, specialization_choice]:
+		doctrine_button.add_theme_font_size_override("font_size", 11)
 
 
 func _button(text_value: String, primary: bool) -> Button:

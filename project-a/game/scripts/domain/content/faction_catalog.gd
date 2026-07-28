@@ -64,6 +64,7 @@ const TIER_TWO_TECH: Dictionary = {
 	"快攻破城": {
 		"title": "全军链式点火协议",
 		"effect": "同阵营主力以50能量开局，其余永久主力也获得20能量，阵营核心带动全队进入首轮爆发",
+		"choice_summary": "全队协同 · 同阵营50能量\n其余主力 +20能量",
 		"effect_id": "opening_energy",
 		"value": 50,
 		"allied_value": 20,
@@ -71,6 +72,7 @@ const TIER_TWO_TECH: Dictionary = {
 	"钢铁防线": {
 		"title": "全域堡垒协议",
 		"effect": "同阵营主力获得最大生命18%的20秒护盾，其余永久主力也获得8%护盾",
+		"choice_summary": "全队协同 · 同阵营18%护盾\n其余主力 +8%护盾",
 		"effect_id": "opening_shield",
 		"value": 1800,
 		"allied_value": 800,
@@ -79,6 +81,7 @@ const TIER_TWO_TECH: Dictionary = {
 	"远程轰炸": {
 		"title": "纵深火力标定协议",
 		"effect": "前两个战区的结构整局处于火力标定状态，受到的伤害提高25%",
+		"choice_summary": "全队协同 · 覆盖2个战区\n结构承伤 +25%",
 		"effect_id": "opening_armor_break",
 		"zone_count": 2,
 		"duration_ticks": 1200,
@@ -86,6 +89,7 @@ const TIER_TWO_TECH: Dictionary = {
 	"干扰增殖": {
 		"title": "纵深失序扩散协议",
 		"effect": "前两个战区守军开局虚弱15秒，让控制、召唤与续航阵容完整展开",
+		"choice_summary": "全队协同 · 覆盖2个战区\n守军虚弱 15秒",
 		"effect_id": "opening_weakness",
 		"zone_count": 2,
 		"duration_ticks": 75,
@@ -96,12 +100,14 @@ const TIER_TWO_SPECIALIZATION: Dictionary = {
 	"快攻破城": {
 		"title": "核心过载点火协议",
 		"effect": "只强化同阵营主力，但以75能量开局，最快形成第一轮阵营连锁爆发",
+		"choice_summary": "阵营专精 · 仅同阵营\n开局75能量",
 		"effect_id": "opening_energy",
 		"value": 75,
 	},
 	"钢铁防线": {
 		"title": "核心壁垒协议",
 		"effect": "只强化同阵营主力，但获得最大生命25%的20秒护盾，专注承住最高压力",
+		"choice_summary": "阵营专精 · 仅同阵营\n获得25%护盾",
 		"effect_id": "opening_shield",
 		"value": 2500,
 		"duration_ticks": 100,
@@ -109,6 +115,7 @@ const TIER_TWO_SPECIALIZATION: Dictionary = {
 	"远程轰炸": {
 		"title": "过载火力标定协议",
 		"effect": "只标定首个战区，但使结构承伤提高40%，用于更快击穿第一道防线",
+		"choice_summary": "阵营专精 · 覆盖1个战区\n结构承伤 +40%",
 		"effect_id": "opening_armor_break",
 		"armor_break_bp": 4000,
 		"zone_count": 1,
@@ -117,6 +124,7 @@ const TIER_TWO_SPECIALIZATION: Dictionary = {
 	"干扰增殖": {
 		"title": "深度失序协议",
 		"effect": "只影响首个战区，但使守军虚弱25秒，为增殖阵容争取更长展开时间",
+		"choice_summary": "阵营专精 · 覆盖1个战区\n守军虚弱 25秒",
 		"effect_id": "opening_weakness",
 		"zone_count": 1,
 		"duration_ticks": 125,
@@ -176,6 +184,7 @@ static func tier_two_options_for(archetype_id: String) -> Array[Dictionary]:
 			"doctrine_id": doctrine_id,
 			"title": String(protocol.get("title", "Tier 2协议")),
 			"effect": String(protocol.get("effect", "")),
+			"choice_summary": String(protocol.get("choice_summary", "")),
 			"action_label": (
 				"选择全队协同"
 				if doctrine_id == "coordination"

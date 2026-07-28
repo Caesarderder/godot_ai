@@ -776,8 +776,13 @@ func _run() -> void:
 	_check(
 		_tree_has_text(tech_preview, "Tier 2科技待定")
 			and _tree_has_text(tech_preview, "全队协同")
-			and _tree_has_text(tech_preview, "阵营专精"),
-		"chapter-three completion opens two explicit Tier 2 doctrines instead of auto-selecting one"
+			and _tree_has_text(tech_preview, "阵营专精")
+			and _tree_has_text(tech_preview, "覆盖2个战区")
+			and _tree_has_text(tech_preview, "结构承伤 +25%")
+			and _tree_has_text(tech_preview, "覆盖1个战区")
+			and _tree_has_text(tech_preview, "结构承伤 +40%")
+			and _tree_has_text(tech_preview, "永久选择 · 不可更改"),
+		"chapter-three completion compares both permanent Tier 2 tradeoffs with exact values"
 	)
 	_check(
 		tech_preview != null
