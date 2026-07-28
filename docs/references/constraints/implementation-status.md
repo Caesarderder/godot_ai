@@ -531,6 +531,13 @@ save roundtrip，`run_campaign_objective_projection_tests.gd` 验证刷新后的
 `ui-faction-tier-two-tech-844x390.png` 与
 `ui-faction-tier-two-battle-844x390.png` 提供连续视觉证据。路线偏好仍需真人盲测，不能由确定性
 测试宣称两者主观价值相等。
+4-1 战中兑现后原战报只显示“协议影响 N 个目标”，玩家无法把结果归因到刚做出的永久路线选择，
+普通胜利按钮还会直接用“进攻下一城镇”跳过新机制侦察。现在战报从 durable doctrine 与实际
+BattleSession 结果共同投影 Tier、全队协同/阵营专精、协议名、原始覆盖/强度取舍和本局真实受益
+目标数；4-1 胜利的唯一主 CTA 点名“侦察 4-2 · 禁飞走廊”，先展示防空扫描与当前编队反制，
+不改变科技数值、奖励或关卡状态。`run_post_30m_ui_journey_tests.gd` 覆盖选择、4-1结算归因、
+4-2侦察连续性；`ui-faction-tier-two-result-844x390.png` 与
+`ui-faction-tier-two-result-568x320.png` 证明两种目标横屏下信息和操作完整可见。
 2026-07-28 第三章已从 3-1～3-5 共用“每 8 秒眩晕最低血角色”拆成五段可学习遭遇：信号消失、
 精英换位、有限屏幕控制、监军护盾组合，以及 3-5 三模块错峰轮换。消失单位真实离开目标集合，
 换位真实修改路线，控制与护盾真实改变战斗状态；HUD、3D 和结算都读取稳定事件与次数。25 关

@@ -819,6 +819,59 @@ func _run() -> void:
 			and not hidden_coordination.visible,
 		"reopening blueprints reconstructs the chosen doctrine without offering a second selection"
 	)
+	var chapter_four_cleared := game.current_state().stage_progress.get(
+		"cleared_stages",
+		[]
+	) as Array
+	chapter_four_cleared.append("stage_4_1")
+	game.current_state().stage_progress["cleared_stages"] = chapter_four_cleared
+	game.current_state().stage_progress["highest_unlocked_stage"] = "stage_4_2"
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_4_1",
+			"next_stage_id": "stage_4_2",
+			"reward": {"gold": 82},
+			"hero_xp_each": 34,
+			"hero_xp_recipients": game.current_state().formation.hero_ids().size(),
+		},
+	})
+	main.set("last_battle_runtime_result", {
+		"ticks": 510,
+		"structures_destroyed": 6,
+		"enemies_defeated": 10,
+		"stage_reached": 2,
+		"faction_protocol_title": String(tier_two.get("title", "")),
+		"faction_protocol_faction": String(tier_two.get("faction", "")),
+		"faction_protocol_tier": 2,
+		"faction_protocol_affected": 3,
+		"alliance_mark_count": 2,
+	})
+	main.call("_show_result")
+	await _wait_frames(4)
+	var chapter_four_action := main.find_child("PrimaryAction", true, false) as Button
+	_check(
+		_tree_has_text(main, "Tier 2科技兑现")
+			and _tree_has_text(main, "全队协同")
+			and _tree_has_text(main, "覆盖2个战区")
+			and _tree_has_text(main, "影响3个目标"),
+		"4-1 settlement attributes the real battle payoff to the player's permanent doctrine"
+	)
+	_check(
+		chapter_four_action != null
+			and chapter_four_action.text.contains("侦察 4-2")
+			and chapter_four_action.text.contains("禁飞"),
+		"4-1 settlement names the exact next encounter instead of offering generic continuation"
+	)
+	if chapter_four_action != null:
+		chapter_four_action.pressed.emit()
+		await _wait_frames(4)
+	_check(
+		String(main.get("selected_stage_id")) == "stage_4_2"
+			and _tree_has_text(main, "防空扫描"),
+		"the 4-1 handoff opens 4-2 reconnaissance before committing the next attack"
+	)
 
 	await _finish(main, game, audio_director)
 

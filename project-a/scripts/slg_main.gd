@@ -2970,8 +2970,20 @@ func _show_result() -> void:
 		primary_action = "next_stage"
 		primary_payload = {"stage_id": String(onboarding.get("stage_id", ""))}
 	elif won and not next_stage_id.is_empty():
-		primary_label = "进攻下一城镇"
-		primary_action = "next_stage"
+		var next_stage := StageCatalog.stage(next_stage_id)
+		var next_chapter := int(next_stage.get("chapter", 1))
+		if next_chapter >= 3:
+			qualification = "下一战线 · %s\n先侦察新威胁，再调整编队与技能时机。" % String(
+				next_stage.get("display_name", next_stage_id)
+			)
+			primary_label = "侦察 %s · %s" % [
+				_stage_short_label(next_stage_id),
+				String(next_stage.get("display_name", "下一战线")),
+			]
+			primary_action = "map_stage"
+		else:
+			primary_label = "进攻下一城镇"
+			primary_action = "next_stage"
 		primary_payload = {"stage_id": next_stage_id}
 	else:
 		primary_label = "培养角色"
@@ -3606,11 +3618,32 @@ func _faction_protocol_result_copy(runtime_result: Dictionary) -> String:
 	var affected := int(runtime_result.get("faction_protocol_affected", 0))
 	if title.is_empty() or affected <= 0:
 		return ""
-	return "阵营科技兑现 · %s「%s」本局影响 %d 个目标" % [
-		String(runtime_result.get("faction_protocol_faction", "阵营")),
-		title,
+	var tier := int(runtime_result.get("faction_protocol_tier", 1))
+	var protocol := _active_faction_protocol(game.current_state())
+	var doctrine_label := String({
+		"coordination": "全队协同",
+		"specialization": "阵营专精",
+	}.get(String(protocol.get("doctrine_id", "")), "阵营协议"))
+	var choice_summary := String(protocol.get("choice_summary", "")).replace("\n", " · ")
+	if choice_summary.is_empty():
+		choice_summary = String(protocol.get("effect", "选择已改变本场开局"))
+	choice_summary = choice_summary.trim_prefix("%s · " % doctrine_label)
+	choice_summary = choice_summary.replace(" +", "+")
+	var compact_title := title.trim_suffix("协议")
+	return "Tier %d科技兑现 · %s「%s」\n%s · 影响%d个目标" % [
+		tier,
+		doctrine_label,
+		compact_title,
+		choice_summary,
 		affected,
 	]
+
+
+func _stage_short_label(stage_id: String) -> String:
+	var parts := stage_id.trim_prefix("stage_").split("_")
+	if parts.size() != 2:
+		return stage_id
+	return "%s-%s" % [parts[0], parts[1]]
 
 
 func _show_epilogue(event: Dictionary = {}) -> void:

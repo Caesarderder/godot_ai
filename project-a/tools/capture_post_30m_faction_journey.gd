@@ -526,6 +526,46 @@ func _capture() -> void:
 	await _wait_frames(2)
 	if not _save("res://artifacts/ui-chapter-four-alliance-mark-844x390.png"):
 		return
+	var tier_two := main.call("_active_faction_protocol", game.current_state()) as Dictionary
+	var result_cleared := game.current_state().stage_progress.get("cleared_stages", []) as Array
+	if not result_cleared.has("stage_4_1"):
+		result_cleared.append("stage_4_1")
+	game.current_state().stage_progress["cleared_stages"] = result_cleared
+	game.current_state().stage_progress["highest_unlocked_stage"] = "stage_4_2"
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_4_1",
+			"next_stage_id": "stage_4_2",
+			"reward": {"gold": 82},
+			"hero_xp_each": 34,
+			"hero_xp_recipients": game.current_state().formation.hero_ids().size(),
+		},
+	})
+	main.set("last_battle_runtime_result", {
+		"ticks": 510,
+		"structures_destroyed": 6,
+		"enemies_defeated": 10,
+		"stage_reached": 2,
+		"faction_protocol_title": String(tier_two.get("title", "")),
+		"faction_protocol_faction": String(tier_two.get("faction", "")),
+		"faction_protocol_tier": 2,
+		"faction_protocol_affected": 3,
+		"alliance_mark_count": 2,
+	})
+	main.call("_show_result")
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-tier-two-result-844x390.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-tier-two-result-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	main.call("_start_stage_battle", "stage_4_2")
 	await _wait_frames(5)
 	battle_world = main.get("battle_world")
