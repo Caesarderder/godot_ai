@@ -805,7 +805,7 @@ async function main() {
 			},
 			browser: browserVersion.product,
 			viewport: VIEWPORT,
-			journey: "fresh profile through every chapter-one core loop, boss victory, chapter-two reconnaissance, and first skill-II growth",
+			journey: "fresh profile through every chapter-one core loop, boss victory, free faction ten-pull, and explicit faction-core choice",
 			openingStageCleared: true,
 			attempts: settledSave.attempts.stage_1_1,
 			firstWallReached: true,
@@ -829,11 +829,10 @@ async function main() {
 			chapterOneComplete: chapterOne.save.clearedStages.includes("stage_1_5"),
 			chapterTwoUnlocked: chapterTwoHandoff.highestUnlockedStage,
 			chapterTwoReconnaissanceAutoStarted: false,
-			firstSkillGrowth: {
-				archetypeId: "gman",
-				activeSkillLevel: skillResearchAfter.roster.find((hero) => hero.archetypeId === "gman")?.activeSkillLevel,
-				cost: actualSkillResearchDelta,
-				chapterTwoAttemptsAfterReturn: Number(chapterTwoAfterGrowth.attempts?.stage_2_1 ?? 0),
+			factionHandoff: {
+				freeTenClaimed: factionTen.onboardingClaimed?.["reward.post_chapter_faction_ten"] === true,
+				selectedCore: factionChoice.factionCore,
+				chapterTwoAttemptsAfterChoice: Number(factionChoice.attempts?.stage_2_1 ?? 0),
 			},
 			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: skillTouches
@@ -863,6 +862,7 @@ async function main() {
 				"artifacts/browser-first-wall-counterattack-started-844x390.png",
 				"artifacts/browser-first-wall-counterattack-victory-844x390.png",
 				"artifacts/browser-first-industrial-choice-844x390.png",
+				"artifacts/browser-first-industrial-gift-claimed-844x390.png",
 				"artifacts/browser-first-industrial-placement-844x390.png",
 				"artifacts/browser-first-industrial-ready-844x390.png",
 				"artifacts/browser-first-industrial-commissioned-844x390.png",
@@ -872,10 +872,9 @@ async function main() {
 				"artifacts/browser-first-boss-started-844x390.png",
 				"artifacts/browser-first-boss-cannon-window-844x390.png",
 				"artifacts/browser-chapter-one-complete-844x390.png",
-				"artifacts/browser-chapter-two-reconnaissance-844x390.png",
-				"artifacts/browser-chapter-two-skill-growth-ready-844x390.png",
-				"artifacts/browser-chapter-two-skill-growth-committed-844x390.png",
-				"artifacts/browser-chapter-two-after-skill-growth-844x390.png",
+				"artifacts/browser-chapter-one-faction-recruit-844x390.png",
+				"artifacts/browser-faction-recruit-result-844x390.png",
+				"artifacts/browser-faction-blueprint-focus-844x390.png",
 			],
 		}, null, 2));
 	} finally {
