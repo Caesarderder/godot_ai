@@ -113,7 +113,10 @@ static func unlocks(state: RefCounted) -> Dictionary:
 		"commander_level": level,
 		"missions": level >= 2 and cleared.has("stage_1_1"),
 		"achievements": level >= 3 and cleared.has("stage_1_2"),
-			"recruitment": level >= 4 and cleared.has("stage_1_5"),
+		# The chapter-one result promises an immediate faction starter ten-pull.
+		# Keep regular progression gates for the pass and weekly systems, but
+		# never put a commander-level wall between that promise and its CTA.
+		"recruitment": cleared.has("stage_1_5"),
 		"pass": level >= 5 and cleared.has("stage_1_5"),
 		"weekly": level >= 10,
 	}

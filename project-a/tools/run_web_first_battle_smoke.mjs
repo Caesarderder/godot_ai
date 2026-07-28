@@ -243,6 +243,13 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 							activeSkillLevel: hero.active_skill_level,
 						})),
 						onboardingClaimed: parsed.onboarding?.claimed,
+						factionCore: Object.values(parsed.command_receipts ?? {})
+							.filter((receipt) => receipt?.type === "choose_faction_core"
+								&& receipt?.result?.ok === true)
+							.sort((left, right) =>
+								Number(right?.result?.state_revision ?? -1)
+								- Number(left?.result?.state_revision ?? -1))
+							.at(0)?.result?.event?.archetype_id ?? "",
 					});
 				} catch (error) {
 					database.close();
@@ -736,68 +743,45 @@ async function main() {
 		) {
 			throw new Error(`chapter-two reconnaissance must not auto-start battle: ${JSON.stringify(chapterTwoHandoff)}`);
 		}
-		await screenshot(cdp, "browser-chapter-two-reconnaissance-844x390.png");
-		const skillResearchBefore = chapterTwoHandoff;
-		await touch(cdp, 600, 330);
-		await new Promise((accept) => setTimeout(accept, 900));
-		await screenshot(cdp, "browser-chapter-two-skill-growth-ready-844x390.png");
-		await touch(cdp, 515, 216);
-		const skillResearchAfter = await waitFor(
-			"G-Man active skill level two persisted to IndexedDB",
+		await screenshot(cdp, "browser-chapter-one-faction-recruit-844x390.png");
+		await touch(cdp, 417, 223);
+		const factionTen = await waitFor(
+			"free faction ten-pull receipt persisted to IndexedDB",
 			async () => {
 				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
-				const commander = save?.roster?.find((hero) => hero.archetypeId === "gman");
-				return Number(commander?.activeSkillLevel ?? 0) === 2 ? save : null;
+				return save?.onboardingClaimed?.["reward.post_chapter_faction_ten"] === true
+					? save
+					: null;
 			},
 			10000,
 			250,
 		);
-		const expectedSkillResearchDelta = {
-			toiletCoins: 80,
-			industrialTech: 6,
-			skillChips: 1,
-			porcelain: 24,
-			parts: 16,
-			sludge: 20,
-		};
-		const actualSkillResearchDelta = {
-			toiletCoins:
-				Number(skillResearchBefore.economy?.toiletCoins ?? 0)
-				- Number(skillResearchAfter.economy?.toiletCoins ?? 0),
-			industrialTech:
-				Number(skillResearchBefore.economy?.industrialTech ?? 0)
-				- Number(skillResearchAfter.economy?.industrialTech ?? 0),
-			skillChips:
-				Number(skillResearchBefore.economy?.skillChips ?? 0)
-				- Number(skillResearchAfter.economy?.skillChips ?? 0),
-			porcelain:
-				Number(skillResearchBefore.materials?.porcelain ?? 0)
-				- Number(skillResearchAfter.materials?.porcelain ?? 0),
-			parts:
-				Number(skillResearchBefore.materials?.parts ?? 0)
-				- Number(skillResearchAfter.materials?.parts ?? 0),
-			sludge:
-				Number(skillResearchBefore.materials?.sludge ?? 0)
-				- Number(skillResearchAfter.materials?.sludge ?? 0),
-		};
-		if (JSON.stringify(actualSkillResearchDelta) !== JSON.stringify(expectedSkillResearchDelta)) {
-			throw new Error(`skill research cost drifted: ${JSON.stringify({
-				expectedSkillResearchDelta,
-				actualSkillResearchDelta,
-			})}`);
+		if (
+			Number(factionTen?.attempts?.stage_2_1 ?? 0) !== 0
+				|| factionTen?.highestUnlockedStage !== "stage_2_1"
+		) {
+			throw new Error(`faction draw must preserve chapter-two reconnaissance: ${JSON.stringify(factionTen)}`);
 		}
 		await new Promise((accept) => setTimeout(accept, 700));
-		await screenshot(cdp, "browser-chapter-two-skill-growth-committed-844x390.png");
-		await touch(cdp, 315, 358);
-		await new Promise((accept) => setTimeout(accept, 900));
-		const chapterTwoAfterGrowth = await evaluate(cdp, READ_SAVE_EXPRESSION);
+		await screenshot(cdp, "browser-faction-recruit-result-844x390.png");
+		await touch(cdp, 185, 288);
+		const factionChoice = await waitFor(
+			"explicit faction-core choice persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return String(save?.factionCore ?? "").length > 0 ? save : null;
+			},
+			10000,
+			250,
+		);
 		if (
-			Number(chapterTwoAfterGrowth?.attempts?.stage_2_1 ?? 0) !== 0
-				|| chapterTwoAfterGrowth?.highestUnlockedStage !== "stage_2_1"
+			Number(factionChoice?.attempts?.stage_2_1 ?? 0) !== 0
+				|| factionChoice?.highestUnlockedStage !== "stage_2_1"
 		) {
-			throw new Error(`skill growth return must preserve reconnaissance state: ${JSON.stringify(chapterTwoAfterGrowth)}`);
+			throw new Error(`faction choice must not auto-start chapter two: ${JSON.stringify(factionChoice)}`);
 		}
-		await screenshot(cdp, "browser-chapter-two-after-skill-growth-844x390.png");
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-faction-blueprint-focus-844x390.png");
 
 		const knownTeardownLines = new Set([
 			'ERROR: Condition "!is_inside_tree()" is true. Returning: false',

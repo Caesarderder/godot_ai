@@ -69,7 +69,12 @@ func _run() -> void:
 		(executor.state.stage_progress["cleared_stages"] as Array).append(stage_id)
 	_ok(not bool(MetaCatalogScript.unlocks(executor.state)["recruitment"]), "recruitment stays hidden until the deterministic first chapter closes")
 	(executor.state.stage_progress["cleared_stages"] as Array).append("stage_1_5")
-	_ok(bool(MetaCatalogScript.unlocks(executor.state)["recruitment"]), "first chapter victory unlocks recruitment for long-term play")
+	executor.state.meta_progression.commander_xp = 0
+	_ok(
+		bool(MetaCatalogScript.unlocks(executor.state)["recruitment"]),
+		"first chapter victory unlocks the promised faction draw without a hidden level wall"
+	)
+	executor.state.meta_progression.commander_xp = 300
 	executor.state.meta_progression.season_merit = 100
 	var coins_before_pass := int(executor.state.economy.toilet_coins)
 	_ok(_command("claim_meta_pass_level", {"level": 1}, "season1-level1").get("ok", false), "reached pass level claims")

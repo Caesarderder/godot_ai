@@ -1785,10 +1785,9 @@ func _legion_view() -> Dictionary:
 			"claimable": foundational_unlocked and not foundational_claimed,
 			"claimed": foundational_claimed,
 		},
-		"recruitment_progress": "解锁进度 · 指挥官 Lv%d/4 · 关卡 1-5 %s" % [
-			int(unlock_state["commander_level"]),
-			"已通关" if cleared.has("stage_1_5") else "未通关",
-		],
+		"recruitment_progress": "解锁进度 · 通关 1-5 后立即开放 · 当前%s" % (
+			"已开放" if cleared.has("stage_1_5") else "未通关"
+		),
 		"recruit_tickets": int(state.economy.recruit_tickets),
 		"recruit_s_pity": int(state.meta_progression.recruit_s_pity),
 		"recruit_target_guaranteed": bool(state.meta_progression.recruit_target_guaranteed),

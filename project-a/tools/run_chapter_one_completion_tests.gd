@@ -34,7 +34,7 @@ func _run() -> void:
 	]
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_1"
 	state.onboarding["active_index"] = 7
-	state.meta_progression.commander_xp = 450
+	state.meta_progression.commander_xp = 140
 	state.economy.toilet_coins = 500
 	state.economy.hero_shards = 20
 	state.factory.materials = {"porcelain": 100, "parts": 0, "sludge": 0}
@@ -66,7 +66,10 @@ func _run() -> void:
 	_check(_tree_has_text(main, "第一章完成 · 灰镜核心已摧毁"), "chapter boss gets a distinct completion title")
 	_check(_tree_has_text(main, "你的成长选择通过实战验证"), "chapter result closes the player-choice promise")
 	_check(_tree_has_text(main, "冲锋压炮 4 次"), "assault mastery proof uses runtime cannon facts")
-	_check(_tree_has_text(main, "首章解锁 · 第2章战线 · 信号招募 · 免费战役战令"), "completion lists only actual unlocked systems")
+	_check(
+		_tree_has_text(main, "首章解锁 · 第2章战线 · 信号招募"),
+		"the real level-three chapter state lists recruitment without inventing a pass unlock"
+	)
 	_check(_tree_has_text(main, "首章训练闭环达成"), "the seven-action onboarding loop visibly settles")
 	var faction_recruit := _button_with_text(main, "领取阵营起手十连")
 	_check(faction_recruit != null, "completion exposes the faction-starter recruitment goal")
