@@ -1,0 +1,4 @@
+interface:
+  display_name: "游戏 UI 生产工作流"
+  short_description: "从策划、截图、代码与运行状态推导可落地的游戏界面方案"
+  default_prompt: "Use $game-ui-production to audit this game screen and produce an implementation-ready UI design."
