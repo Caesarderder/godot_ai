@@ -271,9 +271,11 @@ async function finishActiveBattle(
 	skillInputIntervalMs = 900,
 	settlementTimeoutMs = 90000,
 	midBattleEvidence = null,
+	burstInput = null,
 ) {
 	await new Promise((accept) => setTimeout(accept, 2200));
 	let skillTouches = 0;
+	let burstTouches = 0;
 	let skillCardIndex = 0;
 	const midBattleEvidencePromise = midBattleEvidence
 		? new Promise((accept, reject) => {
@@ -282,24 +284,34 @@ async function finishActiveBattle(
 			}, midBattleEvidence.delayMs);
 		})
 		: Promise.resolve();
-	const skillInput = setInterval(() => {
-		skillTouches += 1;
-		const x = skillCardXs[skillCardIndex % skillCardXs.length];
-		skillCardIndex += 1;
-		void touch(cdp, x, skillCardY);
-	}, skillInputIntervalMs);
+	const skillInput = skillCardXs.length > 0
+		? setInterval(() => {
+			skillTouches += 1;
+			const x = skillCardXs[skillCardIndex % skillCardXs.length];
+			skillCardIndex += 1;
+			void touch(cdp, x, skillCardY);
+		}, skillInputIntervalMs)
+		: null;
+	const burstInputTimer = burstInput
+		? setInterval(() => {
+			burstTouches += 1;
+			void touch(cdp, burstInput.x, burstInput.y);
+		}, burstInput.intervalMs)
+		: null;
 	try {
 		const settledSave = await waitFor(`${stageId} settlement persisted to IndexedDB`, async () => {
 			const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
 			return save && completion(save) ? save : null;
 		}, settlementTimeoutMs, 100);
 		clearInterval(skillInput);
+		clearInterval(burstInputTimer);
 		await midBattleEvidencePromise;
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, evidenceName);
-		return { save: settledSave, skillTouches };
+		return { save: settledSave, skillTouches, burstTouches };
 	} finally {
 		clearInterval(skillInput);
+		clearInterval(burstInputTimer);
 	}
 }
 
@@ -726,13 +738,18 @@ async function main() {
 			(save) => save.clearedStages?.includes("stage_1_5")
 				&& save.highestUnlockedStage === "stage_2_1",
 			"browser-chapter-one-complete-844x390.png",
-			[145, 420, 700],
+			[],
 			310,
 			1000,
 			150000,
 			{
 				delayMs: 55000,
 				name: "browser-first-boss-cannon-window-844x390.png",
+			},
+			{
+				x: 525,
+				y: 158,
+				intervalMs: 2500,
 			},
 		);
 		await touch(cdp, 640, 248);
@@ -955,10 +972,18 @@ async function main() {
 			+ counterattack.skillTouches
 			+ chapterOne.skillTouches
 			+ factionJourneySkillTouches;
-		const skillTouchesPerSecond = totalSkillTouches / (elapsedMs / 1000);
-		if (skillTouchesPerSecond > 1) {
+		const totalBurstTouches = Number(counterattack.burstTouches ?? 0)
+			+ Number(chapterOne.burstTouches ?? 0)
+			+ factionProofs.reduce(
+				(total, proof) => total + Number(proof.burstTouches ?? 0),
+				0,
+			)
+			+ Number(lateWall.burstTouches ?? 0);
+		const battleActionTouchInputs = totalSkillTouches + totalBurstTouches;
+		const battleActionTouchesPerSecond = battleActionTouchInputs / (elapsedMs / 1000);
+		if (battleActionTouchesPerSecond > 1) {
 			throw new Error(
-				`skill input rate exceeds the human-scale ceiling: ${skillTouchesPerSecond.toFixed(3)}/s`,
+				`battle input rate exceeds the human-scale ceiling: ${battleActionTouchesPerSecond.toFixed(3)}/s`,
 			);
 		}
 		const browserVersion = await cdp.send("Browser.getVersion");
@@ -1011,7 +1036,9 @@ async function main() {
 			},
 			clearedStages: chapterOne.save.clearedStages,
 			skillCardTouchInputs: totalSkillTouches,
-			skillTouchesPerSecond,
+			squadBurstTouchInputs: totalBurstTouches,
+			battleActionTouchInputs,
+			battleActionTouchesPerSecond,
 			elapsedMs,
 			runtimeExceptions: exceptions.length,
 			unexpectedConsoleErrors: unexpectedConsoleErrors.length,

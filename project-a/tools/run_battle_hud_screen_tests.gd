@@ -10,8 +10,12 @@ func _init() -> void:
 
 
 func _run() -> void:
+	var host := Control.new()
+	host.size = Vector2(844, 390)
+	root.add_child(host)
 	var hud := BATTLE_HUD_SCENE.instantiate() as BattleHudScreen
-	root.add_child(hud)
+	host.add_child(hud)
+	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	await process_frame
 	hud.configure([{
 		"hero_id": "hero_test",
@@ -31,6 +35,20 @@ func _run() -> void:
 		burst_button != null and burst_button.custom_minimum_size.y >= 44.0,
 		"manual HUD exposes one touch-sized squad burst timing action"
 	)
+	var retreat_button := hud.find_child("BattleRetreatButton", true, false) as Button
+	for action_name in [
+		"BattlePauseButton",
+		"BattleSkillModeButton",
+		"BattleBurstButton",
+		"BattleRetreatButton",
+	]:
+		var action := hud.find_child(action_name, true, false) as Button
+		_check(
+			action != null
+				and action.get_global_rect().position.x >= 0.0
+				and action.get_global_rect().end.x <= host.size.x,
+			"844-wide battle HUD keeps %s fully inside the viewport" % action_name
+		)
 	var skill_button := hud.find_child("BattleSkillButton_hero_test", true, false) as Button
 	_check(skill_button != null, "HUD builds one skill action for each permanent hero")
 	_check(_tree_has_text(hud, "测试先锋 · 攻城护盾"), "HUD names the real player-facing skill")
@@ -59,6 +77,11 @@ func _run() -> void:
 			and not burst_button.disabled
 			and burst_button.text.contains("×1"),
 		"squad burst names how many skills are already ready"
+	)
+	_check(
+		burst_button != null
+			and burst_button.get_theme_color("font_color").is_equal_approx(Color("#e5a84b")),
+		"cannon warning gives the reachable squad burst action a gold emphasis"
 	)
 	hud.apply_snapshot({
 		"burst_window_remaining_ticks": 8,
@@ -291,6 +314,11 @@ func _run() -> void:
 		hud.status_label.text.contains("巨炮已压制 · 安全窗口")
 		and hud.status_label.get_theme_color("font_color") == BattleHudScreen.GREEN,
 		"accepted suppression keeps a readable green confirmation instead of a stale countdown"
+	)
+	_check(
+		burst_button != null
+			and not burst_button.get_theme_color("font_color").is_equal_approx(Color("#e5a84b")),
+		"accepted suppression removes the stale burst emphasis"
 	)
 	hud.apply_snapshot({
 		"stage_index": 2,
@@ -545,7 +573,23 @@ func _run() -> void:
 				and compact_action.get_theme_font_size("font_size") >= 16,
 			"compact battle keeps %s label readable" % action_name
 		)
-	hud.queue_free()
+	host.size = Vector2(568, 320)
+	await process_frame
+	for action_name in [
+		"BattlePauseButton",
+		"BattleSkillModeButton",
+		"BattleBurstButton",
+		"BattleRetreatButton",
+	]:
+		var short_action := hud.find_child(action_name, true, false) as Button
+		_check(
+			short_action != null
+				and short_action.get_global_rect().position.x >= 0.0
+				and short_action.get_global_rect().end.x <= host.size.x
+				and short_action.size.y >= 44.0,
+			"568-wide battle HUD keeps %s visible and touch-sized" % action_name
+		)
+	host.queue_free()
 	await process_frame
 	if failures.is_empty():
 		print("BATTLE_HUD_SCREEN_TESTS_OK")

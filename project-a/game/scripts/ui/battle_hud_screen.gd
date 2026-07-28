@@ -335,6 +335,12 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		burst_button.text = "全队爆发 ×%d" % ready_count
 	else:
 		burst_button.text = "全队蓄势"
+	_apply_burst_emphasis(
+		_manual_skills
+			and not warnings.is_empty()
+			and not warning_suppressed
+			and burst_remaining <= 0
+	)
 	status_label.text = battle_status
 	status_label.add_theme_color_override(
 		"font_color",
@@ -630,6 +636,17 @@ func _apply_theme() -> void:
 		button.add_theme_stylebox_override("hover", _box(Color("#24333a"), 7, CYAN))
 		button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), 7, CYAN))
 		button.add_theme_stylebox_override("focus", _box(Color("#17383a"), 7, Color.WHITE))
+	_apply_burst_emphasis(false)
+
+
+func _apply_burst_emphasis(emphasized: bool) -> void:
+	var normal_color := Color("#3b2a16") if emphasized else Color("#1a2228")
+	var hover_color := Color("#51391a") if emphasized else Color("#24333a")
+	var border_color := GOLD if emphasized else LINE
+	burst_button.add_theme_color_override("font_color", GOLD if emphasized else TEXT)
+	burst_button.add_theme_stylebox_override("normal", _box(normal_color, 7, border_color))
+	burst_button.add_theme_stylebox_override("hover", _box(hover_color, 7, GOLD if emphasized else CYAN))
+	burst_button.add_theme_stylebox_override("pressed", _box(Color("#55401f"), 7, GOLD))
 
 
 func _label(value: String, size: int, color: Color) -> Label:
