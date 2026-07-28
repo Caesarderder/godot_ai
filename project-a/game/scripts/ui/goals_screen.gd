@@ -90,11 +90,18 @@ func _rebuild() -> void:
 
 
 func _build_action() -> void:
+	var welfare := _view.get("new_player_welfare", {}) as Dictionary
+	var welfare_needs_attention := (
+		bool(welfare.get("claimable", false))
+		or bool(welfare.get("case_openable", false))
+		or int(welfare.get("star_core_count", 0)) > 0
+	)
+	if welfare_needs_attention:
+		content.add_child(_new_player_welfare_panel(welfare))
 	content.add_child(_goal_hierarchy(_view.get("hierarchy", {}) as Dictionary))
 	content.add_child(_starter_gifts_panel(_view.get("starter_gifts", {}) as Dictionary))
-	content.add_child(_new_player_welfare_panel(
-		_view.get("new_player_welfare", {}) as Dictionary
-	))
+	if not welfare_needs_attention:
+		content.add_child(_new_player_welfare_panel(welfare))
 	content.add_child(_campaign_panel(_view.get("campaign", {}) as Dictionary))
 	if bool(_view.get("missions_unlocked", false)):
 		content.add_child(_mission_panel())
@@ -163,16 +170,28 @@ func _new_player_welfare_panel(view: Dictionary) -> Control:
 		GREEN
 	))
 	if bool(view.get("case_openable", false)):
-		var open_case := _button("开启走私后勤箱 · 获得 18/10/8 工业材料", true)
+		var case_reward := view.get("case_reward", {}) as Dictionary
+		var open_case := _button(
+			"开启走私后勤箱 · 获得 %d 工业材料" % int(case_reward.get("porcelain", 0)),
+			true
+		)
 		open_case.name = "SmuggledLogisticsCaseButton"
 		open_case.pressed.connect(action_requested.emit.bind("open_smuggled_logistics_case", {}))
 		panel.add_child(open_case)
 	elif bool(view.get("case_opened", false)):
 		panel.add_child(_label("走私后勤箱已开启 · 工业材料已入库", 13, GREEN))
 	if int(view.get("star_core_count", 0)) > 0:
-		var legion := _button("去军团使用黑金核心", false)
+		var recommended_name := String(view.get("recommended_hero_name", "一星首章援军"))
+		panel.add_child(_label(
+			"推荐补齐：%s → 2★ · 保证基础三人职责完整，再由十连核心形成阵营差异。" % recommended_name,
+			13,
+			CYAN
+		))
+		var legion := _button("为%s使用黑金核心" % recommended_name, true)
 		legion.name = "NewPlayerWelfareLegionButton"
-		legion.pressed.connect(action_requested.emit.bind("open_legion_for_welfare", {}))
+		legion.pressed.connect(action_requested.emit.bind("open_legion_for_welfare", {
+			"hero_id": String(view.get("recommended_hero_id", "")),
+		}))
 		panel.add_child(legion)
 	return panel
 
