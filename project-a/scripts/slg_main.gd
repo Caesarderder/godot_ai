@@ -2962,9 +2962,16 @@ func _show_result() -> void:
 			or String(onboarding.get("target", "")) != "expedition"
 		)
 	):
+		var next_blueprint := unlocked_blueprints[0] as Dictionary
+		var next_blueprint_recipe := FactoryCatalog.recipe(String(
+			next_blueprint.get("recipe_id", "")
+		))
 		qualification = "新设计图纸已入库，角色尚未研发"
 		primary_label = "前往研究所研发"
-		primary_action = "research_lab"
+		primary_action = "blueprints"
+		primary_payload = {
+			"archetype_id": String(next_blueprint_recipe.get("archetype_id", "")),
+		}
 	elif chapter_one_complete and bool(welfare_snapshot.get("claimable", false)):
 		qualification = "%s\n开服庆典礼包已解锁 · 黑金升星核心可强化一名自选1★角色" % (
 			_chapter_one_unlock_copy(next_stage_id)

@@ -668,8 +668,31 @@ func _run() -> void:
 			"hero_shards": 12,
 			"hero_xp_each": 30,
 			"hero_xp_recipients": 4,
+			"unlocked_blueprints": [{
+				"kind": "blueprint",
+				"recipe_id": "special.repair",
+			}],
 		},
 	})
+	main.call("_show_result")
+	await _wait_frames(4)
+	var repair_research := main.find_child("PrimaryAction", true, false) as Button
+	_check(
+		repair_research != null and repair_research.text.contains("研究所研发"),
+		"chapter-two reward makes its newly unlocked repair blueprint the primary action"
+	)
+	if repair_research != null:
+		repair_research.pressed.emit()
+		await _wait_frames(4)
+	_check(
+		main.find_child("BlueprintScreen", true, false) != null
+			and String(main.get("blueprint_branch")) == "special",
+		"chapter-two reward opens the exact repair technology branch without an extra facility-screen hop"
+	)
+	var chapter_two_event := (
+		(main.get("last_settlement") as Dictionary).get("event", {}) as Dictionary
+	)
+	chapter_two_event["unlocked_blueprints"] = []
 	main.call("_show_result")
 	await _wait_frames(4)
 	_check(_tree_has_text(main, "第2章胜利"), "chapter-two boss receives a chapter-completion celebration")
