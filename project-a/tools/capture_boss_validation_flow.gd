@@ -21,9 +21,10 @@ func _capture() -> void:
 		audio_director.call("set_playback_enabled", false)
 	game.reset_game(20260727, 1000)
 	var state: RefCounted = game.current_state()
+	state.factory.eligible_facilities["research_lab"] = true
 	state.factory.facilities["research_lab"] = 1
 	state.factory.facility_placements["research_lab"] = [2, 1]
-	main.call("_claim_research_breakthrough")
+	_seed_foundational_research(main)
 	for _frame in 4:
 		await process_frame
 	state = game.current_state()
@@ -77,12 +78,6 @@ func _capture() -> void:
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_1"
 	state.onboarding["active_index"] = 7
 	state.meta_progression.commander_xp = 450
-	var economy_before_skill_capture := {
-		"toilet_coins": int(state.economy.toilet_coins),
-		"industrial_tech": int(state.economy.industrial_tech),
-		"skill_chips": int(state.economy.skill_chips),
-		"materials": state.factory.materials.duplicate(true),
-	}
 	state.economy.toilet_coins = 500
 	state.economy.industrial_tech = 20
 	state.economy.skill_chips = 3
@@ -116,68 +111,43 @@ func _capture() -> void:
 	main.call("_show_result")
 	for _frame in 10:
 		await process_frame
-	var chapter_two := _button_with_text(main, "开启第2章 · 侦察 2-1")
-	if chapter_two == null or not _tree_has_text(main, "冲锋压炮"):
+	var faction_recruit := _button_with_text(main, "领取阵营起手十连")
+	if faction_recruit == null or not _tree_has_text(main, "冲锋压炮"):
 		_fail("chapter completion mastery result unavailable")
 		return
-	if not _save("res://artifacts/ui-chapter-one-complete-844x390.png"):
+	if not await _save_at_size(
+		Vector2i(844, 390),
+		"res://artifacts/ui-chapter-one-complete-844x390.png"
+	):
 		return
-	chapter_two.pressed.emit()
-	for _frame in 10:
+	if not await _save_at_size(
+		Vector2i(568, 320),
+		"res://artifacts/ui-chapter-one-complete-568x320.png"
+	):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	for _frame in 6:
 		await process_frame
-	if not _tree_has_text(main, "下一步 · 培养军团并扩建后勤"):
-		_fail("chapter two growth handoff unavailable")
-		return
-	if not _save("res://artifacts/ui-chapter-two-handoff-844x390.png"):
-		return
-	var grow := _button_with_text(main, "先培养军团")
-	if grow == null:
-		_fail("chapter two permanent-growth action unavailable")
-		return
-	grow.pressed.emit()
+	faction_recruit = _button_with_text(main, "领取阵营起手十连")
+	faction_recruit.pressed.emit()
 	for _frame in 10:
 		await process_frame
 	if (
-		main.find_child("LegionContentScroll_roster", true, false) == null
-		or not _tree_has_text(main, "80 币 · 6 技术 · 1 芯片")
+		String(main.get("legion_tab")) != "recruit"
+		or _button_with_text(main, "领取免费阵营十连") == null
 	):
-		_fail("chapter two skill-chip conversion unavailable")
+		_fail("chapter completion does not hand off to the real free faction ten-pull")
 		return
-	if not _save("res://artifacts/ui-chapter-two-skill-growth-844x390.png"):
+	if not await _save_at_size(
+		Vector2i(844, 390),
+		"res://artifacts/ui-chapter-one-faction-recruit-844x390.png"
+	):
 		return
-	state.economy.toilet_coins = int(economy_before_skill_capture["toilet_coins"])
-	state.economy.industrial_tech = int(economy_before_skill_capture["industrial_tech"])
-	state.economy.skill_chips = int(economy_before_skill_capture["skill_chips"])
-	state.factory.materials = (
-		economy_before_skill_capture["materials"] as Dictionary
-	).duplicate(true)
-	main.call("_show_goals")
-	for _frame in 10:
-		await process_frame
-	if not _tree_has_text(main, "第二章：突破震荡封锁线"):
-		_fail("post-onboarding chapter goal unavailable")
-		return
-	if not _save("res://artifacts/ui-chapter-two-goal-844x390.png"):
-		return
-	main.call("_show_title")
-	for _frame in 10:
-		await process_frame
-	if not _tree_has_text(main, "第二章备战 · 还差"):
-		_fail("chapter two resume title unavailable")
-		return
-	if not _save("res://artifacts/ui-chapter-two-resume-title-844x390.png"):
-		return
-	var resume := _button_with_text(main, "返回指挥室")
-	if resume == null:
-		_fail("chapter two resume action unavailable")
-		return
-	resume.pressed.emit()
-	for _frame in 10:
-		await process_frame
-	if not _tree_has_text(main, "第二章备战：震荡封锁线"):
-		_fail("chapter two resumed factory task unavailable")
-		return
-	if not _save("res://artifacts/ui-chapter-two-resume-base-844x390.png"):
+	if not await _save_at_size(
+		Vector2i(568, 320),
+		"res://artifacts/ui-chapter-one-faction-recruit-568x320.png"
+	):
 		return
 	main.queue_free()
 	await process_frame
@@ -190,6 +160,18 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 		if String(hero.archetype_id) == archetype_id:
 			return hero
 	return null
+
+
+func _seed_foundational_research(main: Node) -> void:
+	main.call("_command", "claim_foundational_signal", {})
+	for entry in [["ordinary.assault", 1000, 1045], ["heavy.armored", 1045, 1090]]:
+		main.call("_command", "unlock_foundational_blueprint", {
+			"recipe_id": String(entry[0]),
+			"now_unix": int(entry[1]),
+		})
+		main.call("_command", "claim_blueprint_research", {
+			"now_unix": int(entry[2]),
+		})
 
 
 func _button_with_text(node: Node, fragment: String) -> Button:
@@ -219,6 +201,14 @@ func _save(path: String) -> bool:
 		return true
 	_fail(error_string(error))
 	return false
+
+
+func _save_at_size(viewport_size: Vector2i, path: String) -> bool:
+	DisplayServer.window_set_size(viewport_size)
+	root.size = viewport_size
+	for _frame in 6:
+		await process_frame
+	return _save(path)
 
 
 func _fail(reason: String) -> void:

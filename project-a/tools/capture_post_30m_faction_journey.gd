@@ -164,6 +164,25 @@ func _capture() -> void:
 	if second_proof == null:
 		_fail("second faction proof action unavailable")
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-proof-one-568x320.png"):
+		return
+	if not _control_is_unobscured(second_proof, main):
+		var nav := main.find_child("PrimaryNavigation", true, false) as Control
+		_fail(
+			"second faction proof action is clipped or obscured at 568x320 "
+			+ "(button=%s viewport=%s nav=%s)" % [
+				_screen_rect(second_proof),
+				second_proof.get_viewport_rect().size,
+				_screen_rect(nav) if nav != null else Rect2(),
+			]
+		)
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	second_proof.pressed.emit()
 	await _wait_frames(5)
 	if not _save("res://artifacts/ui-faction-proof-two-recon-844x390.png"):
@@ -214,6 +233,21 @@ func _capture() -> void:
 	await _wait_frames(7)
 	if not _save("res://artifacts/ui-faction-proof-complete-844x390.png"):
 		return
+	var pressure_test := _button_with_text(main, "试探后段防线")
+	if pressure_test == null:
+		_fail("post-proof pressure-test action unavailable")
+		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-proof-complete-568x320.png"):
+		return
+	if not _control_is_unobscured(pressure_test, main):
+		_fail("post-proof pressure-test action is clipped or obscured at 568x320")
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	state = game.current_state()
 	state.stage_progress["cleared_stages"] = [
 		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5",
@@ -263,6 +297,17 @@ func _capture() -> void:
 	if star_cta == null or not star_cta.text.contains("升至2★"):
 		_fail("faction result star goal unavailable")
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-wall-debrief-568x320.png"):
+		return
+	if not _control_is_unobscured(star_cta, main):
+		_fail("faction wall recovery action is clipped or obscured at 568x320")
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	star_cta.pressed.emit()
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-star-ready-844x390.png"):
@@ -640,6 +685,33 @@ func _qualitative_metric_for(archetype_id: String) -> String:
 		"repair": "repair_group_extra_targets",
 		"parasite": "parasite_extra_summons",
 	}.get(archetype_id, ""))
+
+
+func _control_is_unobscured(control: Control, main: Node) -> bool:
+	if control == null or not control.is_visible_in_tree():
+		return false
+	var rect := _screen_rect(control)
+	var viewport_size := control.get_viewport_rect().size
+	if (
+		rect.position.x < 0.0
+		or rect.position.y < 0.0
+		or rect.end.x > viewport_size.x
+		or rect.end.y > viewport_size.y
+	):
+		return false
+	var nav := main.find_child("PrimaryNavigation", true, false) as Control
+	if nav == null or not nav.is_visible_in_tree():
+		return true
+	var nav_rect := _screen_rect(nav)
+	var nav_intersects_viewport := nav_rect.position.y < viewport_size.y and nav_rect.end.y > 0.0
+	return not nav_intersects_viewport or rect.end.y <= nav_rect.position.y
+
+
+func _screen_rect(control: Control) -> Rect2:
+	var transform := control.get_global_transform_with_canvas()
+	var top_left := transform * Vector2.ZERO
+	var bottom_right := transform * control.size
+	return Rect2(top_left, bottom_right - top_left)
 
 
 func _save(path: String) -> bool:

@@ -234,7 +234,9 @@ Boss 压炮达到阈值时，领域结果仍在当 tick 生效并取消炮击，
 `BattleSession` 的巨炮压制/格挡事实生成路线验证，显示七行动闭环完成、实际开放的第 2 章/
 信号招募/免费战役战令，并以“开启第2章 · 侦察 2-1”为唯一主 CTA；该 CTA 进入 2-1 战前侦察，
 不会强制连续开战。`run_chapter_one_completion_tests.gd` 同时覆盖冲锋和装甲证明、真实解锁摘要
-与精确地图出口，`artifacts/ui-chapter-one-complete-844x390.png` 提供高潮首屏证据。
+与精确阵营招募出口，`artifacts/ui-chapter-one-complete-844x390.png`、
+`artifacts/ui-chapter-one-complete-568x320.png` 及双尺寸
+`ui-chapter-one-faction-recruit-*` 提供“首章高潮 → 免费阵营十连”的连续证据。
 
 战区侦察与结算恢复链使用同一首章事实。1-4 的反制提示明确写出“首败后信号图纸十连 → 建研究所
 → 逐张研发装甲与冲锋 → 编队反攻”，不得再出现研究所抽卡、九兵量产或三合一。1-5 只推荐

@@ -174,9 +174,9 @@ related:
   `ui-boss-ready-844x390.png` 与 `ui-boss-timing-recovery-844x390.png` 证明验证态和时机失败
   结算在 844×390 首屏只保留匹配的主要行动。
   `run_chapter_one_completion_tests.gd` 验证首章专属标题、冲锋压制与装甲格挡两种真实路线证明、
-  七行动闭环、按当前状态生成的第 2 章/招募/战令解锁摘要，以及“侦察 2-1”只打开战前地图而
-  不强制续战；`ui-chapter-one-complete-844x390.png` 证明奖励、贡献、路线兑现、实际解锁和
-  下一章主 CTA 在基准横屏共同可读。
+  七行动闭环、按当前状态生成的第 2 章/招募/战令解锁摘要，以及主 CTA 先进入真实免费阵营十连，
+  不跳过角色池选择直接续战；双尺寸 `ui-chapter-one-complete-*` 与
+  `ui-chapter-one-faction-recruit-*` 证明奖励、贡献、路线兑现、实际解锁和招募交接共同可读。
   `run_campaign_tests.gd` 与 `run_ui_smoke_tests.gd` 共同锁定首墙侦察口径：1-4 玩家可见
   反制只指向信号图纸、研究所研发、永久装甲/冲锋援军和反攻，不再泄漏研究所抽卡、九兵量产或三合一；
   1-5 推荐只保留两条已验证二星路线，首章巨炮预警合同为 5 秒；
