@@ -46,6 +46,8 @@ Godot 场景、脚本、Resource、Autoload 与资产治理的增量重构路线
 [KM:reference.post-30m-faction-technical-design](references/architecture/post-30m-faction-technical-design.md)。
 涉及大中小目标、大小卡点、失败恢复和跨坎奖励时，读
 [KM:reference.objective-hurdle-reward-ladder](references/product-design/objective-hurdle-reward-ladder.md)。
+涉及五章 60 关、三关循环、战力墙、专项科技墙、Boss 或原作剧情灵感映射时，读
+[KM:reference.campaign-60-stage-progression](references/product-design/campaign-60-stage-progression.md)。
 涉及新增角色、角色科技树、升星质变、角色驱动关卡或持续内容生产时，读
 [KM:reference.character-tech-tree-content-production](references/product-design/character-tech-tree-content-production.md)，
 并使用仓库 Skill `.codex/skills/toilet-character-production/`。

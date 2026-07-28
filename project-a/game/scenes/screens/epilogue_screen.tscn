@@ -76,7 +76,7 @@ text = "第一幕战果"
 [node name="CampaignOccupiedCount" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "城镇占领  0/25"
+text = "城镇占领  0/60"
 
 [node name="CampaignRosterCount" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
 unique_name_in_owner = true

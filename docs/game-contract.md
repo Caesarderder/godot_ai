@@ -1,5 +1,5 @@
 ---
-contract_version: 10
+contract_version: 11
 project_id: toilet-factory-siege
 last_updated: 2026-07-28
 km_id: reference.game-contract
@@ -21,6 +21,7 @@ tags:
 related:
   - reference.skibidi-toilet-idle-siege-gdd
   - reference.toilet-factory-technical-design
+  - reference.campaign-60-stage-progression
 ---
 
 # 马桶人工厂攻城项目契约
@@ -28,6 +29,24 @@ related:
 本文件是制作人、策划、程序、美术、音频和测试共享的项目级状态源。详细规则由
 [主 GDD](references/product-design/skibidi-toilet-idle-siege-gdd.md) 维护；当前代码事实由
 [实现状态](references/constraints/implementation-status.md) 维护。
+
+## GC-010: 五章 60 关、双卡点与原作感战役
+- owner: game-design
+- status: accepted
+- accepted_intent: 首 30 分钟的 1-1～1-5 保持不变；之后以每章 12 关扩大战役，每三关形成“两个轻关+一个精英”的循环，每章 6 为战力墙、9 为专项科技墙、12 为章节 Boss。章节情绪参考原作从 Camera 抵抗、Speaker/寄生危机、TV 技术战、联盟反攻到科学家基地决战的宏观演进，但不复制镜头、对白、音乐或资产。
+- acceptance_criteria: 60 个稳定关卡 ID 和独立名称；3/6/9 精英、12 Boss；检查点小奖励与精英/Boss 大奖励；每章一项工业材料专项科技；未研发可硬打但明显困难，研发后机制伤害至少降低 60%；福利不能让新玩家跳过新增墙；旧 1-1～1-5 自动证据继续通过；商业发行前取得 IP 书面授权。
+- implementation_reference: docs/references/product-design/campaign-60-stage-progression.md, project-a/game/scripts/domain/content/stage_catalog.gd, project-a/game/scripts/domain/battle/battle_session.gd
+- verification_evidence: project-a/tools/run_campaign_60_stage_tests.gd, project-a/tools/run_campaign_tests.gd, project-a/tools/run_battle_tests.gd
+- conflict_references: docs/game-contract.md@contract_version-10
+- handoffs: GC-002, GC-003, GC-004, GC-005, GC-007, GC-008
+- handoff_from: game-design
+- handoff_to: programming
+- handoff_request: 以配置驱动的关卡层级和反制科技替换五关制硬编码，并保留命令、存档与战斗确定性
+- handoff_allowed_fields: implementation_reference,status,deviation,last_updated
+- handoff_blocking: false
+- deviation: 60 关目录、五项科技、durable 研发命令、战斗机制减伤和战区入口已实现；完整 60 关经济可达性与真人剧情识别仍需持续扫描和盲测。
+- last_updated: 2026-07-29
+- last_verified: 2026-07-29
 
 ## GC-001: 玩家承诺与核心循环
 - owner: producer
@@ -63,7 +82,7 @@ related:
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
 - deviation: 永久身份、统一等级成长、二至三星节点、稳定技能解锁 ID、主动技能三级研究与工厂专长派驻已接通；
-  战役与招募已统一使用单调角色索引分配，交错解锁不会复用 hero ID。2026-07-28 科技树删除错误前置箭头并补齐评级、阵营、职责、星级质变与来源；持续新增角色改由仓库 Skill 按当前代码事实和关卡替代路线校验。完整 25 关真人理解仍待验证。
+  战役与招募已统一使用单调角色索引分配，交错解锁不会复用 hero ID。2026-07-28 科技树删除错误前置箭头并补齐评级、阵营、职责、星级质变与来源；持续新增角色改由仓库 Skill 按当前代码事实和关卡替代路线校验。完整 60 关真人理解仍待验证。
 - last_updated: 2026-07-28
 - last_verified: —
 
@@ -175,7 +194,7 @@ related:
 - handoff_request: 后续配置与仪表盘使用本框架的稳定单位；确定性扫描和真人试玩校准阈值，商业化不得先于非付费闭环成立
 - handoff_allowed_fields: implementation_reference,status,deviation,last_updated
 - handoff_blocking: false
-- deviation: 当前代码已有统一指挥情报页；新档唯一 Gman 的前三关采用 `1950/2000/2020` 推荐线，1-4 真实三人编队采用 `5700`。2026-07-27 的 7-seed 扫描证明：1-3 为 51.6–69.2 秒险胜且结束生命为 5.6%–32.8%，1-4 单人全败且三人全胜；1-5 基础三人全败，冲锋升星与装甲升星两条命名路线分别全胜。当前 1-5 页面 `6500` 可作为自动校准候选。首章后按玩家“卡点过密”反馈把墙收束到每章 Boss：推荐线从 2-1 起采用 `6900/7300/7700/8100/9000/9400/9800/10200/10600/11500`；保守资源消费后的 7 seed 首轮连续通过 2-1 至 2-4，在 2-5 把核心削至 50.80%–81.69% 后全败；再次成长后连续通过 2-5 至 3-4、在 3-5 形成下一成长验证。主动技能研究也已进入统一战力口径。第二章已有增援/双塔组合，第三章已有信号消失、真实换位、有限控制、监军护盾和 Boss 三模块错峰轮换；第四章已有显式标记、防空、临时单位净化与模块轮换，克制不使用隐藏倍率且保留多种可通关阵容；25 关使用独立遭遇名。真人对新卡点密度的感受、其余关卡完整经济可达性和 25 关新档路径仍未验证。
+- deviation: 当前代码已有统一指挥情报页；新档唯一 Gman 的前三关采用 `1950/2000/2020` 推荐线，1-4 真实三人编队采用 `5700`。旧 1-1～1-5 自动基线继续通过。2026-07-29 起战役改为五章 60 关，每章 3/6/9/12 分别承担精英、战力墙、科技墙和 Boss 节拍；推荐线与敌方倍率由 `StageCatalog` 统一生成。第二章已有增援/双塔组合，第三章已有信号消失、真实换位、有限控制、监军护盾，第四章已有显式标记、防空、临时单位净化与模块轮换。60 关使用独立遭遇名；完整经济可达性和真人卡点密度仍未验证。
 - last_updated: 2026-07-26
 - last_verified: 2026-07-26
 

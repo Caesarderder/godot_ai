@@ -16,6 +16,7 @@ const CYAN := Color("#58c9c2")
 const GOLD := Color("#e5a84b")
 
 @onready var chapter_nav: HBoxContainer = %ChapterNav
+@onready var stage_scroll: ScrollContainer = $StageScroll
 @onready var stage_strip: HBoxContainer = %StageNodeStrip
 @onready var detail_host: MarginContainer = %StageDetailHost
 
@@ -82,11 +83,12 @@ func _rebuild() -> void:
 			stage_id == _selected_stage_id
 		)
 		stage_button.name = "StageNode_%s" % stage_id
-		stage_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		stage_button.custom_minimum_size.y = 52
+		stage_button.custom_minimum_size = Vector2(132, 52)
 		stage_button.disabled = not bool(row.get("unlocked", false))
 		stage_button.pressed.connect(_on_stage_pressed.bind(stage_id))
 		stage_strip.add_child(stage_button)
+		if stage_id == _selected_stage_id:
+			stage_scroll.call_deferred("ensure_control_visible", stage_button)
 
 	var detail := STAGE_DETAIL_PANEL_SCENE.instantiate()
 	detail.configure(

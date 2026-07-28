@@ -97,12 +97,12 @@ static func _backfill_reliable_counters(state: RefCounted) -> void:
 	var has_finale := 0
 	for stage_id in state.stage_progress.get("cleared_stages", []):
 		var config := StageCatalogScript.stage(String(stage_id))
-		if int(config.get("stage_in_chapter", 0)) == 5:
+		if int(config.get("stage_in_chapter", 0)) == StageCatalogScript.BOSS_STAGE_NUMBER:
 			boss_count += 1
-		if String(stage_id) == "stage_5_5":
+		if String(stage_id) == "stage_5_12":
 			has_finale = 1
 	_set_counter(counters, "boss_clears", boss_count)
-	_set_counter(counters, "stage_5_5_cleared", has_finale)
+	_set_counter(counters, "stage_5_12_cleared", has_finale)
 	_set_counter(counters, "first_victory_salvage_earned", boss_count * 15 + (int(counters.get("cleared_stages", 0)) - boss_count) * 5)
 	_set_counter(counters, "archetype_count", _archetype_count(state))
 	_set_counter(counters, "max_hero_level", _max_hero_level(state))

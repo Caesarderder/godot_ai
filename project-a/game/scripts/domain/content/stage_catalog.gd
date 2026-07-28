@@ -3,12 +3,21 @@ extends RefCounted
 
 const StageDefinitionCatalogScript := preload("res://game/scripts/content/stage_definition_catalog.gd")
 
+const CHAPTER_COUNT: int = 5
+const STAGES_PER_CHAPTER: int = 12
+const ELITE_STAGE_NUMBERS: Array[int] = [3, 6, 9]
+const BOSS_STAGE_NUMBER: int = 12
 const ACT1_STAGE_IDS: Array[String] = [
-	"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5",
-	"stage_2_1", "stage_2_2", "stage_2_3", "stage_2_4", "stage_2_5",
-	"stage_3_1", "stage_3_2", "stage_3_3", "stage_3_4", "stage_3_5",
-	"stage_4_1", "stage_4_2", "stage_4_3", "stage_4_4", "stage_4_5",
-	"stage_5_1", "stage_5_2", "stage_5_3", "stage_5_4", "stage_5_5",
+	"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4", "stage_1_5", "stage_1_6",
+	"stage_1_7", "stage_1_8", "stage_1_9", "stage_1_10", "stage_1_11", "stage_1_12",
+	"stage_2_1", "stage_2_2", "stage_2_3", "stage_2_4", "stage_2_5", "stage_2_6",
+	"stage_2_7", "stage_2_8", "stage_2_9", "stage_2_10", "stage_2_11", "stage_2_12",
+	"stage_3_1", "stage_3_2", "stage_3_3", "stage_3_4", "stage_3_5", "stage_3_6",
+	"stage_3_7", "stage_3_8", "stage_3_9", "stage_3_10", "stage_3_11", "stage_3_12",
+	"stage_4_1", "stage_4_2", "stage_4_3", "stage_4_4", "stage_4_5", "stage_4_6",
+	"stage_4_7", "stage_4_8", "stage_4_9", "stage_4_10", "stage_4_11", "stage_4_12",
+	"stage_5_1", "stage_5_2", "stage_5_3", "stage_5_4", "stage_5_5", "stage_5_6",
+	"stage_5_7", "stage_5_8", "stage_5_9", "stage_5_10", "stage_5_11", "stage_5_12",
 ]
 
 const DEFAULT_STAGE_ID: String = "stage_1_1"
@@ -36,14 +45,45 @@ const ACT1_DISPLAY_NAMES: Dictionary = {
 	"stage_5_4": "中央防区",
 	"stage_5_5": "审判之门",
 }
-const RECOMMENDED_POWER: Array[int] = [
+const CHAPTER_STAGE_NAMES: Dictionary = {
+	1: [
+		"无防备城市", "城市警报", "联盟集结", "炮台防线", "灰镜核心",
+		"摄像重装营", "失焦街区", "黑屏预警", "电视人闪袭",
+		"镜片仓库", "泰坦足迹", "抵抗军总台",
+	],
+	2: [
+		"低音街垒", "震荡高架", "广播车队", "回声隧道", "共振前哨",
+		"巨型音箱阵", "寄生样本库", "失控广播站", "感染泰坦投影",
+		"静音走廊", "解毒车队", "共振堡垒",
+	],
+	3: [
+		"信号消失", "烟幕换位", "镜片工厂", "处决画面", "黑屏中继",
+		"电视监军", "传送残影", "控制矩阵", "夺控实验室",
+		"暗屏走廊", "泰坦回归", "黑屏母塔",
+	],
+	4: [
+		"联合标记", "禁飞走廊", "反寄生区", "轮换防线", "三军前哨",
+		"联合近卫", "装甲列车", "模块工坊", "协议封锁",
+		"渗透入口", "实验室外环", "三联军械库",
+	],
+	5: [
+		"空城大道", "战略仓库", "泰坦足迹", "中央防区", "审判前门",
+		"科学家机甲", "诱敌回廊", "连续炮阵", "指挥干扰核心",
+		"实验室深层", "G军团决战", "审判之门",
+	],
+}
+const CHAPTER_POWER_START: Array[int] = [1950, 9400, 13000, 17200, 22500]
+const CHAPTER_POWER_END: Array[int] = [9000, 12500, 16500, 21500, 28000]
+const CHAPTER_ENEMY_BP_START: Array[int] = [6200, 18000, 27000, 35000, 43000]
+const CHAPTER_ENEMY_BP_END: Array[int] = [15200, 26000, 34000, 42000, 52000]
+const LEGACY_RECOMMENDED_POWER: Array[int] = [
 	1950, 2000, 2020, 5700, 6500,
 	6900, 7300, 7700, 8100, 9000,
 	9400, 9800, 10200, 10600, 11500,
 	11900, 12300, 12700, 13100, 14000,
 	14400, 14800, 15200, 15600, 16500,
 ]
-const ENEMY_POWER_BP: Array[int] = [
+const LEGACY_ENEMY_POWER_BP: Array[int] = [
 	6200, 7200, 8400, 9000, 10750,
 	11200, 11600, 12000, 16000, 18000,
 	20200, 23000, 22000, 22000, 27000,
@@ -66,10 +106,16 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 	if _endless_index(stage_id) > 0:
 		return _endless_stage(_endless_index(stage_id))
 	var index := ACT1_STAGE_IDS.find(stage_id)
-	var chapter := int(index / 5) + 1
-	var stage_in_chapter := int(index % 5) + 1
-	var authored_definition: Resource = StageDefinitionCatalogScript.definition(stage_id)
-	var power_bp := int(authored_definition.enemy_power_bp) if authored_definition != null else ENEMY_POWER_BP[index]
+	var chapter := int(index / STAGES_PER_CHAPTER) + 1
+	var stage_in_chapter := int(index % STAGES_PER_CHAPTER) + 1
+	# The accepted first 30 minutes remain intact through the original 1-5
+	# mid-boss; the new campaign depth begins at 1-6.
+	var authored_definition: Resource = (
+		StageDefinitionCatalogScript.definition(stage_id)
+		if chapter == 1 and stage_in_chapter <= 5
+		else null
+	)
+	var power_bp := _enemy_power_bp(chapter, stage_in_chapter)
 	var config := _base_stage(stage_id, chapter, stage_in_chapter, power_bp)
 	if stage_id == DEFAULT_STAGE_ID:
 		# 第一关是纯粹的破坏教学：没有联盟守军或炮台，
@@ -128,11 +174,11 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 	config["enemies"] = _fixed_enemies(enemy_template) if chapter == 1 else _scaled_enemies(enemy_template, power_bp)
 	config["structures"] = _scaled_structures(_structure_template_for(chapter, stage_in_chapter), power_bp)
 	config = _apply_authored_definition(config, authored_definition)
-	if stage_id == "stage_1_5":
+	if stage_id in ["stage_1_5", "stage_1_12"]:
 		_shape_chapter_one_boss(config)
-	elif stage_id == "stage_2_4":
+	elif stage_id == "stage_2_9":
 		_shape_chapter_two_gate(config)
-	elif stage_in_chapter == 5 and chapter >= 2:
+	elif stage_in_chapter in [5, BOSS_STAGE_NUMBER] and chapter >= 2:
 		_shape_boss_finale(config)
 	return config
 
@@ -201,12 +247,12 @@ static func breakthrough_reward(stage_id: String, already_cleared: bool) -> Dict
 	if already_cleared or not ACT1_STAGE_IDS.has(stage_id):
 		return {"hero_shards": 0}
 	var index := ACT1_STAGE_IDS.find(stage_id)
-	var stage_in_chapter := int(index % 5) + 1
+	var stage_in_chapter := int(index % STAGES_PER_CHAPTER) + 1
 	if stage_id == "stage_1_2":
 		return {"hero_shards": 4}
-	if stage_in_chapter == 3:
+	if ELITE_STAGE_NUMBERS.has(stage_in_chapter):
 		return {"hero_shards": 4}
-	if stage_in_chapter == 5:
+	if stage_in_chapter in [5, BOSS_STAGE_NUMBER]:
 		# 旧 8 数据 + 2 芯片，按 1 芯片 = 4 军团数据合并。
 		return {"hero_shards": 16}
 	return {"hero_shards": 0}
@@ -225,9 +271,11 @@ static func unlocks_for(stage_id: String, outcome: String) -> Array[String]:
 
 static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, power_bp: int) -> Dictionary:
 	var index := ACT1_STAGE_IDS.find(stage_id)
-	var recommended_power := RECOMMENDED_POWER[index]
+	var recommended_power := _recommended_power(chapter, stage_in_chapter)
 	var next_id := ACT1_STAGE_IDS[index + 1] if index >= 0 and index + 1 < ACT1_STAGE_IDS.size() else "endless_1"
-	var is_boss := stage_in_chapter == 5
+	var is_boss := (
+		stage_in_chapter in [5, BOSS_STAGE_NUMBER]
+	)
 	var unlock_victory: Array[String] = []
 	var readability := _readability_fields(stage_id, chapter, stage_in_chapter, unlock_victory)
 	var recommendation := _recommendation_fields(stage_id)
@@ -244,7 +292,7 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"display_name": "%d-%d %s" % [
 			chapter,
 			stage_in_chapter,
-			String(ACT1_DISPLAY_NAMES.get(stage_id, "联盟基地" if is_boss else "城市大道")),
+			_stage_display_name(chapter, stage_in_chapter, is_boss),
 		],
 		"stage_names": DEFAULT_STAGE_NAMES.duplicate(),
 		"final_structure_id": "alliance_core",
@@ -252,9 +300,9 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 		"cannon_suppression_target": _cannon_suppression_target(chapter) if is_boss else 0,
 		"cannon_warning_ticks": (25 if chapter == 1 else 20) if is_boss else 0,
 		"next_stage_id": next_id,
-		"reward_victory": {
-			"gold": 35 + chapter * 8 + stage_in_chapter * 3,
-		},
+		"reward_victory": _victory_reward(chapter, stage_in_chapter),
+		"encounter_tier": _encounter_tier(stage_in_chapter),
+		"required_counter_tech": _required_counter_tech(chapter, stage_in_chapter),
 		"reward_defeat": {
 			"gold": 0,
 		},
@@ -319,9 +367,136 @@ static func _base_stage(stage_id: String, chapter: int, stage_in_chapter: int, p
 	}
 
 
+static func _stage_display_name(chapter: int, stage_in_chapter: int, is_boss: bool) -> String:
+	var names := CHAPTER_STAGE_NAMES.get(chapter, []) as Array
+	if stage_in_chapter >= 1 and stage_in_chapter <= names.size():
+		return String(names[stage_in_chapter - 1])
+	return "联盟基地" if is_boss else "城市大道"
+
+
+static func _recommended_power(chapter: int, stage_in_chapter: int) -> int:
+	if chapter == 1 and stage_in_chapter <= 5:
+		return LEGACY_RECOMMENDED_POWER[(chapter - 1) * 5 + stage_in_chapter - 1]
+	if chapter == 1 and stage_in_chapter >= 6:
+		var post_tutorial := [6800, 7050, 7300, 7800, 7950, 8200, 9000]
+		return int(post_tutorial[stage_in_chapter - 6])
+	var start := CHAPTER_POWER_START[chapter - 1]
+	var finish := CHAPTER_POWER_END[chapter - 1]
+	var linear := start + int((finish - start) * (stage_in_chapter - 1) / 11)
+	var wall_bonus := 0
+	if stage_in_chapter == 6:
+		wall_bonus = int((finish - start) * 8 / 100)
+	elif stage_in_chapter == 9:
+		wall_bonus = int((finish - start) * 5 / 100)
+	elif stage_in_chapter == BOSS_STAGE_NUMBER:
+		wall_bonus = int((finish - start) * 10 / 100)
+	return linear + wall_bonus
+
+
+static func _enemy_power_bp(chapter: int, stage_in_chapter: int) -> int:
+	if stage_in_chapter <= 5:
+		return LEGACY_ENEMY_POWER_BP[(chapter - 1) * 5 + stage_in_chapter - 1]
+	if chapter == 1 and stage_in_chapter >= 6:
+		var post_tutorial := [11600, 11900, 12200, 13200, 13500, 13900, 15200]
+		return int(post_tutorial[stage_in_chapter - 6])
+	var start := CHAPTER_ENEMY_BP_START[chapter - 1]
+	var finish := CHAPTER_ENEMY_BP_END[chapter - 1]
+	var linear := start + int((finish - start) * (stage_in_chapter - 1) / 11)
+	if stage_in_chapter == 6:
+		return int(linear * 112 / 100)
+	if stage_in_chapter == 9:
+		return int(linear * 106 / 100)
+	if stage_in_chapter == BOSS_STAGE_NUMBER:
+		return int(linear * 112 / 100)
+	return linear
+
+
+static func _encounter_tier(stage_in_chapter: int) -> String:
+	if stage_in_chapter == BOSS_STAGE_NUMBER:
+		return "boss"
+	if ELITE_STAGE_NUMBERS.has(stage_in_chapter):
+		return "elite"
+	if stage_in_chapter % 3 == 2:
+		return "checkpoint"
+	return "normal"
+
+
+static func _victory_reward(chapter: int, stage_in_chapter: int) -> Dictionary:
+	# Twelve stages redistribute the former five-stage chapter budget instead of
+	# multiplying it. The second stage of each trio is the visible small reward;
+	# elite and boss rewards carry the meaningful spikes.
+	var gold := 12 + chapter * 3
+	if stage_in_chapter % 3 == 2:
+		gold += 10
+	if ELITE_STAGE_NUMBERS.has(stage_in_chapter):
+		gold += 28
+	if stage_in_chapter == BOSS_STAGE_NUMBER:
+		gold += 62
+	return {"gold": gold}
+
+
+static func _required_counter_tech(chapter: int, stage_in_chapter: int) -> String:
+	if stage_in_chapter not in [9, BOSS_STAGE_NUMBER]:
+		return ""
+	var chapter_techs := {
+		1: "counter.sunglasses",
+		2: "counter.resonance_insulation",
+		3: "counter.signal_anchor",
+		4: "counter.alliance_decoder",
+		5: "counter.command_stabilizer",
+	}
+	return String(chapter_techs.get(chapter, ""))
+
+
+static func counter_tech_for_chapter(chapter: int) -> Dictionary:
+	var definitions := {
+		1: {
+			"tech_id": "counter.sunglasses",
+			"display_name": "战术墨镜",
+			"cost": 18,
+			"threat": "电视人的致盲闪屏会重创未防护的马桶人。",
+			"effect": "免疫致盲，并将闪屏伤害降低 80%。",
+		},
+		2: {
+			"tech_id": "counter.resonance_insulation",
+			"display_name": "共振绝缘层",
+			"cost": 26,
+			"threat": "音波共振会抽空技能能量并暴露全队。",
+			"effect": "共振能量损失与易伤持续时间降低 70%。",
+		},
+		3: {
+			"tech_id": "counter.signal_anchor",
+			"display_name": "信号锚定器",
+			"cost": 34,
+			"threat": "电视人会消失、换位并控制落单单位。",
+			"effect": "控制持续时间降低 75%，首次传送会被揭露。",
+		},
+		4: {
+			"tech_id": "counter.alliance_decoder",
+			"display_name": "联军协议解码器",
+			"cost": 42,
+			"threat": "联合模块会轮换标记、防空、净化与护盾。",
+			"effect": "模块持续时间降低 60%，并显示下一模块。",
+		},
+		5: {
+			"tech_id": "counter.command_stabilizer",
+			"display_name": "指挥核心稳定器",
+			"cost": 50,
+			"threat": "终章诱导撤退与连续炮击会瓦解技能循环。",
+			"effect": "撤退冲击伤害降低 75%，炮击预警延长。",
+		},
+	}
+	return (definitions.get(chapter, {}) as Dictionary).duplicate(true)
+
+
 static func _resonance_profile(chapter: int, stage_in_chapter: int) -> Dictionary:
 	if chapter != 2:
 		return {}
+	var beat := (
+		stage_in_chapter
+		if stage_in_chapter <= 5
+		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
+	)
 	var beats := {
 		1: {"period_ticks": 55, "warning_ticks": 10, "energy_drain": 10, "weakness_ticks": 5},
 		2: {"period_ticks": 50, "warning_ticks": 10, "energy_drain": 12, "weakness_ticks": 6},
@@ -329,7 +504,7 @@ static func _resonance_profile(chapter: int, stage_in_chapter: int) -> Dictionar
 		4: {"period_ticks": 35, "warning_ticks": 10, "energy_drain": 18, "weakness_ticks": 8},
 		5: {"period_ticks": 35, "warning_ticks": 10, "energy_drain": 18, "weakness_ticks": 8},
 	}
-	return (beats.get(stage_in_chapter, beats[5]) as Dictionary).duplicate(true)
+	return (beats.get(beat, beats[5]) as Dictionary).duplicate(true)
 
 
 static func _chapter_two_encounter_profile(
@@ -338,6 +513,11 @@ static func _chapter_two_encounter_profile(
 ) -> Dictionary:
 	if chapter != 2:
 		return {}
+	var beat := (
+		stage_in_chapter
+		if stage_in_chapter <= 5
+		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
+	)
 	var beats := {
 		3: {
 			"reinforcement_period_ticks": 65,
@@ -359,7 +539,7 @@ static func _chapter_two_encounter_profile(
 			"echo_impact_limit": 3,
 		},
 	}
-	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
+	return (beats.get(beat, {}) as Dictionary).duplicate(true)
 
 
 static func _chapter_three_encounter_profile(
@@ -368,6 +548,11 @@ static func _chapter_three_encounter_profile(
 ) -> Dictionary:
 	if chapter != 3:
 		return {}
+	var beat := (
+		stage_in_chapter
+		if stage_in_chapter <= 5
+		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
+	)
 	var beats := {
 		1: {
 			"signal_period_ticks": 60,
@@ -402,7 +587,7 @@ static func _chapter_three_encounter_profile(
 			"shield_limit": 6,
 		},
 	}
-	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
+	return (beats.get(beat, {}) as Dictionary).duplicate(true)
 
 
 static func _chapter_four_encounter_profile(
@@ -411,6 +596,11 @@ static func _chapter_four_encounter_profile(
 ) -> Dictionary:
 	if chapter != 4:
 		return {}
+	var beat := (
+		stage_in_chapter
+		if stage_in_chapter <= 5
+		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
+	)
 	var beats := {
 		1: {
 			"mark_period_ticks": 50,
@@ -452,7 +642,7 @@ static func _chapter_four_encounter_profile(
 			"shield_limit": 6,
 		},
 	}
-	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
+	return (beats.get(beat, {}) as Dictionary).duplicate(true)
 
 
 static func _chapter_five_encounter_profile(
@@ -461,6 +651,11 @@ static func _chapter_five_encounter_profile(
 ) -> Dictionary:
 	if chapter != 5:
 		return {}
+	var beat := (
+		stage_in_chapter
+		if stage_in_chapter <= 5
+		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
+	)
 	var beats := {
 		1: {"mode": "retreat", "period_ticks": 55, "warning_ticks": 10, "damage": 20, "limit": 3},
 		2: {"mode": "armor", "period_ticks": 50, "armor_amount": 34, "limit": 4},
@@ -468,7 +663,7 @@ static func _chapter_five_encounter_profile(
 		4: {"mode": "combined", "period_ticks": 55, "warning_ticks": 10, "damage": 24, "armor_amount": 30, "limit": 4, "support_tick": 85, "support_damage": 180},
 		5: {"mode": "final_exam", "period_ticks": 50, "warning_ticks": 10, "damage": 28, "armor_amount": 34, "limit": 6, "support_tick": 100, "support_damage": 220},
 	}
-	return (beats.get(stage_in_chapter, {}) as Dictionary).duplicate(true)
+	return (beats.get(beat, {}) as Dictionary).duplicate(true)
 
 
 static func _endless_index(stage_id: String) -> int:
@@ -699,7 +894,9 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 
 
 static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter: int, unlock_victory: Array[String]) -> Dictionary:
-	var is_boss := stage_in_chapter == 5
+	var is_boss := stage_in_chapter in [5, BOSS_STAGE_NUMBER]
+	var cycle_position := ((stage_in_chapter - 1) % 3) + 1
+	var beat := 5 if is_boss else (4 if stage_in_chapter == 9 else cycle_position)
 	var chapter_threats: Dictionary = {
 		1: "Cameramen 用路障、标记射击和炮塔压住城市大道。",
 		2: "Speakermen 用声波冲锋和能量干扰拖慢技能节奏。",
@@ -738,8 +935,17 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 	var unlock_preview := ""
 	if not unlock_victory.is_empty():
 		unlock_preview = "胜利后预览新蓝图：%s。" % _recipe_labels(unlock_victory)
-	var threat := "%s %s" % [String(chapter_threats[chapter]), String(beat_threats[stage_in_chapter])]
-	var counter := "%s %s" % [String(chapter_counters[chapter]), String(beat_counters[stage_in_chapter])]
+	var threat := "%s %s" % [String(chapter_threats[chapter]), String(beat_threats[beat])]
+	var counter := "%s %s" % [String(chapter_counters[chapter]), String(beat_counters[beat])]
+	if stage_in_chapter == 6:
+		threat += " 这是本章战力精英墙，会直接检验角色等级、星级和阵型承压。"
+	if stage_in_chapter == 9:
+		var tech := counter_tech_for_chapter(chapter)
+		threat += " 这是本章科技精英墙：%s" % String(tech.get("threat", "需要专项反制科技。"))
+		counter = "先在研究所研发「%s」。%s" % [
+			String(tech.get("display_name", "专项反制")),
+			String(tech.get("effect", "")),
+		]
 	var opening_readability: Dictionary = {
 		"stage_1_1": {
 			"threat": "城市尚未形成任何有效抵抗，场上只有城市本体。",

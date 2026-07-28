@@ -242,7 +242,7 @@ func _goal_hierarchy(view: Dictionary) -> Control:
 
 func _campaign_panel(view: Dictionary) -> Control:
 	var panel := _panel("五章攻城进度")
-	panel.add_child(_label("已占领 %d/25 座城镇" % int(view.get("cleared", 0)), 17, GOLD))
+	panel.add_child(_label("已占领 %d/60 座城镇" % int(view.get("cleared", 0)), 17, GOLD))
 	panel.add_child(_progress(float(view.get("cleared", 0)), 25.0, CYAN))
 	panel.add_child(_label(String(view.get("chapters_copy", "")), 13, TEXT))
 	var map_button := _button("前往战区", false)

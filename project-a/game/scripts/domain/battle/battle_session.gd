@@ -84,6 +84,8 @@ var _solo_pressure_bp: int = 10000
 var _faction_protocol: Dictionary = {}
 var _faction_protocol_applied: bool = false
 var _faction_protocol_affected: int = 0
+var _counter_hazard_impacts: int = 0
+var _counter_hazard_damage: int = 0
 
 
 func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_STAGE_ID, stage_config: Dictionary = {}) -> void:
@@ -172,6 +174,8 @@ func start(hero_snapshots: Array, stage_id: String = StageCatalogScript.DEFAULT_
 	_started_solo = false
 	_faction_protocol_applied = false
 	_faction_protocol_affected = 0
+	_counter_hazard_impacts = 0
+	_counter_hazard_damage = 0
 
 	if hero_snapshots.is_empty() or hero_snapshots.size() > 6:
 		is_finished = true
@@ -342,6 +346,7 @@ func _apply_faction_protocol(events: Array[Dictionary]) -> void:
 
 func _run_chapter_mechanics(events: Array[Dictionary]) -> void:
 	var chapter := int(_stage_config.get("chapter", 1))
+	_run_counter_hazard(events)
 	var resonance_period := int(_stage_config.get("resonance_period_ticks", 0))
 	var resonance_warning := int(_stage_config.get("resonance_warning_ticks", 0))
 	if (
@@ -476,6 +481,34 @@ func _run_finale_mechanics(events: Array[Dictionary]) -> void:
 		"lane": lane,
 		"kind": kind,
 		"warning": _finale_warning_count,
+	})
+
+
+func _run_counter_hazard(events: Array[Dictionary]) -> void:
+	var required_tech := String(_stage_config.get("required_counter_tech", ""))
+	if required_tech.is_empty() or tick_index <= 0 or tick_index % 50 != 0:
+		return
+	var protected := bool(_stage_config.get("counter_tech_active", false))
+	var base_damage := 4 + int(_stage_config.get("chapter", 1)) * 3
+	var damage := maxi(1, int(base_damage * (20 if protected else 100) / 100))
+	var affected := 0
+	var dealt := 0
+	for ally in _living_main_allies():
+		var effective := mini(int(ally["hp"]), damage)
+		ally["hp"] = maxi(0, int(ally["hp"]) - damage)
+		if int(ally["hp"]) <= 0:
+			ally["alive"] = false
+		dealt += effective
+		affected += 1
+	_counter_hazard_impacts += 1
+	_counter_hazard_damage += dealt
+	events.append({
+		"type": &"counter_hazard",
+		"tick": tick_index,
+		"tech_id": required_tech,
+		"protected": protected,
+		"affected": affected,
+		"damage": dealt,
 	})
 
 

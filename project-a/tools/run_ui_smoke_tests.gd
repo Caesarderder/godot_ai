@@ -1104,7 +1104,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(_tree_has_text(instance, "小目标 ·"), "goals screen names the next executable action")
 	_ok(instance.find_child("CurrentHurdlePanel", true, false) != null, "goals screen explains the current hurdle and recovery")
 	_ok(instance.find_child("GoalHierarchyPrimaryCTA", true, false) != null, "goal hierarchy ends in one executable CTA")
-	_ok(_tree_has_text(instance, "已占领 2/25 座城镇"), "goals screen exposes durable campaign progress")
+	_ok(_tree_has_text(instance, "已占领 2/60 座城镇"), "goals screen exposes durable campaign progress")
 	_ok(instance.find_child("MetaGoalsActionTab", true, false) != null, "goals screen exposes action tab")
 	_ok(instance.find_child("MetaGoalsPassTab", true, false) != null, "goals screen exposes pass tab")
 	_ok(instance.find_child("MetaGoalsAchievementsTab", true, false) != null, "goals screen exposes achievement tab")
@@ -1272,7 +1272,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		"ok": true,
 		"event": {
 			"outcome": "victory",
-			"stage_id": "stage_5_5",
+			"stage_id": "stage_5_12",
 			"ticks": 385,
 			"campaign_completed": true,
 			"first_campaign_completion": true,
@@ -1282,7 +1282,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	await _wait_frames(3)
 	_ok(instance.find_child("CampaignEpilogueScreen", true, false) != null, "final victory opens the dedicated campaign epilogue")
 	_ok(_tree_has_text(instance, "第一幕完成"), "campaign epilogue clearly states main-campaign completion")
-	_ok(_tree_has_text(instance, "城镇占领  25/25"), "campaign epilogue summarizes all authored towns")
+	_ok(_tree_has_text(instance, "城镇占领  60/60"), "campaign epilogue summarizes all authored towns")
 	var endless_button := instance.find_child("CampaignEnterEndlessButton", true, false) as Button
 	_ok(endless_button != null and not endless_button.disabled, "campaign epilogue exposes endless continuation")
 	if endless_button != null:

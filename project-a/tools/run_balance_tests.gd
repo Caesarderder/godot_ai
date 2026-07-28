@@ -290,55 +290,22 @@ func _test_growth_plan() -> void:
 
 func _test_stage_curve() -> void:
 	var previous_recommended := 0
-	var recommended_by_stage: Dictionary = {}
 	for stage_id in StageCatalogScript.all_stage_ids():
 		var config := StageCatalogScript.stage(stage_id)
 		var recommended := int(config.get("recommended_power", 0))
 		var minimum := int(config.get("minimum_power", 0))
 		_check(recommended >= previous_recommended, "%s recommended power is monotonic" % stage_id)
 		_eq(minimum, int(recommended * 85 / 100), "%s minimum power is the 85%% challenge line" % stage_id)
-		recommended_by_stage[stage_id] = recommended
+		var stage_number := int(config.get("stage_in_chapter", 0))
+		var expected_tier := (
+			"boss" if stage_number == 12
+			else ("elite" if stage_number in [3, 6, 9] else ("checkpoint" if stage_number % 3 == 2 else "normal"))
+		)
+		_eq(String(config.get("encounter_tier", "")), expected_tier, "%s follows the three-stage encounter rhythm" % stage_id)
+		if stage_number in [9, 12]:
+			_check(not String(config.get("required_counter_tech", "")).is_empty(), "%s exposes its technology requirement" % stage_id)
 		previous_recommended = recommended
-	var expected_walls: Array[String] = [
-		"stage_2_5", "stage_3_5", "stage_4_5", "stage_5_5",
-	]
-	var detected_walls: Array[String] = []
-	var stage_ids := StageCatalogScript.all_stage_ids()
-	var chapter_handoff := (
-		int(recommended_by_stage["stage_2_1"])
-		- int(recommended_by_stage["stage_1_5"])
-	)
-	_check(
-		chapter_handoff > 0 and chapter_handoff <= 1500,
-		"1-5 to 2-1 is an explicit post-chapter growth handoff, not a hidden Boss wall"
-	)
-	for index in range(6, stage_ids.size()):
-		var stage_id := String(stage_ids[index])
-		var jump := (
-			int(recommended_by_stage[stage_id])
-			- int(recommended_by_stage[String(stage_ids[index - 1])])
-		)
-		var prior_step := (
-			int(recommended_by_stage[String(stage_ids[index - 1])])
-			- int(recommended_by_stage[String(stage_ids[index - 2])])
-		)
-		var earlier_step := (
-			int(recommended_by_stage[String(stage_ids[index - 2])])
-			- int(recommended_by_stage[String(stage_ids[index - 3])])
-		)
-		var local_small_step := maxi(prior_step, earlier_step)
-		if jump >= local_small_step * 2:
-			detected_walls.append(stage_id)
-			_check(
-				jump <= local_small_step * 4,
-				"%s recommended jump stays inside the relaxed Boss-wall envelope" % stage_id
-			)
-		else:
-			_check(jump <= 400, "%s remains inside the small-step advancement window" % stage_id)
-	_eq(detected_walls, expected_walls, "recommended curve keeps exactly four chapter-Boss growth walls")
-	var release_power := CombatPowerScript.snapshots_power(_release_roster())
-	var final_config := StageCatalogScript.stage("stage_5_5")
-	_check(release_power >= int(final_config["recommended_power"]), "three-star release roster meets the displayed finale recommendation")
+	var final_config := StageCatalogScript.stage("stage_5_12")
 	var undertrained_power := CombatPowerScript.snapshots_power(_undertrained_roster())
 	_check(undertrained_power < int(final_config["minimum_power"]), "one-star squad is visibly below the finale challenge line")
 

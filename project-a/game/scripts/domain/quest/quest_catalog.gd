@@ -31,7 +31,7 @@ static func major_quest(stage_id: String) -> Dictionary:
 	var config := StageCatalogScript.stage(stage_id)
 	if config.is_empty():
 		return {}
-	var is_boss := int(config.get("stage_in_chapter", 0)) == 5
+	var is_boss := int(config.get("stage_in_chapter", 0)) == StageCatalogScript.BOSS_STAGE_NUMBER
 	return {
 		"quest_id": major_quest_id(stage_id),
 		"kind": "major",

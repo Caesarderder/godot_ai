@@ -24,7 +24,7 @@ const MAJOR_ACHIEVEMENT_IDS: Array[String] = [
 const ALLOWED_METRICS: Array[String] = [
 	"cleared_stages",
 	"boss_clears",
-	"stage_5_5_cleared",
+	"stage_5_12_cleared",
 	"production_started",
 	"production_claimed",
 	"archetype_count",
@@ -45,7 +45,7 @@ const DEFINITIONS: Array[Dictionary] = [
 	{"achievement_id": "ach.campaign.clear_25", "category": "campaign", "metric": "cleared_stages", "target": 25, "title": "完成第一幕攻城", "reward": {"merit": 240, "gold": 80, "xp_books": 2}},
 	{"achievement_id": "ach.boss.destroy_1", "category": "campaign", "metric": "boss_clears", "target": 1, "title": "击破首个联盟核心", "reward": {"merit": 120, "gold": 30, "xp_books": 1}},
 	{"achievement_id": "ach.boss.destroy_5", "category": "campaign", "metric": "boss_clears", "target": 5, "title": "五座联盟核心全毁", "reward": {"merit": 260, "gold": 80, "xp_books": 2}},
-	{"achievement_id": "ach.boss.last_gate", "category": "campaign", "metric": "stage_5_5_cleared", "target": 1, "title": "审判之门倒塌", "reward": {"merit": 200, "gold": 0, "xp_books": 0}},
+	{"achievement_id": "ach.boss.last_gate", "category": "campaign", "metric": "stage_5_12_cleared", "target": 1, "title": "审判之门倒塌", "reward": {"merit": 200, "gold": 0, "xp_books": 0}},
 	{"achievement_id": "ach.factory.start_3", "category": "factory", "metric": "production_started", "target": 3, "title": "工厂轰鸣三次", "reward": {"merit": 20, "gold": 5, "xp_books": 0}},
 	{"achievement_id": "ach.factory.claim_6", "category": "factory", "metric": "production_claimed", "target": 9, "title": "九兵援军集结", "reward": {"merit": 40, "gold": 10, "xp_books": 0}},
 	{"achievement_id": "ach.factory.all_archetypes", "category": "factory", "metric": "archetype_count", "target": 8, "title": "八类单位全收集", "reward": {"merit": 180, "gold": 0, "xp_books": 1}},

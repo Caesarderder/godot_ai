@@ -39,4 +39,4 @@ static func stage_victory_salvage(stage_id: String) -> int:
 	var config := StageCatalogScript.stage(stage_id)
 	if config.is_empty():
 		return 0
-	return 15 if int(config.get("stage_in_chapter", 0)) == 5 else 5
+	return 15 if int(config.get("stage_in_chapter", 0)) == StageCatalogScript.BOSS_STAGE_NUMBER else 5

@@ -18,6 +18,7 @@ const COMMAND_CLASSES: Dictionary = {
 	"upgrade_permanent_hero": DURABLE_VALUE,
 	"upgrade_hero_star": DURABLE_VALUE,
 	"research_active_skill": DURABLE_VALUE,
+	"research_counter_tech": DURABLE_VALUE,
 	"assign_factory_specialist": DURABLE_VALUE,
 	"upgrade_facility": DURABLE_VALUE,
 	"construct_facility": DURABLE_VALUE,

@@ -36,6 +36,14 @@ related:
 
 # 实现状态基线
 
+## 2026-07-29：五章 60 关与专项科技墙
+
+- `StageCatalog` 已由 5×5 扩为 5×12；首 30 分钟的 1-1～1-5 配置保持兼容，新增段从 1-6 承接阵营十连。
+- 每章 3/6/9 为精英节拍，12 为章节 Boss；6 强调战力，9 要求章节专项科技，12 合并验证。
+- 五项反制科技使用工业材料和 durable receipt，经 `research_counter_tech` exact-once 研发；战斗读取同一关卡配置，有科技时专项机制伤害降低 80%。
+- 五章名称和剧情情绪参考 Camera、Speaker/寄生、TV、三族联合、科学家基地的公开原作演进；这不是商业授权证据。
+- 已新增 `run_campaign_60_stage_tests.gd`，并更新旧战役/战斗回归以同时保护首 30 分钟和 60 关新合同。
+
 ## 当前代码事实
 
 - 当前开发根是 `project-a/`，Godot 4.6.3、GDScript、3D、Compatibility、Web-first、手机横屏。

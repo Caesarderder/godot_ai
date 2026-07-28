@@ -1001,7 +1001,7 @@ func _test_chapter_four_counterplay_ladder() -> void:
 
 
 func _test_act_one_stage_catalog_and_config_start() -> void:
-	_check(StageCatalogScript.all_stage_ids().size() == 25, "act one catalog exposes twenty-five stages")
+	_check(StageCatalogScript.all_stage_ids().size() == 60, "act one catalog exposes sixty stages")
 	_check(StageCatalogScript.has_stage("stage_5_5"), "act one catalog includes final 5-5")
 	var config := StageCatalogScript.stage("stage_2_5")
 	_check(String(config.get("stage_id", "")) == "stage_2_5", "stage catalog returns requested stage id")

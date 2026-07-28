@@ -1136,7 +1136,7 @@ func _show_map() -> void:
 	selected_chapter = clampi(selected_chapter, 1, maxi(1, highest_chapter))
 	var visible_stage_ids: Array[String] = []
 	if selected_chapter <= 5:
-		for stage_number in range(1, 6):
+		for stage_number in range(1, StageCatalog.STAGES_PER_CHAPTER + 1):
 			visible_stage_ids.append("stage_%d_%d" % [selected_chapter, stage_number])
 	else:
 		var endless_index := 1
@@ -1191,7 +1191,52 @@ func _show_map() -> void:
 	war_zone.attack_requested.connect(_start_stage_battle)
 	war_zone.preparation_requested.connect(_on_map_preparation_requested)
 	shell.add_child(war_zone)
+	var required_counter_tech := String(selected_config.get("required_counter_tech", ""))
+	if not required_counter_tech.is_empty():
+		var tech_definition := StageCatalog.counter_tech_for_chapter(
+			int(selected_config.get("chapter", 1))
+		)
+		var tech_owned := _has_counter_tech(state, required_counter_tech)
+		var tech_row := _panel_vbox("专项反制科技", 8)
+		tech_row.add_child(_label(
+			"%s · %s" % [
+				String(tech_definition.get("display_name", "专项科技")),
+				"已研发" if tech_owned else String(tech_definition.get("threat", "")),
+			],
+			13,
+			GREEN if tech_owned else GOLD
+		))
+		if not tech_owned:
+			var research_button := _button(
+				"研发（工业材料 %d）" % int(tech_definition.get("cost", 0)),
+				Callable(self, "_research_counter_tech").bind(
+					int(selected_config.get("chapter", 1))
+				),
+				true
+			)
+			tech_row.add_child(research_button)
+		shell.add_child(tech_row)
 	_add_nav(shell, Screen.MAP)
+
+
+func _has_counter_tech(state: RefCounted, tech_id: String) -> bool:
+	var durable := state.receipt_ledgers.get("durable", {}) as Dictionary
+	return durable.has("counter_tech:%s" % tech_id)
+
+
+func _research_counter_tech(chapter: int) -> void:
+	var definition := StageCatalog.counter_tech_for_chapter(chapter)
+	var tech_id := String(definition.get("tech_id", ""))
+	var result := _command(
+		"research_counter_tech",
+		{"tech_id": tech_id, "chapter": chapter},
+		"counter-tech:%s" % tech_id
+	)
+	if not bool(result.get("ok", false)):
+		_notify(_error_copy(String(result.get("error", "COUNTER_TECH_RESEARCH_FAILED"))))
+		return
+	_notify("研发完成 · %s" % String(definition.get("display_name", tech_id)))
+	_show_map()
 
 
 func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictionary:
@@ -2320,10 +2365,14 @@ func _goals_view(state: RefCounted) -> Dictionary:
 	var chapter_parts: Array[String] = []
 	for chapter in range(1, 6):
 		var chapter_clear := 0
-		for stage_number in range(1, 6):
+		for stage_number in range(1, StageCatalog.STAGES_PER_CHAPTER + 1):
 			if cleared.has("stage_%d_%d" % [chapter, stage_number]):
 				chapter_clear += 1
-		chapter_parts.append("第%d章 %d/5" % [chapter, chapter_clear])
+		chapter_parts.append("第%d章 %d/%d" % [
+			chapter,
+			chapter_clear,
+			StageCatalog.STAGES_PER_CHAPTER,
+		])
 	var missions: Array[Dictionary] = []
 	for definition in MetaCatalog.DAILY:
 		var mission := _goals_mission_view(state, definition)
@@ -2553,6 +2602,13 @@ func _start_battle() -> void:
 	battle_unit_hud.clear()
 	_clear()
 	var config := StageCatalog.stage(selected_stage_id)
+	var required_counter_tech := String(config.get("required_counter_tech", ""))
+	config["counter_tech_active"] = (
+		required_counter_tech.is_empty()
+		or _has_counter_tech(game.current_state(), required_counter_tech)
+	)
+	if bool(config["counter_tech_active"]) and not required_counter_tech.is_empty():
+		_apply_counter_tech_battle_effect(config)
 	var faction_protocol := _active_faction_protocol(game.current_state())
 	if not faction_protocol.is_empty():
 		config["faction_protocol"] = faction_protocol
@@ -2617,6 +2673,43 @@ func _start_battle() -> void:
 		"manual_skills": battle_manual_skills,
 	})
 	battle_world.start_battle(snapshots, selected_stage_id, config)
+
+
+func _apply_counter_tech_battle_effect(config: Dictionary) -> void:
+	match int(config.get("chapter", 1)):
+		2:
+			config["resonance_energy_drain"] = maxi(
+				1,
+				int(int(config.get("resonance_energy_drain", 0)) * 30 / 100)
+			)
+			config["resonance_weakness_ticks"] = maxi(
+				1,
+				int(int(config.get("resonance_weakness_ticks", 0)) * 30 / 100)
+			)
+		3:
+			config["tv_control_duration_ticks"] = maxi(
+				1,
+				int(int(config.get("tv_control_duration_ticks", 0)) * 25 / 100)
+			)
+			config["tv_teleport_limit"] = maxi(
+				0,
+				int(config.get("tv_teleport_limit", 0)) - 1
+			)
+		4:
+			config["alliance_mark_duration_ticks"] = maxi(
+				1,
+				int(int(config.get("alliance_mark_duration_ticks", 0)) * 40 / 100)
+			)
+			config["alliance_anti_air_duration_ticks"] = maxi(
+				1,
+				int(int(config.get("alliance_anti_air_duration_ticks", 0)) * 40 / 100)
+			)
+		5:
+			config["finale_damage"] = maxi(
+				1,
+				int(int(config.get("finale_damage", 0)) * 25 / 100)
+			)
+			config["finale_warning_ticks"] = int(config.get("finale_warning_ticks", 0)) + 5
 
 
 func _toggle_battle_skill_mode() -> void:
@@ -2869,7 +2962,7 @@ func _show_settlement_error(reason: String) -> void:
 func _show_result() -> void:
 	var event := last_settlement.get("event", {}) as Dictionary
 	var outcome := String(event.get("outcome", "defeat"))
-	if outcome == "victory" and String(event.get("stage_id", "")) == "stage_5_5":
+	if outcome == "victory" and String(event.get("stage_id", "")) == "stage_5_12":
 		_show_epilogue(event)
 		return
 	screen = Screen.RESULT
@@ -2885,7 +2978,7 @@ func _show_result() -> void:
 	var completed_chapter := int(cleared_stage.get("chapter", 0))
 	var chapter_boss_complete := (
 		won
-		and int(cleared_stage.get("stage_in_chapter", 0)) == 5
+		and int(cleared_stage.get("stage_in_chapter", 0)) == StageCatalog.BOSS_STAGE_NUMBER
 		and completed_chapter >= 2
 	)
 	var result_title := (
@@ -4547,7 +4640,9 @@ func _sync_music_for_screen() -> void:
 	if screen == Screen.BATTLE:
 		var config := StageCatalog.stage(active_battle_stage if not active_battle_stage.is_empty() else selected_stage_id)
 		music_director.request_state(
-			&"boss" if int(config.get("stage_in_chapter", 0)) == 5 else &"battle"
+			&"boss"
+			if String(config.get("encounter_tier", "")) == "boss"
+			else &"battle"
 		)
 		return
 	music_director.request_state(&"base")
@@ -5419,6 +5514,10 @@ func _error_copy(code: String) -> String:
 		"HERO_ALREADY_IN_REPAIR": "该角色已经进入等待维修",
 		"NO_REPAIRS_READY": "还没有完成的等待维修",
 		"NOT_ENOUGH_INDUSTRIAL_TECH": "工业材料不足，先收取工厂产出",
+		"NOT_ENOUGH_INDUSTRIAL_MATERIALS": "工业材料不足，先收取工厂产出",
+		"COUNTER_TECH_LOCKED": "先通关本章第 8 关并回收敌方技术样本",
+		"COUNTER_TECH_ALREADY_RESEARCHED": "这项反制科技已经研发完成",
+		"COUNTER_TECH_UNKNOWN": "专项科技配置不存在，请返回战区重试",
 		"RESEARCH_LAB_LEVEL_TOO_LOW": "研究所等级不足，升级至 Lv.2 可研究技能Ⅲ",
 		"META_MISSIONS_LOCKED": "通关 1-1 且指挥官达到 Lv2 后开放行动任务",
 		"META_WEEKLY_LOCKED": "指挥官达到 Lv10 后开放周任务",

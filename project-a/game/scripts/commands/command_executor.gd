@@ -137,6 +137,40 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 			if resources.has("porcelain"):
 				candidate.factory.grant({"porcelain": int(resources["porcelain"])})
 			return {"ok": true, "event": {"type": "resources_granted"}}
+		"research_counter_tech":
+			var tech_id := String(data["tech_id"])
+			var chapter := int(data["chapter"])
+			var definition := StageCatalogScript.counter_tech_for_chapter(chapter)
+			if tech_id != String(definition.get("tech_id", "")):
+				return {"ok": false, "error": "COUNTER_TECH_UNKNOWN"}
+			var prerequisite := "stage_%d_8" % chapter
+			if not (candidate.stage_progress.get("cleared_stages", []) as Array).has(prerequisite):
+				return {"ok": false, "error": "COUNTER_TECH_LOCKED"}
+			var durable := candidate.receipt_ledgers.get("durable", {}) as Dictionary
+			var receipt_key := "counter_tech:%s" % tech_id
+			if durable.has(receipt_key):
+				return {"ok": false, "error": "COUNTER_TECH_ALREADY_RESEARCHED"}
+			var cost := int(definition.get("cost", 0))
+			if int(candidate.factory.materials.get("porcelain", 0)) < cost:
+				return {"ok": false, "error": "NOT_ENOUGH_INDUSTRIAL_MATERIALS"}
+			candidate.factory.materials["porcelain"] = (
+				int(candidate.factory.materials.get("porcelain", 0)) - cost
+			)
+			durable[receipt_key] = {
+				"tech_id": tech_id,
+				"chapter": chapter,
+				"cost": cost,
+			}
+			candidate.receipt_ledgers["durable"] = durable
+			return {
+				"ok": true,
+				"event": {
+					"type": "counter_tech_researched",
+					"tech_id": tech_id,
+					"chapter": chapter,
+					"cost": cost,
+				},
+			}
 		"settle_battle":
 			var battle_id := String(data.get("battle_id", ""))
 			var outcome := String(data.get("outcome", ""))
@@ -208,8 +242,8 @@ func _apply_reducer(candidate: RefCounted, command_type: String, payload: Varian
 					"hero_shards": int(StageCatalogScript.breakthrough_reward(stage_id, already_cleared).get("hero_shards", 0)) if outcome == "victory" else 0,
 					"unlocked_hero": {},
 					"first_victory": was_first_victory,
-					"campaign_completed": outcome == "victory" and stage_id == "stage_5_5",
-					"first_campaign_completion": outcome == "victory" and stage_id == "stage_5_5" and was_first_victory,
+					"campaign_completed": outcome == "victory" and stage_id == "stage_5_12",
+					"first_campaign_completion": outcome == "victory" and stage_id == "stage_5_12" and was_first_victory,
 				},
 			}
 		"claim_factory_output":
@@ -457,6 +491,15 @@ func _validate_payload(command_type: String, payload: Variant) -> String:
 					return "RESOURCE_AMOUNT_MUST_BE_INT"
 				if int(resources[key]) < 0:
 					return "RESOURCE_AMOUNT_MUST_NOT_BE_NEGATIVE"
+			return ""
+		"research_counter_tech":
+			var counter_error := _exact_keys(data, ["tech_id", "chapter"], "research_counter_tech")
+			if not counter_error.is_empty():
+				return counter_error
+			if typeof(data["tech_id"]) != TYPE_STRING or String(data["tech_id"]).is_empty():
+				return "research_counter_tech.tech_id must be non-empty string"
+			if typeof(data["chapter"]) != TYPE_INT or int(data["chapter"]) < 1 or int(data["chapter"]) > 5:
+				return "research_counter_tech.chapter must be 1..5"
 			return ""
 		"claim_factory_output":
 			var factory_claim_error := _exact_keys(data, ["now_unix"], "claim_factory_output")

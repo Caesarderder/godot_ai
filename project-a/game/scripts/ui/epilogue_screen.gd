@@ -43,7 +43,7 @@ func configure(view: Dictionary) -> void:
 
 
 func _apply_view() -> void:
-	occupied_label.text = "城镇占领  %d/25" % int(_view.get("cleared_count", 0))
+	occupied_label.text = "城镇占领  %d/60" % int(_view.get("cleared_count", 0))
 	roster_label.text = "永久角色  %d 名" % int(_view.get("roster_count", 0))
 	mastery_label.text = "军团星级  %d★ · 技能等级合计 %d" % [
 		int(_view.get("total_stars", 0)),

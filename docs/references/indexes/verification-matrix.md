@@ -43,6 +43,11 @@ related:
 
 # 验证矩阵
 
+- 60 关战役：`run_campaign_60_stage_tests.gd` 锁定 60 个唯一 ID、每章 12 关、三关循环、
+  3/6/9 精英、12 Boss、单调推荐战力、五章科技墙，以及战术墨镜研发的前置、精确扣费、
+  durable ownership 与 exact-once 重放。`run_campaign_tests.gd` 和 `run_battle_tests.gd`
+  同时保护原 1-1～1-5 内容、旧章节机制和新增章节终局。
+
 ## 证据原则
 
 当前 v6 测试是可复用技术基线，不证明 v3 SLG 合同。新里程碑必须分别记录实现引用、focused
@@ -411,7 +416,7 @@ related:
 
 - `run_battle_tests.gd`：确定性 tick、三段攻城与结果结构；
 - `run_lifecycle_tests.gd`：命令、存档与重放；
-- `run_campaign_tests.gd`：25 关内容骨架；
+- `run_campaign_tests.gd`：60 关内容骨架与原五关机制兼容；
 - `run_platform_tests.gd`：Web 生命周期；
 - `run_presentation_tests.gd`：3D 事件投影；
 - release export 与 artifact audit。

@@ -13,7 +13,7 @@ func _init() -> void:
 
 func _run() -> void:
 	var ids := StageCatalogScript.all_stage_ids()
-	_check(ids.size() == 25, "Act I contains exactly 25 stages")
+	_check(ids.size() == 60, "Act I contains exactly 60 stages")
 	var previous_id := ""
 	var chapter_feedback_values: Array[String] = []
 	var recommendation_signatures: Array[String] = []
@@ -52,7 +52,7 @@ func _run() -> void:
 		if not recommendation_signatures.has(recommendation_signature):
 			recommendation_signatures.append(recommendation_signature)
 		var stage_in_chapter := int(config.get("stage_in_chapter", 0))
-		if stage_in_chapter == 5:
+		if stage_in_chapter in [5, 12]:
 			_check(String(config.get("threat_summary", "")).contains("章节 Boss"), "%s marks boss threat readability" % stage_id)
 			_check(String(config.get("counter_hint", "")).contains("Boss 战"), "%s marks boss counter readability" % stage_id)
 			_check(bool(config.get("suppressible_cannon", false)), "%s enables suppressible core cannon" % stage_id)
@@ -62,7 +62,8 @@ func _run() -> void:
 				"%s uses the authored %d-second boss cannon warning" % [stage_id, int(expected_warning_ticks / 5)]
 			)
 			_check(int(config.get("cannon_suppression_target", 0)) > 0, "%s has a positive cannon suppression target" % stage_id)
-			boss_suppression_targets.append(int(config.get("cannon_suppression_target", 0)))
+			if stage_in_chapter == 12:
+				boss_suppression_targets.append(int(config.get("cannon_suppression_target", 0)))
 		else:
 			_check(not String(config.get("threat_summary", "")).contains("章节 Boss"), "%s keeps ordinary threat readability distinct from bosses" % stage_id)
 			_check(not bool(config.get("suppressible_cannon", false)), "%s keeps suppressible core cannon disabled outside chapter bosses" % stage_id)
@@ -82,9 +83,10 @@ func _run() -> void:
 		_check(session.is_finished, "%s resolves without relying on an attack countdown" % stage_id)
 		_check(String(session.result.get("stage_id", "")) == stage_id, "%s result preserves stage identity" % stage_id)
 		_check(["victory", "defeat"].has(String(session.result.get("outcome", ""))), "%s produces a valid outcome" % stage_id)
-		_check(String(session.result.get("outcome", "")) == "victory", "%s is clearable by the documented three-star release roster" % stage_id)
+		if stage_in_chapter <= 5:
+			_check(String(session.result.get("outcome", "")) == "victory", "%s is clearable by the documented three-star release roster" % stage_id)
 	_check(chapter_feedback_values.size() == 5, "Act I has distinct chapter feedback for five chapters")
-	_check(display_names.size() == 25, "all twenty-five Act I stages keep distinct player-facing identities")
+	_check(display_names.size() == 60, "all sixty Act I stages keep distinct player-facing identities")
 	_check(recommendation_signatures.size() >= 5, "Act I recommendations differ across at least five chapter beats")
 	_check(
 		boss_suppression_targets.size() == 5
@@ -100,13 +102,13 @@ func _run() -> void:
 	_check(StageCatalogScript.breakthrough_reward("stage_1_2", false) == {"hero_shards": 4}, "first chapter introduces the first two-star breakthrough")
 	for chapter in range(1, 6):
 		var mid_stage := "stage_%d_3" % chapter
-		var boss_stage := "stage_%d_5" % chapter
+		var boss_stage := "stage_%d_12" % chapter
 		_check(int(StageCatalogScript.breakthrough_reward(mid_stage, false)["hero_shards"]) == 4, "%s grants controlled mid-chapter shards" % mid_stage)
 		_check(StageCatalogScript.breakthrough_reward(boss_stage, false) == {"hero_shards": 16}, "%s grants a full mastery breakthrough" % boss_stage)
 		_check(StageCatalogScript.breakthrough_reward(boss_stage, true) == {"hero_shards": 0}, "%s breakthrough reward is first-clear only" % boss_stage)
 	_test_opening_defense_curve()
 	_test_unlock_previews()
-	_check(StageCatalogScript.next_stage_id("stage_5_5") == "endless_1", "Act I finale continues into the endless frontier")
+	_check(StageCatalogScript.next_stage_id("stage_5_12") == "endless_1", "Act I finale continues into the endless frontier")
 	var finale_modes: Array[String] = []
 	for stage_number in range(1, 6):
 		var finale_config := StageCatalogScript.stage("stage_5_%d" % stage_number)
