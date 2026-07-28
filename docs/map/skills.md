@@ -47,6 +47,7 @@ related:
 | UI、输入与内容生产 | `ux-design` 或具体实现 Skill | `godot-ui`、`responsive-ui`、`hud-system`、`input-handling`、`localization`、`ux-design`、`game-visual-design`、`builda-vector-art`、`assets-pipeline`、`audio-system` |
 | 调试、测试、性能与发布 | 与验证阶段匹配的 Skill | `godot-debugging`、`godot-testing`、`godot-code-review`、`godot-optimization`、`export-pipeline`、`game-web-release`、`game-playtest` |
 | 显式设计与交付 | 用户明确指定的 `game-*` | `game-design`、`game-balance`、`game-level-design`、`game-narrative-design`、`game-technical-design`、`game-prototype`、`game-vertical-slice` |
+| 厕所角色生产 | `toilet-char` | `toilet-char`（统一短入口）、`toilet-character-production`（权威规格、快照与校验工具） |
 | 条件能力与替代技术栈 | 先检查项目边界 | `addon-development`、`beehave`、`limboai`、`csharp-godot`、`csharp-signals`、`gdextension`、`multithreading`、`mobile-development`、`multiplayer-basics`、`multiplayer-sync`、`dedicated-server`、`xr-development` |
 
 ## 高频任务路由
@@ -56,6 +57,7 @@ related:
 | 修改 GDScript 或节点生命周期 | `gdscript-patterns` | `godot-architecture`、`godot-testing` | 归属文件、引擎版本、测试入口 |
 | 新建或拆分场景/系统 | `godot-architecture` | `scene-organization`、`component-system` | 状态所有权、依赖方向、Autoload 边界 |
 | 战斗、数值、能力、装备 | 对应玩法 Skill | `resource-pattern`、`save-load`、`godot-testing` | 确定性、持久化写入口、产品领域不变量 |
+| 新建、优化或接入我方/联盟角色 | `toilet-char` | `toilet-character-production`、按实现涉及的系统 Skill | 当前角色与关卡快照、科技树位置、可用反制、代码事实 |
 | 2D/3D 表现或交互 | `2d-essentials` / `3d-essentials` | 相机、动画、物理、VFX 的具体 Skill | 表现是否影响领域结果、Web 预算 |
 | HUD、菜单、响应式布局 | `ux-design` 或 `godot-ui` | `responsive-ui`、`hud-system`、`input-handling` | 玩家目标、触控/安全区、信息优先级 |
 | Bug、回归或性能问题 | `godot-debugging` / `godot-optimization` | `godot-testing` | 可复现证据、基线、最小验证命令 |
@@ -73,4 +75,3 @@ related:
 ## 维护
 
 新增、删除、重命名或同步 `.codex/skills/*` 后，运行 [KM:workflow.knowledge-map-maintenance](../workflows/knowledge-map-maintenance.md)：重新枚举含 `SKILL.md` 的直接子目录，更新本页能力簇和任务路由，并执行 [CMD:docs-lint](../runbooks/docs-lint.md#docs-lint)。
-
