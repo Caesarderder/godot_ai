@@ -130,6 +130,8 @@ func _run() -> void:
 			"fragment_total": 60,
 			"highest_rating": "A",
 		},
+		"recruit_reveal": true,
+		"reduced_motion": false,
 		"recruit_core_choices": [
 			{
 				"archetype_id": "assault",
@@ -164,6 +166,28 @@ func _run() -> void:
 		},
 	})
 	await process_frame
+	await process_frame
+	await process_frame
+	var reveal_card := legion.find_child(
+		"RecruitFactionChoiceCard_assault",
+		true,
+		false
+	) as Control
+	_check(
+		reveal_card != null
+			and (
+				reveal_card.modulate.a < 1.0
+				or reveal_card.scale.x < 1.0
+			),
+		"a fresh ten-pull starts a bounded candidate reveal without changing its action"
+	)
+	await create_timer(0.8).timeout
+	_check(
+		reveal_card != null
+			and is_equal_approx(reveal_card.modulate.a, 1.0)
+			and reveal_card.scale.is_equal_approx(Vector2.ONE),
+		"the candidate reveal settles at a fully readable stable layout"
+	)
 	_check(
 		_tree_has_text(legion, "十连战果已锁定 · 新角色图纸 2 · 专属碎片 +60"),
 		"faction choice first names the concrete ten-pull haul"
@@ -175,6 +199,24 @@ func _run() -> void:
 	_check(
 		_tree_has_text(legion, "新角色设计 · B级 · 冲锋马桶人"),
 		"faction choice frames each candidate as a newly unlocked character design"
+	)
+	var reduced_view := (legion.get("_view") as Dictionary).duplicate(true)
+	reduced_view["reduced_motion"] = true
+	reduced_view["recruit_reveal"] = true
+	legion.configure(reduced_view)
+	await process_frame
+	await process_frame
+	await process_frame
+	reveal_card = legion.find_child(
+		"RecruitFactionChoiceCard_assault",
+		true,
+		false
+	) as Control
+	_check(
+		reveal_card != null
+			and is_equal_approx(reveal_card.modulate.a, 1.0)
+			and reveal_card.scale.is_equal_approx(Vector2.ONE),
+		"reduced motion bypasses the reveal and keeps the complete result immediately visible"
 	)
 	_check(_tree_has_text(legion, "冲锋马桶人专属碎片 +20"), "duplicate signal result projects archetype-specific fragments")
 	_check(not _tree_has_text(legion, "设计数据"), "recruitment no longer projects blueprint data as a resource")

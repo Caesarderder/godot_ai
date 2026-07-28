@@ -1262,7 +1262,10 @@ func _show_legion() -> void:
 	legion.action_requested.connect(func(_action_id: String, _payload: Dictionary) -> void: _play_ui_click())
 	legion.action_requested.connect(_on_legion_action_requested)
 	shell.add_child(legion)
-	legion.configure(_legion_view())
+	var legion_view := _legion_view()
+	legion.configure(legion_view)
+	if bool(legion_view.get("recruit_reveal", false)):
+		last_recruit_results.clear()
 	_add_nav(shell, Screen.LEGION)
 
 
@@ -1755,6 +1758,8 @@ func _legion_view() -> Dictionary:
 		"recruit_target_guaranteed": bool(state.meta_progression.recruit_target_guaranteed),
 		"recruit_results": recruit_results,
 		"recruit_reward_summary": recruit_reward_summary,
+		"recruit_reveal": not last_recruit_results.is_empty(),
+		"reduced_motion": bool(settings_store.reduced_motion),
 		"recruit_focus": recruit_focus,
 		"recruit_core_choices": recruit_core_choices,
 		"codex": codex,

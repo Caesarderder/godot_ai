@@ -39,9 +39,17 @@ func _capture() -> void:
 		_fail("free faction ten-pull unavailable")
 		return
 	free_ten.pressed.emit()
-	await _wait_frames(8)
+	await _wait_frames(50)
 	if not _save("res://artifacts/ui-faction-recruit-result-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-faction-recruit-result-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 
 	var state: RefCounted = game.current_state()
 	var event := RecruitmentResultProjectionScript.latest_event_for_command(

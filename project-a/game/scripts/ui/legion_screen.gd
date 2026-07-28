@@ -50,6 +50,8 @@ const SLOT_NAMES := {
 var _view: Dictionary = {}
 var _selected_hero_id := ""
 var _roster_hero_list: VBoxContainer
+var _recruit_reveal_tween: Tween
+var _recruit_reveal_generation := 0
 
 
 func _ready() -> void:
@@ -74,6 +76,7 @@ func configure(view: Dictionary) -> void:
 
 
 func _rebuild() -> void:
+	_cancel_recruit_reveal()
 	var active_tab := String(_view.get("tab", "formation"))
 	var first_formation := _view.get("first_formation", {}) as Dictionary
 	var first_growth := _view.get("first_growth_choice", {}) as Dictionary
@@ -104,7 +107,13 @@ func _rebuild() -> void:
 		"recruit":
 			content.add_child(_recruit_panel())
 			if not (_view.get("recruit_results", []) as Array).is_empty():
-				call_deferred("_focus_recruit_result")
+				if (
+					bool(_view.get("recruit_reveal", false))
+					and not bool(_view.get("reduced_motion", false))
+				):
+					call_deferred("_play_recruit_reveal")
+				else:
+					call_deferred("_focus_recruit_result")
 		"codex":
 			content.add_child(_codex_panel())
 		"roster":
@@ -445,7 +454,14 @@ func _recruit_panel() -> Control:
 			for choice_value in core_choices:
 				var choice := choice_value as Dictionary
 				var card := _panel("")
+				card.name = "RecruitFactionChoiceCard_%s" % String(
+					choice.get("archetype_id", "")
+				)
 				card.custom_minimum_size.x = 350
+				card.panel_style = _box(
+					Color("#181d22"),
+					_faction_accent(String(choice.get("faction", "")))
+				)
 				card.add_child(_label(
 					"新角色设计 · %s级 · %s · %s\n%s · 2★%s（碎片已齐）" % [
 						String(choice.get("rating", "B")),
@@ -738,6 +754,84 @@ func _focus_recruit_result() -> void:
 		0,
 		int(scroll.get_v_scroll_bar().max_value)
 	)
+
+
+func _play_recruit_reveal() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	var choice_panel := content.find_child(
+		"RecruitFactionCoreChoice",
+		true,
+		false
+	) as Control
+	if choice_panel == null:
+		_focus_recruit_result()
+		return
+	var cards: Array[Control] = []
+	for choice_value in _view.get("recruit_core_choices", []):
+		var choice := choice_value as Dictionary
+		var card := content.find_child(
+			"RecruitFactionChoiceCard_%s" % String(choice.get("archetype_id", "")),
+			true,
+			false
+		) as Control
+		if card != null:
+			cards.append(card)
+	choice_panel.modulate.a = 0.25
+	for card in cards:
+		card.modulate.a = 0.0
+		card.pivot_offset = card.size * 0.5
+		card.scale = Vector2(0.96, 0.96)
+	_recruit_reveal_generation += 1
+	var generation := _recruit_reveal_generation
+	_recruit_reveal_tween = create_tween().set_parallel(true)
+	_recruit_reveal_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_recruit_reveal_tween.tween_property(
+		choice_panel,
+		"modulate:a",
+		1.0,
+		0.18
+	).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	for card_index in cards.size():
+		var card := cards[card_index]
+		var delay := 0.14 + float(card_index) * 0.18
+		_recruit_reveal_tween.tween_property(
+			card,
+			"modulate:a",
+			1.0,
+			0.24
+		).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_recruit_reveal_tween.tween_property(
+			card,
+			"scale",
+			Vector2.ONE,
+			0.28
+		).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_recruit_reveal_tween.chain().tween_callback(func() -> void:
+		if (
+			generation == _recruit_reveal_generation
+			and is_inside_tree()
+		):
+			_focus_recruit_result()
+	)
+
+
+func _cancel_recruit_reveal() -> void:
+	_recruit_reveal_generation += 1
+	if _recruit_reveal_tween != null and _recruit_reveal_tween.is_valid():
+		_recruit_reveal_tween.kill()
+	_recruit_reveal_tween = null
+
+
+func _faction_accent(faction: String) -> Color:
+	return Color(String({
+		"快攻破城": "#d77b45",
+		"钢铁防线": "#58c9c2",
+		"远程轰炸": "#e5a84b",
+		"干扰增殖": "#a979d1",
+	}.get(faction, "#58c9c2")))
 
 
 func _focus_faction_candidate() -> void:

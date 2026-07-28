@@ -44,6 +44,10 @@ func _run() -> void:
 	_check(main.find_child("SignalRecruitResultPanel", true, false) != null, "ten-pull renders its real result panel")
 	var core_choice_panel := main.find_child("RecruitFactionCoreChoice", true, false)
 	_check(core_choice_panel != null, "ten-pull asks the player to decide their faction core")
+	_check(
+		not bool(main.call("_legion_view").get("recruit_reveal", true)),
+		"the fresh reveal is consumed once so refresh cannot replay or block the durable choice"
+	)
 	var recruit_scroll := main.find_child("LegionContentScroll_recruit", true, false) as ScrollContainer
 	_check(
 		recruit_scroll != null and recruit_scroll.scroll_vertical > 0,
