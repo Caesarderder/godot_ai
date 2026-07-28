@@ -101,6 +101,18 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 				"detail": "装甲与冲锋已经入队；立即返回 1-4 验证新职责组合。",
 				"hero_id": "",
 			}
+	if (
+		stage_id == "stage_1_5"
+		and not cleared_stages.has(stage_id)
+		and not _has_chapter_one_growth_route(state)
+	):
+		next_action = {
+			"id": "upgrade",
+			"title": "先完成冲锋/装甲二星成长",
+			"detail": "核心巨炮是首次成长验收：任选冲锋快攻或装甲守势升至2★，再用战斗验证质变。",
+			"hero_id": "",
+			"blocks_attack": true,
+		}
 	return {
 		"stage_id": stage_id,
 		"stage_name": String(stage_config.get("display_name", "")),
@@ -200,6 +212,16 @@ static func _formation_has_archetype(state: RefCounted, archetype_id: String) ->
 	for hero_id in state.formation.hero_ids():
 		var hero: RefCounted = state.hero_by_id(String(hero_id))
 		if hero != null and String(hero.archetype_id) == archetype_id:
+			return true
+	return false
+
+
+static func _has_chapter_one_growth_route(state: RefCounted) -> bool:
+	for hero in state.roster:
+		if (
+			int(hero.star) >= 2
+			and String(hero.archetype_id) in ["assault", "armored"]
+		):
 			return true
 	return false
 

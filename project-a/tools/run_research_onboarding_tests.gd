@@ -3,11 +3,13 @@ extends SceneTree
 const GameState := preload("res://game/scripts/state/game_state.gd")
 const CommandExecutor := preload("res://game/scripts/commands/command_executor.gd")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const SaveCodec := preload("res://game/scripts/persistence/save_codec.gd")
 
 var failures: Array[String] = []
 
 
 func _init() -> void:
+	_test_current_save_recovers_direct_research_lab_eligibility()
 	var state: RefCounted = GameState.create_new(20260726, 1000, false)
 	_check(int(state.factory.facilities["research_lab"]) == 0, "研究所开局尚未建成")
 	_check(bool(state.factory.eligible_facilities.get("research_lab", false)), "研究所开局即取得建造资格")
@@ -101,6 +103,22 @@ func _init() -> void:
 			push_error(failure)
 		print("RESEARCH ONBOARDING TESTS FAIL: %d" % failures.size())
 		quit(1)
+
+
+func _test_current_save_recovers_direct_research_lab_eligibility() -> void:
+	var stale_state: RefCounted = GameState.create_new(20260728, 1000, false)
+	stale_state.factory.eligible_facilities.erase("research_lab")
+	var decoded := SaveCodec.from_json_text(SaveCodec.to_json_text(stale_state))
+	_check(bool(decoded.get("ok", false)), "缺少研究所资格的 schema v11 存档应可加载")
+	if bool(decoded.get("ok", false)):
+		_check(
+			bool(decoded["state"].factory.eligible_facilities.get("research_lab", false)),
+			"schema v11 存档加载时应恢复研究所直接建造资格"
+		)
+	_check(
+		not stale_state.factory.eligible_facilities.has("research_lab"),
+		"存档边界规范化不得修改调用方的运行中状态"
+	)
 
 
 func _execute(executor: RefCounted, key: String, type: String, payload: Dictionary) -> Dictionary:

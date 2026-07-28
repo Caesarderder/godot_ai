@@ -135,12 +135,14 @@ func _apply_configuration() -> void:
 	var action_id := String(action.get("id", "attack"))
 	var needs_preparation := action_id in ["upgrade", "research", "recruit", "formation"] and _unlocked and not _cleared
 	var needs_discovery := action_id == "discover" and _unlocked and not _cleared
+	var blocks_attack := bool(action.get("blocks_attack", false))
 	var force_primary_attack := bool(
 		faction_proof.get("force_primary_attack", false)
 	)
 	if force_primary_attack:
 		needs_preparation = false
 		needs_discovery = false
+		blocks_attack = false
 	_preparation_action_id = action_id
 	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
 	next_action.visible = needs_preparation or needs_discovery
@@ -153,14 +155,18 @@ func _apply_configuration() -> void:
 		growth_button.text = "编入两名援军"
 	else:
 		growth_button.text = String(action.get("title", "建造研究所")) if needs_preparation else "先培养军团"
-	attack_button.disabled = not _unlocked
+	attack_button.disabled = not _unlocked or blocks_attack
 	attack_button.text = String(faction_proof.get("attack_label", "")) if not faction_proof.is_empty() else (
 		"再次夺取"
 		if _cleared
 		else (
+			"完成2★成长后解锁"
+			if blocks_attack
+			else (
 			"仍要试探"
 			if needs_preparation
 			else ("试探炮台防线" if needs_discovery else ("立即出击" if _unlocked else "尚未侦测"))
+			)
 		)
 	)
 	if force_primary_attack:

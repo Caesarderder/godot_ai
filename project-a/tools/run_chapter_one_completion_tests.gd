@@ -71,8 +71,39 @@ func _run() -> void:
 		"the real level-three chapter state lists recruitment without inventing a pass unlock"
 	)
 	_check(_tree_has_text(main, "首章训练闭环达成"), "the seven-action onboarding loop visibly settles")
-	var faction_recruit := _button_with_text(main, "领取阵营起手十连")
-	_check(faction_recruit != null, "completion exposes the faction-starter recruitment goal")
+	var welfare_handoff := _button_with_text(main, "领取开服庆典礼包")
+	_check(welfare_handoff != null, "completion first exposes the newly unlocked celebration gift")
+	if welfare_handoff != null:
+		welfare_handoff.pressed.emit()
+		await _wait_frames(4)
+	var welfare_claim := main.find_child("NewPlayerWelfareClaimButton", true, false) as Button
+	_check(welfare_claim != null and not welfare_claim.disabled, "chapter result hands off to an actionable exact-once gift")
+	if welfare_claim != null:
+		welfare_claim.pressed.emit()
+		await _wait_frames(4)
+	var welfare_legion := main.find_child("NewPlayerWelfareLegionButton", true, false) as Button
+	_check(welfare_legion != null, "claimed gift exposes the recommended one-star reinforcement route")
+	if welfare_legion != null:
+		welfare_legion.pressed.emit()
+		await _wait_frames(4)
+	_check(
+		String(main.get("legion_selected_hero_id")) == String(armored.hero_id),
+		"welfare handoff focuses the unchosen one-star chapter reinforcement"
+	)
+	var welfare_core := main.find_child("WelfareStarCore_*", true, false) as Button
+	_check(welfare_core != null and not welfare_core.disabled, "focused reinforcement exposes the exact welfare core action")
+	if welfare_core != null:
+		welfare_core.pressed.emit()
+		await _wait_frames(4)
+	_check(int(_hero_for(game.current_state(), "armored").star) == 2, "player confirmation consumes the core and completes the base trio")
+	main.call("_show_goals")
+	await _wait_frames(4)
+	var faction_recruit := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(
+		faction_recruit != null and faction_recruit.text.contains("领取阵营起手十连"),
+		"claimed celebration gift preserves the faction-starter recruitment goal | actual=%s"
+			% ("missing" if faction_recruit == null else faction_recruit.text)
+	)
 	if faction_recruit != null:
 		faction_recruit.pressed.emit()
 		await _wait_frames(4)
@@ -92,6 +123,20 @@ func _run() -> void:
 	if core_choice != null:
 		core_choice.pressed.emit()
 		await _wait_frames(4)
+	main.call("_show_result")
+	await _wait_frames(4)
+	var replay_handoff := _button_with_text(main, "查看第2章新战线")
+	_check(
+		replay_handoff != null,
+		"replaying the chapter boss after claiming both gifts routes forward instead of reopening a spent reward"
+	)
+	if replay_handoff != null:
+		replay_handoff.pressed.emit()
+		await _wait_frames(4)
+	_check(
+		String(main.get("selected_stage_id")) == "stage_2_1",
+		"completed chapter-one reward path lands on the first chapter-two stage"
+	)
 	main.set("legion_tab", "roster")
 	main.call("_show_legion")
 	await _wait_frames(4)

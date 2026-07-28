@@ -44,6 +44,35 @@ func _run() -> void:
 		"hero_id": initial_assault.hero_id,
 	})
 	state = game.current_state()
+	state.stage_progress["cleared_stages"] = [
+		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4",
+	]
+	state.stage_progress["highest_unlocked_stage"] = "stage_1_5"
+	main.set("selected_chapter", 1)
+	main.set("selected_stage_id", "stage_1_5")
+	main.call("_show_map")
+	await _wait_frames(3)
+	var locked_attack := main.find_child("AttackButton", true, false) as Button
+	var growth_route := main.find_child("GrowthButton", true, false) as Button
+	_check(
+		locked_attack != null
+		and locked_attack.disabled
+		and locked_attack.text.contains("2★成长"),
+		"chapter boss visibly blocks attack until the first qualitative growth route"
+	)
+	_check(
+		growth_route != null
+		and growth_route.visible
+		and growth_route.text.contains("培养"),
+		"the blocked boss keeps the exact recovery action visible"
+	)
+	main.call("_start_stage_battle", "stage_1_5")
+	await _wait_frames(3)
+	_check(
+		main.find_child("BattleHudScreen", true, false) == null
+		and main.find_child("LegionScreen", true, false) != null,
+		"alternate battle entry cannot bypass the visible chapter-one growth contract"
+	)
 	state.onboarding["active_index"] = 5
 	state.economy.hero_shards = maxi(4, int(state.economy.hero_shards))
 	main.call("_follow_task", "legion")

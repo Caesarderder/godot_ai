@@ -2336,6 +2336,12 @@ func _goals_view(state: RefCounted) -> Dictionary:
 			"complete": complete,
 			"claimed": claimed,
 		})
+	var welfare := NewPlayerWelfareService.snapshot(state)
+	for hero in state.roster:
+		if String(hero.archetype_id) in ["assault", "armored"] and int(hero.star) == 1:
+			welfare["recommended_hero_id"] = String(hero.hero_id)
+			welfare["recommended_hero_name"] = String(hero.display_name)
+			break
 	var xp := int(state.meta_progression.commander_xp)
 	var commander_level := MetaCatalog.commander_level(xp)
 	var commander_claimable := 0
@@ -2353,7 +2359,7 @@ func _goals_view(state: RefCounted) -> Dictionary:
 			"cleared": cleared.size(),
 			"chapters_copy": "  ·  ".join(chapter_parts),
 		},
-		"new_player_welfare": NewPlayerWelfareService.snapshot(state),
+		"new_player_welfare": welfare,
 		"starter_gifts": StarterGiftService.snapshot(state),
 		"missions_unlocked": bool(unlock_state["missions"]),
 		"weekly_unlocked": bool(unlock_state["weekly"]),
@@ -2445,6 +2451,7 @@ func _on_goals_action_requested(action_id: String, payload: Dictionary) -> void:
 		"open_smuggled_logistics_case":
 			_open_smuggled_logistics_case()
 		"open_legion_for_welfare":
+			legion_selected_hero_id = String(payload.get("hero_id", ""))
 			legion_tab = "roster"
 			_show_legion()
 
@@ -2491,6 +2498,17 @@ func _achievement_row(state: RefCounted, definition: Dictionary) -> Control:
 
 
 func _start_battle() -> void:
+	if (
+		selected_stage_id == "stage_1_5"
+		and not (game.current_state().stage_progress.get("cleared_stages", []) as Array).has(
+			selected_stage_id
+		)
+		and _boss_growth_route_id().is_empty()
+	):
+		legion_tab = "roster"
+		_notify("核心巨炮需要首次成长验证：先把冲锋或装甲升至2★")
+		_show_legion()
+		return
 	var snapshots := _battle_snapshots()
 	if snapshots.is_empty():
 		_notify("当前编队没有可出战角色")
@@ -2900,6 +2918,10 @@ func _show_result() -> void:
 			hurdle_proof = _boss_mastery_proof_copy(last_battle_runtime_result)
 	var next_stage_id := String(event.get("next_stage_id", ""))
 	var onboarding := OnboardingService.snapshot(game.current_state())
+	var welfare_snapshot := NewPlayerWelfareService.snapshot(game.current_state())
+	var faction_recruit_claimed := ResearchBreakthroughService.is_faction_claimed(
+		game.current_state()
+	)
 	var campaign_objective := CampaignObjectiveProjection.derive(
 		game.current_state(),
 		onboarding
@@ -2943,10 +2965,21 @@ func _show_result() -> void:
 		qualification = "新设计图纸已入库，角色尚未研发"
 		primary_label = "前往研究所研发"
 		primary_action = "research_lab"
-	elif chapter_one_complete:
+	elif chapter_one_complete and bool(welfare_snapshot.get("claimable", false)):
+		qualification = "%s\n开服庆典礼包已解锁 · 黑金升星核心可强化一名自选1★角色" % (
+			_chapter_one_unlock_copy(next_stage_id)
+		)
+		primary_label = "领取开服庆典礼包"
+		primary_action = "welfare"
+	elif chapter_one_complete and not faction_recruit_claimed:
 		qualification = _chapter_one_unlock_copy(next_stage_id)
 		primary_label = "领取阵营起手十连"
 		primary_action = "faction_recruit"
+	elif chapter_one_complete:
+		qualification = "首章奖励均已领取 · 第2章阵营验证战线已开放"
+		primary_label = "查看第2章新战线"
+		primary_action = "map_stage"
+		primary_payload = {"stage_id": "stage_2_1"}
 	elif (
 		chapter_boss_complete
 		and completed_chapter == 3
@@ -3209,6 +3242,9 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 		"faction_recruit":
 			legion_tab = "recruit"
 			_show_legion()
+		"welfare":
+			goals_tab = "action"
+			_show_goals()
 		"faction_doctrine":
 			_show_blueprints()
 		"blueprints":
@@ -4106,6 +4142,15 @@ func _assign_formation_slot(slot: String, hero_id: String) -> void:
 		and deployed_hero != null
 		and String(deployed_hero.archetype_id) == selected_core
 	):
+		selected_stage_id = String(
+			game.current_state().stage_progress.get(
+				"highest_unlocked_stage",
+				"stage_2_1"
+			)
+		)
+		selected_chapter = int(
+			StageCatalog.stage(selected_stage_id).get("chapter", 2)
+		)
 		_notify("阵营初阵已成 · %s已部署 · 去2-1验证%s" % [
 			String(deployed_hero.display_name),
 			FactionCatalog.playstyle_for(selected_core),
@@ -4176,6 +4221,9 @@ func _follow_task(
 			elif not hero_id.is_empty():
 				legion_selected_hero_id = hero_id
 				legion_tab = "roster"
+			_show_legion()
+		"recruit":
+			legion_tab = "recruit"
 			_show_legion()
 		"research":
 			_open_research_lab()

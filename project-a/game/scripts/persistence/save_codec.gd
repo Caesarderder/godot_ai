@@ -124,6 +124,7 @@ static func decode(data: Variant) -> Dictionary:
 		if not migration_input_error.is_empty():
 			return {"ok": false, "error": migration_input_error}
 	dict = _upgrade_legacy_v5_factory_loop(dict)
+	_normalize_direct_research_lab_eligibility(dict)
 	var schema_error := _validate_game_schema(dict)
 	if not schema_error.is_empty():
 		return {"ok": false, "error": schema_error}
@@ -132,6 +133,20 @@ static func decode(data: Variant) -> Dictionary:
 	if not errors.is_empty():
 		return {"ok": false, "error": "; ".join(errors)}
 	return {"ok": true, "state": state}
+
+
+static func _normalize_direct_research_lab_eligibility(data: Dictionary) -> void:
+	if typeof(data.get("factory")) != TYPE_DICTIONARY:
+		return
+	var factory := data["factory"] as Dictionary
+	if typeof(factory.get("facilities")) != TYPE_DICTIONARY:
+		return
+	var facilities := factory["facilities"] as Dictionary
+	if typeof(facilities.get("research_lab")) != TYPE_INT or int(facilities["research_lab"]) != 0:
+		return
+	if typeof(factory.get("eligible_facilities")) != TYPE_DICTIONARY:
+		return
+	(factory["eligible_facilities"] as Dictionary)["research_lab"] = true
 
 
 static func _upgrade_legacy_v5_factory_loop(data: Dictionary) -> Dictionary:

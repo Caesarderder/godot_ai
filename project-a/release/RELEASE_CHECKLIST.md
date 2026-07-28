@@ -57,11 +57,15 @@ State labels:
   reinforcements, then clicks the rendered counterattack CTA and operates all three hero cards until the second
   1-4 attempt wins. The same journey chooses and commissions a resource facility, claims its first real output,
   compares both verified growth routes, commits an assault two-star choice, defeats 1-5, records the role and
-  cannon-suppression contribution, and opens chapter-two reconnaissance without auto-starting 2-1. It then
-  follows the safe growth route, researches G-Man skill II through the rendered member card, proves the exact
-  80/6/1/24/16/20 transaction, and returns to 2-1 reconnaissance; IndexedDB proves every chapter-one clear,
-  one boss attempt, the 2-1 unlock, permanent skill level two, and zero 2-1 attempts with no runtime, console,
-  or network failures
+  cannon-suppression contribution, and opens chapter-two reconnaissance without auto-starting 2-1. It then claims
+  the faction ten-pull, chooses one of two equal-rarity cores, completes that core's timed research, deploys the
+  permanent hero, clears 2-1/2-2/2-3, and reaches a real one-star pressure result at 2-4 or 2-5. The visible
+  recovery objective focuses the exact roster card and spends only that archetype's fragments to reach two stars.
+  Candidate `7c7497d` selected Sonic, recorded 60 fragments before a 20-fragment upgrade, and finished with the
+  same permanent hero at two stars after 736.866 seconds, with no runtime, console, or network failures.
+  It used 558 hero-card touches plus 34 visible squad-burst touches (592 total, 0.803 per second); the boss
+  segment used only the visible squad-burst control. This automated rate is a reachability ceiling, not evidence
+  of human comprehension, immersion, or fun
   (`node tools/run_web_first_battle_smoke.mjs`).
 - [ ] Firefox desktop smoke.
 - [ ] Optional desktop Safari `WEBKIT_PREFLIGHT` against the frozen candidate; record the exact Safari version.
@@ -86,5 +90,8 @@ State labels:
 - [ ] Final legal review for font notice, fan-content/IP risk, store copy, and every asset license.
 - [x] A deterministic local rollback artifact is bound to the clean candidate and passes isolated restore,
   full-file SHA256 comparison, and `release_audit.py`.
+  Candidate `7c7497d50d167adf312d1079970cb81dabdc3a61` rehearsed as
+  `project-a-web-7c7497d50d16.tar.gz`, SHA256
+  `fe300378699b46742942f3107687026778b34c4e8777b3ac370562a510dcaea4` (16 files).
 - [ ] Production monitoring thresholds, named incident owner, hosting/CDN rollback operation, and production-origin
   rollback rehearsal.
