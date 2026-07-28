@@ -764,7 +764,7 @@ async function main() {
 		}
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-faction-recruit-result-844x390.png");
-		await touch(cdp, 185, 288);
+		await touch(cdp, 185, 258);
 		const factionChoice = await waitFor(
 			"explicit faction-core choice persisted to IndexedDB",
 			async () => {
