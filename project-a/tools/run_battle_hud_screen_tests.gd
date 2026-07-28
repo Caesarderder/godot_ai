@@ -522,6 +522,29 @@ func _run() -> void:
 			and hud.status_label.text.contains("开盾或治疗"),
 		"stage 4-1 turns focus fire into a timed defensive decision"
 	)
+	hud.configure([{
+		"hero_id": "hero_test",
+		"display_name": "测试先锋",
+		"max_hp": 200,
+		"skill_id": "siege_shield",
+		"star": 2,
+	}], true, false, false, true)
+	_check(
+		hud.status_label.get_theme_font_size("font_size") >= 18,
+		"compact battle keeps the current protocol or threat line readable"
+	)
+	for action_name in [
+		"BattlePauseButton",
+		"BattleSkillModeButton",
+		"BattleBurstButton",
+		"BattleRetreatButton",
+	]:
+		var compact_action := hud.find_child(action_name, true, false) as Button
+		_check(
+			compact_action != null
+				and compact_action.get_theme_font_size("font_size") >= 16,
+			"compact battle keeps %s label readable" % action_name
+		)
 	hud.queue_free()
 	await process_frame
 	if failures.is_empty():

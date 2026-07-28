@@ -2044,6 +2044,7 @@ func _blueprint_view() -> Dictionary:
 			node["action_name"] = "UnlockFoundationalBlueprint_%s" % recipe_id.replace(".", "_")
 		nodes.append(node)
 	return {
+		"compact": _layout_profile() == "compact_landscape",
 		"branch": blueprint_branch,
 		"branch_title": String(branch_data.get("title", "研究分支")),
 		"branch_summary": String(branch_data.get("summary", "比较职责与成长质变")),
@@ -2499,7 +2500,8 @@ func _start_battle() -> void:
 		snapshots,
 		battle_manual_skills,
 		first_skill_tutorial,
-		reinforcement_rally
+		reinforcement_rally,
+		_layout_profile() == "compact_landscape"
 	)
 	if reinforcement_rally:
 		audio_director.play_cue(&"success", -12.0)

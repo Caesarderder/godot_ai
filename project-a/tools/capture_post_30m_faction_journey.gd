@@ -431,10 +431,36 @@ func _capture() -> void:
 	await _wait_frames(10)
 	if not _save("res://artifacts/ui-faction-chapter-two-proof-844x390.png"):
 		return
+	var chapter_three_cta := _button_with_text(main, "查看第3章新战线")
+	if chapter_three_cta == null:
+		_fail("chapter-two completion action unavailable")
+		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _control_is_unobscured(chapter_three_cta, main):
+		_fail("chapter-two completion action is clipped or obscured at 568x320")
+		return
+	if not _save("res://artifacts/ui-faction-chapter-two-proof-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	main.call("_show_blueprints")
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-tech-preview-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _tree_has_text(main, "3章起自动生效"):
+		_fail("faction protocol activation timing is not readable at 568x320")
+		return
+	if not _save("res://artifacts/ui-faction-tech-preview-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	main.call("_show_result")
 	await _wait_frames(6)
 	var next_chapter := main.find_child("PrimaryAction", true, false) as Button
@@ -511,6 +537,25 @@ func _capture() -> void:
 	await _wait_frames(2)
 	if not _save("res://artifacts/ui-faction-tech-activated-battle-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	var skill_mode_action := main.find_child("BattleSkillModeButton", true, false) as Button
+	var pause_action := main.find_child("BattlePauseButton", true, false) as Button
+	var retreat_action := main.find_child("BattleRetreatButton", true, false) as Button
+	if (
+		not _tree_has_text(main, "火力标定协议")
+		or not _control_is_unobscured(skill_mode_action, main)
+		or not _control_is_unobscured(pause_action, main)
+		or not _control_is_unobscured(retreat_action, main)
+	):
+		_fail("faction protocol or battle controls are clipped at 568x320")
+		return
+	if not _save("res://artifacts/ui-faction-tech-activated-battle-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	battle_session.tick_index = 59
 	battle_world.call("_process", 0.2)
 	await _wait_frames(2)
@@ -662,6 +707,17 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 		if String(hero.archetype_id) == archetype_id:
 			return hero
 	return null
+
+
+func _tree_has_text(node: Node, fragment: String) -> bool:
+	if node is Label and (node as Label).text.contains(fragment):
+		return true
+	if node is Button and (node as Button).text.contains(fragment):
+		return true
+	for child in node.get_children():
+		if _tree_has_text(child, fragment):
+			return true
+	return false
 
 
 func _button_with_text(node: Node, fragment: String) -> Button:

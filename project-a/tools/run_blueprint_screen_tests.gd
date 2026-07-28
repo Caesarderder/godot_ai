@@ -147,6 +147,34 @@ func _run() -> void:
 	var claim := screen.find_child("ClaimFoundationalBlueprint", true, false) as Button
 	claim.pressed.emit()
 	_check(requested["id"] == "claim_research", "completed research emits claim action")
+	screen.call("configure", {
+		"compact": true,
+		"branch": "flying",
+		"branch_title": "飞行枝",
+		"core_status": "阵营科技已经激活",
+		"breakthrough": {},
+		"results": [],
+		"faction_tech_preview": {
+			"tier": 1,
+			"faction": "远程轰炸",
+			"title": "火力标定协议",
+			"effect": "首个战区结构承伤提高25%",
+			"activation_chapter": 3,
+		},
+		"faction_tech_choices": [],
+		"nodes": [],
+	})
+	var tech_identity := screen.get_node("%Identity") as Label
+	var tech_effect := screen.get_node("%Effect") as Label
+	_check(
+		tech_identity.get_theme_font_size("font_size") >= 16
+			and tech_effect.get_theme_font_size("font_size") >= 16,
+		"compact protocol preview enlarges the unlocked identity and effect instead of shrinking all details"
+	)
+	_check(
+		(screen.get_node("%BlueprintBackButton") as Button).get_theme_font_size("font_size") >= 16,
+		"compact protocol preview keeps its return action label readable"
+	)
 
 	screen.queue_free()
 	host.queue_free()

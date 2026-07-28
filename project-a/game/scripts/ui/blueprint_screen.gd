@@ -80,6 +80,16 @@ func configure(view: Dictionary) -> void:
 
 
 func _apply_view() -> void:
+	var compact := bool(_view.get("compact", false))
+	var key_font_size := 16 if compact else 11
+	tech_identity.add_theme_font_size_override("font_size", key_font_size)
+	tech_effect.add_theme_font_size_override("font_size", key_font_size)
+	back_button.add_theme_font_size_override("font_size", 16 if compact else 14)
+	for entry in BRANCHES:
+		var responsive_tab := tabs.get_node(
+			"Blueprint%sTab" % String(entry[0]).capitalize()
+		) as Button
+		responsive_tab.add_theme_font_size_override("font_size", 16 if compact else 14)
 	var selected := String(_view.get("branch", "ordinary"))
 	for entry in BRANCHES:
 		var id := String(entry[0])

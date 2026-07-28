@@ -57,8 +57,12 @@ func configure(
 	snapshots: Array[Dictionary],
 	manual_skills: bool,
 	first_skill_tutorial: bool = false,
-	reinforcement_rally: bool = false
+	reinforcement_rally: bool = false,
+	compact: bool = false
 ) -> void:
+	status_label.add_theme_font_size_override("font_size", 18 if compact else 16)
+	for action in [pause_button, skill_mode_button, burst_button, retreat_button]:
+		action.add_theme_font_size_override("font_size", 16 if compact else 14)
 	_manual_skills = manual_skills
 	_first_skill_tutorial = first_skill_tutorial
 	_first_skill_confirmed = false
