@@ -1217,6 +1217,7 @@ func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictio
 		"focus": proof_focus,
 		"attack_label": "验证%s核心" % String(hero.display_name),
 		"hero_id": String(hero.hero_id),
+		"force_primary_attack": true,
 	}
 
 

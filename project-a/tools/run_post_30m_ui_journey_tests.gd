@@ -245,7 +245,21 @@ func _run() -> void:
 		main,
 		"验证%s核心" % String(faction_hero.display_name)
 	)
-	_check(proof_attack != null and proof_attack.is_visible_in_tree(), "reconnaissance keeps one core-specific battle action visible")
+	_check(
+		proof_attack != null
+			and proof_attack.is_visible_in_tree()
+			and proof_attack.get_global_rect().end.y <= float(root.size.y)
+			and (
+				(proof_attack.get_theme_stylebox("normal") as StyleBoxFlat).bg_color
+					== Color("#e5a84b")
+			),
+		"reconnaissance keeps one gold core-specific battle action fully inside the first viewport"
+	)
+	var proof_growth := main.find_child("GrowthButton", true, false) as Button
+	_check(
+		proof_growth == null or not proof_growth.is_visible_in_tree(),
+		"the three-battle proof does not compete with a generic growth action"
+	)
 	main.set("last_battle_runtime_result", {
 		"ticks": 310,
 		"structures_destroyed": 3,
