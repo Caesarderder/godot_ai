@@ -1328,6 +1328,11 @@ func _legion_view() -> Dictionary:
 	var deployed_hero: RefCounted = state.hero_by_id(deployed_id)
 	var deployed_power := CombatPower.hero_power(deployed_hero) if deployed_hero != null else 0
 	var deployed_archetypes: Array[String] = []
+	var formation_focus_hero_id := (
+		legion_selected_hero_id
+		if legion_tab == "formation"
+		else ""
+	)
 	for deployed_hero_id in state.formation.hero_ids():
 		var formation_hero: RefCounted = state.hero_by_id(String(deployed_hero_id))
 		if formation_hero != null:
@@ -1340,6 +1345,8 @@ func _legion_view() -> Dictionary:
 			or not deployed_archetypes.has("armored")
 		)
 	)
+	if first_formation_active:
+		formation_focus_hero_id = ""
 	var recommended_archetype := ""
 	if first_formation_active:
 		recommended_archetype = "armored" if not deployed_archetypes.has("armored") else "assault"
@@ -1355,11 +1362,6 @@ func _legion_view() -> Dictionary:
 	)
 	var recruit_event := RecruitmentResultProjection.latest_event(state)
 	var focus_archetype := RecruitmentResultProjection.selected_faction_core(state)
-	var formation_focus_hero_id := (
-		legion_selected_hero_id
-		if legion_tab == "formation"
-		else ""
-	)
 	if focus_archetype.is_empty() and not bool(recruit_event.get("requires_core_choice", false)):
 		for result_value in recruit_event.get("results", []):
 			var result := result_value as Dictionary
