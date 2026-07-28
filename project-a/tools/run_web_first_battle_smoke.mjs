@@ -634,7 +634,7 @@ async function main() {
 		await touch(cdp, 630, 322);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-industrial-choice-844x390.png");
-		await touch(cdp, 600, 335);
+		await touch(cdp, 668, 365);
 		await waitFor(
 			"new-game supply gift funds the first industrial facility",
 			async () => {
