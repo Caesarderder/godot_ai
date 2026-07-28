@@ -72,6 +72,9 @@ func _apply_configuration() -> void:
 	status_label.add_theme_color_override("font_color", GREEN if _cleared else GOLD)
 	threat_summary.text = String(_config.get("threat_summary", "联盟守军正在集结。"))
 	var faction_proof := _report.get("faction_proof", {}) as Dictionary
+	var faction_protocol_preview := (
+		_report.get("faction_protocol_preview", {}) as Dictionary
+	)
 	var formation_plan := _report.get("formation_plan", {}) as Dictionary
 	if not faction_proof.is_empty():
 		decision_hint.text = "%s\n%s" % [
@@ -79,6 +82,20 @@ func _apply_configuration() -> void:
 			String(faction_proof.get("focus", "")),
 		]
 		decision_hint.add_theme_color_override("font_color", CYAN)
+	elif not faction_protocol_preview.is_empty():
+		decision_hint.text = "阵营科技待命 · Tier %d「%s」· 开战自动生效\n%s" % [
+			int(faction_protocol_preview.get("tier", 1)),
+			String(faction_protocol_preview.get("title", "阵营协议")),
+			(
+				"阵容核对 · 已覆盖：%s｜待补：%s" % [
+					String(formation_plan.get("covered_copy", "无")),
+					String(formation_plan.get("missing_copy", "无")),
+				]
+				if not formation_plan.is_empty()
+				else String(faction_protocol_preview.get("effect", ""))
+			),
+		]
+		decision_hint.add_theme_color_override("font_color", GOLD)
 	elif formation_plan.is_empty():
 		decision_hint.text = "反制选择：%s" % String(
 			_config.get("counter_hint", "观察敌方结构和阵容职责后再决定成长路线。")

@@ -1142,6 +1142,17 @@ func _show_map() -> void:
 	var faction_proof := _faction_proof_stage_context(state, selected_stage_id)
 	if not faction_proof.is_empty():
 		selected_report["faction_proof"] = faction_proof
+	var active_protocol := _active_faction_protocol(state)
+	if (
+		not active_protocol.is_empty()
+		and int(selected_config.get("chapter", 1))
+			>= int(active_protocol.get("activation_chapter", 3))
+	):
+		selected_report["faction_protocol_preview"] = {
+			"title": String(active_protocol.get("title", "阵营协议")),
+			"effect": String(active_protocol.get("effect", "")),
+			"tier": int(active_protocol.get("tier", 1)),
+		}
 	var war_zone := WarZoneScreenScene.instantiate()
 	war_zone.configure(
 		highest_chapter,

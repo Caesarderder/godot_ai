@@ -700,6 +700,16 @@ func _run() -> void:
 			and _tree_has_text(main, "待补"),
 		"next-chapter reconnaissance translates static recommendations into the player's current formation plan"
 	)
+	var active_preview := main.call(
+		"_active_faction_protocol",
+		game.current_state()
+	) as Dictionary
+	_check(
+		_tree_has_text(main, "阵营科技待命")
+			and _tree_has_text(main, String(active_preview.get("title", "")))
+			and _tree_has_text(main, "开战自动生效"),
+		"3-1 reconnaissance bridges the chapter reward to its imminent first-battle activation"
+	)
 	main.call("_show_blueprints")
 	await _wait_frames(4)
 	var tech_preview := main.find_child("FactionTechPreview", true, false) as Control

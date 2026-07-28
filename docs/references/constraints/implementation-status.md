@@ -513,6 +513,11 @@ Shell 只在 command 刚返回且 `last_recruit_results` 存在时投影一次�
 均从 3-1 起真实进入 `BattleSession`，只在同阵营角色已编入时触发。HUD 首 tick 点名协议与
 影响对象，结算记录实际影响数；`ui-faction-tech-activated-battle-844x390.png` 证明 844×390
 首屏可见。该规则不增加静态 CP、隐藏倍率或新存档状态。
+2-5 结算与 3-1 首 tick 之间此前仍有侦察断层：进入新章只显示通用阵容核对，刚解锁的协议消失。
+战区投影现从 durable 核心恢复当前协议，在激活章节的侦察首屏显示 Tier、协议名称和“开战自动生效”，
+下一行保留阵容已覆盖/待补；能力比与培养/试探动作仍来自原战力报告。
+`ui-chapter-three-reorientation-844x390.png` 与 `ui-chapter-three-reorientation-568x320.png`
+证明长期奖励从结算、侦察到战斗首 tick 连续可见。
 第三章原本只有遭遇变化，随后虽会自动获得 Tier 2，却仍没有玩家决策。现在 3-5 首通只开放
 “全队协同 / 阵营专精”二选一：前者扩散收益，后者牺牲覆盖换取更高强度或时长；选择写入 durable
 command receipt 且不能被第二次选择覆盖，未选择时第四章不会越权获得 Tier 2。

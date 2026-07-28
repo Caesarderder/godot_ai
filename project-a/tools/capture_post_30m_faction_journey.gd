@@ -400,6 +400,14 @@ func _capture() -> void:
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-chapter-three-reorientation-844x390.png"):
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if not _save("res://artifacts/ui-chapter-three-reorientation-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
 	main.set("battle_manual_skills", true)
 	main.call("_start_stage_battle", "stage_2_1")
 	await _wait_frames(5)
