@@ -2985,6 +2985,13 @@ func _show_result() -> void:
 	else:
 		primary_label = "培养角色"
 		primary_action = "legion"
+	var materials_guidance := _battle_materials_copy(onboarding)
+	if not materials_guidance.is_empty():
+		qualification = (
+			materials_guidance
+			if qualification.is_empty()
+			else "%s\n%s" % [qualification, materials_guidance]
+		)
 	var protocol_growth := _faction_protocol_result_copy(last_battle_runtime_result)
 	if faction_proof_stage:
 		hurdle_proof = _faction_opening_proof_copy(
@@ -3015,7 +3022,7 @@ func _show_result() -> void:
 		"outcome_color": "green" if won else ("gold" if outcome == "retreat" else "red"),
 		"reward_headline": _battle_reward_headline(reward, legion_data_gain),
 		"hero_experience": _hero_experience_copy(event, last_battle_runtime_result),
-		"materials": "工业材料由工厂设施持续生产；攻城不直接掉落",
+		"materials": "",
 		"mission_progress": _onboarding_settlement_copy(event, onboarding),
 		"breakthrough": "",
 		"unlocked_hero": unlocked_copy,
@@ -3055,6 +3062,15 @@ func _battle_reward_headline(reward: Dictionary, legion_data_gain: int) -> Strin
 	if legion_data_gain > 0:
 		gains.append("军团数据 +%d" % legion_data_gain)
 	return "    ".join(gains)
+
+
+func _battle_materials_copy(onboarding: Dictionary) -> String:
+	if (
+		not bool(onboarding.get("finished", false))
+		and String(onboarding.get("task_id", "")) == "operation.choose_growth"
+	):
+		return "工业成长已开放 · 建造资源设施即可持续获得工业材料"
+	return ""
 
 
 func _chapter_two_opening_clear_count(state: RefCounted) -> int:
@@ -3381,7 +3397,7 @@ func _battle_debrief_copy(
 		return "全员安全撤退；调整阵位、技能或成长投资后即可再次挑战。"
 	if outcome != "victory":
 		return "攻势终止于第 %d 阶段；强化角色或工厂后可无损再战。" % (int(runtime_result.get("stage_reached", 0)) + 1)
-	return "军团完成占领并无损返回；可连战，也可立即投入战果进行成长。"
+	return ""
 
 
 func _chapter_two_mechanic_debrief(

@@ -864,12 +864,28 @@ func _run() -> void:
 		"4-1 settlement celebrates its real gold reward without a zero-value resource"
 	)
 	_check(
+		not _tree_has_text(main, "工业材料由工厂设施持续生产")
+			and not _tree_has_text(main, "工业成长已开放"),
+		"later-chapter results retire the completed industrial-material tutorial"
+	)
+	_check(
 		String(main.call("_battle_reward_headline", {"gold": 80}, 8))
 			== "金币 +80    军团数据 +8"
 			and String(main.call("_battle_reward_headline", {"gold": 0}, 8))
 				== "军团数据 +8"
 			and String(main.call("_battle_reward_headline", {"gold": 0}, 0)).is_empty(),
 		"battle reward projection handles dual, data-only, and zero-resource states without noise"
+	)
+	_check(
+		String(main.call("_battle_materials_copy", {
+			"finished": false,
+			"task_id": "operation.choose_growth",
+		})).contains("建造资源设施")
+			and String(main.call("_battle_materials_copy", {
+				"finished": true,
+				"task_id": "operation.choose_growth",
+			})).is_empty(),
+		"industrial-material source appears only during its authored onboarding action"
 	)
 	_check(
 		chapter_four_action != null

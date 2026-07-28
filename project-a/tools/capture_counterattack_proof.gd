@@ -23,7 +23,13 @@ func _capture() -> void:
 	var state: RefCounted = game.current_state()
 	state.factory.facilities["research_lab"] = 1
 	state.factory.facility_placements["research_lab"] = [2, 1]
-	main.call("_claim_research_breakthrough")
+	main.call("_command", "claim_foundational_signal", {})
+	for entry in [["ordinary.assault", 1000, 1045], ["heavy.armored", 1045, 1090]]:
+		main.call("_command", "unlock_foundational_blueprint", {
+			"recipe_id": String(entry[0]),
+			"now_unix": int(entry[1]),
+		})
+		main.call("_command", "claim_blueprint_research", {"now_unix": int(entry[2])})
 	for _frame in 4:
 		await process_frame
 	state = game.current_state()
@@ -70,6 +76,15 @@ func _capture() -> void:
 		return
 	var output := "res://artifacts/ui-counterattack-proof-844x390.png"
 	var error := root.get_texture().get_image().save_png(output)
+	if error != OK:
+		_fail(error_string(error))
+		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	for _frame in 8:
+		await process_frame
+	var compact_output := "res://artifacts/ui-counterattack-proof-568x320.png"
+	error = root.get_texture().get_image().save_png(compact_output)
 	if error != OK:
 		_fail(error_string(error))
 		return
