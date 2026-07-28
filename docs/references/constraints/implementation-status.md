@@ -549,6 +549,12 @@ save roundtrip，`run_campaign_objective_projection_tests.gd` 验证刷新后的
 `ui-faction-tier-two-tech-844x390.png` 与
 `ui-faction-tier-two-battle-844x390.png` 提供连续视觉证据。路线偏好仍需真人盲测，不能由确定性
 测试宣称两者主观价值相等。
+3-5 此前虽然能打开 Tier 2 选择，却跳过了第三章机制复盘，玩家看不到永久抉择由哪场掌握证明换来。
+结算现从同一 BattleSession 结果逐项汇总信号消失、精英换位、屏幕控制与监军护盾次数，并明确
+“转火、重锁目标与破盾验证”；唯一主操作仍为 Tier 2 科技方向。新增
+`ui-chapter-three-complete-844x390.png` 与 `ui-chapter-three-complete-568x320.png`
+证明章节考试、永久选择提示和主按钮在两个目标横屏中同时可读，capture 通过真实结算按钮进入
+科技蓝图，不再直接跳过章节交接。
 4-1 战中兑现后原战报只显示“协议影响 N 个目标”，玩家无法把结果归因到刚做出的永久路线选择，
 普通胜利按钮还会直接用“进攻下一城镇”跳过新机制侦察。现在战报从 durable doctrine 与实际
 BattleSession 结果共同投影 Tier、全队协同/阵营专精、协议名、原始覆盖/强度取舍和本局真实受益

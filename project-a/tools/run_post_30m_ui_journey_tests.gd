@@ -622,6 +622,21 @@ func _run() -> void:
 			and tv_debrief.contains("先击穿护盾"),
 		"stage 3-4 result explains its combined TV modules and next target priority"
 	)
+	var tv_exam_debrief := String(main.call("_battle_debrief_copy", {
+		"tv_signal_vanish_count": 2,
+		"tv_teleport_count": 3,
+		"tv_control_count": 4,
+		"tv_shield_count": 5,
+	}, "victory", "stage_3_5"))
+	_check(
+		tv_exam_debrief.contains("章节考试")
+			and tv_exam_debrief.contains("信号消失2次")
+			and tv_exam_debrief.contains("换位3次")
+			and tv_exam_debrief.contains("控制4次")
+			and tv_exam_debrief.contains("护盾5次")
+			and tv_exam_debrief.contains("转火、重锁目标与破盾验证"),
+		"stage 3-5 settlement closes every learned TV module before the permanent doctrine choice"
+	)
 	var alliance_debrief := String(main.call("_battle_debrief_copy", {
 		"alliance_mark_count": 2,
 		"alliance_anti_air_count": 2,
@@ -758,9 +773,21 @@ func _run() -> void:
 		"structures_destroyed": 7,
 		"enemies_defeated": 9,
 		"stage_reached": 2,
+		"tv_signal_vanish_count": 2,
+		"tv_teleport_count": 3,
+		"tv_control_count": 4,
+		"tv_shield_count": 5,
 	})
 	main.call("_show_result")
 	await _wait_frames(4)
+	_check(
+		_tree_has_text(main, "章节考试")
+			and _tree_has_text(main, "信号消失2次")
+			and _tree_has_text(main, "换位3次")
+			and _tree_has_text(main, "控制4次")
+			and _tree_has_text(main, "护盾5次"),
+		"3-5 settlement visibly proves what the player mastered before asking for a doctrine"
+	)
 	var choose_tech_action := main.find_child("PrimaryAction", true, false) as Button
 	_check(
 		choose_tech_action != null

@@ -3446,12 +3446,21 @@ func _chapter_three_mechanic_debrief(
 	outcome: String,
 	stage_id: String
 ) -> String:
-	if not stage_id.begins_with("stage_3_") or stage_id == "stage_3_5":
+	if not stage_id.begins_with("stage_3_"):
 		return ""
 	var vanish_count := int(runtime_result.get("tv_signal_vanish_count", 0))
 	var teleport_count := int(runtime_result.get("tv_teleport_count", 0))
 	var control_count := int(runtime_result.get("tv_control_count", 0))
 	var shield_count := int(runtime_result.get("tv_shield_count", 0))
+	if stage_id == "stage_3_5":
+		var prefix := "章节考试" if outcome == "victory" else "失败归因"
+		return "%s · 信号消失%d次 / 换位%d次 / 控制%d次 / 护盾%d次；你已完成转火、重锁目标与破盾验证。" % [
+			prefix,
+			vanish_count,
+			teleport_count,
+			control_count,
+			shield_count,
+		]
 	if vanish_count > 0:
 		return "信号战复盘 · 敌方消失并复现 %d 次；失去目标时转火，不必空等原目标。" % vanish_count
 	if teleport_count > 0:

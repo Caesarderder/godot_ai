@@ -580,7 +580,59 @@ func _capture() -> void:
 			cleared.append(stage_id)
 	state.stage_progress["cleared_stages"] = cleared
 	state.stage_progress["highest_unlocked_stage"] = "stage_4_1"
-	main.call("_show_blueprints")
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_3_5",
+			"next_stage_id": "stage_4_1",
+			"reward": {"gold": 74},
+			"hero_xp_each": 30,
+			"hero_xp_recipients": state.formation.hero_ids().size(),
+		},
+	})
+	main.set("last_battle_runtime_result", {
+		"ticks": 480,
+		"structures_destroyed": 7,
+		"enemies_defeated": 9,
+		"stage_reached": 2,
+		"tv_signal_vanish_count": 2,
+		"tv_teleport_count": 3,
+		"tv_control_count": 4,
+		"tv_shield_count": 5,
+	})
+	main.call("_show_result")
+	await _wait_frames(8)
+	if (
+		not _tree_has_text(main, "章节考试")
+		or not _tree_has_text(main, "信号消失2次")
+		or not _tree_has_text(main, "换位3次")
+		or not _tree_has_text(main, "控制4次")
+		or not _tree_has_text(main, "护盾5次")
+	):
+		_fail("chapter-three exam proof is missing from settlement")
+		return
+	if not _save("res://artifacts/ui-chapter-three-complete-844x390.png"):
+		return
+	var tier_two_handoff := _button_with_text(main, "选择 Tier 2")
+	if tier_two_handoff == null or not _control_is_unobscured(tier_two_handoff, main):
+		_fail("chapter-three settlement does not expose the Tier 2 handoff")
+		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.size = Vector2i(568, 320)
+	await _wait_frames(8)
+	if (
+		not _tree_has_text(main, "章节考试")
+		or not _control_is_unobscured(tier_two_handoff, main)
+	):
+		_fail("chapter-three proof or Tier 2 handoff is clipped at 568x320")
+		return
+	if not _save("res://artifacts/ui-chapter-three-complete-568x320.png"):
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
+	await _wait_frames(8)
+	tier_two_handoff.pressed.emit()
 	await _wait_frames(8)
 	if not _save("res://artifacts/ui-faction-tier-two-choice-844x390.png"):
 		return
