@@ -22,7 +22,67 @@ func _run() -> void:
 	state.factory.eligible_facilities["research_lab"] = true
 	state.factory.facilities["research_lab"] = 1
 	state.factory.facility_placements["research_lab"] = [2, 1]
-	_seed_foundational_research(main)
+	state.onboarding["active_index"] = 1
+	state.onboarding["progress"]["operation.keep_advancing/capture_1_2"] = 1
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "victory",
+			"stage_id": "stage_1_2",
+			"next_stage_id": "stage_1_3",
+			"reward": {"gold": 35},
+			"unlocked_blueprints": [{
+				"kind": "blueprint",
+				"recipe_id": "ordinary.assault",
+			}],
+		},
+	})
+	main.set("last_battle_runtime_result", {
+		"stage_reached": 2,
+		"structures_destroyed": 5,
+		"enemies_defeated": 6,
+	})
+	main.call("_show_result")
+	await _wait_frames(4)
+	var next_stage_cta := main.find_child("PrimaryAction", true, false) as Button
+	_check(
+		next_stage_cta != null
+			and next_stage_cta.text.contains("继续进攻 1-3"),
+		"stage 1-2 banks its blueprint without interrupting the authored two-stage advance"
+	)
+	state.onboarding["active_index"] = 3
+	main.set("last_settlement", {
+		"ok": true,
+		"event": {
+			"outcome": "defeat",
+			"stage_id": "stage_1_4",
+			"reward": {},
+		},
+	})
+	main.set("last_battle_runtime_result", {
+		"stage_reached": 1,
+		"structures_destroyed": 2,
+		"enemies_defeated": 3,
+	})
+	main.call("_show_result")
+	await _wait_frames(4)
+	var research_cta := main.find_child("PrimaryAction", true, false) as Button
+	_check(
+		research_cta != null
+			and research_cta.text.contains("研发冲锋马桶人"),
+		"1-4 defeat points to the exact first blueprint instead of generic cultivation (got: %s)" % (
+			research_cta.text if research_cta != null else "missing"
+		)
+	)
+	if research_cta != null:
+		research_cta.pressed.emit()
+		await _wait_frames(4)
+	_check(
+		String(main.get("blueprint_branch")) == "ordinary"
+			and main.find_child("FactionTechPreview", true, false) != null,
+		"1-4 recovery CTA opens the authored blueprint branch through the UI action boundary"
+	)
+	await _seed_foundational_research(main)
 	await _wait_frames(4)
 	state = game.current_state()
 	main.call("_open_breakthrough_formation")
@@ -88,11 +148,19 @@ func _hero_for(state: RefCounted, archetype_id: String) -> RefCounted:
 
 func _seed_foundational_research(main: Node) -> void:
 	main.call("_command", "claim_foundational_signal", {})
-	for entry in [["ordinary.assault", 1000, 1045], ["heavy.armored", 1045, 1090]]:
-		main.call("_command", "unlock_foundational_blueprint", {
-			"recipe_id": String(entry[0]), "now_unix": int(entry[1]),
-		})
-		main.call("_command", "claim_blueprint_research", {"now_unix": int(entry[2])})
+	main.call("_command", "unlock_foundational_blueprint", {
+		"recipe_id": "ordinary.assault", "now_unix": 1000,
+	})
+	main.call("_claim_foundational_blueprint")
+	await _wait_frames(4)
+	_check(
+		String(main.get("blueprint_branch")) == "heavy",
+		"claiming the first foundational hero keeps the player on the remaining research objective"
+	)
+	main.call("_command", "unlock_foundational_blueprint", {
+		"recipe_id": "heavy.armored", "now_unix": 1045,
+	})
+	main.call("_claim_foundational_blueprint")
 
 
 func _wait_frames(count: int) -> void:

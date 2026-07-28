@@ -2060,6 +2060,14 @@ func _blueprint_view() -> Dictionary:
 		"faction_tech_preview": faction_tech_preview,
 		"faction_tech_choices": faction_tech_choices,
 		"reduced_motion": bool(settings_store.reduced_motion),
+		"refresh_at_unix": (
+			FactoryService.blueprint_research_completes_at(active_research)
+			if (
+				not active_research.is_empty()
+				and now < FactoryService.blueprint_research_completes_at(active_research)
+			)
+			else 0
+		),
 		"nodes": nodes,
 	}
 
@@ -2085,6 +2093,8 @@ func _on_blueprint_action_requested(action_id: String, payload: Dictionary) -> v
 			_claim_foundational_blueprint()
 		"choose_faction_doctrine":
 			_choose_faction_doctrine(String(payload.get("doctrine_id", "")))
+		"refresh":
+			_show_blueprints()
 		"back":
 			_show_base()
 
@@ -2128,6 +2138,18 @@ func _claim_foundational_blueprint() -> void:
 	var result := _command("claim_blueprint_research", {"now_unix": int(Time.get_unix_time_from_system())})
 	if bool(result.get("ok", false)):
 		var hero_id := String((result.get("event", {}) as Dictionary).get("hero_id", ""))
+		var onboarding := OnboardingService.snapshot(game.current_state())
+		if (
+			not bool(onboarding.get("finished", false))
+			and String(onboarding.get("target", "")) == "research"
+		):
+			var next_recipe := FactoryCatalog.recipe(String(onboarding.get("recipe_id", "")))
+			_notify("%s已解锁 · 下一步：%s" % [
+				String((result.get("event", {}) as Dictionary).get("display_name", "基础马桶人")),
+				String(onboarding.get("cta_label", "继续研发下一张图纸")),
+			])
+			_open_blueprint_for_archetype(String(next_recipe.get("archetype_id", "")))
+			return
 		legion_tab = "formation"
 		formation_edit_slot = "troop_1"
 		for slot_id in ["troop_1", "troop_2", "troop_3", "troop_4", "troop_5"]:
@@ -2893,7 +2915,13 @@ func _show_result() -> void:
 		qualification = "已取得研究所建造资格"
 		primary_label = "返回基地建造研究所"
 		primary_action = "research_lab"
-	elif not unlocked_blueprints.is_empty():
+	elif (
+		not unlocked_blueprints.is_empty()
+		and (
+			bool(onboarding.get("finished", false))
+			or String(onboarding.get("target", "")) != "expedition"
+		)
+	):
 		qualification = "新设计图纸已入库，角色尚未研发"
 		primary_label = "前往研究所研发"
 		primary_action = "research_lab"
@@ -2957,6 +2985,14 @@ func _show_result() -> void:
 	elif not bool(onboarding.get("finished", false)) and String(onboarding.get("target", "")) == "legion":
 		primary_label = String(onboarding.get("cta_label", "比较成长路线"))
 		primary_action = "legion"
+	elif not bool(onboarding.get("finished", false)) and String(onboarding.get("target", "")) == "research":
+		var research_recipe := FactoryCatalog.recipe(String(onboarding.get("recipe_id", "")))
+		qualification = "研究所已建成 · 关卡图纸等待实体化"
+		primary_label = String(onboarding.get("cta_label", "研发永久援军"))
+		primary_action = "blueprints"
+		primary_payload = {
+			"archetype_id": String(research_recipe.get("archetype_id", "")),
+		}
 	elif not bool(onboarding.get("finished", false)) and String(onboarding.get("target", "")) == "factory":
 		primary_label = String(onboarding.get("cta_label", "前往工厂"))
 		primary_action = "factory"
@@ -3157,6 +3193,8 @@ func _on_result_action_requested(action_id: String, payload: Dictionary) -> void
 			_show_legion()
 		"faction_doctrine":
 			_show_blueprints()
+		"blueprints":
+			_open_blueprint_for_archetype(String(payload.get("archetype_id", "")))
 		"next_stage":
 			_start_stage_battle(String(payload.get("stage_id", "")))
 		"map_stage":

@@ -86,6 +86,7 @@ static func snapshot(state: RefCounted) -> Dictionary:
 		"cta_label": "领取行动战果" if completed and not claimed else String(first_incomplete.get("cta_label", "继续")),
 		"target": String(first_incomplete.get("target", "factory")),
 		"stage_id": String(first_incomplete.get("stage_target", "")),
+		"recipe_id": String(first_incomplete.get("recipe_id", "")),
 		"progress": _completed_objective_count(objectives),
 		"target_value": objectives.size(),
 		"objectives": objectives,

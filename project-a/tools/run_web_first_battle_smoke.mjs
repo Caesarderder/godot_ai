@@ -228,6 +228,7 @@ const READ_SAVE_EXPRESSION = `new Promise((resolve, reject) => {
 						facilities: parsed.factory?.facilities,
 						facilityPlacements: parsed.factory?.facility_placements,
 						facilityWork: parsed.factory?.facility_work,
+						blueprintResearch: parsed.factory?.blueprint_research,
 						materials: parsed.factory?.materials,
 						economy: {
 							toiletCoins: parsed.economy?.toilet_coins,
@@ -461,37 +462,6 @@ async function main() {
 		clearTimeout(stopSkillInput);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-battle-result-844x390.png");
-		const earlyUnexpectedConsoleErrors = consoleErrors.filter(
-			(line) => !line.includes("AudioContext") && !line.includes("was not allowed to start"),
-		);
-		if (exceptions.length || earlyUnexpectedConsoleErrors.length || failedRequests.length) {
-			throw new Error(`runtime errors: ${JSON.stringify({
-				exceptions,
-				consoleErrors: earlyUnexpectedConsoleErrors,
-				failedRequests,
-			})}`);
-		}
-		const openingBrowserVersion = await cdp.send("Browser.getVersion");
-		console.log("WEB_FIRST_BATTLE_SMOKE_PASS");
-		console.log(JSON.stringify({
-			candidate: candidate.revision,
-			browser: openingBrowserVersion.product,
-			viewport: VIEWPORT,
-			journey: "fresh profile builds the required research lab and clears 1-1",
-			researchLabBuilt: true,
-			openingStageCleared: true,
-			attempts: settledSave.attempts.stage_1_1,
-			skillCardTouchInputs: skillTouches,
-			elapsedMs: Date.now() - startedAt,
-			runtimeExceptions: exceptions.length,
-			unexpectedConsoleErrors: earlyUnexpectedConsoleErrors.length,
-			failedRequests: failedRequests.length,
-			evidence: [
-				"artifacts/browser-first-battle-844x390.png",
-				"artifacts/browser-first-battle-result-844x390.png",
-			],
-		}, null, 2));
-		return;
 
 		const stage12 = await continueBattle(
 			cdp,
@@ -513,70 +483,72 @@ async function main() {
 				&& Number(save.onboardingActiveIndex ?? -1) >= 3,
 			"browser-first-wall-defeat-844x390.png",
 		);
+		// The research lab already exists. The defeat CTA must now open the
+		// exact first stage-earned blueprint, then keep the second research
+		// objective focused until both permanent reinforcements exist.
 		await touch(cdp, 650, 240);
 		await new Promise((accept) => setTimeout(accept, 1000));
-		await touch(cdp, 670, 350);
-		await new Promise((accept) => setTimeout(accept, 600));
-		await touch(cdp, 280, 270);
-		await new Promise((accept) => setTimeout(accept, 600));
 		await screenshot(cdp, "browser-research-placement-ready-844x390.png");
-		await touch(cdp, 650, 365);
-		const researchConstruction = await waitFor(
-			"research lab construction persisted to IndexedDB",
+		await touch(cdp, 260, 287);
+		const assaultResearch = await waitFor(
+			"assault blueprint research persisted to IndexedDB",
 			async () => {
 				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
-				return save?.facilityWork?.facility_id === "research_lab"
-					&& save?.facilityWork?.work_type === "construction"
+				return save?.blueprintResearch?.recipe_id === "ordinary.assault"
 					? save
 					: null;
 			},
 			10000,
 			250,
 		);
-		await new Promise((accept) => setTimeout(accept, 500));
 		await screenshot(cdp, "browser-research-construction-started-844x390.png");
-		const completesAtUnix = Number(researchConstruction.facilityWork?.completes_at_unix ?? 0);
-		if (completesAtUnix <= 0) throw new Error("research construction has no completion time");
-		const waitForConstructionMs = Math.max(0, completesAtUnix * 1000 - Date.now() + 1200);
-		if (waitForConstructionMs > 90000) {
-			throw new Error(`research construction wait is unexpectedly long: ${waitForConstructionMs}ms`);
+		const assaultCompletesAt = Number(assaultResearch.blueprintResearch?.completes_at_unix ?? 0);
+		const assaultWaitMs = Math.max(0, assaultCompletesAt * 1000 - Date.now() + 1200);
+		if (assaultCompletesAt <= 0 || assaultWaitMs > 15000) {
+			throw new Error(`assault blueprint wait is invalid: ${assaultWaitMs}ms`);
 		}
-		await new Promise((accept) => setTimeout(accept, waitForConstructionMs));
+		await new Promise((accept) => setTimeout(accept, assaultWaitMs));
 		await screenshot(cdp, "browser-research-ready-to-claim-844x390.png");
-		const claimInput = setInterval(() => {
-			void touch(cdp, 650, 318);
-		}, 700);
-		let researchBuilt;
-		try {
-			await touch(cdp, 650, 318);
-			researchBuilt = await waitFor(
-				"completed research lab persisted to IndexedDB",
-				async () => {
-					const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
-					return Number(save?.facilities?.research_lab ?? 0) === 1
-						&& Object.keys(save?.facilityWork ?? {}).length === 0
-						? save
-						: null;
-				},
-				10000,
-				250,
-			);
-		} finally {
-			clearInterval(claimInput);
-		}
-		await new Promise((accept) => setTimeout(accept, 500));
+		await touch(cdp, 260, 287);
+		const assaultUnlocked = await waitFor(
+			"assault permanent hero persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.roster?.some((hero) => hero.archetypeId === "assault")
+					&& Object.keys(save?.blueprintResearch ?? {}).length === 0
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
 		await screenshot(cdp, "browser-research-lab-built-844x390.png");
-		await touch(cdp, 650, 320);
-		await new Promise((accept) => setTimeout(accept, 900));
+		await touch(cdp, 260, 287);
+		const armoredResearch = await waitFor(
+			"armored blueprint research persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return save?.blueprintResearch?.recipe_id === "heavy.armored"
+					? save
+					: null;
+			},
+			10000,
+			250,
+		);
 		await screenshot(cdp, "browser-research-breakthrough-ready-844x390.png");
-		await touch(cdp, 420, 257);
+		const armoredCompletesAt = Number(armoredResearch.blueprintResearch?.completes_at_unix ?? 0);
+		const armoredWaitMs = Math.max(0, armoredCompletesAt * 1000 - Date.now() + 1200);
+		if (armoredCompletesAt <= 0 || armoredWaitMs > 20000) {
+			throw new Error(`armored blueprint wait is invalid: ${armoredWaitMs}ms`);
+		}
+		await new Promise((accept) => setTimeout(accept, armoredWaitMs));
+		await touch(cdp, 260, 287);
 		const breakthrough = await waitFor(
-			"research breakthrough ten-pull persisted to IndexedDB",
+			"both permanent reinforcements persisted to IndexedDB",
 			async () => {
 				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
 				const archetypes = (save?.roster ?? []).map((hero) => hero.archetypeId);
-				return save?.onboardingClaimed?.["reward.research_breakthrough_ten"]
-					&& archetypes.includes("assault")
+				return archetypes.includes("assault")
 					&& archetypes.includes("armored")
 					? save
 					: null;
@@ -586,8 +558,6 @@ async function main() {
 		);
 		await new Promise((accept) => setTimeout(accept, 900));
 		await screenshot(cdp, "browser-research-breakthrough-result-844x390.png");
-		await touch(cdp, 420, 300);
-		await new Promise((accept) => setTimeout(accept, 900));
 		await screenshot(cdp, "browser-first-formation-step-one-844x390.png");
 		const armoredHero = breakthrough.roster.find((hero) => hero.archetypeId === "armored");
 		const assaultHero = breakthrough.roster.find((hero) => hero.archetypeId === "assault");
@@ -641,6 +611,26 @@ async function main() {
 		}
 		await touch(cdp, 650, 210);
 		await new Promise((accept) => setTimeout(accept, 1000));
+		await touch(cdp, 545, 304);
+		await new Promise((accept) => setTimeout(accept, 900));
+		await screenshot(cdp, "browser-first-growth-choice-844x390.png");
+		await touch(cdp, 210, 285);
+		const firstGrowth = await waitFor(
+			"assault two-star growth persisted to IndexedDB",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				const assault = save?.roster?.find((hero) => hero.archetypeId === "assault");
+				return Number(assault?.star ?? 0) === 2 ? save : null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-first-growth-committed-844x390.png");
+		await touch(cdp, 110, 357);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await touch(cdp, 630, 322);
+		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-industrial-choice-844x390.png");
 		await touch(cdp, 545, 304);
 		await new Promise((accept) => setTimeout(accept, 700));
@@ -706,22 +696,6 @@ async function main() {
 		await touch(cdp, 570, 184);
 		await new Promise((accept) => setTimeout(accept, 500));
 		await touch(cdp, 630, 300);
-		await new Promise((accept) => setTimeout(accept, 900));
-		await screenshot(cdp, "browser-first-growth-choice-844x390.png");
-		await touch(cdp, 210, 285);
-		const firstGrowth = await waitFor(
-			"assault two-star growth persisted to IndexedDB",
-			async () => {
-				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
-				const assault = save?.roster?.find((hero) => hero.archetypeId === "assault");
-				return Number(assault?.star ?? 0) === 2 ? save : null;
-			},
-			10000,
-			250,
-		);
-		await new Promise((accept) => setTimeout(accept, 700));
-		await screenshot(cdp, "browser-first-growth-committed-844x390.png");
-		await touch(cdp, 420, 250);
 		await new Promise((accept) => setTimeout(accept, 1000));
 		await screenshot(cdp, "browser-first-boss-started-844x390.png");
 		const chapterOne = await finishActiveBattle(
@@ -839,10 +813,9 @@ async function main() {
 			firstWallReached: true,
 			firstWallOutcome: "defeat",
 			firstWallAttempts: firstWall.save.attempts.stage_1_4,
-			researchConstructionStarted: true,
-			researchLabBuilt: Number(researchBuilt.facilities?.research_lab) === 1,
-			researchPlacement: researchBuilt.facilityPlacements?.research_lab,
-			breakthroughClaimed: true,
+			researchLabBuiltBeforeFirstBattle: Number(breakthrough.facilities?.research_lab) === 1,
+			researchPlacement: breakthrough.facilityPlacements?.research_lab,
+			stageBlueprintsResearched: ["assault", "armored"],
 			guaranteedReinforcements: ["assault", "armored"],
 			firstFormation: firstFormation.formation,
 			counterattackOutcome: "victory",

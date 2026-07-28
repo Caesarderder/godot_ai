@@ -106,6 +106,32 @@ func _run() -> void:
 		_check(control.has_focus(), "%s is reachable in the 844x390 focus chain" % control.name)
 	unlock.pressed.emit()
 	_check(requested["id"] == "start_research" and requested["recipe_id"] == "ordinary.assault", "research node emits stable recipe action")
+	requested["id"] = ""
+	screen.call("configure", {
+		"branch": "ordinary",
+		"branch_title": "突击枝",
+		"core_status": "冲锋马桶人研发中",
+		"breakthrough": {},
+		"results": [],
+		"refresh_at_unix": int(Time.get_unix_time_from_system()) + 1,
+		"nodes": [
+			{
+				"recipe_id": "ordinary.assault",
+				"display_name": "冲锋蓝图",
+				"status_id": "researching",
+				"status_copy": "研发中 · 剩余 1秒",
+				"action_id": "claim_research",
+				"action_label": "研发中…",
+				"action_name": "ClaimFoundationalBlueprint",
+				"disabled": true,
+			},
+		],
+	})
+	await create_timer(1.4).timeout
+	_check(
+		requested["id"] == "refresh",
+		"research completion schedules one read-only view refresh instead of leaving a stale disabled button"
+	)
 	var branch := {"id": ""}
 	screen.connect("branch_selected", func(id: String) -> void: branch["id"] = id)
 	(screen.get_node("BlueprintTabs/BlueprintHeavyTab") as Button).pressed.emit()

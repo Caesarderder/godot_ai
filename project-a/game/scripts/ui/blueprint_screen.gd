@@ -46,6 +46,7 @@ const BRANCHES := [
 var _view: Dictionary = {}
 var _reveal_tween: Tween
 var _resource_context: Control
+var _refresh_generation := 0
 
 
 func _ready() -> void:
@@ -160,6 +161,7 @@ func _apply_view() -> void:
 	var nodes := _view.get("nodes", []) as Array
 	for node_value in nodes:
 		node_row.add_child(_build_node(node_value as Dictionary))
+	_schedule_research_refresh(int(_view.get("refresh_at_unix", 0)))
 
 
 func _build_result_card(view: Dictionary) -> PanelContainer:
@@ -299,6 +301,7 @@ func _build_node(view: Dictionary) -> PanelContainer:
 		var button := _button(String(view.get("action_label", "继续")), true)
 		button.custom_minimum_size.y = 32
 		button.name = String(view.get("action_name", "BlueprintNodeAction"))
+		button.set_meta("primary_blueprint_action", true)
 		button.disabled = bool(view.get("disabled", false))
 		button.pressed.connect(action_requested.emit.bind(action_id, {
 			"recipe_id": String(view.get("recipe_id", "")),
@@ -333,7 +336,27 @@ func _focus_primary_after_layout() -> void:
 	if results_panel.visible:
 		%BlueprintResultsLegionButton.grab_focus()
 		return
+	for action_value in find_children("*", "Button", true, false):
+		var action := action_value as Button
+		if (
+			bool(action.get_meta("primary_blueprint_action", false))
+			and action.visible
+			and not action.disabled
+		):
+			action.grab_focus()
+			return
 	back_button.grab_focus()
+
+
+func _schedule_research_refresh(refresh_at_unix: int) -> void:
+	_refresh_generation += 1
+	var generation := _refresh_generation
+	var delay := refresh_at_unix - int(Time.get_unix_time_from_system())
+	if delay <= 0:
+		return
+	await get_tree().create_timer(float(delay) + 0.15).timeout
+	if is_inside_tree() and generation == _refresh_generation:
+		action_requested.emit("refresh", {})
 
 
 func _apply_theme() -> void:
