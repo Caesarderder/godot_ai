@@ -2806,10 +2806,7 @@ func _show_result() -> void:
 	)
 	var shell := _shell(result_title, "战果已结算，全员无损返回")
 	var reward := event.get("reward", {}) as Dictionary
-	var breakthrough := ""
 	var legion_data_gain := int(event.get("hero_shards", 0))
-	if legion_data_gain > 0:
-		breakthrough = "军团数据 +%d" % legion_data_gain
 	var unlocked_hero := event.get("unlocked_hero", {}) as Dictionary
 	var unlocked_blueprints := event.get("unlocked_blueprints", []) as Array
 	var unlocked_copy := ""
@@ -3016,13 +3013,11 @@ func _show_result() -> void:
 			)
 		),
 		"outcome_color": "green" if won else ("gold" if outcome == "retreat" else "red"),
-		"reward_headline": "金币 +%d    军团数据 +%d" % [
-			int(reward.get("gold", 0)), legion_data_gain
-		],
+		"reward_headline": _battle_reward_headline(reward, legion_data_gain),
 		"hero_experience": _hero_experience_copy(event, last_battle_runtime_result),
 		"materials": "工业材料由工厂设施持续生产；攻城不直接掉落",
 		"mission_progress": _onboarding_settlement_copy(event, onboarding),
-		"breakthrough": breakthrough,
+		"breakthrough": "",
 		"unlocked_hero": unlocked_copy,
 		"combat_summary": combat_summary,
 		"contribution": contribution,
@@ -3050,6 +3045,16 @@ func _show_result() -> void:
 	})
 	result_screen.action_requested.connect(_on_result_action_requested)
 	shell.add_child(result_screen)
+
+
+func _battle_reward_headline(reward: Dictionary, legion_data_gain: int) -> String:
+	var gains: Array[String] = []
+	var gold_gain := int(reward.get("gold", 0))
+	if gold_gain > 0:
+		gains.append("金币 +%d" % gold_gain)
+	if legion_data_gain > 0:
+		gains.append("军团数据 +%d" % legion_data_gain)
+	return "    ".join(gains)
 
 
 func _chapter_two_opening_clear_count(state: RefCounted) -> int:

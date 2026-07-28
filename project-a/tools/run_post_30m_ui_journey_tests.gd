@@ -859,6 +859,19 @@ func _run() -> void:
 		"4-1 settlement attributes the real battle payoff to the player's permanent doctrine"
 	)
 	_check(
+		_tree_has_text(main, "金币 +82")
+			and not _tree_has_text(main, "军团数据 +0"),
+		"4-1 settlement celebrates its real gold reward without a zero-value resource"
+	)
+	_check(
+		String(main.call("_battle_reward_headline", {"gold": 80}, 8))
+			== "金币 +80    军团数据 +8"
+			and String(main.call("_battle_reward_headline", {"gold": 0}, 8))
+				== "军团数据 +8"
+			and String(main.call("_battle_reward_headline", {"gold": 0}, 0)).is_empty(),
+		"battle reward projection handles dual, data-only, and zero-resource states without noise"
+	)
+	_check(
 		chapter_four_action != null
 			and chapter_four_action.text.contains("侦察 4-2")
 			and chapter_four_action.text.contains("禁飞"),

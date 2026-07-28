@@ -15,6 +15,7 @@ func _run() -> void:
 	result_screen.call("configure", {
 		"outcome_banner": "胜利 · 工厂与军团获得成长",
 		"outcome_color": "green",
+		"reward_headline": "金币 +80",
 		"hero_experience": "参战经验 · 3名主力各 +30 XP · 阵营核心 火箭马桶人 60/100 XP，距 Lv3 还差 40",
 		"mission_progress": "行动五完成 · 奖励已自动入账 → 新目标：行动六：工业备战",
 		"hurdle_proof": "高墙复盘 · 单人首战失败 → 三人反攻成功 · 援军分担 68% 承伤、贡献 52% 输出",
@@ -39,6 +40,11 @@ func _run() -> void:
 			and _tree_has_text(result_screen, "距 Lv3 还差 40"),
 		"result makes hidden battle experience and the faction core's next level visible"
 	)
+	_check(
+		_tree_has_text(result_screen, "金币 +80")
+			and not _tree_has_text(result_screen, "军团数据 +0"),
+		"result celebrates only resources that actually increased"
+	)
 	var requested := {"id": ""}
 	result_screen.connect("action_requested", func(action_id: String, _payload: Dictionary) -> void:
 		requested["id"] = action_id
@@ -48,6 +54,7 @@ func _run() -> void:
 	_check(requested["id"] == "factory", "industrial onboarding CTA routes to the factory")
 	result_screen.configure({
 		"outcome_banner": "失败 · 可立即调整后再战",
+		"reward_headline": "",
 		"primary_label": "掌握巨炮时机 · 再战 1-5",
 		"primary_action": "next_stage",
 		"primary_payload": {"stage_id": "stage_1_5"},
@@ -56,6 +63,10 @@ func _run() -> void:
 	_check(
 		not result_screen.factory_action.visible,
 		"result hides unrelated factory navigation by default during a specific recovery"
+	)
+	_check(
+		not result_screen.reward_headline.visible,
+		"a zero-resource result removes the empty reward headline instead of showing +0"
 	)
 	result_screen.queue_free()
 	await process_frame
