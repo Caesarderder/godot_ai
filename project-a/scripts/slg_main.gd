@@ -1330,7 +1330,7 @@ func _legion_view() -> Dictionary:
 	var deployed_archetypes: Array[String] = []
 	var formation_focus_hero_id := (
 		legion_selected_hero_id
-		if legion_tab == "formation"
+		if legion_tab == "formation" and bool(onboarding.get("finished", false))
 		else ""
 	)
 	for deployed_hero_id in state.formation.hero_ids():
@@ -1345,8 +1345,6 @@ func _legion_view() -> Dictionary:
 			or not deployed_archetypes.has("armored")
 		)
 	)
-	if first_formation_active:
-		formation_focus_hero_id = ""
 	var recommended_archetype := ""
 	if first_formation_active:
 		recommended_archetype = "armored" if not deployed_archetypes.has("armored") else "assault"
