@@ -622,6 +622,7 @@ func _meter_row(tag_text: String, color: Color, value: int, maximum: int) -> Dic
 
 func _apply_theme() -> void:
 	%BattleBottomHud.add_theme_stylebox_override("panel", _box(PANEL, 8, LINE))
+	status_label.add_theme_stylebox_override("normal", _box(PANEL, 7, LINE))
 	pause_button.icon = ICON_PAUSE
 	skill_mode_button.icon = ICON_TARGET
 	retreat_button.icon = ICON_RETREAT

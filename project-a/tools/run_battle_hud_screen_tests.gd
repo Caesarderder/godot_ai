@@ -71,6 +71,13 @@ func _run() -> void:
 	_check(hud.status_label.text.contains("阶段 3/3"), "HUD projects battle phase from the runtime snapshot")
 	_check(hud.status_label.text.contains("炮击 2.0秒"), "HUD exposes the boss warning countdown")
 	_check(hud.status_label.text.contains("点装甲护盾扛炮"), "HUD explains the roster-specific cannon response")
+	var status_style := hud.status_label.get_theme_stylebox("normal") as StyleBoxFlat
+	_check(
+		status_style != null
+			and status_style.bg_color.a >= 0.85
+			and status_style.content_margin_left >= 8.0,
+		"battle status uses an opaque padded carrier so world labels cannot contaminate warnings"
+	)
 	_check(skill_button != null and not skill_button.disabled, "manual skill becomes actionable at full energy")
 	_check(
 		burst_button != null
