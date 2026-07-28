@@ -62,6 +62,14 @@ func _run() -> void:
 	var armored_button := main.find_child("ChooseGrowth_armored", true, false) as Button
 	_check(assault_button != null and not assault_button.disabled, "the fast route is actionable")
 	_check(armored_button != null and not armored_button.disabled, "the defensive route is equally actionable")
+	var growth_scroll := main.find_child("LegionContentScroll_formation", true, false) as ScrollContainer
+	if assault_button != null and armored_button != null and growth_scroll != null:
+		var visible_bottom := growth_scroll.get_global_rect().end.y
+		_check(
+			assault_button.get_global_rect().end.y <= visible_bottom
+			and armored_button.get_global_rect().end.y <= visible_bottom,
+			"both irreversible growth choices remain visible without scrolling at 844x390"
+		)
 	if assault_button != null:
 		assault_button.pressed.emit()
 		await _wait_frames(4)

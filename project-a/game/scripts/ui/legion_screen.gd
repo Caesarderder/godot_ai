@@ -197,20 +197,25 @@ func _growth_choice_panel(first_growth: Dictionary) -> Control:
 			TEXT
 		))
 		card.add_child(_label(String(choice.get("route", "")), 12, CYAN))
-		card.add_child(_label(String(choice.get("verified", "")), 12, GREEN))
 		card.add_child(_label(
-			"战力 %d → %d（+%d）" % [
+			"%s · 战力 %d→%d（+%d）" % [
+				String(choice.get("verified", "")),
 				int(choice.get("power_before", 0)),
 				int(choice.get("power_after", 0)),
 				int(choice.get("power_gain", 0)),
 			],
-			13,
-			GOLD
+			11,
+			GREEN
 		))
-		card.add_child(_label("消耗 · %s" % String(choice.get("cost", "")), 11, TEXT))
 		var resource_context := choice.get("resource_context", {}) as Dictionary
 		if not resource_context.is_empty():
-			card.add_child(_resource_context(resource_context))
+			card.add_child(_label(
+				"消耗 · %s" % _resource_projection_copy(resource_context),
+				10,
+				GOLD
+			))
+		else:
+			card.add_child(_label("消耗 · %s" % String(choice.get("cost", "")), 10, GOLD))
 		var upgraded := bool(choice.get("already_upgraded", false))
 		var action := _button("已完成二星成长" if upgraded else "选择此路线并升至 2★", true)
 		action.name = "ChooseGrowth_%s" % String(choice.get("archetype_id", ""))

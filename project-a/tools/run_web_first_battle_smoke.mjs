@@ -611,7 +611,7 @@ async function main() {
 		}
 		await touch(cdp, 650, 210);
 		await new Promise((accept) => setTimeout(accept, 1000));
-		await touch(cdp, 545, 304);
+		await touch(cdp, 630, 322);
 		await new Promise((accept) => setTimeout(accept, 900));
 		await screenshot(cdp, "browser-first-growth-choice-844x390.png");
 		await touch(cdp, 210, 285);
