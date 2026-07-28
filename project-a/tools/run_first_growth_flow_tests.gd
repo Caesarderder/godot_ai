@@ -78,9 +78,26 @@ func _run() -> void:
 	_check(assault != null and int(assault.star) == 2, "the chosen route commits through the star-up domain command")
 	_check(String(OnboardingService.snapshot(state).get("task_id", "")) == "operation.choose_growth", "combat growth completes before the independent factory objectives")
 
+	state.factory.materials["porcelain"] = 0
+	if not (state.stage_progress["cleared_stages"] as Array).has("stage_1_3"):
+		(state.stage_progress["cleared_stages"] as Array).append("stage_1_3")
 	main.call("_on_result_action_requested", "factory", {})
 	await _wait_frames(3)
 	_check(main.find_child("ConstructionPanel", true, false) != null, "industrial result CTA enters construction instead of looping on the mission panel")
+	var recovery_gift := main.find_child("ClaimFactoryRecoveryGift", true, false) as Button
+	_check(
+		recovery_gift != null and not recovery_gift.disabled,
+		"zero opening stock surfaces the earned new-game gift at the exact industrial blocker"
+	)
+	if recovery_gift != null:
+		recovery_gift.pressed.emit()
+		await _wait_frames(4)
+	state = game.current_state()
+	assault = _hero_for(state, "assault")
+	_check(
+		int(state.factory.materials.get("porcelain", -1)) == 30,
+		"the explicit gift claim funds exactly one first resource facility"
+	)
 	_check(main.find_child("ChooseFacility_porcelain_plant", true, false) != null, "the first industrial step exposes a real resource facility choice")
 	_check(main.find_child("ChooseFacility_repair_center", true, false) == null, "unrelated facilities defer during the commissioning choice")
 	_check(_tree_has_text(main, "工业材料"), "resource choices expose their unified industrial construction cost")
@@ -151,6 +168,7 @@ func _run() -> void:
 	initial_armored = null
 	initial_assault = null
 	assault = null
+	recovery_gift = null
 	state = null
 	game = null
 	main.queue_free()

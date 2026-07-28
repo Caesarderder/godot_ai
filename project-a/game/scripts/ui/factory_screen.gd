@@ -183,6 +183,25 @@ func _construction_panel() -> Control:
 	guide.name = "ConstructionStepGuide"
 	panel.add_child(guide)
 	if active_id.is_empty():
+		var recovery_gift := construction.get("recovery_gift", {}) as Dictionary
+		if not recovery_gift.is_empty():
+			panel.add_child(_label(
+				"工业支援待领取\n%s · %s\n%s" % [
+					String(recovery_gift.get("title", "新游补给礼包")),
+					String(recovery_gift.get("reward_copy", "")),
+					String(recovery_gift.get("reason_copy", "")),
+				],
+				13,
+				GOLD
+			))
+			var claim_gift := _button("领取补给并继续选址", true)
+			claim_gift.name = "ClaimFactoryRecoveryGift"
+			claim_gift.pressed.connect(action_requested.emit.bind(
+				"claim_starter_gift",
+				{"gift_id": String(recovery_gift.get("gift_id", ""))}
+			))
+			panel.add_child(claim_gift)
+			return panel
 		var choices := GridContainer.new()
 		choices.name = "ConstructionButtonGrid"
 		choices.columns = 2

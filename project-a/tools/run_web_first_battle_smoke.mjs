@@ -632,6 +632,18 @@ async function main() {
 		await touch(cdp, 630, 322);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await screenshot(cdp, "browser-first-industrial-choice-844x390.png");
+		await touch(cdp, 600, 335);
+		await waitFor(
+			"new-game supply gift funds the first industrial facility",
+			async () => {
+				const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
+				return Number(save?.materials?.porcelain ?? 0) === 30 ? save : null;
+			},
+			10000,
+			250,
+		);
+		await new Promise((accept) => setTimeout(accept, 700));
+		await screenshot(cdp, "browser-first-industrial-gift-claimed-844x390.png");
 		await touch(cdp, 545, 304);
 		await new Promise((accept) => setTimeout(accept, 700));
 		await touch(cdp, 350, 270);

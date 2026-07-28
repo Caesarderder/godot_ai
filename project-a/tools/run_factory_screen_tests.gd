@@ -39,6 +39,34 @@ func _run() -> void:
 	_check(String(research_choice.tooltip_text).contains("挑战 1-4"), "locked research explains the exact unlock action")
 	var porcelain_choice := factory.find_child("ChooseFacility_porcelain_plant", true, false) as Button
 	_check(porcelain_choice != null and porcelain_choice.text.contains("5秒"), "construction catalog exposes the five-second wait before selection")
+	var gift_view := _base_view()
+	gift_view["panel"] = "build"
+	(gift_view["construction"] as Dictionary)["focused_growth"] = true
+	(gift_view["construction"] as Dictionary)["recovery_gift"] = {
+		"gift_id": "new_game_supply_v1",
+		"title": "新游补给礼包",
+		"reward_copy": "金币 ×50 · 工业材料 ×30",
+		"reason_copy": "下一座工业设施启动资金",
+	}
+	factory.configure(gift_view)
+	await process_frame
+	var gift_action_request := {"id": "", "gift_id": ""}
+	factory.action_requested.connect(func(action_id: String, payload: Dictionary) -> void:
+		gift_action_request["id"] = action_id
+		gift_action_request["gift_id"] = String(payload.get("gift_id", ""))
+	)
+	var recovery_gift := factory.find_child("ClaimFactoryRecoveryGift", true, false) as Button
+	_check(
+		recovery_gift != null and recovery_gift.text.contains("领取补给"),
+		"an unfunded first facility exposes the earned supply gift instead of three dead choices"
+	)
+	if recovery_gift != null:
+		recovery_gift.pressed.emit()
+	_check(
+		gift_action_request["id"] == "claim_starter_gift"
+		and gift_action_request["gift_id"] == "new_game_supply_v1",
+		"the factory recovery gift emits one exact durable claim request"
+	)
 
 	build_view["construction"] = {
 		"options": [],

@@ -899,6 +899,22 @@ func _factory_view() -> Dictionary:
 			),
 			"disabled": not state.factory.can_spend(cost) or not state.factory.facility_work.is_empty() or not eligible,
 		})
+	var recovery_gift: Dictionary = {}
+	if growth_facility_choice:
+		var has_affordable_option := false
+		for option_value in construction_options:
+			if not bool((option_value as Dictionary).get("disabled", true)):
+				has_affordable_option = true
+				break
+		if not has_affordable_option:
+			for gift_value in StarterGiftService.snapshot(state).get("gifts", []):
+				var gift := gift_value as Dictionary
+				if (
+					String(gift.get("gift_id", "")) == "new_game_supply_v1"
+					and bool(gift.get("claimable", false))
+				):
+					recovery_gift = gift.duplicate(true)
+					break
 	var cell_selected := construction_cell.x != 999
 	var occupied := cell_selected and _is_factory_cell_occupied(construction_cell)
 	var facility := _factory_facility_view(state, selected_facility_id, now_unix)
@@ -911,6 +927,7 @@ func _factory_view() -> Dictionary:
 		"facility": facility,
 		"construction": {
 			"focused_growth": growth_facility_choice,
+			"recovery_gift": recovery_gift,
 			"options": construction_options,
 			"active_id": construction_facility_id,
 			"active_name": String(FACILITY_NAMES.get(construction_facility_id, "")),
@@ -1007,6 +1024,8 @@ func _on_factory_action_requested(action_id: String, payload: Dictionary) -> voi
 			_claim_facility_output(String(payload.get("facility_id", "")))
 		"claim_task":
 			_claim_task()
+		"claim_starter_gift":
+			_claim_starter_gift_from_factory(String(payload.get("gift_id", "")))
 		"follow_task":
 			_follow_task(
 				String(payload.get("target", "map")),
@@ -4032,6 +4051,14 @@ func _claim_starter_gift(gift_id: String) -> void:
 	), _show_goals)
 
 
+func _claim_starter_gift_from_factory(gift_id: String) -> void:
+	_after_action(_command(
+		"claim_starter_gift",
+		{"gift_id": gift_id},
+		StarterGiftService.business_key(gift_id)
+	), _show_base)
+
+
 func _open_smuggled_logistics_case() -> void:
 	_after_action(_command(
 		"open_smuggled_logistics_case",
@@ -4290,6 +4317,15 @@ func _success_copy(result: Dictionary) -> String:
 			return "%s升至 %d★ · 质变解锁：%s" % [hero_name, star, effect]
 		"new_player_welfare_claimed":
 			return "黑市援助已到账：黑金升星核心 ×1、走私后勤箱 ×1"
+		"starter_gift_claimed":
+			return "%s已到账：%s" % [
+				(
+					"新游补给礼包"
+					if String(event.get("gift_id", "")) == "new_game_supply_v1"
+					else "新手启程礼包"
+				),
+				_reward_text(event.get("reward", {}) as Dictionary),
+			]
 		"smuggled_logistics_case_opened":
 			return "走私后勤箱已开启：工业材料 +25"
 		"hero_repaired":
