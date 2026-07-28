@@ -1,0 +1,4 @@
+interface:
+  display_name: "Toilet Char 角色制作"
+  short_description: "基于当前架构、科技树和关卡创建、优化并接入我方或联盟角色"
+  default_prompt: "使用 $toilet-char 基于当前角色、关卡和代码事实设计一个可接入科技树的新角色。"

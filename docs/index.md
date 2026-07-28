@@ -50,7 +50,8 @@ Godot 场景、脚本、Resource、Autoload 与资产治理的增量重构路线
 [KM:reference.campaign-60-stage-progression](references/product-design/campaign-60-stage-progression.md)。
 涉及新增角色、角色科技树、升星质变、角色驱动关卡或持续内容生产时，读
 [KM:reference.character-tech-tree-content-production](references/product-design/character-tech-tree-content-production.md)，
-并使用仓库 Skill `.codex/skills/toilet-character-production/`。
+先查 [KM:reference.character-roster-index](references/characters/index.md)，并使用仓库 Skill
+`.codex/skills/toilet-char/`。
 涉及同类产品、首局结构、渐进披露、产品承诺一致性或上线体验基准时，读
 [KM:reference.competitor-first-session-benchmark](references/product-design/competitor-first-session-benchmark.md)。
 
