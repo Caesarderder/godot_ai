@@ -281,6 +281,16 @@ related:
   G-Man 技能按钮，证明 Lv.2 与六项精确成本持久化，再通过底部战区导航返回 2-1，尝试数保持
   0；698 次战斗技能触控期间三类运行错误均为 0。新增三张
   `browser-chapter-two-skill-growth-*` 截图覆盖交易前、交易后和回访侦察。
+- 当前替代证据：clean candidate `5f5b5e5721cb` / `0.13.53-faction-ten-handoff.1` 已由
+  Chrome 150 在 844×390 隔离新档连续跑通完整首章与阵营交接。真实链路包含开局只够研究所的
+  工业材料、关卡图纸研发、1-4 单人首败与三人反攻、首屏二星二选一、显式领取新游补给礼包、
+  5 秒陶瓷厂施工/验收/收取、1-5 Boss、免费阵营十连、两名同评级核心比较、durable 音波核心
+  选择及其科技图纸聚焦。IndexedDB 证明 2-1 尝试仍为 0；425.6 秒、790 次技能触控期间三类
+  runtime/console/network 错误均为 0。`browser-first-industrial-gift-claimed-844x390.png`、
+  `browser-chapter-one-faction-recruit-844x390.png`、`browser-faction-recruit-result-844x390.png`
+  与 `browser-faction-blueprint-focus-844x390.png` 是本轮新转折证据。此项取代旧的“首章后直接
+  升级 G-Man 技能”浏览器路径；阵营核心研发、入队、三场证明和专属碎片升星仍缺同一新档的
+  连续 Web 证据。
 - 首章后成长周期：`run_progression_cycle_scan.gd` 从 7 个固定 seed 的保守 1-5 后账本出发，
   先领取新游福利、开启 18/10/8 后勤箱并使用一次免材料升星核心，再用明确贪心策略消费永久
   成长资源并运行真实 `BattleSession`。首轮编队 CP `9172–9554`，2-1 至 2-4 全胜、2-5
