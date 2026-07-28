@@ -281,14 +281,17 @@ related:
   G-Man 技能按钮，证明 Lv.2 与六项精确成本持久化，再通过底部战区导航返回 2-1，尝试数保持
   0；698 次战斗技能触控期间三类运行错误均为 0。新增三张
   `browser-chapter-two-skill-growth-*` 截图覆盖交易前、交易后和回访侦察。
-- 当前连续证据：clean candidate `7c7497d50d16` / `0.13.55-mobile-battle-command-bar.1` 已由
-  Chrome 150 在 844×390 隔离新档连续跑通完整首章、阵营交接与二星质变。真实链路包含开局只够研究所的
+- 当前连续证据：clean candidate `40cdbcf4296f` /
+  `0.13.56-post-chapter-welfare-handoff.1` 已由 Chrome 150 在 844×390 隔离新档连续跑通
+  完整首章、福利补齐、阵营交接、二星质变、第二章 Boss 与第三章侦察。真实链路包含开局只够研究所的
   工业材料、关卡图纸研发、1-4 单人首败与三人反攻、首屏二星二选一、显式领取新游补给礼包、
-  5 秒陶瓷厂施工/验收/收取、1-5 Boss、免费阵营十连、两名同评级核心比较、durable 音波核心
+  5 秒陶瓷厂施工/验收/收取、1-5 Boss、开服庆典礼包、25 工业材料后勤箱、未升星装甲援军
+  福利升至 2★、免费阵营十连、两名同评级核心比较、durable 音波核心
   选择及其科技图纸聚焦；随后真实研发、入队，连续通过 2-1～2-3，在 2-4 一星压力测试失败，
-  再由战报唯一目标进入该音波角色成员页，以 60/20 型号专属碎片升至 2★。IndexedDB 证明核心
-  hero ID 未变且最终 `star = 2`；736.866 秒内执行 558 次角色技能卡触控与 34 次全队爆发
-  触控，合计 592 次、平均 0.803 次/秒，三类 runtime/console/network 错误均为 0。Boss 段
+  再由战报唯一目标进入该音波角色成员页，以 60/20 型号专属碎片升至 2★，继续达到 Lv.3、
+  通过 2-5、激活 Tier 1 并停在 3-1 侦察。IndexedDB 证明核心 hero ID 未变且最终
+  `star = 2, level = 3`；944.737 秒内执行 519 次角色技能卡触控与 125 次全队爆发触控，
+  合计 644 次、平均 0.682 次/秒，三类 runtime/console/network 错误均为 0。Boss 段
   只使用可见的全队爆发按钮；该输入频率是防止机器刷键掩盖 UI 缺陷的可达性护栏，不是玩家理解
   或乐趣证据。`run_battle_hud_screen_tests.gd` 另锁定 844×390 与 568×320 下独立战术状态行、
   四个可见操作、至少 44 px 触控高度、巨炮强调和压制后复位。`browser-first-industrial-gift-claimed-844x390.png`、
@@ -296,10 +299,11 @@ related:
   与 `browser-faction-blueprint-focus-844x390.png` 保存前段转折；
   `browser-faction-formation-committed-844x390.png`、
   `browser-faction-late-wall-result-844x390.png`、`browser-faction-star-focus-844x390.png`
-  与 `browser-faction-star-unlocked-844x390.png` 保存后段因果。此项取代旧的“首章后直接升级
+  `browser-faction-star-unlocked-844x390.png`、`browser-faction-chapter-two-complete-844x390.png`
+  与 `browser-faction-chapter-three-recon-844x390.png` 保存后段因果。此项取代旧的“首章后直接升级
   G-Man 技能”浏览器路径；它证明连续可达和状态落盘，不证明真人阵营认同、乐趣或继续意愿。
 - 首章后成长周期：`run_progression_cycle_scan.gd` 从 7 个固定 seed 的保守 1-5 后账本出发，
-  先领取新游福利、开启 18/10/8 后勤箱并使用一次免材料升星核心，再用明确贪心策略消费永久
+  先领取新游福利、开启 25 工业材料后勤箱并使用一次免材料升星核心，再用明确贪心策略消费永久
   成长资源并运行真实 `BattleSession`。首轮编队 CP `9172–9554`，2-1 至 2-4 全胜、2-5
   全败且均到达最终阶段、摧毁 6 个结构并把核心压到 50.80%–81.69%；第二轮 CP
   `10961–11558`，2-5 至 3-4 全胜、3-5 全败。`run_battle_tests.gd` 另锁定未配置关卡继续使用
