@@ -292,7 +292,7 @@ async function finishActiveBattle(
 		const settledSave = await waitFor(`${stageId} settlement persisted to IndexedDB`, async () => {
 			const save = await evaluate(cdp, READ_SAVE_EXPRESSION);
 			return save && completion(save) ? save : null;
-		}, settlementTimeoutMs, 400);
+		}, settlementTimeoutMs, 100);
 		clearInterval(skillInput);
 		await midBattleEvidencePromise;
 		await new Promise((accept) => setTimeout(accept, 700));
@@ -857,8 +857,8 @@ async function main() {
 				(save) => save.clearedStages?.includes(stageId),
 				`browser-faction-proof-${index + 1}-result-844x390.png`,
 				[110, 315, 520, 725],
-				330,
-				260,
+				310,
+				1000,
 				180000,
 			);
 			factionProofs.push(proof);
@@ -883,8 +883,8 @@ async function main() {
 			(save) => Number(save?.attempts?.stage_2_4 ?? 0) > 0,
 			"browser-faction-late-wall-result-844x390.png",
 			[110, 315, 520, 725],
-			330,
-			260,
+			310,
+			1000,
 			180000,
 		);
 		factionJourneySkillTouches += lateWall.skillTouches;
@@ -901,8 +901,8 @@ async function main() {
 				(save) => Number(save?.attempts?.stage_2_5 ?? 0) > 0,
 				"browser-faction-boss-pressure-result-844x390.png",
 				[110, 315, 520, 725],
-				330,
-				260,
+				310,
+				1000,
 				180000,
 			);
 			factionJourneySkillTouches += bossPressure.skillTouches;
