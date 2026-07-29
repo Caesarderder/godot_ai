@@ -1,0 +1,33 @@
+{
+  "run_id": "mobile_slg_ui_refresh_20260730",
+  "iteration": 2,
+  "work_unit": "将工厂、战区和军团收敛为世界覆盖式情境界面，并建立统一轻量 UI 美术生产流程",
+  "status": "progress",
+  "changed_files": [
+    "project-a/game/scenes/screens/factory_screen.tscn",
+    "project-a/game/scripts/ui/factory_screen.gd",
+    "project-a/game/scenes/screens/war_zone_screen.tscn",
+    "project-a/game/scripts/ui/war_zone_screen.gd",
+    "project-a/game/scripts/ui/legion_screen.gd",
+    "project-a/game/scripts/ui/ui_art_direction.gd",
+    "project-a/assets/asset_manifest.md",
+    "design/art/asset-requirements.md"
+  ],
+  "evidence_ids": [
+    "ev_ui_runtime_6035159",
+    "ev_ui_responsive_6035159",
+    "ev_ui_visual_6035159",
+    "ev_ui_human_required_6035159"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "不保留完整上游素材包，只引入实际使用的四张小纹理和许可证。",
+    "不再让工厂侧栏参与布局挤压 3D 世界。",
+    "不再让六个阵位依赖滚动才能看全。"
+  ],
+  "next_action": "按同一视觉层级与美术语义收敛结果、帮助、设置等低频次级页面，并准备独立目标玩家验证。",
+  "blocker": null,
+  "schema_version": "caesar-loop/v2"
+}

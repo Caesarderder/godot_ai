@@ -24,7 +24,7 @@
   "inference": "第一轮 HUD 改动满足当前自动响应式门槛。",
   "result": "pass",
   "confidence": 0.95,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "未覆盖 iOS Safari 实机安全区和手指遮挡。"
   ],

@@ -24,7 +24,7 @@
   "inference": "第一轮显著改善画面占用，但战区仍是卡片式页面，尚不能通过整个视觉层级门。",
   "result": "directional",
   "confidence": 0.9,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "评审非独立。",
     "战区和工厂上下文面板仍需继续重构。",

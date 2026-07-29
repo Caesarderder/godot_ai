@@ -21,23 +21,23 @@ related:
 
 # Caesar Loop Run：mobile_slg_ui_refresh_20260730
 
-本节点由 `loop-sync` 从运行 JSON 与 ledger 生成，记录当前 `baselining` 状态。原始
+本节点由 `loop-sync` 从运行 JSON 与 ledger 生成，记录当前 `slice_building` 状态。原始
 `RunSpec`、`Progress`、`EvidenceRecord`、`Finding` 与 `IterationResult` 是事实源；
 不要手工修改本页来关闭质量门。评审应先进入子任务绑定的 Test Scenario，再检查当前
 revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 
 ```loop #mobile_slg_ui_refresh_20260730
 title: 重构真实运行的手机横屏 UI，让3D游戏世界成为主体，并以情境面板和单一主行动承载工厂、战区与战斗操作。
-state: baselining
-phase: baselining
-iteration: 1/12
-revision: 3b943e1
-active_unit: record first HUD candidate and remaining war-zone gap
+state: slice_building
+phase: slice_building
+iteration: 2/12
+revision: 6035159
+active_unit: compact secondary screens under the unified UI art direction
 run_dir: docs/workbench/loop-data/mobile_slg_ui_refresh_20260730
 run_spec: docs/workbench/loop-data/mobile_slg_ui_refresh_20260730/run-spec.json
 progress: docs/workbench/loop-data/mobile_slg_ui_refresh_20260730/progress.json
 knowledge_node: docs/workbench/loops/mobile-slg-ui-refresh-20260730.md
-updated_at: 2026-07-29T18:14:24Z
+updated_at: 2026-07-29T18:30:51Z
 terminal: no
 ## Player Outcome
 - target: 首次接触本作的手机轻量SLG玩家
@@ -49,14 +49,18 @@ terminal: no
 - [pass] gate_runtime :: correctness :: Real screens boot and shipping actions remain wired. :: evidence=1
 - [pending] gate_visual_hierarchy :: visual :: The world dominates and the current objective plus one primary action are visually clear. :: evidence=1
 - [pass] gate_responsive :: correctness :: The redesigned UI remains usable at required landscape sizes and safe areas. :: evidence=1
-- [pending] gate_player_learning :: player_learning :: A fresh target player identifies goal, risk, and next action within two seconds. :: evidence=1
+- [human_required] gate_player_learning :: player_learning :: A fresh target player identifies goal, risk, and next action within two seconds. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
-- [human_required] ev_ui_human_required_3b943e1 :: player_observation :: gate=gate_player_learning :: freshness=current :: Uncoached target-player session described by scenario_mobile_ui_core
-- [pass] ev_ui_responsive_3b943e1 :: test :: gate=gate_responsive :: freshness=current :: godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd
-- [pass] ev_ui_runtime_3b943e1 :: test :: gate=gate_runtime :: freshness=current :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd
-- [directional] ev_ui_visual_3b943e1 :: capture :: gate=gate_visual_hierarchy :: freshness=current :: project-a/artifacts/ui-battle-844x390.png; project-a/artifacts/ui-camp-844x390.png; project-a/artifacts/ui-expedition-844x390.png
+- [human_required] ev_ui_human_required_3b943e1 :: player_observation :: gate=gate_player_learning :: freshness=stale :: Uncoached target-player session described by scenario_mobile_ui_core
+- [human_required] ev_ui_human_required_6035159 :: player_observation :: gate=gate_player_learning :: freshness=current :: Uncoached target-player session described by scenario_mobile_ui_core
+- [pass] ev_ui_responsive_3b943e1 :: test :: gate=gate_responsive :: freshness=stale :: godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd
+- [pass] ev_ui_responsive_6035159 :: test :: gate=gate_responsive :: freshness=current :: godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd; godot --headless --path project-a -s tools/run_legion_screen_tests.gd; project-a/artifacts/ui-legion-844x390.png
+- [pass] ev_ui_runtime_3b943e1 :: test :: gate=gate_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd
+- [pass] ev_ui_runtime_6035159 :: test :: gate=gate_runtime :: freshness=current :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_factory_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --path project-a -s tools/capture_ui_review.gd
+- [directional] ev_ui_visual_3b943e1 :: capture :: gate=gate_visual_hierarchy :: freshness=stale :: project-a/artifacts/ui-battle-844x390.png; project-a/artifacts/ui-camp-844x390.png; project-a/artifacts/ui-expedition-844x390.png
+- [directional] ev_ui_visual_6035159 :: capture :: gate=gate_visual_hierarchy :: freshness=current :: project-a/artifacts/ui-battle-844x390.png; project-a/artifacts/ui-camp-844x390.png; project-a/artifacts/ui-expedition-844x390.png; project-a/artifacts/ui-legion-844x390.png; project-a/assets/asset_manifest.md
 ## Host Capabilities
 - [unsupported] fresh_agent_context :: Current run uses one active implementation context.
 - [unsupported] parallel_agents :: No delegation requested for this run.
@@ -67,12 +71,13 @@ terminal: no
 - [supported] persistent_run_state :: Repository-local Caesar Loop ledgers and Workbench projection are available.
 - [unsupported] target_player_access :: No uncoached target players are available to the current host.
 ## Decisions
-- 2026-07-29T18:09:35Z :: Run initialized through caesar-awesome managed artifact tool.
-- 2026-07-29T18:09:35Z :: Observed local Godot capture, shared worktree, and unavailable target-player access.
-- 2026-07-29T18:09:35Z :: RunSpec, ownership, evidence route, and host capability audit are ready.
-- 2026-07-29T18:13:41Z :: Integrated first HUD candidate was committed and pushed.
-- 2026-07-29T18:14:24Z :: Scenario ran twice through fresh Godot processes and produced stable named captures and assertions.
 - 2026-07-29T18:14:24Z :: Shipping UI routes and screen actions pass current runtime suites.
 - 2026-07-29T18:14:24Z :: Responsive battle HUD assertions pass at canonical short landscape sizes.
-summary: scenarios=1 gates=4 evidence=4 current=4 findings=0 iterations=1
+- 2026-07-29T18:30:38Z :: Integrated world-first factory and war-zone screens, unified lightweight sci-fi UI art, and a one-screen legion formation.
+- 2026-07-29T18:30:47Z :: Current shipping UI suites and capture route pass.
+- 2026-07-29T18:30:48Z :: Current battle and legion layouts pass canonical landscape assertions.
+- 2026-07-29T18:30:48Z :: High-frequency screens materially improved; secondary pages still need the same hierarchy treatment.
+- 2026-07-29T18:30:48Z :: No uncoached target player is available on this host.
+- 2026-07-29T18:30:48Z :: The baseline and representative world-first slice now have current runtime, responsive, visual-directional and human-required evidence.
+summary: scenarios=1 gates=4 evidence=8 current=4 findings=0 iterations=2
 ```

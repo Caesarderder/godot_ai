@@ -1,0 +1,34 @@
+{
+  "evidence_id": "ev_ui_runtime_6035159",
+  "revision": "6035159",
+  "gate_id": "gate_runtime",
+  "claim": "Real screens boot and shipping actions remain wired.",
+  "scenario_id": "scenario_mobile_ui_core",
+  "evidence_type": "test",
+  "artifact_or_command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_factory_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --path project-a -s tools/capture_ui_review.gd",
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "repository UI, legion, factory and battle HUD suites",
+    "version": "6035159",
+    "independence": "not_applicable"
+  },
+  "observation": "UI smoke、军团、工厂、战斗 HUD 测试及完整 UI 截图流程全部通过；真实 screen signals、导航和动作节点保持连通。",
+  "inference": "地图化战区、世界覆盖式工厂、紧凑战斗 HUD 和一屏阵型未破坏 shipping 交互。",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "自动测试不证明视觉质量或真人理解。"
+  ],
+  "created_at": "2026-07-30T00:00:00+08:00",
+  "schema_version": "caesar-loop/v2",
+  "run_id": "mobile_slg_ui_refresh_20260730"
+}

@@ -1,0 +1,36 @@
+{
+  "evidence_id": "ev_ui_visual_6035159",
+  "revision": "6035159",
+  "gate_id": "gate_visual_hierarchy",
+  "claim": "The world dominates and the current objective plus one primary action are visually clear.",
+  "scenario_id": "scenario_mobile_ui_core",
+  "evidence_type": "capture",
+  "artifact_or_command": "project-a/artifacts/ui-battle-844x390.png; project-a/artifacts/ui-camp-844x390.png; project-a/artifacts/ui-expedition-844x390.png; project-a/artifacts/ui-legion-844x390.png; project-a/assets/asset_manifest.md",
+  "environment": {
+    "engine": "Godot 4.6.3 Compatibility",
+    "platform": "macOS OpenGL over Metal",
+    "device": "Apple M4",
+    "viewport": "844x390",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "same-context comparative visual inspection",
+    "version": "2",
+    "independence": "non_independent"
+  },
+  "observation": "战斗、工厂和战区已分别成为连续世界覆盖层、3D 岛屿情境卡和战术路线地图；军团 6 阵位首次完整落在首屏。四屏统一使用同一组深色螺钉框架，金色只标主行动/当前标签，青色只标状态/目标。保留的四张纹理源文件不足 6 KiB，实测 PCK 增量 94,160 bytes。",
+  "inference": "高频主循环已形成统一的游戏化视觉语言并显著降低面板占用；但部分低频结果、帮助和设置页仍偏后台表单，因此当前证据保持 directional。",
+  "result": "directional",
+  "confidence": 0.92,
+  "freshness": "current",
+  "limitations": [
+    "评审非独立。",
+    "低频次级页面仍需同一规范收敛。",
+    "静态截图不证明动态可读性。"
+  ],
+  "created_at": "2026-07-30T00:00:00+08:00",
+  "schema_version": "caesar-loop/v2",
+  "run_id": "mobile_slg_ui_refresh_20260730"
+}

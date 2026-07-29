@@ -24,7 +24,7 @@
   "inference": "覆盖层重构未切断 shipping signals 或战斗状态投影。",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "自动测试不证明视觉质量或真人理解。"
   ],
