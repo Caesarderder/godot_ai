@@ -31,9 +31,9 @@ class CharacterDesignTests(unittest.TestCase):
 
     def test_snapshot_reads_current_roster_and_stage_curve(self) -> None:
         result = character_design.snapshot(PROJECT_ROOT)
-        self.assertEqual(len(result["roster"]), 8)
-        self.assertEqual(len(result["stage_curve"]), 25)
-        self.assertEqual(result["stage_curve"][-1]["recommended_power"], 16500)
+        self.assertEqual(len(result["roster"]), 23)
+        self.assertEqual(len(result["stage_curve"]), 60)
+        self.assertEqual(result["stage_curve"][-1]["recommended_power"], 28550)
         self.assertEqual(
             next(row for row in result["roster"] if row["archetype_id"] == "saw")[
                 "power"
@@ -75,6 +75,18 @@ class CharacterDesignTests(unittest.TestCase):
         self.assertTrue(
             any("occurs before character availability" in error for error in result["errors"])
         )
+
+    def test_existing_character_spec_must_match_runtime_identity(self) -> None:
+        implemented = json.loads(
+            (REPO_ROOT / "docs/references/characters/specs/mortar.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertTrue(character_design.validate(PROJECT_ROOT, implemented)["ok"])
+        implemented["class_id"] = "guardian"
+        result = character_design.validate(PROJECT_ROOT, implemented)
+        self.assertFalse(result["ok"])
+        self.assertTrue(any("class_id mismatch" in error for error in result["errors"]))
 
 
 if __name__ == "__main__":

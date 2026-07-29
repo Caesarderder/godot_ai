@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "drain_engine",
+  "display_name": "虹吸引擎马桶人",
+  "rating": "A",
+  "class_id": "guardian",
+  "branch": "heavy",
+  "faction": "钢铁防线",
+  "tactical_verb": "虹吸",
+  "player_promise": "当精英登场且队伍技能空窗时，玩家用虹吸提前下一轮战术。",
+  "base_stats": {
+    "hp": 190,
+    "attack": 21,
+    "defense": 40,
+    "speed_milli": 84000,
+    "crit_bp": 800
+  },
+  "active_skill": {
+    "skill_id": "energy_siphon",
+    "display_name": "虹吸引擎",
+    "one_star": "给最低能量友军充能。",
+    "two_star": "同时充能两名友军。",
+    "three_star": "虹吸延长精英虚弱。",
+    "timing": "技能空窗时释放。",
+    "weakness": "自身输出低。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 30
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "单精英空窗。",
+      "feedback": "能量管线。",
+      "fallbacks": [
+        "sonic"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "空窗加炮击。",
+      "feedback": "友军提前亮技。",
+      "fallbacks": [
+        "armored"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "多轮精英。",
+      "feedback": "两名充能。",
+      "fallbacks": [
+        "protocol_weaver"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss轮换模块。",
+      "feedback": "关键技能提前。",
+      "fallbacks": [
+        "sonic",
+        "repair"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "污水涡轮改造能量泵。",
+    "silhouette": "背部旋转涡轮。",
+    "battle_sound": "吸入低鸣到充能高音。",
+    "alliance_response": "使用无能量诱饵。"
+  },
+  "nearest_peers": [
+    "sonic",
+    "repair"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

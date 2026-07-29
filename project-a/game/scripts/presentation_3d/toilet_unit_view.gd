@@ -199,6 +199,29 @@ func _build_model(unit_snapshot: Dictionary) -> void:
 		_add_part("PhaseDrill", "bomb", "danger", Vector3(0.0, 0.72, -0.72))
 	if archetype_id == "protocol_weaver":
 		_add_part("ProtocolLoom", "rim", accent_key, Vector3(0.0, 1.92, 0.10))
+	if archetype_id == "ram_breaker":
+		_add_part("ShieldRam", "bomb", "danger", Vector3(0.0, 0.72, -0.78))
+	if archetype_id == "smoke_screen":
+		_add_part("LeftSmokeTank", "bomb", "ally_porcelain", Vector3(-0.48, 0.96, 0.56))
+		_add_part("RightSmokeTank", "bomb", "ally_porcelain", Vector3(0.48, 0.96, 0.56))
+	if archetype_id == "mortar":
+		_add_part("MortarTube", "antenna", "danger", Vector3(0.0, 1.45, 0.48))
+	if archetype_id == "interceptor":
+		_add_part("InterceptorRadar", "sight", accent_key, Vector3(0.0, 1.98, 0.0))
+	if archetype_id == "bulwark":
+		_add_part("LinkLeft", "armor", "ally_porcelain", Vector3(-0.62, 0.92, 0.10))
+		_add_part("LinkRight", "armor", "ally_porcelain", Vector3(0.62, 0.92, 0.10))
+	if archetype_id == "crusher":
+		_add_part("HydraulicJaw", "saw", "danger", Vector3(0.0, 0.70, -0.72))
+	if archetype_id == "echo_mimic":
+		_add_part("EchoRing", "rim", "ally_porcelain", Vector3(0.0, 1.92, 0.06))
+	if archetype_id == "drain_engine":
+		_add_part("DrainTurbine", "rim", accent_key, Vector3(0.0, 1.12, 0.66))
+	if archetype_id == "swarm_beacon":
+		_add_part("SwarmBeacon", "antenna", "danger", Vector3(0.0, 2.02, 0.0))
+	if archetype_id == "chronolock":
+		_add_part("ChronoOuterRing", "rim", "ally_porcelain", Vector3(0.0, 1.92, 0.0))
+		_add_part("ChronoCore", "sight", "danger", Vector3(0.0, 1.92, -0.10))
 	if elite:
 		_add_part("EliteCrest", "crest", "danger", Vector3(0.0, 1.95, -0.03))
 		_body_pivot.scale = Vector3(1.18, 1.18, 1.18)

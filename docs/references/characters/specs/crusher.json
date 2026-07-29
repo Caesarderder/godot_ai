@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "crusher",
+  "display_name": "液压粉碎马桶人",
+  "rating": "A",
+  "class_id": "fighter",
+  "branch": "heavy",
+  "faction": "快攻破城",
+  "tactical_verb": "处决",
+  "player_promise": "当结构残血却仍在增援时，玩家用处决立即结束攻城尾段。",
+  "base_stats": {
+    "hp": 150,
+    "attack": 36,
+    "defense": 28,
+    "speed_milli": 92000,
+    "crit_bp": 900
+  },
+  "active_skill": {
+    "skill_id": "hydraulic_crush",
+    "display_name": "液压终结",
+    "one_star": "重击当前结构。",
+    "two_star": "震击同阶段守军。",
+    "three_star": "击破后返还能量。",
+    "timing": "结构进入残血时释放。",
+    "weakness": "满血结构收益低。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 30
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "残血塔。",
+      "feedback": "液压压碎。",
+      "fallbacks": [
+        "rocket"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "结构加增援。",
+      "feedback": "震击守军。",
+      "fallbacks": [
+        "assault"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "多段城门。",
+      "feedback": "返能连击。",
+      "fallbacks": [
+        "saw"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss模块残血。",
+      "feedback": "模块终结。",
+      "fallbacks": [
+        "rocket",
+        "saw"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "重工液压机移动化。",
+    "silhouette": "前置巨钳。",
+    "battle_sound": "液压蓄力后陶瓷崩裂。",
+    "alliance_response": "加入假目标结构。"
+  },
+  "nearest_peers": [
+    "saw",
+    "rocket"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "swarm_beacon",
+  "display_name": "群落信标马桶人",
+  "rating": "B",
+  "class_id": "arcanist",
+  "branch": "special",
+  "faction": "干扰增殖",
+  "tactical_verb": "诱饵",
+  "player_promise": "当敌军集火主力时，玩家用诱饵改写目标并争取推进时间。",
+  "base_stats": {
+    "hp": 120,
+    "attack": 42,
+    "defense": 17,
+    "speed_milli": 92000,
+    "crit_bp": 900
+  },
+  "active_skill": {
+    "skill_id": "decoy_bloom",
+    "display_name": "诱饵群落",
+    "one_star": "投放一只诱饵幼体。",
+    "two_star": "投放两只。",
+    "three_star": "登场时虚弱守军。",
+    "timing": "敌军开始集火时释放。",
+    "weakness": "诱饵不能造成高伤害。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 20
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "单线集火。",
+      "feedback": "诱饵被锁定。",
+      "fallbacks": [
+        "armored"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "集火加控制。",
+      "feedback": "主力脱压。",
+      "fallbacks": [
+        "parasite"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "多线标记。",
+      "feedback": "双诱饵。",
+      "fallbacks": [
+        "smoke_screen"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss锁定。",
+      "feedback": "锁定转移。",
+      "fallbacks": [
+        "armored",
+        "parasite"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "寄生孢子改为无害信标。",
+    "silhouette": "头顶发光蜂巢。",
+    "battle_sound": "短促召集鸣叫。",
+    "alliance_response": "加入目标识别扫描。"
+  },
+  "nearest_peers": [
+    "parasite",
+    "armored"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

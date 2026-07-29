@@ -1179,6 +1179,31 @@ func _spawn_skill_vfx(event: Dictionary) -> void:
 			_spawn_dash_streak(origin, Color("#ffd34f"))
 		"protocol_hijack":
 			_spawn_pulse_ring(origin, Color("#d67cff"), 2.0)
+		"ram_shatter":
+			_spawn_dash_streak(origin, Color("#ffb14f"))
+			_spawn_sparks(origin, Color("#fff0ba"))
+		"caustic_smokescreen":
+			_spawn_pulse_ring(origin, Color("#8eb7a5"), 2.3)
+		"sewer_mortar":
+			_spawn_projectile_arc(origin, origin + Vector3(0.0, 1.8, -4.6), Color("#ffc15a"))
+		"warning_intercept":
+			_spawn_pulse_ring(origin, Color("#5de5ff"), 1.7)
+			_spawn_sparks(origin, Color("#d6fbff"))
+		"linked_bulwark":
+			_spawn_pulse_ring(origin, Color("#74a8ff"), 2.0)
+		"hydraulic_crush":
+			_spawn_dash_streak(origin, Color("#ff755f"))
+			_add_camera_shake(0.12, 0.10)
+		"allied_echo":
+			_spawn_pulse_ring(origin, Color("#d38cff"), 2.4)
+			_spawn_pulse_ring(origin, Color("#7d5cff"), 1.5)
+		"energy_siphon":
+			_spawn_pulse_ring(origin, Color("#57e7b2"), 1.9)
+		"decoy_bloom":
+			_spawn_pulse_ring(origin, Color("#c1ef66"), 2.1)
+		"chrono_lock":
+			_spawn_pulse_ring(origin, Color("#85a8ff"), 2.6)
+			_spawn_sparks(origin, Color("#eff4ff"))
 		_:
 			_spawn_pulse_ring(origin, Color("#ffffff"), 1.0)
 

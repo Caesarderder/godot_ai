@@ -15,8 +15,12 @@ const POOLS: Dictionary = {
 	"S": ["parasite", "saw", "protocol_weaver", "echo_mimic", "chronolock"],
 }
 const FACTION_CORE_POOLS: Dictionary = {
-	"B": ["assault", "rocket", "repair"],
-	"A": ["sonic", "armored", "bomber"],
+	# The first-hour ten-pull may surface every B/A playstyle added for the
+	# 30–60 minute faction-forming loop. Each rarity still contains at least
+	# one candidate from all four factions, so the two guaranteed choices can
+	# remain same-rarity and cross-faction.
+	"B": ["assault", "rocket", "repair", "ram_breaker", "mortar", "bulwark", "swarm_beacon"],
+	"A": ["sonic", "armored", "bomber", "smoke_screen", "interceptor", "crusher", "drain_engine"],
 }
 const DUPLICATE_FRAGMENTS: Dictionary = {"B": 20, "A": 30, "S": 40}
 # Compatibility alias for authored onboarding cards. The value now means

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "interceptor",
+  "display_name": "预警截击马桶人",
+  "rating": "A",
+  "class_id": "ranger",
+  "branch": "flying",
+  "faction": "远程轰炸",
+  "tactical_verb": "截击",
+  "player_promise": "当红线炮击预警出现时，玩家用截击把伤害变成反攻窗口。",
+  "base_stats": {
+    "hp": 130,
+    "attack": 24,
+    "defense": 21,
+    "speed_milli": 112000,
+    "crit_bp": 1150
+  },
+  "active_skill": {
+    "skill_id": "warning_intercept",
+    "display_name": "红线截击",
+    "one_star": "保护两名主力。",
+    "two_star": "截击盾覆盖全队。",
+    "three_star": "成功截击后反击精英。",
+    "timing": "预警命中前释放。",
+    "weakness": "无预警时价值较低。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 30
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "单次炮击。",
+      "feedback": "空中截爆。",
+      "fallbacks": [
+        "armored"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "炮击加守军。",
+      "feedback": "护盾保留。",
+      "fallbacks": [
+        "anchor_bastion"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "交替预警。",
+      "feedback": "反击精英。",
+      "fallbacks": [
+        "armored"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss齐射。",
+      "feedback": "全队截击。",
+      "fallbacks": [
+        "armored",
+        "repair"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "火箭雷达改成防空阵列。",
+    "silhouette": "头顶双翼雷达。",
+    "battle_sound": "锁定三连音。",
+    "alliance_response": "假预警诱导。"
+  },
+  "nearest_peers": [
+    "armored",
+    "anchor_bastion"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

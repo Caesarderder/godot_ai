@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "chronolock",
+  "display_name": "时序锁定母体",
+  "rating": "S",
+  "class_id": "arcanist",
+  "branch": "special",
+  "faction": "干扰增殖",
+  "tactical_verb": "冻结",
+  "player_promise": "当多名敌人即将齐射时，玩家用冻结打断危险节奏并集中反击。",
+  "base_stats": {
+    "hp": 120,
+    "attack": 42,
+    "defense": 17,
+    "speed_milli": 92000,
+    "crit_bp": 900
+  },
+  "active_skill": {
+    "skill_id": "chrono_lock",
+    "display_name": "时序封锁",
+    "one_star": "冻结普通守军。",
+    "two_star": "延长并影响精英。",
+    "three_star": "冻结同时削弱防御。",
+    "timing": "齐射前释放。",
+    "weakness": "结构和Boss免疫。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 40
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "普通守军齐射。",
+      "feedback": "蓝色停摆。",
+      "fallbacks": [
+        "sonic"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "精英混编。",
+      "feedback": "精英短停。",
+      "fallbacks": [
+        "anchor_bastion"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "三线齐射。",
+      "feedback": "全阶段冻结。",
+      "fallbacks": [
+        "smoke_screen"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss护卫齐射。",
+      "feedback": "护卫被冻结，Boss继续行动。",
+      "fallbacks": [
+        "sonic",
+        "armored"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "截获电视同步脉冲。",
+    "silhouette": "多环时钟天线。",
+    "battle_sound": "节拍骤停后回响。",
+    "alliance_response": "Boss改用异步模块。"
+  },
+  "nearest_peers": [
+    "sonic",
+    "protocol_weaver"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

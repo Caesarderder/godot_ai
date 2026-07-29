@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "smoke_screen",
+  "display_name": "烟幕喷射马桶人",
+  "rating": "A",
+  "class_id": "arcanist",
+  "branch": "special",
+  "faction": "干扰增殖",
+  "tactical_verb": "遮蔽",
+  "player_promise": "当敌人标记濒危主力时，玩家用遮蔽把集火变成撤压窗口。",
+  "base_stats": {
+    "hp": 120,
+    "attack": 42,
+    "defense": 17,
+    "speed_milli": 92000,
+    "crit_bp": 900
+  },
+  "active_skill": {
+    "skill_id": "caustic_smokescreen",
+    "display_name": "腐蚀烟幕",
+    "one_star": "保护最低血主力。",
+    "two_star": "烟幕覆盖全队。",
+    "three_star": "烟幕虚弱精英。",
+    "timing": "集火标记后释放。",
+    "weakness": "不能治疗已损生命。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 30
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "单点集火。",
+      "feedback": "蓝灰烟幕盾。",
+      "fallbacks": [
+        "repair"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "集火加炮击。",
+      "feedback": "全队存活。",
+      "fallbacks": [
+        "armored"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "连续标记。",
+      "feedback": "精英虚弱。",
+      "fallbacks": [
+        "sonic"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss集火。",
+      "feedback": "标记伤害被吸收。",
+      "fallbacks": [
+        "armored",
+        "repair"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "污泥净化副产物。",
+    "silhouette": "双侧烟罐。",
+    "battle_sound": "泄压喷雾声。",
+    "alliance_response": "热成像标记。"
+  },
+  "nearest_peers": [
+    "repair",
+    "armored"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

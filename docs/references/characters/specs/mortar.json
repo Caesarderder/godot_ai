@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "mortar",
+  "display_name": "曲射臼炮马桶人",
+  "rating": "B",
+  "class_id": "ranger",
+  "branch": "flying",
+  "faction": "远程轰炸",
+  "tactical_verb": "曲射",
+  "player_promise": "当前线拥堵而后塔暴露时，玩家用曲射越线拆除威胁。",
+  "base_stats": {
+    "hp": 130,
+    "attack": 24,
+    "defense": 21,
+    "speed_milli": 112000,
+    "crit_bp": 1150
+  },
+  "active_skill": {
+    "skill_id": "sewer_mortar",
+    "display_name": "下水道曲射炮",
+    "one_star": "轰击最远目标。",
+    "two_star": "落点溅射守军。",
+    "three_star": "弹坑持续破甲结构。",
+    "timing": "后塔暴露时释放。",
+    "weakness": "对移动单体不稳定。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 20
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "孤立后塔。",
+      "feedback": "抛物线落弹。",
+      "fallbacks": [
+        "rocket"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "前排加后塔。",
+      "feedback": "越线命中。",
+      "fallbacks": [
+        "phase_tunneler"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_3",
+      "demand": "双塔。",
+      "feedback": "破甲标记。",
+      "fallbacks": [
+        "rocket"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss后方模块。",
+      "feedback": "模块提前损毁。",
+      "fallbacks": [
+        "rocket",
+        "phase_tunneler"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "排污管改造曲射炮。",
+    "silhouette": "背负短粗炮管。",
+    "battle_sound": "闷响后远端爆裂。",
+    "alliance_response": "部署拦截网。"
+  },
+  "nearest_peers": [
+    "rocket",
+    "phase_tunneler"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

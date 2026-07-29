@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "archetype_id": "bulwark",
+  "display_name": "联结壁垒马桶人",
+  "rating": "B",
+  "class_id": "guardian",
+  "branch": "heavy",
+  "faction": "钢铁防线",
+  "tactical_verb": "联结",
+  "player_promise": "当多名主力同时掉血时，玩家用联结平滑压力并保住阵型。",
+  "base_stats": {
+    "hp": 190,
+    "attack": 21,
+    "defense": 40,
+    "speed_milli": 84000,
+    "crit_bp": 800
+  },
+  "active_skill": {
+    "skill_id": "linked_bulwark",
+    "display_name": "联结壁垒",
+    "one_star": "联结两名低血主力。",
+    "two_star": "覆盖全部主力。",
+    "three_star": "联结时即时恢复生命。",
+    "timing": "两名以上主力掉血时释放。",
+    "weakness": "不解除控制。"
+  },
+  "acquisition": {
+    "available_after_stage": "stage_1_12",
+    "research_seconds": 5,
+    "duplicate_fragments": 20
+  },
+  "encounters": {
+    "safe_intro": {
+      "stage_id": "stage_2_1",
+      "demand": "双线受压。",
+      "feedback": "蓝色联结线。",
+      "fallbacks": [
+        "repair"
+      ]
+    },
+    "combination_test": {
+      "stage_id": "stage_2_2",
+      "demand": "双线加控制。",
+      "feedback": "血线稳定。",
+      "fallbacks": [
+        "armored"
+      ]
+    },
+    "spotlight": {
+      "stage_id": "stage_2_4",
+      "demand": "持续消耗。",
+      "feedback": "全队盾量。",
+      "fallbacks": [
+        "repair"
+      ]
+    },
+    "boss_soft_counter": {
+      "stage_id": "stage_2_5",
+      "demand": "Boss分摊压力。",
+      "feedback": "无人被单点击倒。",
+      "fallbacks": [
+        "armored",
+        "repair"
+      ]
+    }
+  },
+  "narrative": {
+    "origin": "装甲支架改为联结管。",
+    "silhouette": "左右伸展的蓝色管线。",
+    "battle_sound": "低频管压脉冲。",
+    "alliance_response": "改用控制拆联结。"
+  },
+  "nearest_peers": [
+    "armored",
+    "repair"
+  ],
+  "evidence_labels": {
+    "base_power": "derived",
+    "skill_value": "implemented",
+    "player_desirability": "unknown"
+  }
+}

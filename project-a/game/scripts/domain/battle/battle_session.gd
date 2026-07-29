@@ -1550,7 +1550,14 @@ func _cast_skill(unit: Dictionary, events: Array[Dictionary]) -> void:
 			if star < 2 and link_targets.size() > 2:
 				link_targets = link_targets.slice(0, 2)
 			for ally in link_targets:
-				ally["shield"] = int(ally.get("shield", 0)) + maxi(25, int(ally["max_hp"]) / 5)
+				# This is a pressure-smoothing link, not a second siege shield.
+				# Keeping the absorb budget below Armored preserves the authored
+				# 2-4 growth wall in the first-hour faction journey.
+				var link_shield_bp := 1400 if star >= 3 else (1000 if star >= 2 else 1200)
+				ally["shield"] = int(ally.get("shield", 0)) + maxi(
+					18,
+					int(ally["max_hp"]) * link_shield_bp / 10000
+				)
 				ally["shield_ticks"] = 55
 				if star >= 3:
 					ally["hp"] = mini(int(ally["max_hp"]), int(ally["hp"]) + maxi(10, int(unit["attack"])))

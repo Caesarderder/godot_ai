@@ -2206,16 +2206,16 @@ func _blueprint_unlock_source(recipe_id: String) -> String:
 		"flying.magnetic_conductor": "4-3 首通或信号招募",
 		"ordinary.phase_tunneler": "4-6 首通或信号招募",
 		"special.protocol_weaver": "4-9 首通或信号招募",
-		"ordinary.ram_breaker": "4-4 首通后信号招募",
-		"special.smoke_screen": "4-4 首通后信号招募",
-		"flying.mortar": "4-5 首通后信号招募",
-		"flying.interceptor": "4-5 首通后信号招募",
-		"heavy.bulwark": "5-1 首通后信号招募",
-		"heavy.crusher": "5-1 首通后信号招募",
-		"special.echo_mimic": "5-2 首通后信号招募",
-		"heavy.drain_engine": "5-2 首通后信号招募",
-		"special.swarm_beacon": "5-3 首通后信号招募",
-		"special.chronolock": "5-4 首通后信号招募",
+		"ordinary.ram_breaker": "首章阵营十连候选或4-4首通",
+		"special.smoke_screen": "首章阵营十连候选或4-5首通",
+		"flying.mortar": "首章阵营十连候选或4-7首通",
+		"flying.interceptor": "首章阵营十连候选或4-8首通",
+		"heavy.bulwark": "首章阵营十连候选或4-10首通",
+		"heavy.crusher": "首章阵营十连候选或4-11首通",
+		"special.echo_mimic": "首章后标准信号S级或4-12首通",
+		"heavy.drain_engine": "首章阵营十连候选或5-3首通",
+		"special.swarm_beacon": "首章阵营十连候选或5-6首通",
+		"special.chronolock": "首章后标准信号S级或5-9首通",
 	}
 	return String(sources.get(recipe_id, "信号招募"))
 
@@ -3550,6 +3550,16 @@ func _faction_mastery_proof_copy(
 		"saw": ["saw_followup_hits", "精英追斩触发"],
 		"repair": ["repair_group_extra_targets", "群体维修额外覆盖"],
 		"parasite": ["parasite_extra_summons", "额外召唤寄生幼体"],
+		"ram_breaker": ["new_character_effects", "碎盾冲击生效"],
+		"smoke_screen": ["new_character_effects", "烟幕保护覆盖"],
+		"mortar": ["new_character_effects", "曲射落点命中"],
+		"interceptor": ["new_character_effects", "预警截击保护"],
+		"bulwark": ["new_character_effects", "联结壁垒覆盖"],
+		"crusher": ["new_character_effects", "液压处决命中"],
+		"echo_mimic": ["new_character_effects", "战术回响命中"],
+		"drain_engine": ["new_character_effects", "虹吸充能覆盖"],
+		"swarm_beacon": ["new_character_effects", "诱饵幼体投放"],
+		"chronolock": ["new_character_effects", "时序冻结覆盖"],
 	}.get(archetype_id, []) as Array
 	if metric.is_empty():
 		return ""

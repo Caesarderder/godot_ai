@@ -15,7 +15,7 @@ STAR_BP = {1: 10000, 2: 13000, 3: 16000}
 RARITY_BP = {"B": 10000, "A": 10000, "S": 14000}
 VALID_BRANCHES = {"ordinary", "heavy", "flying", "special"}
 VALID_FACTIONS = {"快攻破城", "钢铁防线", "远程轰炸", "干扰增殖"}
-STAGE_PATTERN = re.compile(r"^stage_([1-5])_([1-5])$")
+STAGE_PATTERN = re.compile(r"^stage_([1-5])_([1-9]|1[0-2])$")
 
 
 def _text(project: Path, relative: str) -> str:
@@ -66,14 +66,47 @@ def _star_effects(source: str) -> dict[str, dict[int, str]]:
 
 def _recommended_power(stage_source: str) -> list[int]:
     match = re.search(r"const RECOMMENDED_POWER:\s*Array\[int\]\s*=\s*\[(.*?)\]", stage_source, re.S)
-    if not match:
+    if match:
+        return [int(value) for value in re.findall(r"\d+", match.group(1))]
+    def values(constant: str) -> list[int]:
+        current = re.search(
+            rf"const {constant}:\s*Array\[int\]\s*=\s*\[(.*?)\]",
+            stage_source,
+            re.S,
+        )
+        return [] if not current else [
+            int(value) for value in re.findall(r"\d+", current.group(1))
+        ]
+    starts = values("CHAPTER_POWER_START")
+    finishes = values("CHAPTER_POWER_END")
+    legacy = values("LEGACY_RECOMMENDED_POWER")
+    if len(starts) != 5 or len(finishes) != 5 or len(legacy) < 5:
         return []
-    return [int(value) for value in re.findall(r"\d+", match.group(1))]
+    powers: list[int] = []
+    for chapter in range(1, 6):
+        for stage in range(1, 13):
+            if chapter == 1 and stage <= 5:
+                powers.append(legacy[stage - 1])
+                continue
+            if chapter == 1:
+                powers.append([6800, 7050, 7300, 7800, 7950, 8200, 9000][stage - 6])
+                continue
+            start = starts[chapter - 1]
+            finish = finishes[chapter - 1]
+            value = start + (finish - start) * (stage - 1) // 11
+            if stage == 6:
+                value += (finish - start) * 8 // 100
+            elif stage == 9:
+                value += (finish - start) * 5 // 100
+            elif stage == 12:
+                value += (finish - start) * 10 // 100
+            powers.append(value)
+    return powers
 
 
 def _recommendation_counts(stage_source: str, recipe_rows: list[dict[str, str]]) -> dict[str, dict[str, int]]:
     counts = {row["archetype_id"]: {"recommended": 0, "fallback": 0} for row in recipe_rows}
-    for block in re.finditer(r'"stage_[1-5]_[1-5]"\s*:\s*\{(.*?)\n\t\t\}', stage_source, re.S):
+    for block in re.finditer(r'"stage_[1-5]_(?:[1-9]|1[0-2])"\s*:\s*\{(.*?)\n\t\t\}', stage_source, re.S):
         body = block.group(1)
         for kind in ("recommended", "fallback"):
             match = re.search(rf'"{kind}"\s*:\s*\[([^\]]*)\]', body)
@@ -130,7 +163,7 @@ def snapshot(project: Path) -> dict:
         "roster": roster,
         "classes": classes,
         "stage_curve": [
-            {"stage_id": f"stage_{index // 5 + 1}_{index % 5 + 1}", "recommended_power": value}
+            {"stage_id": f"stage_{index // 12 + 1}_{index % 12 + 1}", "recommended_power": value}
             for index, value in enumerate(powers)
         ],
         "known_factions": sorted(VALID_FACTIONS),
@@ -146,7 +179,7 @@ def _stage_index(stage_id: str) -> int:
     match = STAGE_PATTERN.fullmatch(stage_id)
     if not match:
         return -1
-    return (int(match.group(1)) - 1) * 5 + int(match.group(2)) - 1
+    return (int(match.group(1)) - 1) * 12 + int(match.group(2)) - 1
 
 
 def validate(project: Path, spec: dict) -> dict:
@@ -167,8 +200,7 @@ def validate(project: Path, spec: dict) -> dict:
     archetype_id = str(spec["archetype_id"])
     if not re.fullmatch(r"[a-z][a-z0-9_]*", archetype_id):
         errors.append("archetype_id must be lower_snake_case")
-    if archetype_id in existing:
-        errors.append(f"archetype_id already exists: {archetype_id}")
+    existing_row = existing.get(archetype_id)
     rating = str(spec["rating"])
     class_id = str(spec["class_id"])
     if rating not in RARITY_BP:
@@ -182,6 +214,25 @@ def validate(project: Path, spec: dict) -> dict:
     stats = spec["base_stats"]
     if not isinstance(stats, dict) or any(not isinstance(stats.get(key), int) or stats.get(key, 0) <= 0 for key in ATTRS):
         errors.append(f"base_stats must contain positive integers: {', '.join(ATTRS)}")
+    if existing_row is not None:
+        implemented_identity = {
+            "display_name": str(existing_row.get("display_name", "")),
+            "rating": str(existing_row.get("rating", "")),
+            "class_id": str(existing_row.get("class_id", "")),
+            "branch": str(existing_row.get("workshop", "")),
+            "faction": str(existing_row.get("faction", "")),
+        }
+        for key, implemented_value in implemented_identity.items():
+            if str(spec.get(key, "")) != implemented_value:
+                errors.append(
+                    f"implemented {archetype_id} {key} mismatch: "
+                    f"spec={spec.get(key, '')} runtime={implemented_value}"
+                )
+        if isinstance(stats, dict) and stats != existing_row.get("base_stats", {}):
+            errors.append(
+                f"implemented {archetype_id} base_stats mismatch: "
+                f"spec={stats} runtime={existing_row.get('base_stats', {})}"
+            )
     power = {}
     if not errors:
         power = {star: combat_power(stats, rating, star) for star in (1, 2, 3)}
@@ -210,7 +261,7 @@ def validate(project: Path, spec: dict) -> dict:
     unlock_stage = str(acquisition.get("available_after_stage", "")) if isinstance(acquisition, dict) else ""
     unlock_index = _stage_index(unlock_stage)
     if unlock_index < 0:
-        errors.append("acquisition.available_after_stage must be stage_1_1..stage_5_5")
+        errors.append("acquisition.available_after_stage must be stage_1_1..stage_5_12")
     expected_fragments = {"B": 20, "A": 30, "S": 40}.get(rating)
     if isinstance(acquisition, dict) and int(acquisition.get("duplicate_fragments", -1)) != expected_fragments:
         errors.append(f"{rating} duplicate_fragments must match current recruit rule: {expected_fragments}")
@@ -222,7 +273,7 @@ def validate(project: Path, spec: dict) -> dict:
         stage_id = str(encounter.get("stage_id", ""))
         index = _stage_index(stage_id)
         if index < 0:
-            errors.append(f"encounters.{key}.stage_id must be stage_1_1..stage_5_5")
+            errors.append(f"encounters.{key}.stage_id must be stage_1_1..stage_5_12")
         elif index < unlock_index:
             errors.append(f"encounters.{key} occurs before character availability")
         elif index < prior:

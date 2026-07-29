@@ -1020,10 +1020,22 @@ func _qualitative_metric_for(archetype_id: String) -> String:
 		"saw": "saw_followup_hits",
 		"repair": "repair_group_extra_targets",
 		"parasite": "parasite_extra_summons",
+		"ram_breaker": "new_character_effects",
+		"smoke_screen": "new_character_effects",
+		"mortar": "new_character_effects",
+		"interceptor": "new_character_effects",
+		"bulwark": "new_character_effects",
+		"crusher": "new_character_effects",
+		"echo_mimic": "new_character_effects",
+		"drain_engine": "new_character_effects",
+		"swarm_beacon": "new_character_effects",
+		"chronolock": "new_character_effects",
 	}.get(archetype_id, ""))
 
 
 func _tree_has_text(node: Node, fragment: String) -> bool:
+	if node == null:
+		return false
 	if node is Label and (node as Label).text.contains(fragment):
 		return true
 	if node is Button and (node as Button).text.contains(fragment):

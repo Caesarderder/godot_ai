@@ -37,6 +37,7 @@ func _init() -> void:
 		"at least six of seven faction routes retain the authored growth wall while one perfect manual route may earn a skill shortcut"
 	)
 	_test_s_one_star_value()
+	_test_first_hour_new_core_reachability()
 	_test_free_ten_hard_pity_edge()
 	_test_faction_core_choice_is_durable_and_exclusive()
 	_test_tier_two_doctrine_choice_is_durable_and_exclusive()
@@ -410,6 +411,31 @@ func _post_chapter_one_state(run_seed: int) -> RefCounted:
 	return state
 
 
+func _test_first_hour_new_core_reachability() -> void:
+	var expected: Array[String] = [
+		"ram_breaker", "smoke_screen", "mortar", "interceptor",
+		"bulwark", "crusher", "drain_engine", "swarm_beacon",
+	]
+	var seen: Dictionary = {}
+	for seed_offset in 512:
+		var state: RefCounted = _post_chapter_one_state(30000000 + seed_offset)
+		var result := SignalRecruitServiceScript.recruit_free_faction_ten(state)
+		_ok(bool(result.get("ok", false)), "first-hour candidate scan draw succeeds")
+		if not bool(result.get("ok", false)):
+			continue
+		for archetype_id_value in (
+			(result.get("event", {}) as Dictionary).get("faction_core_candidates", []) as Array
+		):
+			seen[String(archetype_id_value)] = true
+		if expected.all(func(archetype_id: String) -> bool: return seen.has(archetype_id)):
+			break
+	for archetype_id in expected:
+		_ok(
+			seen.has(archetype_id),
+			"%s is reachable as a guaranteed first-hour faction-core candidate" % archetype_id
+		)
+
+
 func _test_s_one_star_value() -> void:
 	var s_hero: RefCounted = HeroGeneratorScript.generate_archetype(3001, 1, "saw", "fighter")
 	var b_hero: RefCounted = HeroGeneratorScript.generate_archetype(3001, 1, "assault", "fighter")
@@ -655,6 +681,16 @@ func _qualitative_metric_for(archetype_id: String) -> String:
 		"saw": "saw_followup_hits",
 		"repair": "repair_group_extra_targets",
 		"parasite": "parasite_extra_summons",
+		"ram_breaker": "new_character_effects",
+		"smoke_screen": "new_character_effects",
+		"mortar": "new_character_effects",
+		"interceptor": "new_character_effects",
+		"bulwark": "new_character_effects",
+		"crusher": "new_character_effects",
+		"echo_mimic": "new_character_effects",
+		"drain_engine": "new_character_effects",
+		"swarm_beacon": "new_character_effects",
+		"chronolock": "new_character_effects",
 	}.get(archetype_id, ""))
 
 
