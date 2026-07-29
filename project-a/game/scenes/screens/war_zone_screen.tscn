@@ -2,29 +2,55 @@
 
 [ext_resource type="Script" path="res://game/scripts/ui/war_zone_screen.gd" id="1_script"]
 
-[node name="WarZoneScreen" type="VBoxContainer"]
+[node name="WarZoneScreen" type="Control"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+mouse_filter = 1
 script = ExtResource("1_script")
 
 [node name="ChapterNav" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 34.0
+offset_top = 2.0
+offset_right = -34.0
+offset_bottom = 38.0
+grow_horizontal = 2
 alignment = 1
-theme_override_constants/separation = 8
+theme_override_constants/separation = 5
 
 [node name="StageScroll" type="ScrollContainer" parent="."]
-layout_mode = 2
-horizontal_scroll_mode = 2
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 36.0
+offset_top = 48.0
+offset_right = -36.0
+offset_bottom = 104.0
+grow_horizontal = 2
+horizontal_scroll_mode = 3
 vertical_scroll_mode = 0
 
 [node name="StageNodeStrip" type="HBoxContainer" parent="StageScroll"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 4
+size_flags_horizontal = 3
+alignment = 1
 
 [node name="StageDetailHost" type="MarginContainer" parent="."]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -520.0
+offset_top = -160.0
+offset_right = -8.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0

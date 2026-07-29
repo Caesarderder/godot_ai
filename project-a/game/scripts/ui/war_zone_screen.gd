@@ -1,5 +1,5 @@
 class_name WarZoneScreen
-extends VBoxContainer
+extends Control
 
 signal chapter_selected(chapter: int)
 signal stage_selected(stage_id: String)
@@ -32,6 +32,7 @@ var _estimated_threat := "未知"
 
 
 func _ready() -> void:
+	resized.connect(queue_redraw)
 	if not _selected_config.is_empty():
 		_rebuild()
 
@@ -66,24 +67,32 @@ func _rebuild() -> void:
 	_clear_children(detail_host)
 	for chapter in range(1, 6):
 		var chapter_button := _button("第%d章" % chapter, _selected_chapter == chapter)
-		chapter_button.custom_minimum_size = Vector2(105, 36)
+		chapter_button.custom_minimum_size = Vector2(92, 36)
 		chapter_button.disabled = chapter > _highest_chapter
 		chapter_button.pressed.connect(_on_chapter_pressed.bind(chapter))
 		chapter_nav.add_child(chapter_button)
 	var endless_button := _button("无尽前线", _selected_chapter == 6)
-	endless_button.custom_minimum_size = Vector2(120, 36)
+	endless_button.custom_minimum_size = Vector2(104, 36)
 	endless_button.disabled = _highest_chapter < 6
 	endless_button.pressed.connect(_on_chapter_pressed.bind(6))
 	chapter_nav.add_child(endless_button)
 
 	for row in _stage_rows:
 		var stage_id := String(row.get("stage_id", ""))
+		var stage_number := stage_id.trim_prefix("stage_").replace("_", "-")
+		var stage_state := "◆" if bool(row.get("unlocked", false)) else "×"
+		if String(row.get("status", "")) == "已夺回":
+			stage_state = "✓"
 		var stage_button := _button(
-			"%s\n%s" % [String(row.get("display_name", stage_id)), String(row.get("status", ""))],
+			"%s\n%s" % [stage_number, stage_state],
 			stage_id == _selected_stage_id
 		)
 		stage_button.name = "StageNode_%s" % stage_id
-		stage_button.custom_minimum_size = Vector2(132, 52)
+		stage_button.custom_minimum_size = Vector2(58, 50)
+		stage_button.tooltip_text = "%s · %s" % [
+			String(row.get("display_name", stage_id)),
+			String(row.get("status", "")),
+		]
 		stage_button.disabled = not bool(row.get("unlocked", false))
 		stage_button.pressed.connect(_on_stage_pressed.bind(stage_id))
 		stage_strip.add_child(stage_button)
@@ -102,6 +111,43 @@ func _rebuild() -> void:
 	detail.attack_requested.connect(_on_attack_requested)
 	detail.preparation_requested.connect(preparation_requested.emit)
 	detail_host.add_child(detail)
+	queue_redraw()
+
+
+func _draw() -> void:
+	var viewport_size := size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return
+	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color("#081219d9"))
+	var horizon_y := viewport_size.y * 0.58
+	for index in range(7):
+		var y := lerpf(112.0, viewport_size.y - 8.0, float(index) / 6.0)
+		var fade := 0.13 * (1.0 - float(index) / 8.0)
+		draw_line(Vector2(0.0, y), Vector2(viewport_size.x, y), Color(CYAN, fade), 1.0)
+	for index in range(9):
+		var x := viewport_size.x * float(index) / 8.0
+		draw_line(
+			Vector2(viewport_size.x * 0.5, horizon_y),
+			Vector2(x, viewport_size.y),
+			Color(CYAN, 0.08),
+			1.0
+		)
+	var route_start := Vector2(54.0, horizon_y + 28.0)
+	var route_end := Vector2(viewport_size.x - 66.0, horizon_y - 14.0)
+	draw_line(route_start, route_end, Color(CYAN, 0.32), 3.0, true)
+	for index in range(5):
+		var point := route_start.lerp(route_end, float(index) / 4.0)
+		var active := index == clampi(_selected_stage_index(), 0, 4)
+		draw_circle(point, 10.0 if active else 6.0, GOLD if active else Color(CYAN, 0.58))
+		if active:
+			draw_arc(point, 16.0, 0.0, TAU, 32, Color(GOLD, 0.54), 2.0, true)
+
+
+func _selected_stage_index() -> int:
+	for index in range(_stage_rows.size()):
+		if String(_stage_rows[index].get("stage_id", "")) == _selected_stage_id:
+			return index
+	return 0
 
 
 func _button(value: String, selected: bool) -> Button:

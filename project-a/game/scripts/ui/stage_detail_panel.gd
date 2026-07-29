@@ -177,8 +177,8 @@ func _apply_configuration() -> void:
 	if force_primary_attack:
 		_style_pressure_test_action()
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = PANEL
-	panel_style.border_color = CYAN if _unlocked else LINE
+	panel_style.bg_color = Color(PANEL, 0.9)
+	panel_style.border_color = Color(CYAN, 0.72) if _unlocked else LINE
 	panel_style.set_border_width_all(1)
 	panel_style.set_corner_radius_all(14)
 	add_theme_stylebox_override("panel", panel_style)
