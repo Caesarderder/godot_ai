@@ -238,7 +238,8 @@ func _growth_choice_panel(first_growth: Dictionary) -> Control:
 func _formation_panel() -> Control:
 	var first_formation := _view.get("first_formation", {}) as Dictionary
 	var onboarding_active := bool(first_formation.get("active", false))
-	var panel := _panel("" if onboarding_active else "出击阵型")
+	var panel := _panel("")
+	panel.add_theme_constant_override("separation", 5)
 	if onboarding_active:
 		var guide := _panel("高墙反攻编队 %d/%d · %s" % [
 			int(first_formation.get("deployed", 0)),
@@ -257,21 +258,34 @@ func _formation_panel() -> Control:
 		}))
 		panel.add_child(action)
 	if not onboarding_active:
-		panel.add_child(_label(
-			"军团战力 %d · 下一目标 %s 推荐 %d" % [
+		var readiness := HBoxContainer.new()
+		readiness.name = "FormationReadinessStrip"
+		readiness.add_theme_constant_override("separation", 14)
+		var power_label := _label(
+			"战力 %d / %d" % [
 				int(_view.get("team_power", 0)),
-				String(_view.get("target_stage_name", "未知战区")),
 				int(_view.get("recommended_power", 0)),
 			],
 			15,
 			GOLD
-		))
+		)
+		power_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		readiness.add_child(power_label)
+		var target_label := _label(
+			"下一目标 · %s" % String(_view.get("target_stage_name", "未知战区")),
+			13,
+			CYAN
+		)
+		target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		target_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		readiness.add_child(target_label)
+		panel.add_child(readiness)
 		var gap := int(_view.get("recommended_power", 0)) - int(_view.get("team_power", 0))
 		panel.add_child(_label(
-			"战力差 %s · 先选职责，再比较战力；前排承伤，后排保住关键输出。" % (
+			"%s · 前排承伤，后排保护关键输出；点阵位可替换。" % (
 				"+%d" % gap if gap > 0 else "已达推荐线"
 			),
-			12,
+			11,
 			RED if gap > 0 else GREEN
 		))
 	var grid := GridContainer.new()
@@ -286,7 +300,7 @@ func _formation_panel() -> Control:
 			continue
 		var selected := slot_id == String(_view.get("formation_edit_slot", ""))
 		var button := _button(
-			"%s\n%s\n%s" % [
+			"%s · %s\n%s" % [
 				String(SLOT_NAMES.get(slot_id, slot_id)),
 				String(slot.get("display_name", "空位")),
 				String(slot.get("role", "待命")),
@@ -294,14 +308,12 @@ func _formation_panel() -> Control:
 			selected
 		)
 		button.name = "FormationSlot_%s" % slot_id
-		button.custom_minimum_size = Vector2(220, 54 if onboarding_active else 70)
+		button.custom_minimum_size = Vector2(220, 48 if onboarding_active else 52)
 		button.pressed.connect(action_requested.emit.bind("select_slot", {"slot": slot_id}))
 		grid.add_child(button)
 	panel.add_child(grid)
 	var edit_slot := String(_view.get("formation_edit_slot", ""))
-	if edit_slot.is_empty():
-		panel.add_child(_label("轻点一个阵位，立即比较可替换角色。", 13, MUTED))
-	else:
+	if not edit_slot.is_empty():
 		panel.add_child(_candidate_panel(edit_slot))
 	return panel
 
