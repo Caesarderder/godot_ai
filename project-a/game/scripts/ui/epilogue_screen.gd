@@ -79,7 +79,7 @@ func _apply_theme() -> void:
 	%CampaignContinuationPromise.add_theme_color_override("font_color", CYAN)
 	for button in [endless_button, goals_button, base_button]:
 		button.focus_mode = Control.FOCUS_ALL
-		button.custom_minimum_size.y = 44
+		button.custom_minimum_size.y = 40
 		button.add_theme_font_override("font", CJK_FONT)
 		button.add_theme_stylebox_override("focus", _button_style(Color(CYAN, 0.16), CYAN))
 	endless_button.add_theme_stylebox_override("normal", _button_style(GOLD, GOLD))

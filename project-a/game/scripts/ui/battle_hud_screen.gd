@@ -79,7 +79,7 @@ func configure(
 	skill_mode_button.text = "手动技能" if _manual_skills else "自动技能"
 	burst_button.visible = _manual_skills
 	burst_button.disabled = not _manual_skills
-	burst_button.tooltip_text = "下达一次全队爆发指令；未来 2 秒内就绪的技能会立即释放"
+	burst_button.tooltip_text = "下达全队爆发指令；接下来 2 秒内就绪的技能会立即释放"
 	skill_grid.columns = maxi(1, snapshots.size())
 	_clear_units()
 	for snapshot in snapshots:
@@ -141,10 +141,10 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 					]
 				_:
 					detail = "阵营效果已生效"
-			_chapter_feedback_copy = "%s · Tier %d「%s」：%s" % [
+			_chapter_feedback_copy = "%s · %d阶「%s」：%s" % [
 				String(event.get("faction", "阵营")),
 				tier,
-				String(event.get("title", "阵营协议")),
+				String(event.get("title", "阵营科技")),
 				detail,
 			]
 			_chapter_feedback_updates = 12
@@ -194,7 +194,7 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 			_chapter_feedback_updates = 8
 			_chapter_feedback_danger = false
 		elif event_type == &"tv_teleport":
-			_chapter_feedback_copy = "TV精英换位 · 已切换战斗带与路线 · 重新确认集火目标"
+			_chapter_feedback_copy = "电视人精英换位 · 已切换战斗带与路线 · 重新确认集火目标"
 			_chapter_feedback_updates = 8
 			_chapter_feedback_danger = false
 		elif event_type == &"screen_control":
@@ -273,7 +273,7 @@ func apply_battle_events(events: Array[Dictionary]) -> void:
 			_chapter_feedback_updates = 8
 			_chapter_feedback_danger = false
 		elif event_type == &"finale_support":
-			_chapter_feedback_copy = "剧情支援 · G-Toilet命中当前目标，造成%d伤害 · 抓住窗口推进" % int(
+			_chapter_feedback_copy = "剧情支援 · Gman命中当前目标，造成%d伤害 · 抓住窗口推进" % int(
 				event.get("damage", 0)
 			)
 			_chapter_feedback_updates = 10
@@ -535,7 +535,7 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	var unit_id := String(snapshot.get("hero_id", ""))
 	var root := PanelContainer.new()
 	root.name = "BattleUnitCard_%s" % unit_id
-	root.custom_minimum_size = Vector2(116, 72)
+	root.custom_minimum_size = Vector2(108, 64)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_stylebox_override("panel", _unit_card_style(false))
 	var stack := VBoxContainer.new()
@@ -563,7 +563,7 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	skill.name = "BattleSkillButton_%s" % unit_id
 	skill.flat = true
 	skill.focus_mode = Control.FOCUS_ALL
-	skill.custom_minimum_size.y = 72
+	skill.custom_minimum_size.y = 64
 	skill.tooltip_text = "%s\n%s" % [
 		String(snapshot.get("skill_display_name", "主动技能")),
 		String(snapshot.get("skill_timing", "能量达到 100% 后释放")),
@@ -594,9 +594,15 @@ func _unit_display_name(unit_id: String) -> String:
 
 
 func _unit_card_style(highlighted: bool) -> StyleBoxFlat:
-	var style := _box(PANEL_2, 6, GOLD if highlighted else Color("#3b4a54"))
+	var style := _box(
+		Color(PANEL_2, 0.9),
+		5,
+		GOLD if highlighted else Color(0, 0, 0, 0)
+	)
 	if highlighted:
 		style.set_border_width_all(2)
+	else:
+		style.set_border_width_all(0)
 	return style
 
 
@@ -621,8 +627,12 @@ func _meter_row(tag_text: String, color: Color, value: int, maximum: int) -> Dic
 
 
 func _apply_theme() -> void:
-	%BattleBottomHud.add_theme_stylebox_override("panel", _box(PANEL, 8, LINE))
-	status_label.add_theme_stylebox_override("normal", _box(PANEL, 7, LINE))
+	var bottom_style := _box(Color(PANEL, 0.9), 5, Color(0, 0, 0, 0))
+	bottom_style.set_border_width_all(0)
+	%BattleBottomHud.add_theme_stylebox_override("panel", bottom_style)
+	var status_style := _box(Color(PANEL, 0.9), 4, Color(0, 0, 0, 0))
+	status_style.set_border_width_all(0)
+	status_label.add_theme_stylebox_override("normal", status_style)
 	pause_button.icon = ICON_PAUSE
 	skill_mode_button.icon = ICON_TARGET
 	retreat_button.icon = ICON_RETREAT
@@ -632,7 +642,7 @@ func _apply_theme() -> void:
 		button.focus_mode = Control.FOCUS_ALL
 		button.add_theme_constant_override("icon_max_width", 18)
 		button.add_theme_font_override("font", CJK_FONT)
-		button.add_theme_font_size_override("font_size", 14)
+		button.add_theme_font_size_override("font_size", 13)
 		button.add_theme_stylebox_override("normal", _box(Color("#1a2228"), 7, LINE))
 		button.add_theme_stylebox_override("hover", _box(Color("#24333a"), 7, CYAN))
 		button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), 7, CYAN))

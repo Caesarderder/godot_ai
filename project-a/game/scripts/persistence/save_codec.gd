@@ -118,7 +118,7 @@ static func decode(data: Variant) -> Dictionary:
 	if not dict.has("schema_version") or typeof(dict["schema_version"]) != TYPE_INT:
 		return {"ok": false, "error": "schema_version must be int"}
 	if not [5, 6, 7, 8, 9, 10, CURRENT_SCHEMA_VERSION].has(int(dict["schema_version"])):
-		return {"ok": false, "error": "unsupported schema_version; delete local save to start Gman campaign"}
+		return {"ok": false, "error": "存档版本不受支持；请清除本地存档后重新开始Gman战役"}
 	if int(dict["schema_version"]) == 8:
 		var migration_input_error := _validate_v8_resource_migration_inputs(dict)
 		if not migration_input_error.is_empty():
@@ -129,10 +129,29 @@ static func decode(data: Variant) -> Dictionary:
 	if not schema_error.is_empty():
 		return {"ok": false, "error": schema_error}
 	var state := GameStateScript.from_dict(dict)
+	_refresh_roster_display_names(state)
 	var errors := state.validate()
 	if not errors.is_empty():
 		return {"ok": false, "error": "; ".join(errors)}
 	return {"ok": true, "state": state}
+
+
+static func _refresh_roster_display_names(state: RefCounted) -> void:
+	for hero in state.roster:
+		var persisted_name := String(hero.display_name)
+		if persisted_name.is_empty():
+			continue
+		var archetype_id := String(hero.archetype_id)
+		var current_name := HeroGenerator.archetype_display_name(archetype_id)
+		var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
+		if not recipe.is_empty():
+			current_name = String(recipe.get("display_name", current_name))
+		for separator in [" · ", " ★"]:
+			var suffix_at := persisted_name.find(separator)
+			if suffix_at >= 0:
+				current_name += persisted_name.substr(suffix_at)
+				break
+		hero.display_name = current_name
 
 
 static func _normalize_direct_research_lab_eligibility(data: Dictionary) -> void:

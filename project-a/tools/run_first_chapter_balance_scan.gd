@@ -29,7 +29,7 @@ func _init() -> void:
 					starter_max_hp = int(row["initial_max_hp"])
 					starter_attack = int(row["initial_attack"])
 				elif int(row["initial_max_hp"]) != starter_max_hp or int(row["initial_attack"]) != starter_attack:
-					failures.append("%s seed %d must not override starter Gman stats by stage" % [stage_id, run_seed])
+					failures.append("%s seed %d must not override starter G-Toilet stats by stage" % [stage_id, run_seed])
 			var outcome := String(row["outcome"])
 			if stage_id in ["stage_1_1", "stage_1_2", "stage_1_3"] and outcome != "victory":
 				failures.append("%s seed %d should clear with the starter legion" % [stage_id, run_seed])
@@ -39,7 +39,7 @@ func _init() -> void:
 				var final_hp := int(row["final_gman_hp"])
 				var max_hp := maxi(1, int(row["final_gman_max_hp"]))
 				if final_hp <= 0 or final_hp * 5 > max_hp * 2:
-					failures.append("stage_1_3 seed %d should leave starter Gman alive at 40%% health or less" % run_seed)
+					failures.append("stage_1_3 seed %d should leave starter G-Toilet alive at 40%% health or less" % run_seed)
 				if int(row["ticks"]) < 250 or int(row["ticks"]) > 350:
 					failures.append("stage_1_3 seed %d should finish in 50-70 seconds, got %d ticks" % [run_seed, int(row["ticks"])])
 			if stage_id in ["stage_1_4", "stage_1_5"] and outcome == "victory":
@@ -48,7 +48,7 @@ func _init() -> void:
 			if stage_id in ["stage_1_1", "stage_1_2", "stage_1_3"] and (ratio < 0.95 or ratio > 1.10):
 				failures.append("%s seed %d should display in the target capability band" % [stage_id, run_seed])
 			if stage_id == "stage_1_4" and ratio >= 0.85:
-				failures.append("stage_1_4 seed %d solo G-Man should display as underpowered" % run_seed)
+				failures.append("stage_1_4 seed %d solo G-Toilet should display as underpowered" % run_seed)
 		var reinforced := _reinforced_snapshots(state)
 		var reinforced_row := _simulate(run_seed, reinforced, "stage_1_4")
 		reinforced_row["scenario"] = "two_blueprint_reinforcement"
@@ -64,7 +64,7 @@ func _init() -> void:
 				break
 		var solo_death_ratio := float(solo_wall_row.get("ticks", 0)) / float(maxi(1, int(reinforced_row["ticks"])))
 		if solo_death_ratio < 0.40 or solo_death_ratio > 0.65:
-			failures.append("stage_1_4 seed %d should kill solo Gman around the midpoint, ratio %.2f" % [run_seed, solo_death_ratio])
+			failures.append("stage_1_4 seed %d should kill solo G-Toilet around the midpoint, ratio %.2f" % [run_seed, solo_death_ratio])
 		var reinforced_ratio := float(reinforced_row["cp"]) / float(maxi(1, int(reinforced_row["recommended"])))
 		if reinforced_ratio < 0.95 or reinforced_ratio > 1.10:
 			failures.append("stage_1_4 seed %d reinforced CP should match the displayed capability band" % run_seed)

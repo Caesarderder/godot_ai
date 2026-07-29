@@ -389,7 +389,7 @@ App Shell 启动既有 `BattleWorld` / `BattleSession`，并只从 accepted batt
 
 同一 Web 新档不能停在只读侦察：在记录 2-1 尝试数为 0 后，点击高优先“先培养军团”，必须
 进入 `LegionScreen` 成员培养而非编队页。自动旅程只通过正式 `ResearchSkill_*` 按钮研究首屏
-G-Man 技能 II，并以 IndexedDB 证明 `active_skill_level == 2`，同时精确扣除 80 币、6 技术、
+Gman 技能 II，并以 IndexedDB 证明 `active_skill_level == 2`，同时精确扣除 80 币、6 技术、
 1 芯片及陶瓷/零件/能源 24/16/20；不得直接改存档或调用 `_research_active_skill()`。交易后
 返回战区再次显示 2-1 侦察，尝试数仍为 0，证明“Boss 战果 → 永久技能成长 → 下一章备战”
 闭环成立但没有替玩家自动开战。
@@ -453,7 +453,7 @@ App Shell 只投影现有 `SettingsStore` / Web 能力、执行持久化与浏�
 主动技能的玩家文案与确定性公式保持分层：`ActiveSkillDefinition.tres` 拥有稳定 ID、职责、效果
 和时机说明，`BattleSession` 拥有伤害、护盾、目标选择和事件。仅对跨多个调用点、必须进入平衡
 回归的公式系数使用具名 basis-point 常量；不把单个技能的运行时公式塞进 UI Resource，也不让
-UI 按文案重演伤害。G-Man 使用 `GMAN_OVERRUN_BASE_DAMAGE_BP` 作为通用倍率；只有明确需要
+UI 按文案重演伤害。Gman 使用 `GMAN_OVERRUN_BASE_DAMAGE_BP` 作为通用倍率；只有明确需要
 power fantasy 的关卡可以通过 StageCatalog 的 `gman_opening_damage_bp` 提高该场第一次号令。
 运行时单位只保存本局 `skill_casts`，不进入永久存档；事件和 snapshot 可携带该事实但 UI 不
 据此重算。当前仅 1-1 使用 30000bp，其余和重复施法均为 20000bp；修改必须同时通过首技能有效

@@ -19,7 +19,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 寄生母体马桶人
+# 大型寄生虫马桶人
 
 | 字段 | 当前事实 |
 |---|---|

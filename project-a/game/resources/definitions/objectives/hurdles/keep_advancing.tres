@@ -7,5 +7,5 @@ script = ExtResource("1")
 task_id = &"operation.keep_advancing"
 scale = "小坎"
 title = "远程与轻炮施压"
-reason = "敌人开始从安全距离持续消耗 Gman。"
+reason = "敌人开始从安全距离持续消耗Gman。"
 recovery = "观察炮击预警，在满能量时释放技能。"

@@ -494,7 +494,7 @@ func _show_title() -> void:
 	local_save_delete_armed = false
 	_clear()
 	_build_factory_world()
-	var shell := _shell("灰镜战线", "地下工厂信号已恢复", true)
+	var shell := _shell("马桶人进化-维度爆裂", "原作时间线 · E07", true)
 	shell.name = "TitleShell"
 	var title_screen := TitleScreenScene.instantiate() as Control
 	title_screen.call("configure", _title_progress_snapshot())
@@ -804,7 +804,7 @@ func _show_base() -> void:
 	screen = Screen.BASE
 	_clear()
 	_build_factory_world()
-	var shell := _shell("灰镜地下工厂", "战火仍在地表燃烧", true)
+	var shell := _shell("马桶人地下工厂", "战火仍在地表燃烧", true)
 	var factory := FactoryScreenScene.instantiate() as FactoryScreen
 	active_factory_screen = factory
 	factory.panel_selected.connect(func(_panel_id: String) -> void: _play_ui_click())
@@ -981,9 +981,9 @@ func _factory_facility_view(state: RefCounted, facility_id: String, now_unix: in
 			"status": "%s%s · %s" % [
 				work_name,
 				work_copy,
-				"已完成，请点击下方“验收完成”"
-				if remaining == 0
-				else "还剩 %s；完成后点击下方验收" % _duration_copy(remaining),
+					"已建成，点击下方启用"
+					if remaining == 0
+					else "还剩 %s；建成后点击启用" % _duration_copy(remaining),
 			],
 			"ready": remaining == 0,
 			"remaining_seconds": remaining,
@@ -1144,7 +1144,7 @@ func _on_intelligence_action_requested(action_id: String, payload: Dictionary) -
 func _show_map() -> void:
 	screen = Screen.MAP
 	_clear()
-	var shell := _shell("灰镜战区", "联盟防线正在收缩")
+	var shell := _shell("马桶人战区", "联盟防线正在收缩")
 	var state: RefCounted = game.current_state()
 	var cleared: Array = state.stage_progress.get("cleared_stages", [])
 	var highest := String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
@@ -1279,7 +1279,7 @@ func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictio
 	var archetype_id := String(hero.archetype_id)
 	if phase == "probe_late_wall":
 		return {
-			"headline": "1★压力测试 · %s核心 · %s" % [
+				"headline": "1★初战 · %s核心 · %s" % [
 				String(hero.display_name),
 				FactionCatalog.playstyle_for(archetype_id),
 			],
@@ -1291,27 +1291,27 @@ func _faction_proof_stage_context(state: RefCounted, stage_id: String) -> Dictio
 	var star_effect := FactionCatalog.next_star_effect(archetype_id, 2)
 	if phase == "breakthrough_gate":
 		return {
-			"headline": "2★Lv2成长兑现 · %s核心" % String(hero.display_name),
-			"focus": "验证：让“%s”真实触发；失败无损。" % star_effect,
-			"attack_label": "验证2★质变",
+			"headline": "2星2级成长兑现 · %s核心" % String(hero.display_name),
+				"focus": "目标：在战斗中触发“%s”；失败无损。" % star_effect,
+				"attack_label": "试用2★新能力",
 			"hero_id": String(hero.hero_id),
 			"force_primary_attack": true,
 		}
 	if phase == "breakthrough":
 		return {
-			"headline": "章节终验 · 2★Lv3 %s核心" % String(hero.display_name),
-			"focus": "终验：持续触发“%s”并击毁核心；失败无损。" % star_effect,
-			"attack_label": "检验2★质变",
+				"headline": "章节决战 · 2星3级%s核心" % String(hero.display_name),
+				"focus": "持续触发“%s”并击毁核心；失败无损。" % star_effect,
+				"attack_label": "迎战章节首领",
 			"hero_id": String(hero.hero_id),
 			"force_primary_attack": true,
 		}
 	return {
-		"headline": "阵营验证 · %s核心已上阵 · %s" % [
+			"headline": "核心出征 · %s已上阵 · %s" % [
 			String(hero.display_name),
 			FactionCatalog.playstyle_for(archetype_id),
 		],
 		"focus": proof_focus,
-		"attack_label": "验证%s核心" % String(hero.display_name),
+			"attack_label": "让%s出征" % String(hero.display_name),
 		"hero_id": String(hero.hero_id),
 		"force_primary_attack": true,
 	}
@@ -1461,7 +1461,7 @@ func _legion_view() -> Dictionary:
 		if not level_cost.is_empty():
 			level_resource_context = _resource_context_view(
 				"LevelResources_%s" % String(hero.hero_id),
-				"升级至 Lv.%d · 当前/需要 → 操作后" % int(level_cost.get("target_level", int(hero.level) + 1)),
+				"升级至%d级 · 当前/需要 → 操作后" % int(level_cost.get("target_level", int(hero.level) + 1)),
 				[
 					_resource_context_item("toilet_coins", "金币", "金币", int(growth_balances["toilet_coins"]), int(level_cost.get("coin_cost", 0))),
 				],
@@ -1519,7 +1519,7 @@ func _legion_view() -> Dictionary:
 		if not skill_cost.is_empty():
 			skill_resource_context = _resource_context_view(
 				"SkillResources_%s" % String(hero.hero_id),
-				"技能研究 Lv.%d · 当前/需要 → 研究后" % int(skill_quote.get("target_level", int(hero.active_skill_level) + 1)),
+				"技能研究%d级 · 当前/需要 → 研究后" % int(skill_quote.get("target_level", int(hero.active_skill_level) + 1)),
 				[
 					_resource_context_item("toilet_coins", "金币", "金币", int(growth_balances["toilet_coins"]), int(skill_cost.get("toilet_coins", 0))),
 					_resource_context_item(
@@ -1537,7 +1537,7 @@ func _legion_view() -> Dictionary:
 		if int(hero.star) < 2:
 			next_growth = "升至 2★ 解锁职责被动"
 		elif int(hero.star) < 3:
-			next_growth = "升至 3★ 触发技能质变"
+				next_growth = "升至 3★ 解锁技能强化"
 		elif int(hero.active_skill_level) < 3:
 			next_growth = "研究主动技能"
 		var selected_formation_focus := (
@@ -1782,6 +1782,7 @@ func _legion_view() -> Dictionary:
 		"archetype_id": "gman",
 		"display_name": "Gman",
 		"rating": "B",
+		"role_copy": _legion_role("gman"),
 		"description": String((archetype_defs.get("gman", {}) as Dictionary).get("description", "")),
 		"status": "researched",
 		"status_copy": "初始指挥官 · 永久角色已入列",
@@ -1801,6 +1802,7 @@ func _legion_view() -> Dictionary:
 			"archetype_id": archetype_id,
 			"display_name": String(recipe["display_name"]),
 			"rating": String(recipe.get("rating", "B")),
+			"role_copy": _legion_role(archetype_id),
 			"description": String((archetype_defs.get(archetype_id, {}) as Dictionary).get("description", "")),
 			"status": status,
 			"status_copy": (
@@ -1831,7 +1833,9 @@ func _legion_view() -> Dictionary:
 		"first_growth_choice": {
 			"active": first_growth_active,
 			"choices": growth_choices,
-			"target_stage": "1-5 灰镜核心巨炮",
+			"target_stage": String(
+				StageCatalog.stage("stage_1_5").get("display_name", "E11 · 飞行马桶交战")
+			),
 		},
 		"boss_ready": {
 			"active": boss_ready_active and not boss_route.is_empty(),
@@ -1841,6 +1845,9 @@ func _legion_view() -> Dictionary:
 			"team_power": CombatPower.formation_power(state),
 			"recommended_power": int(StageCatalog.stage("stage_1_5").get("recommended_power", 0)),
 			"stage_id": "stage_1_5",
+			"stage_name": String(
+				StageCatalog.stage("stage_1_5").get("display_name", "E11 · 飞行马桶交战")
+			),
 		},
 		"counterattack": {
 			"visible": (
@@ -1950,6 +1957,8 @@ func _global_core_resource_view() -> Dictionary:
 		4
 	)
 	view["item_min_width"] = 46
+	view["compact"] = true
+	view["compact_heading_width"] = 0
 	return view
 
 
@@ -2126,6 +2135,7 @@ func _blueprint_view() -> Dictionary:
 			"display_name": String(recipe.get("display_name", recipe_id)),
 			"rating": String(recipe.get("rating", "B")),
 			"faction": FactionCatalog.faction_for(archetype_id),
+			"skill_name": String(skill_view.get("display_name", "主动战法")),
 			"role_copy": String(skill_view.get("role_copy", archetype.get("role", ""))),
 			"one_star_value": String(skill_view.get("effect_copy", "拥有完整主动技能")).get_slice("；", 0),
 			"two_star_effect": FactionCatalog.next_star_effect(archetype_id, 2),
@@ -2169,7 +2179,7 @@ func _blueprint_view() -> Dictionary:
 		"compact": _layout_profile() == "compact_landscape",
 		"branch": blueprint_branch,
 		"branch_title": String(branch_data.get("title", "研究分支")),
-		"branch_summary": String(branch_data.get("summary", "比较职责与成长质变")),
+			"branch_summary": String(branch_data.get("summary", "比较职责与星级能力")),
 		"journey_focus_recipe_id": faction_focus_recipe_id,
 		"focus_recipe_id": active_focus_recipe_id,
 		"core_status": (
@@ -2247,7 +2257,7 @@ func _choose_faction_doctrine(doctrine_id: String) -> void:
 		_notify(_error_copy(String(result.get("error", "FACTION_DOCTRINE_CHOICE_FAILED"))))
 		return
 	var protocol := _active_faction_protocol(game.current_state())
-	_notify("Tier 2选择完成 · %s从4-1起生效" % String(protocol.get("title", "阵营协议")))
+	_notify("二阶科技已选 · %s从4-1起生效" % String(protocol.get("title", "阵营科技")))
 	selected_stage_id = "stage_4_1"
 	selected_chapter = 4
 	_show_map()
@@ -2635,7 +2645,7 @@ func _start_battle() -> void:
 		and _boss_growth_route_id().is_empty()
 	):
 		legion_tab = "roster"
-		_notify("核心巨炮需要首次成长验证：先把冲锋或装甲升至2★")
+		_notify("核心巨炮火力过强：先把冲锋或装甲升至2★")
 		_show_legion()
 		return
 	var snapshots := _battle_snapshots()
@@ -3029,7 +3039,12 @@ func _show_result() -> void:
 		and completed_chapter >= 2
 	)
 	var result_title := (
-		"第一章完成 · 灰镜核心已摧毁"
+		"第一章完成 · %s已攻克" % String(
+			StageCatalog.stage(cleared_stage_id).get(
+				"display_name",
+				_stage_short_label(cleared_stage_id)
+			)
+		)
 		if chapter_one_complete
 		else (
 			"第%d章完成 · 阵营突破已确认" % completed_chapter
@@ -3156,7 +3171,7 @@ func _show_result() -> void:
 		primary_label = "领取阵营起手十连"
 		primary_action = "faction_recruit"
 	elif chapter_one_complete:
-		qualification = "首章奖励均已领取 · 第2章阵营验证战线已开放"
+		qualification = "首章奖励均已领取 · 第2章战线已开放"
 		primary_label = "查看第2章新战线"
 		primary_action = "map_stage"
 		primary_payload = {"stage_id": "stage_2_1"}
@@ -3165,18 +3180,18 @@ func _show_result() -> void:
 		and completed_chapter == 3
 		and _selected_faction_doctrine(game.current_state()).is_empty()
 	):
-		qualification = "第三章完成 · Tier 2科技分支已开放\n先决定全队协同或阵营专精，再侦察第四章。"
-		primary_label = "选择 Tier 2 科技方向"
+		qualification = "第三章完成 · 二阶科技已开放\n先决定全队协同或阵营专精，再侦察第四章。"
+		primary_label = "选择二阶科技"
 		primary_action = "faction_doctrine"
 	elif has_faction_result_action:
 		qualification = (
 			"本场战果已计入阵营成长\n下一步：%s" % [
-				String(faction_result_hierarchy.get("small", "继续验证核心打法")),
+				String(faction_result_hierarchy.get("small", "继续磨合核心打法")),
 			]
 			if faction_proof_advanced
 			else (
-				"本关已完成，重复胜利不增加证明进度\n下一步：%s" % String(
-					faction_result_hierarchy.get("small", "继续验证核心打法")
+				"本关已完成，继续推进新战线\n下一步：%s" % String(
+					faction_result_hierarchy.get("small", "继续磨合核心打法")
 				)
 				if faction_proof_stage and won
 				else String(
@@ -3272,17 +3287,17 @@ func _show_result() -> void:
 	var result_screen := BattleResultScreenScene.instantiate()
 	result_screen.configure({
 		"outcome_banner": (
-			"首章胜利 · 你的成长选择通过实战验证"
+				"首章胜利 · 你的成长选择扭转了战局"
 			if chapter_one_complete
 			else (
 				(
-					"阵营实战证明 3/3 · 基础打法已经站稳"
-					if faction_proof_progress >= 3
-					else "阵营实战证明 %d/3 · 核心打法正在成形" % faction_proof_progress
+						"核心磨合 3/3 · 基础打法已经站稳"
+						if faction_proof_progress >= 3
+						else "核心磨合 %d/3 · 打法正在成形" % faction_proof_progress
 				)
 				if faction_proof_advanced
 				else (
-					"第%d章胜利 · 阵营打法通过实战验证" % completed_chapter
+						"第%d章胜利 · 阵营打法已经站稳" % completed_chapter
 					if chapter_boss_complete
 					else ("胜利 · 获得军团成长战果" if won else ("撤退 · 全员安全返回" if outcome == "retreat" else "失败 · 可立即调整后再战"))
 				)
@@ -3301,7 +3316,7 @@ func _show_result() -> void:
 		"debrief": debrief,
 		"growth": (
 			(
-				"Tier 2科技突破 · 全队协同覆盖更广，阵营专精单点更强；本次选择永久保留"
+					"二阶科技解锁 · 全队协同覆盖更广，阵营专精单点更强；本次选择永久保留"
 				if cleared_stage_id == "stage_3_5"
 				else _faction_tech_result_copy(1)
 			)
@@ -3372,18 +3387,18 @@ func _faction_opening_proof_copy(
 	) as Dictionary
 	var hero_damage := int(damage_by_unit.get(String(hero.hero_id), 0))
 	if not won:
-		return "%s核心已安全返回 · 调整技能时机后继续验证%s" % [
+		return "%s核心已安全返回 · 调整技能时机后再攻%s" % [
 			String(hero.display_name),
 			FactionCatalog.playstyle_for(archetype_id),
 		]
 	if not advanced:
-		return "实战证明仍为 %d/3 · 本关已验证，请推进下一座未占领城" % progress
-	return "实战证明 %d/3 · %s核心贡献 %d 伤害 · %s" % [
+		return "核心磨合仍为 %d/3 · 本关已攻克，请推进下一座未占领城" % progress
+	return "核心磨合 %d/3 · %s贡献 %d 伤害 · %s" % [
 		progress,
 		String(hero.display_name),
 		hero_damage,
 		(
-			"三场基础验证完成，下一步试探后段压力"
+			"三场磨合完成，下一步挑战后段防线"
 			if progress >= 3
 			else "下一场继续观察%s" % FactionCatalog.playstyle_for(archetype_id)
 		),
@@ -3494,15 +3509,15 @@ func _counterattack_proof_copy(
 func _boss_mastery_proof_copy(runtime_result: Dictionary) -> String:
 	var route_id := _boss_growth_route_id()
 	if route_id == "assault":
-		return "路线验证 · 冲锋压炮 %d 次，二星成长兑现" % int(
+		return "冲锋压炮 %d 次 · 二星能力改变了战局" % int(
 			runtime_result.get("cannon_suppressed_count", 0)
 		)
 	if route_id == "armored":
-		return "路线验证 · 装甲格挡 %d 次，反震 %d" % [
+		return "装甲格挡 %d 次 · 反震 %d" % [
 			int(runtime_result.get("cannon_guarded_count", 0)),
 			int(runtime_result.get("cannon_guard_counter_damage", 0)),
 		]
-	return "路线验证 · 二星成长帮助军团摧毁了首章核心巨炮"
+	return "二星成长帮助军团摧毁了首章核心巨炮"
 
 
 func _faction_mastery_proof_copy(
@@ -3532,7 +3547,7 @@ func _faction_mastery_proof_copy(
 		return ""
 	if int(hero.star) < 2:
 		if outcome == "victory":
-			return "压力测试 · 1★%s已突破%s；保持当前星级，继续确认真正的后段墙。" % [
+			return "越级攻克 · 1★%s已突破%s；保持当前星级，继续挑战后段防线。" % [
 				String(hero.display_name),
 				String(StageCatalog.stage(stage_id).get("display_name", stage_id)),
 			]
@@ -3556,14 +3571,14 @@ func _faction_mastery_proof_copy(
 	var count := int(runtime_result.get(String(metric[0]), 0))
 	var hero_name := String(hero.display_name)
 	if count <= 0:
-		return "阵营质变验证 · %s的2★机制本局尚未触发；调整技能时机后再战。" % hero_name
-	return "阵营质变验证 · %s%s %d 次 · %s" % [
+		return "%s的2★能力本局尚未触发；调整技能时机后再战。" % hero_name
+	return "%s的2★能力%s %d 次 · %s" % [
 		hero_name,
 		String(metric[1]),
 		count,
-		"二星质变帮助突破%s" % StageCatalog.stage(stage_id).get("display_name", stage_id)
+		"二星能力帮助突破%s" % StageCatalog.stage(stage_id).get("display_name", stage_id)
 		if outcome == "victory"
-		else "质变已经生效，仍需提升等级或调整技能时机",
+		else "新能力已经生效，仍需提升等级或调整技能时机",
 	]
 
 
@@ -3653,20 +3668,20 @@ func _battle_debrief_copy(
 	var guarded_count := int(runtime_result.get("cannon_guarded_count", 0))
 	if guarded_count > 0:
 		if outcome != "victory" and stage_id == "stage_1_5":
-			return "失败归因 · 阵容/战力：已格挡巨炮 %d 次但仍未突破；回军团检查编队与成长。" % guarded_count
+			return "失败原因 · 已格挡巨炮 %d 次但火力仍不足；回军团检查编队与成长。" % guarded_count
 		return "装甲护盾格挡巨炮 %d 次并反震 %d 伤害：预警开盾成功把防守转成了推进。" % [
 			guarded_count,
 			int(runtime_result.get("cannon_guard_counter_damage", guarded_count * 60)),
 		]
 	if outcome != "victory" and stage_id == "stage_1_5" and _boss_growth_route_id().is_empty():
-		return "失败归因 · 成长未完成：冲锋或装甲尚未升到二星；先完成一条已验证路线。"
+		return "失败原因 · 冲锋或装甲尚未升到二星；先完成一条成长路线。"
 	if int(runtime_result.get("cannon_hit_count", 0)) > 0:
 		if outcome != "victory" and stage_id == "stage_1_5":
-			return "失败归因 · 巨炮机制/技能时机：巨炮命中 %d 次；下次在倒计时内释放二星技能。" % int(runtime_result["cannon_hit_count"])
+			return "失败原因 · 巨炮命中 %d 次；下次在倒计时内释放二星技能。" % int(runtime_result["cannon_hit_count"])
 		return "巨炮命中 %d 次：下次切换手动技能，在炮击倒计时内集中爆发。" % int(runtime_result["cannon_hit_count"])
 	if int(runtime_result.get("cannon_suppressed_count", 0)) > 0:
 		if outcome != "victory" and stage_id == "stage_1_5":
-			return "失败归因 · 阵容/战力：已压制巨炮 %d 次但仍未突破；回军团检查编队与成长。" % int(runtime_result["cannon_suppressed_count"])
+			return "失败原因 · 已压制巨炮 %d 次但火力仍不足；回军团检查编队与成长。" % int(runtime_result["cannon_suppressed_count"])
 		return "成功压制巨炮 %d 次：技能时机有效改善了本局生存与推进效率。" % int(runtime_result["cannon_suppressed_count"])
 	if resonance_pulses > 0:
 		return _resonance_debrief_copy(runtime_result, outcome)
@@ -3683,8 +3698,8 @@ func _chapter_two_mechanic_debrief(
 	stage_id: String
 ) -> String:
 	if stage_id == "stage_2_5":
-		var prefix := "章节考试" if outcome == "victory" else "失败归因"
-		return "%s · 广播增援%d波 / 声塔命中%d次（%d伤害）/ 共振%d次 / 巨炮命中%d次；阵营已完成技能时机、站位与破核验证。" % [
+		var prefix := "章节决战" if outcome == "victory" else "失败原因"
+		return "%s · 广播增援%d波 / 声塔命中%d次（%d伤害）/ 共振%d次 / 巨炮命中%d次；你的技能时机与站位足以击破核心。" % [
 			prefix,
 			int(runtime_result.get("speaker_reinforcement_waves", 0)),
 			int(runtime_result.get("speaker_echo_impact_count", 0)),
@@ -3698,7 +3713,7 @@ func _chapter_two_mechanic_debrief(
 			return ""
 		if outcome == "victory":
 			return "广播车复盘 · 击穿 %d 波临时增援；优先清理广播车可阻止战线被持续补强。" % waves
-		return "失败归因 · 广播车召来 %d 波增援；下次先集火新增目标，再推进核心。" % waves
+		return "失败原因 · 广播车召来 %d 波增援；下次先集火新增目标，再推进核心。" % waves
 	if stage_id == "stage_2_4":
 		var impacts := int(runtime_result.get("speaker_echo_impact_count", 0))
 		if impacts <= 0:
@@ -3709,7 +3724,7 @@ func _chapter_two_mechanic_debrief(
 				impacts,
 				damage,
 			]
-		return "失败归因 · 双塔交替轰击 %d 次造成 %d 伤害；黄色预警会明确点名前排或后排。" % [
+		return "失败原因 · 双塔交替轰击 %d 次造成 %d 伤害；黄色预警会明确点名前排或后排。" % [
 			impacts,
 			damage,
 		]
@@ -3728,8 +3743,8 @@ func _chapter_three_mechanic_debrief(
 	var control_count := int(runtime_result.get("tv_control_count", 0))
 	var shield_count := int(runtime_result.get("tv_shield_count", 0))
 	if stage_id == "stage_3_5":
-		var prefix := "章节考试" if outcome == "victory" else "失败归因"
-		return "%s · 信号消失%d次 / 换位%d次 / 控制%d次 / 护盾%d次；你已完成转火、重锁目标与破盾验证。" % [
+		var prefix := "章节决战" if outcome == "victory" else "失败原因"
+		return "%s · 信号消失%d次 / 换位%d次 / 控制%d次 / 护盾%d次；你成功完成转火、重锁目标与破盾。" % [
 			prefix,
 			vanish_count,
 			teleport_count,
@@ -3739,14 +3754,14 @@ func _chapter_three_mechanic_debrief(
 	if vanish_count > 0:
 		return "信号战复盘 · 敌方消失并复现 %d 次；失去目标时转火，不必空等原目标。" % vanish_count
 	if teleport_count > 0:
-		return "换位战复盘 · TV精英传送 %d 次；观察战斗带变化后重新集中火力。" % teleport_count
+		return "换位战复盘 · 电视人精英传送 %d 次；观察战斗带变化后重新集中火力。" % teleport_count
 	if shield_count > 0:
 		return "监军复盘 · 精英护盾启动 %d 次、屏幕控制 %d 次；先击穿护盾再处理高伤目标。" % [
 			shield_count,
 			control_count,
 		]
 	if control_count > 0:
-		var prefix := "控制战复盘" if outcome == "victory" else "失败归因"
+		var prefix := "控制战复盘" if outcome == "victory" else "失败原因"
 		return "%s · 关键成员被短暂停火 %d 次；保留其他成员技能维持推进。" % [
 			prefix,
 			control_count,
@@ -3778,7 +3793,7 @@ func _chapter_four_mechanic_debrief(
 			purge_damage,
 		]
 	if stage_id == "stage_4_4" and marks + anti_air + purges + shields > 0:
-		var prefix := "轮换复盘" if outcome == "victory" else "失败归因"
+		var prefix := "轮换复盘" if outcome == "victory" else "失败原因"
 		return "%s · 标记 %d / 防空 %d / 净化 %d / 护盾 %d；按当前战斗阶段保留对应解法。" % [
 			prefix,
 			marks,
@@ -3802,7 +3817,7 @@ func _chapter_five_mechanic_debrief(
 	var support := int(runtime_result.get("finale_support_count", 0))
 	if impacts + armor + support <= 0:
 		return ""
-	var prefix := "终章复盘" if outcome == "victory" else "失败归因"
+	var prefix := "终章复盘" if outcome == "victory" else "失败原因"
 	return "%s · 识别环境冲击%d次（%d伤害）/诱饵装甲%d层/剧情支援%d次；终局考验的是预警、破甲与续航配合。" % [
 		prefix,
 		impacts,
@@ -3816,7 +3831,7 @@ func _resonance_debrief_copy(runtime_result: Dictionary, outcome: String) -> Str
 	var pulses := int(runtime_result.get("resonance_pulse_count", 0))
 	var drained := int(runtime_result.get("resonance_energy_drained", 0))
 	if outcome != "victory":
-		return "失败归因 · 共振冲击 %d 次共削减 %d 能量；切手动并在紫色预警结束前释放技能。" % [
+		return "失败原因 · 共振冲击 %d 次共削减 %d 能量；切手动并在紫色预警结束前释放技能。" % [
 			pulses,
 			drained,
 		]
@@ -3861,7 +3876,7 @@ func _hero_experience_copy(event: Dictionary, runtime_result: Dictionary) -> Str
 	var recipients := int(event.get("hero_xp_recipients", 0))
 	if xp_each <= 0 or recipients <= 0:
 		return ""
-	var base := "参战经验 · %d名主力各 +%d XP" % [recipients, xp_each]
+	var base := "参战经验 · %d名主力各 +%d 经验" % [recipients, xp_each]
 	var faction_event := RecruitmentResultProjection.latest_event_for_command(
 		game.current_state(),
 		"claim_faction_signal"
@@ -3884,12 +3899,12 @@ func _hero_experience_copy(event: Dictionary, runtime_result: Dictionary) -> Str
 		var target_xp := int(HeroProgression.LEVEL_XP[next_level])
 		var missing_xp := maxi(0, target_xp - int(hero.xp))
 		if missing_xp == 0:
-			return "%s · 阵营核心 %s 已满足 Lv%d 经验，消耗金币即可升级" % [
+			return "%s · 阵营核心 %s 已满足%d级经验，消耗金币即可升级" % [
 				base,
 				String(hero.display_name),
 				next_level,
 			]
-		return "%s · 阵营核心 %s %d/%d XP，距 Lv%d 还差 %d" % [
+		return "%s · 阵营核心 %s 经验 %d/%d，距%d级还差 %d" % [
 			base,
 			String(hero.display_name),
 			int(hero.xp),
@@ -3910,11 +3925,11 @@ func _faction_tech_result_copy(tier: int = 1) -> String:
 	var preview := FactionCatalog.tech_protocol_for(archetype_id, tier)
 	if preview.is_empty():
 		return _growth_opportunity_copy({})
-	return "Tier %d阵营科技%s · %s「%s」：%s（第%d章起自动生效）" % [
+	return "%d阶阵营科技%s · %s「%s」：%s（第%d章起自动生效）" % [
 		int(preview.get("tier", tier)),
 		"升级" if tier >= 2 else "解锁",
 		String(preview.get("faction", "阵营")),
-		String(preview.get("title", "未来协议")),
+		String(preview.get("title", "待选科技")),
 		String(preview.get("effect", "")),
 		int(preview.get("activation_chapter", 3)),
 	]
@@ -3930,14 +3945,14 @@ func _faction_protocol_result_copy(runtime_result: Dictionary) -> String:
 	var doctrine_label := String({
 		"coordination": "全队协同",
 		"specialization": "阵营专精",
-	}.get(String(protocol.get("doctrine_id", "")), "阵营协议"))
+	}.get(String(protocol.get("doctrine_id", "")), "阵营科技"))
 	var choice_summary := String(protocol.get("choice_summary", "")).replace("\n", " · ")
 	if choice_summary.is_empty():
 		choice_summary = String(protocol.get("effect", "选择已改变本场开局"))
 	choice_summary = choice_summary.trim_prefix("%s · " % doctrine_label)
 	choice_summary = choice_summary.replace(" +", "+")
 	var compact_title := title.trim_suffix("协议")
-	return "Tier %d科技兑现 · %s「%s」\n%s · 影响%d个目标" % [
+	return "%d阶科技生效 · %s「%s」\n%s · 影响%d个目标" % [
 		tier,
 		doctrine_label,
 		compact_title,
@@ -3956,7 +3971,7 @@ func _stage_short_label(stage_id: String) -> String:
 func _show_epilogue(event: Dictionary = {}) -> void:
 	screen = Screen.EPILOGUE
 	_clear()
-	var shell := _shell("第一幕完成 · 中央基地陷落", "五章战役终结，但无尽前线仍在呼叫")
+	var shell := _shell("第一幕完成 · 太空马桶人舰队到来", "E74 战线开启，无尽前线仍在呼叫")
 	var state: RefCounted = game.current_state()
 	var cleared_count := 0
 	for stage_id in state.stage_progress.get("cleared_stages", []):
@@ -3978,8 +3993,8 @@ func _show_epilogue(event: Dictionary = {}) -> void:
 	epilogue.connect("action_requested", _on_epilogue_action_requested)
 	shell.add_child(epilogue)
 	var credits := _label(
-		"《马桶人工厂攻城》第一幕 · Godot 4.6 Web 版\n设计、程序与原创低模资产：本项目制作组",
-		11,
+		"《马桶人进化-维度爆裂》第一幕\n设计、程序与原创低模资产：本项目制作组",
+		14,
 		MUTED
 	)
 	credits.name = "CampaignCreditsLabel"
@@ -4334,7 +4349,7 @@ func _assign_formation_slot(slot: String, hero_id: String) -> void:
 		selected_chapter = int(
 			StageCatalog.stage(selected_stage_id).get("chapter", 2)
 		)
-		_notify("阵营初阵已成 · %s已部署 · 去2-1验证%s" % [
+		_notify("核心初阵已成 · %s已部署 · 前往2-1迎战%s" % [
 			String(deployed_hero.display_name),
 			FactionCatalog.playstyle_for(selected_core),
 		])
@@ -4371,8 +4386,8 @@ func _signal_recruit(count: int) -> void:
 			var result_name := HeroGenerator.archetype_display_name(
 				String(draw.get("archetype_id", ""))
 			)
-			summaries.append("%s级%s%s" % [
-				String(draw.get("rarity", "B")),
+			summaries.append("%s%s%s" % [
+				_rating_display_name(String(draw.get("rarity", "B"))),
 				result_name,
 				(
 					"专属碎片+%d" % int(draw.get("amount", 0))
@@ -4384,6 +4399,15 @@ func _signal_recruit(count: int) -> void:
 		_show_legion()
 	else:
 		_notify(_error_copy(String(result.get("error", "招募失败"))))
+
+
+func _rating_display_name(rating: String) -> String:
+	return String({
+		"C": "基础",
+		"B": "标准",
+		"A": "精锐",
+		"S": "传奇",
+	}.get(rating, "标准"))
 
 
 func _follow_task(
@@ -4513,18 +4537,18 @@ func _success_copy(result: Dictionary) -> String:
 				" · 溢出 %s" % overflow_copy if not overflow_copy.is_empty() else "",
 			]
 		"facility_upgraded":
-			return "%s已升至 Lv.%d" % [
+			return "%s已升至%d级" % [
 				FACILITY_NAMES.get(String(event.get("facility_id", "")), "建筑"),
 				int(event.get("level", 1)),
 			]
 		"facility_constructed":
-			return "%s已落成，Lv.1 功能开始运转" % FACILITY_NAMES.get(
+			return "%s已落成，1级功能开始运转" % FACILITY_NAMES.get(
 				String(event.get("facility_id", "")),
 				"设施"
 			)
 		"facility_work_started":
 			if String(event.get("work_type", "")) == "construction":
-				return "%s开始建造，仅需 %d 秒；完成后点击“验收完成”" % [
+				return "%s开始建造，仅需 %d 秒；建成后点击“启用建筑”" % [
 					FACILITY_NAMES.get(String(event.get("facility_id", "")), "设施"),
 					int(event.get("duration_seconds", 5)),
 				]
@@ -4535,7 +4559,7 @@ func _success_copy(result: Dictionary) -> String:
 		"blueprint_research_started":
 			return "角色研发已开始，完成后可领取"
 		"hero_upgraded":
-			return "角色已升至 Lv.%d，战力提升" % int(event.get("level", 1))
+			return "角色已升至%d级，战力提升" % int(event.get("level", 1))
 		"hero_star_upgraded":
 			var archetype_id := String(event.get("archetype_id", ""))
 			var star := int(event.get("star", 1))
@@ -4543,13 +4567,13 @@ func _success_copy(result: Dictionary) -> String:
 			var effect := FactionCatalog.next_star_effect(archetype_id, star)
 			if String(event.get("source", "")) == "new_player_welfare":
 				var waived := event.get("waived_cost", {}) as Dictionary
-				return "黑金核心生效：%s升至 %d★ · 质变解锁：%s · 免除军团数据 %d" % [
+				return "黑金核心生效：%s升至 %d★ · 新能力：%s · 免除军团数据 %d" % [
 					hero_name,
 					star,
 					effect,
 					int(waived.get("hero_shards", 0)),
 				]
-			return "%s升至 %d★ · 质变解锁：%s" % [hero_name, star, effect]
+			return "%s升至 %d★ · 新能力：%s" % [hero_name, star, effect]
 		"new_player_welfare_claimed":
 			return "黑市援助已到账：黑金升星核心 ×1、走私后勤箱 ×1"
 		"starter_gift_claimed":
@@ -4607,7 +4631,7 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	ui_root.add_child(safe)
 	var root := VBoxContainer.new()
 	root.name = "AppShellRoot"
-	root.add_theme_constant_override("separation", 8)
+	root.add_theme_constant_override("separation", 5)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	safe.add_child(root)
@@ -4620,29 +4644,30 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	)
 	root.add_child(header_panel)
 	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 10)
+	header.add_theme_constant_override("separation", 6)
 	header_panel.add_child(header)
 	var titles := VBoxContainer.new()
 	titles.add_theme_constant_override("separation", -2)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	titles.custom_minimum_size.x = 112
 	header.add_child(titles)
-	var title_label := _label(title_text, 21, TEXT)
+	var title_label := _label(title_text, 19, TEXT)
 	title_label.clip_text = true
 	title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.add_theme_constant_override("outline_size", 2)
 	title_label.add_theme_color_override("font_outline_color", Color(BG, 0.85))
 	titles.add_child(title_label)
-	var subtitle_label := _label(subtitle, 12, Color(MUTED, 0.9))
+	var subtitle_label := _label(subtitle, 14, Color(MUTED, 0.9))
 	subtitle_label.clip_text = true
 	subtitle_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	subtitle_label.visible = screen in [Screen.TITLE, Screen.SETTINGS, Screen.HELP]
 	titles.add_child(subtitle_label)
-	if screen not in [Screen.TITLE, Screen.SETTINGS, Screen.BATTLE, Screen.HELP]:
+	if screen == Screen.LEGION or title_text == "科技蓝图":
 		var global_resources := ResourceContextHudScript.new() as Control
 		global_resources.name = "GlobalCoreResourceHUD"
-		global_resources.custom_minimum_size.x = 222
+		global_resources.custom_minimum_size.x = 260
 		global_resources.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		global_resources.call("configure", _global_core_resource_view())
 		header.add_child(global_resources)
@@ -4883,7 +4908,7 @@ func _add_factory_building(facility_id: String) -> void:
 
 	var title := Label3D.new()
 	title.name = "BuildingLabel"
-	title.text = "%s  Lv.%d" % [FACILITY_NAMES[facility_id], level]
+	title.text = "%s  %d级" % [FACILITY_NAMES[facility_id], level]
 	title.font = CJKFont
 	title.font_size = 34
 	title.pixel_size = 0.0055
@@ -4926,7 +4951,7 @@ func _add_factory_world_labels() -> void:
 		var level := int(game.current_state().factory.facilities.get(facility_id, 0))
 		if level <= 0:
 			continue
-		var text := "%s  Lv.%d" % [FACILITY_NAMES[facility_id], level]
+		var text := "%s  %d级" % [FACILITY_NAMES[facility_id], level]
 		if level > 0 and FACTORY_RESOURCE_NAMES.has(facility_id):
 			var preview := LogisticsService.facility_output_preview(
 				game.current_state(),
@@ -5094,7 +5119,7 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 	var nav := HBoxContainer.new()
 	nav.name = "PrimaryNavigation"
 	nav.alignment = BoxContainer.ALIGNMENT_CENTER
-	nav.add_theme_constant_override("separation", 8)
+	nav.add_theme_constant_override("separation", 4)
 	nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shell.add_child(nav)
 	var entries: Array = [
@@ -5123,8 +5148,18 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 				"%d 项奖励待领取" % badge_count
 				if badge_count > 0 else "暂无待领取奖励"
 			)
-		button.custom_minimum_size = Vector2(0, 46)
+		button.custom_minimum_size = Vector2(0, 48)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 14)
+		var nav_style := _box(
+			Color(CYAN, 0.12) if int(entry[1]) == active else Color(PANEL_2, 0.38),
+			0,
+			Color(CYAN, 0.7) if int(entry[1]) == active else Color(0, 0, 0, 0)
+		)
+		nav_style.set_border_width_all(0)
+		if int(entry[1]) == active:
+			nav_style.set_border_width(SIDE_BOTTOM, 2)
+		button.add_theme_stylebox_override("normal", nav_style)
 		nav.add_child(button)
 		if int(entry[1]) in [Screen.BASE, Screen.GOALS]:
 			var badge := NotificationBadgeScript.new() as NotificationBadge
@@ -5573,12 +5608,12 @@ func _error_copy(code: String) -> String:
 		"COUNTER_TECH_LOCKED": "先通关本章第 8 关并回收敌方技术样本",
 		"COUNTER_TECH_ALREADY_RESEARCHED": "这项反制科技已经研发完成",
 		"COUNTER_TECH_UNKNOWN": "专项科技配置不存在，请返回战区重试",
-		"RESEARCH_LAB_LEVEL_TOO_LOW": "研究所等级不足，升级至 Lv.2 可研究技能Ⅲ",
-		"META_MISSIONS_LOCKED": "通关 1-1 且指挥官达到 Lv2 后开放行动任务",
-		"META_WEEKLY_LOCKED": "指挥官达到 Lv10 后开放周任务",
-		"META_PASS_LOCKED": "通关 1-5 且指挥官达到 Lv5 后开放战令",
-		"META_ACHIEVEMENTS_LOCKED": "通关 1-2 且指挥官达到 Lv3 后开放成就",
-		"SIGNAL_RECRUIT_LOCKED": "通关 1-5 且指挥官达到 Lv4 后开放长期信号招募",
+		"RESEARCH_LAB_LEVEL_TOO_LOW": "研究所等级不足，升级至2级可研究技能Ⅲ",
+		"META_MISSIONS_LOCKED": "通关 1-1 且指挥官达到2级后开放行动任务",
+		"META_WEEKLY_LOCKED": "指挥官达到10级后开放周任务",
+		"META_PASS_LOCKED": "通关 1-5 且指挥官达到5级后开放战令",
+		"META_ACHIEVEMENTS_LOCKED": "通关 1-2 且指挥官达到3级后开放成就",
+		"SIGNAL_RECRUIT_LOCKED": "通关 1-5 且指挥官达到4级后开放长期信号招募",
 		"FOUNDATIONAL_SIGNAL_NOT_DETECTED": "先完成 1-4 首次高墙侦察，截获基础设计信号",
 		"FOUNDATIONAL_SIGNAL_ALREADY_CLAIMED": "基础图纸十连已经接收",
 		"PASS_NO_CLAIMABLE_REWARDS": "当前没有可领取的战令奖励",
@@ -5586,7 +5621,7 @@ func _error_copy(code: String) -> String:
 		"ACHIEVEMENT_NO_CLAIMABLE_REWARDS": "当前没有可领取的成就奖励",
 		"FORMATION_SLOT_INVALID": "目标阵位无效",
 		"HERO_ALREADY_IN_FORMATION_SLOT": "该英雄已经位于目标阵位",
-		"ACTIVE_SKILL_LEVEL_CAP_REACHED": "主动技能已达到 Lv.3 上限",
+		"ACTIVE_SKILL_LEVEL_CAP_REACHED": "主动技能已达到3级上限",
 		"HERO_ALREADY_READY": "该角色战备已经满额",
 		"HERO_LEVEL_CAP_REACHED": "角色已达到当前等级上限",
 		"FACILITY_LEVEL_CAP_REACHED": "设施已达到当前等级上限",
@@ -5609,8 +5644,8 @@ func _error_copy(code: String) -> String:
 		"FACTION_CORE_SIGNAL_MISSING": "先领取阵营起手十连",
 		"FACTION_CORE_INVALID": "只能从本次十连的两名候选中选择阵营核心",
 		"FACTION_CORE_ALREADY_CHOSEN": "阵营核心已经确定，不能重复更换",
-		"FACTION_DOCTRINE_LOCKED": "完成第三章 3-5 后才能选择 Tier 2 科技",
+		"FACTION_DOCTRINE_LOCKED": "完成第三章 3-5 后才能选择二阶科技",
 		"FACTION_DOCTRINE_CORE_MISSING": "阵营核心记录缺失，请先恢复阵营十连存档",
-		"FACTION_DOCTRINE_ALREADY_CHOSEN": "Tier 2 科技方向已经确定",
+		"FACTION_DOCTRINE_ALREADY_CHOSEN": "二阶科技方向已经确定",
 	}
 	return String(known.get(code, code))

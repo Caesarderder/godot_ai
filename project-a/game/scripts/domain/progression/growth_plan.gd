@@ -34,7 +34,7 @@ static func for_stage(state: RefCounted, stage_config: Dictionary) -> Dictionary
 	if stage_id == "stage_1_4" and int(state.attempt_counters.get(stage_id, 0)) == 0:
 		result["action"] = "challenge"
 		result["title"] = "先侦察炮台防线"
-		result["detail"] = "本次首战用于发现真实威胁；失败后回到研究所，研发 1-2、1-3 首通获得的装甲与冲锋图纸。"
+		result["detail"] = "本次首战用于发现真实威胁；失败后研发承伤与冲锋玩法图纸。"
 		result["estimated_gold_value"] = 0
 		result["estimate_label"] = "无需新增金币投入"
 		return result
@@ -85,7 +85,7 @@ static func for_stage(state: RefCounted, stage_config: Dictionary) -> Dictionary
 			result["action"] = "collect"
 			result["hero_id"] = String(upgrade["hero_id"])
 			result["title"] = "补足 %s 的升级条件" % String(upgrade["display_name"])
-			result["detail"] = "升到 L%d 预计 +%d 战力；还缺出战经验%d、金币%d。" % [
+			result["detail"] = "升到%d级预计 +%d 战力；还缺出战经验%d、金币%d。" % [
 				int(upgrade["target_level"]),
 				gain,
 				missing_xp,
@@ -97,7 +97,7 @@ static func for_stage(state: RefCounted, stage_config: Dictionary) -> Dictionary
 		result["action"] = "upgrade"
 		result["hero_id"] = String(upgrade["hero_id"])
 		result["title"] = "训练 %s" % String(upgrade["display_name"])
-		result["detail"] = "出战经验已达标；支付金币%d升到 L%d，预计 +%d 战力。" % [
+		result["detail"] = "出战经验已达标；支付金币%d升到%d级，预计 +%d 战力。" % [
 			coin_cost,
 			int(upgrade["target_level"]),
 			gain,

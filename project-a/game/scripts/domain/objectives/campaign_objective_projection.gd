@@ -192,19 +192,19 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 				archetype_id,
 				chapter_two_clears + 1
 			)
-			small = "第%d场验证：用%d★%s攻占%s（实战证明 %d/3）" % [
+			small = "第%d场磨合：用%d★%s攻占%s（已完成 %d/3）" % [
 				chapter_two_clears + 1,
 				int(hero.star),
 				role_name,
 				String(StageCatalogScript.stage(stage_id).get("display_name", stage_id)),
 				chapter_two_clears,
 			]
-			cta_label = "开始第%d场验证 · %s" % [
+			cta_label = "开始第%d场出击 · %s" % [
 				chapter_two_clears + 1,
 				String(StageCatalogScript.stage(stage_id).get("display_name", stage_id)),
 			]
 			target = "map"
-			hurdle_title = "阵营打法尚未经过实战"
+			hurdle_title = "阵营打法还需要磨合"
 			hurdle_reason = "战力数字不能替代玩家亲自看见新职责改变战局；%s" % proof_focus
 			recovery = "失败无永久损失；调整站位或技能时机后可立即重试。"
 		elif int(hero.star) < 2 and not late_probe_stage_id.is_empty():
@@ -220,11 +220,11 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			cta_label = "试探后段防线 · %s" % probe_stage_name
 			target = "map"
 			hurdle_title = "阵营第一次压力测试"
-			hurdle_reason = "先打一场，才能知道阵营缺的是技能时机、站位还是核心质变。"
+			hurdle_reason = "先打一场，才能知道阵营缺的是技能时机、站位还是关键能力。"
 			recovery = "试探无永久损失；无论胜负，战报都会保留机制数据与下一步。"
 		elif int(hero.star) < 2:
 			phase = "star"
-			small = "使用%s专属碎片升至2★，兑现阵营质变" % role_name
+			small = "使用%s专属碎片升至2★，解锁新的战斗能力" % role_name
 			cta_label = "将%s升至2★" % role_name
 			target = "legion"
 			hurdle_title = "第二章后段成长墙"
@@ -232,14 +232,14 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			recovery = "免费十连已保证同型号重复；碎片只用于这个角色。"
 		elif int(hero.level) < 2:
 			phase = "level_two"
-			small = "用前三场积累的经验与金币，将2★%s升至Lv2" % role_name
-			cta_label = "将%s升至Lv2" % role_name
+			small = "用前三场积累的经验与金币，将2星%s升至2级" % role_name
+			cta_label = "将%s升至2级" % role_name
 			target = "legion"
-			hurdle_title = "质变需要基础强度承载"
+			hurdle_title = "新能力需要基础强度支撑"
 			hurdle_reason = (
-				"2★已经改变技能行为；Lv2补足突破1-9科技墙所需的基础属性。"
+				"2星已经改变技能行为；2级补足突破1-9科技墙所需的基础属性。"
 				if expanded_bridge
-				else "2★已经改变技能行为；Lv2补足突破2-4所需的基础属性。"
+				else "2星已经改变技能行为；2级补足突破2-4所需的基础属性。"
 			)
 			recovery = (
 				"1-6至1-8的首通经验已计入该角色；升级不消耗工业材料。"
@@ -250,63 +250,63 @@ static func _faction_journey(state: RefCounted, cleared: Array) -> Dictionary:
 			phase = "breakthrough_gate"
 			stage_id = gate_stage
 			small = (
-				"用2★Lv2 %s与战术墨镜突破电视人闪袭" % role_name
+				"用2星2级%s突破 E14 监控人防线" % role_name
 				if expanded_bridge
-				else "用2★Lv2 %s突破2-4双塔回响" % role_name
+				else "用2星2级%s突破2-4双塔回响" % role_name
 			)
 			cta_label = (
-				"验证阵营与科技 · 1-9 电视人闪袭"
+				"迎战 1-9 · 监控人防线"
 				if expanded_bridge
-				else "验证Lv2阵营 · 2-4 双塔回响"
+				else "迎战 2-4 · 双塔回响"
 			)
 			target = "map"
 			hurdle_title = "第一次成长兑现"
-			hurdle_reason = "用刚解锁的2★机制和Lv2强度解决已经见过的压力。"
+			hurdle_reason = "用刚解锁的2星机制和2级强度解决已经见过的压力。"
 			recovery = (
-				"先研发战术墨镜，再根据闪屏战报调整站位和技能时机。"
+				"根据远程火力战报调整前后排与技能时机。"
 				if expanded_bridge
 				else "失败无损；根据声塔命中与共振数据调整站位和技能时机。"
 			)
 		elif int(hero.level) < 3:
 			phase = "level_three"
-			small = "使用%s战果，将2★%s升至Lv3迎战章节Boss" % [
+			small = "使用%s战果，将2星%s升至3级迎战章节首领" % [
 				"1-9" if expanded_bridge else "2-4",
 				role_name,
 			]
-			cta_label = "将%s升至Lv3" % role_name
+			cta_label = "将%s升至3级" % role_name
 			target = "legion"
-			hurdle_title = "Boss前最后一次明确成长"
+			hurdle_title = "首领战前最后一次明确成长"
 			hurdle_reason = (
-				"1-9已经证明质变与科技有效；Lv3补足击毁1-12核心的持续输出或生存。"
+				"1-9已展示新能力与科技的配合；3级补足击毁1-12核心所需的持续输出或生存。"
 				if expanded_bridge
-				else "2-4已经证明质变有效；Lv3补足击毁2-5核心的持续输出或生存。"
+				else "2-4已展示二星能力；3级补足击毁2-5核心所需的持续输出或生存。"
 			)
 			recovery = (
 				"1-9首通经验与金币已入账；升级后继续推进抵抗军总台。"
 				if expanded_bridge
-				else "2-4首通经验与金币已入账；升级后直接返回共振堡垒验证。"
+				else "2-4首通经验与金币已入账；升级后直接返回共振堡垒。"
 			)
 		elif not cleared.has(finale_stage):
 			phase = "breakthrough"
 			stage_id = finale_stage
-			small = "用2★Lv3 %s击毁%s核心，完成阵营成形" % [
+			small = "用2星3级%s击毁%s核心，完成阵营成形" % [
 				role_name,
 				"1-12" if expanded_bridge else "2-5",
 			]
-			cta_label = "检验2★质变 · %s" % String(
+			cta_label = "迎战章节核心 · %s" % String(
 				StageCatalogScript.stage(stage_id).get("display_name", stage_id)
 			)
 			target = "map"
-			hurdle_title = "阵营核心最终验证"
+			hurdle_title = "阵营核心的最终决战"
 			hurdle_reason = "升星只有在战斗行为和过关方式改变时才有意义。"
 			recovery = "保留新被动的技能窗口；失败不损失角色、碎片或保底。"
 		elif cleared.has("stage_3_5") and _selected_faction_doctrine(state).is_empty():
 			phase = "choose_doctrine"
-			small = "为%s选择 Tier 2：全队协同或阵营专精" % faction_name
-			cta_label = "选择 Tier 2 科技方向"
+			small = "为%s选择二阶科技：全队协同或阵营专精" % faction_name
+			cta_label = "选择二阶科技方向"
 			target = "blueprints"
 			hurdle_title = "第三章胜利需要转化为新打法"
-			hurdle_reason = "Tier 2不是自动加点；覆盖更多目标与强化阵营核心必须由你取舍。"
+			hurdle_reason = "二阶科技不会自动选择；覆盖更多目标或强化阵营核心，需要由你取舍。"
 			recovery = "进入科技蓝图比较两条免费分支；选择永久保留，从4-1起真实生效。"
 		else:
 			return {"active": false}
@@ -395,7 +395,7 @@ static func _faction_core_choice_journey() -> Dictionary:
 			"scale": "阵营选择",
 			"title": "抽取结果还没有成为你的路线",
 			"reason": "两名候选都拥有2★所需的专属碎片，但阵营职责和后续科技不同。",
-			"recovery": "进入信号结果比较评级、阵营和2★质变；选择永久保留，刷新不会代选。",
+			"recovery": "进入信号结果比较评级、阵营和2★能力；选择永久保留，刷新不会代选。",
 		},
 		"finished": false,
 		"actionable": true,
@@ -417,7 +417,7 @@ static func _faction_core_choice_journey() -> Dictionary:
 			"finished": false,
 			"onboarding_finished": true,
 			"title": "阵营成形：选择长期核心",
-			"lesson": "抽卡决定可选角色池；由你决定哪名角色获得持续目标、科技和关卡验证。",
+			"lesson": "抽卡决定可选角色池；由你决定哪名角色进入后续成长、科技和关卡路线。",
 			"cta_label": "选择我的阵营核心",
 			"target": "legion",
 			"stage_id": "stage_1_6",
@@ -459,14 +459,14 @@ static func _faction_phase_title(phase: String) -> String:
 	var titles := {
 		"research": "研发新角色",
 		"formation": "建立阵营编队",
-		"prove_one_star": "证明核心打法",
+		"prove_one_star": "磨合核心打法",
 		"probe_late_wall": "试探后段防线",
-		"star": "解锁2★质变",
-		"level_two": "培养核心至Lv2",
+		"star": "解锁2★能力",
+		"level_two": "培养核心至2级",
 		"breakthrough_gate": "兑现第一次成长",
-		"level_three": "培养核心至Lv3",
+		"level_three": "培养核心至3级",
 		"breakthrough": "突破第二章",
-		"choose_doctrine": "Tier 2抉择",
+		"choose_doctrine": "二阶科技抉择",
 		"choose_core": "选择阵营核心",
 	}
 	return String(titles.get(phase, "形成阵营"))
@@ -483,7 +483,7 @@ static func _title_view(
 ) -> Dictionary:
 	if no_clears:
 		return {
-			"primary_label": "唤醒 Gman · 启动反攻",
+			"primary_label": "率领Gman · 进入 E07",
 			"objective": "当前目标 · 摧毁联盟前哨 1-1",
 		}
 	if campaign_complete:
@@ -523,7 +523,7 @@ static func _onboarding_hierarchy(onboarding: Dictionary, cleared: Array) -> Dic
 		"macro": (
 			"推进第二章，扩大战争工厂"
 			if cleared.has("stage_1_5")
-			else "摧毁灰镜核心，完成第一章"
+			else "摧毁 E11 联盟核心巨炮，完成第一章"
 		),
 		"medium": String(onboarding.get("title", "建立下一条战线")),
 		"small": (
@@ -548,7 +548,7 @@ static func _faction_recruit_hierarchy() -> Dictionary:
 		"hurdle": {
 			"scale": "中目标",
 			"title": "军团扩编",
-			"reason": "首章基础三人已经证明核心职责；下一步由抽取结果形成不同玩家的阵营路线。",
+			"reason": "首章基础三人已经展现核心职责；下一步由抽取结果形成不同玩家的阵营路线。",
 			"recovery": "免费十连不消耗招募券，并保证至少一名新型号和一次对应专属碎片。",
 		},
 		"finished": true,
@@ -664,7 +664,7 @@ static func _chapter_campaign_copy(stage_config: Dictionary) -> Dictionary:
 			"macro": "推进第二章，扩大战争工厂",
 			"medium": "第二章：突破震荡封锁线",
 			"hurdle_title": "第二章声波防线",
-			"hurdle_reason": "首章队伍已证明基础职责，但第二章要求更高的永久成长与后勤供给。",
+			"hurdle_reason": "首章队伍已形成基础分工，但第二章要求更高的永久成长与后勤供给。",
 			"growth_recovery": "先培养现有军团；所有首章资产保留，不需要付费解锁路线。",
 			"recon_recovery": "先侦察敌方声波结构，再决定阵容和技能时机。",
 			"lesson": "首章资产全部保留；先跨过新的成长坎，再侦察声波防线。",
@@ -675,7 +675,7 @@ static func _chapter_campaign_copy(stage_config: Dictionary) -> Dictionary:
 			"macro": "破解电视控制链，扩展阵营组合",
 			"medium": "第三章：保护核心成员脱离点杀",
 			"hurdle_title": "电视控制与点杀链",
-			"hurdle_reason": "第二章证明了2★核心；第三章会控制关键成员并制造连续点杀窗口。",
+			"hurdle_reason": "第二章练成了2★核心；第三章会控制关键成员并制造连续点杀窗口。",
 			"growth_recovery": "优先培养维修、装甲或干扰成员，保住被控制的阵营核心。",
 			"recon_recovery": "先侦察控制目标与爆发窗口，再决定保护、打断或召唤牵制路线。",
 			"lesson": "阵营核心已经成形；第三章要求围绕它补充续航与反控制职责。",
@@ -695,10 +695,10 @@ static func _chapter_campaign_copy(stage_config: Dictionary) -> Dictionary:
 			"chapter_name": "第五章",
 			"front_name": "联盟总指挥部",
 			"macro": "摧毁联盟总指挥部，完成五章战役",
-			"medium": "第五章：证明完整阵营的最终解法",
+			"medium": "第五章：完成阵营终局决战",
 			"hurdle_title": "联盟最终防御协议",
 			"hurdle_reason": "最终章连续复用此前的控制、护盾、炮击和结构压力，检验完整阵营理解。",
-			"growth_recovery": "只强化当前阵营的关键短板；不需要推翻已经验证的核心路线。",
+			"growth_recovery": "只强化当前阵营的关键短板；不需要推翻已经成形的核心路线。",
 			"recon_recovery": "读取敌方组合后安排技能顺序，把每个成员的职责用在明确窗口。",
 			"lesson": "五章终局检验阵营组合与技能时机；失败保留全部永久成长。",
 		},

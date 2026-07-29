@@ -8,5 +8,5 @@
 script = ExtResource("1")
 task_id = &"operation.research_reinforcements"
 title = "行动四：研发关卡图纸"
-lesson = "把 1-2 与 1-3 获得的冲锋、装甲图纸在研究所逐张研发成永久援军。"
+lesson = "把 1-2 与 1-3 获得的冲锋、承伤玩法图纸在研究所逐张研发成永久援军。"
 objectives = Array[Resource]([ExtResource("3"), ExtResource("4")])

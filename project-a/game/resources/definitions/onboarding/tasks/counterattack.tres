@@ -7,6 +7,6 @@
 script = ExtResource("1")
 task_id = &"operation.counterattack"
 title = "行动五：带队反攻"
-lesson = "让两名新马桶人加入编队，分担重炮火力并攻克灰镜高墙。"
+lesson = "让冲锋与承伤玩法马桶人加入编队，分担重炮火力并攻克监控人火力点。"
 objectives = Array[Resource]([ExtResource("2")])
 hero_shards = 8

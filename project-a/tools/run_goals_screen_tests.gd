@@ -16,10 +16,10 @@ func _run() -> void:
 	goals.call("configure", _action_view())
 	await process_frame
 	_check(goals.find_child("GoalHierarchyPanel", true, false) != null, "action tab owns one macro-to-micro chain")
-	_check(_tree_has_text(goals, "大目标 · 摧毁灰镜核心"), "macro goal remains visible")
+	_check(_tree_has_text(goals, "大目标 · 摧毁 E11 联盟核心巨炮"), "macro goal remains visible")
 	_check(_tree_has_text(goals, "中目标 · 行动三：撞击高墙"), "medium operation remains visible")
 	_check(_tree_has_text(goals, "小目标 · 完成 1-4 首次挑战"), "small executable goal remains visible")
-	_check(_tree_has_text(goals, "大坎 · 1-4 灰镜高墙"), "hurdle scale and identity are explicit")
+	_check(_tree_has_text(goals, "大坎 · 1-4 E10 · 监控人增援"), "hurdle scale and identity are explicit")
 	_check(_tree_has_text(goals, "过坎：完成首战后用保障币建研究所"), "recovery path is explicit")
 	var action_request := {"id": "", "stage_id": "", "hero_id": "", "archetype_id": ""}
 	goals.connect("action_requested", func(action_id: String, payload: Dictionary) -> void:
@@ -135,12 +135,12 @@ func _action_view() -> Dictionary:
 	return {
 		"tab": "action",
 		"hierarchy": {
-			"macro": "摧毁灰镜核心，完成第一章",
+			"macro": "摧毁 E11 联盟核心巨炮，完成第一章",
 			"medium": "行动三：撞击高墙",
 			"small": "完成 1-4 首次挑战并寻找失败原因",
 			"hurdle": {
 				"scale": "大坎",
-				"title": "1-4 灰镜高墙",
+				"title": "1-4 E10 · 监控人增援",
 				"reason": "职责覆盖不足",
 				"recovery": "完成首战后用保障币建研究所，启动免费突破十连。",
 			},

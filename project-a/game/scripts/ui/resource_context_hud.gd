@@ -62,13 +62,14 @@ func configure(view: Dictionary) -> void:
 	_note.visible = not compact and not _note.text.is_empty()
 	_compact_row.visible = compact
 	if compact:
-		var compact_heading := _label(_heading.text, 10, CYAN)
-		compact_heading.name = "ResourceContextCompactHeading"
-		compact_heading.custom_minimum_size.x = int(view.get("compact_heading_width", 112))
-		compact_row_add(compact_heading)
+		if not _heading.text.is_empty():
+			var compact_heading := _label(_heading.text, 12, CYAN)
+			compact_heading.name = "ResourceContextCompactHeading"
+			compact_heading.custom_minimum_size.x = int(view.get("compact_heading_width", 112))
+			compact_row_add(compact_heading)
 		for item_value in view.get("items", []):
 			var item := item_value as Dictionary
-			var compact_meter := _label(_projection_copy(item), 9, _projection_color(item))
+			var compact_meter := _label(_projection_copy(item), 12, _projection_color(item))
 			compact_meter.name = "CompactResource_%s" % String(item.get("id", "unknown"))
 			compact_meter.tooltip_text = _tooltip_copy(item)
 			compact_meter.autowrap_mode = TextServer.AUTOWRAP_OFF

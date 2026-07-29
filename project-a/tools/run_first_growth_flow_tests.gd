@@ -14,7 +14,7 @@ func _run() -> void:
 		"res://game/resources/definitions/onboarding/objectives/complete_combat_growth.tres"
 	)
 	_check(
-		String(growth_objective.cta_label) == "比较冲锋/装甲2★路线",
+		String(growth_objective.cta_label) == "比较破城/铁甲2★打法",
 		"the battle-result handoff names both routes and the two-star decision"
 	)
 	change_scene_to_file("res://scenes/screens/main.tscn")
@@ -164,7 +164,12 @@ func _run() -> void:
 		"defeat",
 		"stage_1_5"
 	))
-	_check(timing_debrief.contains("巨炮机制/技能时机"), "cannon hits produce a mechanism and timing diagnosis")
+	_check(
+		timing_debrief.contains("失败原因")
+		and timing_debrief.contains("巨炮命中 2 次")
+		and timing_debrief.contains("倒计时内释放二星技能"),
+		"cannon hits produce a factual mechanism diagnosis and exact retry timing"
+	)
 	var timing_recovery := main.call("_boss_failure_recovery", {"cannon_hit_count": 2}) as Dictionary
 	_check(String(timing_recovery.get("label", "")).contains("再战 1-5"), "timing failure offers an immediate mastery retry")
 	var formation_recovery := main.call("_boss_failure_recovery", {"cannon_suppressed_count": 1}) as Dictionary
@@ -175,7 +180,12 @@ func _run() -> void:
 		"defeat",
 		"stage_1_5"
 	))
-	_check(guarded_debrief.contains("阵容/战力"), "guarding the cannon cannot hide a later formation failure")
+	_check(
+		guarded_debrief.contains("失败原因")
+		and guarded_debrief.contains("已格挡巨炮 1 次")
+		and guarded_debrief.contains("回军团检查编队与成长"),
+		"guarding the cannon cannot hide the later formation-and-growth failure"
+	)
 	assault.star = 1
 	var growth_debrief := String(main.call(
 		"_battle_debrief_copy",
@@ -183,7 +193,12 @@ func _run() -> void:
 		"defeat",
 		"stage_1_5"
 	))
-	_check(growth_debrief.contains("成长未完成"), "missing two-star growth is diagnosed before mechanics")
+	_check(
+		growth_debrief.contains("失败原因")
+		and growth_debrief.contains("尚未升到二星")
+		and growth_debrief.contains("先完成一条成长路线"),
+		"missing two-star growth is diagnosed with the exact recovery action before mechanics"
+	)
 	assault.star = 2
 	var attack := main.find_child("BossReadyAttackButton", true, false) as Button
 	_check(attack != null and attack.text.contains("进攻 1-5"), "boss verification exposes one exact test action")

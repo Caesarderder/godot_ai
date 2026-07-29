@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 objective_id = &"capture_1_3"
-label = "攻克 1-3 联盟集结"
+label = "攻克 1-3 市政厅路障"
 event_type = &"battle_settled"
 stage_id = &"stage_1_3"
 outcome = "victory"

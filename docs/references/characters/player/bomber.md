@@ -19,7 +19,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 自爆飞行马桶人
+# 炸弹桶马桶人
 
 | 字段 | 当前事实 |
 |---|---|

@@ -1,6 +1,6 @@
 extends SceneTree
 
-# 文件名为旧 CI 入口保留；内容负责保护永久 G-Man 与移除三合一/抽取入口的新合同。
+# 文件名为旧 CI 入口保留；内容负责保护永久 G-Toilet 与移除三合一/抽取入口的新合同。
 const GameStateScript := preload("res://game/scripts/state/game_state.gd")
 const CommandExecutorScript := preload("res://game/scripts/commands/command_executor.gd")
 const CommandClassRegistryScript := preload("res://game/scripts/commands/command_class_registry.gd")
@@ -11,11 +11,11 @@ var failures: Array[String] = []
 func _init() -> void:
 	var state: RefCounted = GameStateScript.create_new(20260726, 100)
 	_check(int(state.schema_version) == 11, "new campaign uses schema v11")
-	_check(String(state.roster[0].archetype_id) == "gman", "starter legion is led by permanent G-Man")
-	_check(state.roster.size() == 1, "new campaign starts with G-Man as its only unlocked hero")
+	_check(String(state.roster[0].archetype_id) == "gman", "starter legion is led by permanent G-Toilet")
+	_check(state.roster.size() == 1, "new campaign starts with G-Toilet as its only unlocked hero")
 	_check(state.factory.blueprints.size() == 4, "hidden compatibility data preserves four baseline model blueprints")
 	_check(int(state.economy.toilet_coins) == 20 and int(state.economy.toilet_gems) == 0, "new campaign starts scarce and exposes no premium currency")
-	_check(state.formation.hero_ids() == state.roster_ids(), "new campaign deploys only G-Man")
+	_check(state.formation.hero_ids() == state.roster_ids(), "new campaign deploys only G-Toilet")
 	for removed_command in ["recruit_hero", "train_hero", "merge_heroes", "exchange_salvage", "purchase_gold_shop", "start_blueprint_research"]:
 		_check(not CommandClassRegistryScript.has_command(removed_command), "%s remains removed from command authority" % removed_command)
 	var executor: RefCounted = CommandExecutorScript.new(state, func(_candidate: RefCounted) -> bool: return true)

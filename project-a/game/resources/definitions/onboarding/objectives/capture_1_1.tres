@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 objective_id = &"capture_1_1"
-label = "使用 Gman 攻克 1-1 无防备城市"
+label = "使用Gman完成 1-1 E07 战斗"
 event_type = &"battle_settled"
 stage_id = &"stage_1_1"
 outcome = "victory"

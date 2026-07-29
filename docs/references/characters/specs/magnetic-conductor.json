@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "archetype_id": "magnetic_conductor",
-  "display_name": "磁轨牵引马桶人",
+  "display_name": "冲击波直升机马桶人",
   "rating": "A",
   "class_id": "ranger",
   "branch": "flying",
@@ -22,7 +22,7 @@
   "encounters": {
     "safe_intro": {"stage_id": "stage_4_2", "demand": "两名可牵引标记兵分列两线。", "feedback": "青色磁轨把目标拉到同一爆心并显示聚焦环。", "fallbacks": ["sonic"]},
     "combination_test": {"stage_id": "stage_4_3", "demand": "分散射手与禁飞区同时压迫，要求先收束再齐射。", "feedback": "火箭或自爆命中聚拢目标时显示连锁计数。", "fallbacks": ["rocket", "sonic"]},
-    "spotlight": {"stage_id": "stage_4_4", "demand": "轮换防线每轮把普通守军拆到两翼。", "feedback": "一次聚拢取消两翼交叉火力并记录减少的活跃火线。", "fallbacks": ["bomber", "saw"]},
+    "spotlight": {"stage_id": "stage_4_4", "demand": "换防桥头每轮把普通守军拆到两翼。", "feedback": "一次聚拢取消两翼交叉火力并记录减少的活跃火线。", "fallbacks": ["bomber", "saw"]},
     "boss_soft_counter": {"stage_id": "stage_4_5", "demand": "Boss本体免疫牵引，但护卫可被收束以打开攻核窗口。", "feedback": "护卫坍缩后Boss核心暴露倒计时延长。", "fallbacks": ["armored", "rocket", "repair"]}
   },
   "narrative": {

@@ -160,7 +160,7 @@ func _capture() -> void:
 	await _wait_frames(7)
 	if not _save("res://artifacts/ui-faction-proof-one-844x390.png"):
 		return
-	var second_proof := _button_with_text(main, "开始第2场验证")
+	var second_proof := _button_with_text(main, "开始第2场出击")
 	if second_proof == null:
 		_fail("second faction proof action unavailable")
 		return
@@ -206,7 +206,7 @@ func _capture() -> void:
 	main.set("last_settlement", second_proof_settlement)
 	main.call("_show_result")
 	await _wait_frames(5)
-	var third_proof := _button_with_text(main, "开始第3场验证")
+	var third_proof := _button_with_text(main, "开始第3场出击")
 	if third_proof == null:
 		_fail("third faction proof action unavailable")
 		return
@@ -345,7 +345,7 @@ func _capture() -> void:
 	if not _save("res://artifacts/ui-faction-level-two-goal-844x390.png"):
 		return
 	var level_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
-	if level_cta == null or not level_cta.text.contains("Lv2"):
+	if level_cta == null or not level_cta.text.contains("2级"):
 		_fail("faction level-two goal unavailable")
 		return
 	level_cta.pressed.emit()
@@ -376,7 +376,7 @@ func _capture() -> void:
 	if not _save("res://artifacts/ui-faction-level-three-goal-844x390.png"):
 		return
 	level_cta = main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
-	if level_cta == null or not level_cta.text.contains("Lv3"):
+	if level_cta == null or not level_cta.text.contains("3级"):
 		_fail("faction level-three goal unavailable")
 		return
 	level_cta.pressed.emit()
@@ -413,11 +413,18 @@ func _capture() -> void:
 	}
 	runtime_result[metric_key] = 7
 	main.set("last_battle_runtime_result", runtime_result)
+	var chapter_two_cleared := state.stage_progress.get("cleared_stages", []) as Array
+	for stage_number in range(1, 13):
+		var chapter_two_stage_id := "stage_2_%d" % stage_number
+		if not chapter_two_cleared.has(chapter_two_stage_id):
+			chapter_two_cleared.append(chapter_two_stage_id)
+	state.stage_progress["cleared_stages"] = chapter_two_cleared
+	state.stage_progress["highest_unlocked_stage"] = "stage_3_1"
 	main.set("last_settlement", {
 		"ok": true,
 		"event": {
 			"outcome": "victory",
-			"stage_id": "stage_2_5",
+			"stage_id": "stage_2_12",
 			"next_stage_id": "stage_3_1",
 			"reward": {"gold": 78, "porcelain": 35, "parts": 31, "sludge": 26},
 			"industrial_tech": 5,
@@ -604,7 +611,7 @@ func _capture() -> void:
 	main.call("_show_result")
 	await _wait_frames(8)
 	if (
-		not _tree_has_text(main, "章节考试")
+		not _tree_has_text(main, "章节决战")
 		or not _tree_has_text(main, "信号消失2次")
 		or not _tree_has_text(main, "换位3次")
 		or not _tree_has_text(main, "控制4次")
@@ -614,18 +621,18 @@ func _capture() -> void:
 		return
 	if not _save("res://artifacts/ui-chapter-three-complete-844x390.png"):
 		return
-	var tier_two_handoff := _button_with_text(main, "选择 Tier 2")
+	var tier_two_handoff := _button_with_text(main, "选择二阶科技")
 	if tier_two_handoff == null or not _control_is_unobscured(tier_two_handoff, main):
-		_fail("chapter-three settlement does not expose the Tier 2 handoff")
+		_fail("chapter-three settlement does not expose the second-tier handoff")
 		return
 	DisplayServer.window_set_size(Vector2i(568, 320))
 	root.size = Vector2i(568, 320)
 	await _wait_frames(8)
 	if (
-		not _tree_has_text(main, "章节考试")
+		not _tree_has_text(main, "章节决战")
 		or not _control_is_unobscured(tier_two_handoff, main)
 	):
-		_fail("chapter-three proof or Tier 2 handoff is clipped at 568x320")
+		_fail("chapter-three result or second-tier handoff is clipped at 568x320")
 		return
 	if not _save("res://artifacts/ui-chapter-three-complete-568x320.png"):
 		return
@@ -646,7 +653,7 @@ func _capture() -> void:
 	await _wait_frames(8)
 	var doctrine_choice := main.find_child("CoordinationChoice", true, false) as Button
 	if doctrine_choice == null:
-		_fail("Tier 2 doctrine choice unavailable")
+		_fail("second-tier doctrine choice unavailable")
 		return
 	doctrine_choice.pressed.emit()
 	await _wait_frames(6)

@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 objective_id = &"complete_combat_growth"
-label = "选择冲锋或装甲马桶人升到二星"
+label = "选择冲锋或承伤玩法马桶人升到二星"
 event_types = PackedStringArray("hero_star_upgraded", "permanent_hero_star_upgraded")
 archetype_ids = PackedStringArray("assault", "armored")
 target = "legion"
-cta_label = "比较冲锋/装甲2★路线"
+cta_label = "比较破城/铁甲2★打法"

@@ -7,6 +7,6 @@
 script = ExtResource("1")
 task_id = &"operation.high_wall"
 title = "行动三：撞击高墙"
-lesson = "挑战 1-4 重炮防线；这次失败会揭示 Gman 缺少前排增援。"
+lesson = "挑战 1-4 监控人火力点；这次失败会揭示Gman缺少前排增援。"
 objectives = Array[Resource]([ExtResource("2")])
 toilet_coins = 30

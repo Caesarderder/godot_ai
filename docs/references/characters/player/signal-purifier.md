@@ -20,7 +20,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 信号净化马桶人
+# 钢爪马桶人科学家
 
 > 状态：`implemented`。目录、长期招募、3-1首通图纸、研究、编队、战斗技能、科技树与程序化表现均已接入；玩家偏好仍为 `unknown`。
 

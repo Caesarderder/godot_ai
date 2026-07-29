@@ -32,7 +32,7 @@ func _run_contract() -> void:
 	_verify_factory_capacity_contract()
 	_verify_skill_research_contract()
 	_expect(executor.state.content_version == "toilet-factory-slg-v3-factions", "new saves use the faction-progression contract")
-	_expect(executor.state.roster.size() == 1, "new game owns only permanent G-Man")
+	_expect(executor.state.roster.size() == 1, "new game owns only permanent G-Toilet")
 	var permanent_ids: Array[String] = executor.state.roster_ids()
 	_expect(executor.state.formation.hero_ids() == permanent_ids, "new game deploys only its unlocked hero")
 
@@ -66,7 +66,7 @@ func _run_contract() -> void:
 	}), "1-3 supply gift funds the next industrial choice")
 
 	var high_wall_defeat := _settle("stage_1_4", "defeat", permanent_ids)
-	_expect_ok(high_wall_defeat, "Gman first high-wall attempt settles as defeat")
+	_expect_ok(high_wall_defeat, "G-Toilet first high-wall attempt settles as defeat")
 	_expect_task("operation.research_reinforcements", false, 0)
 	_expect(int(executor.state.factory.facilities["research_lab"]) == 1, "opening research lab remains available after the high-wall defeat")
 	_expect_ok(_command("unlock_foundational_blueprint", {
@@ -86,7 +86,7 @@ func _run_contract() -> void:
 	var armored_id := String((armored_research.get("event", {}) as Dictionary).get("hero_id", ""))
 	_expect_ok(_command("assign_formation_slot", {"slot": "troop_1", "hero_id": assault_id}), "assault toilet joins the formation")
 	_expect_ok(_command("assign_formation_slot", {"slot": "troop_2", "hero_id": armored_id}), "armored toilet joins the formation")
-	_expect(executor.state.formation.hero_ids().size() == 3, "Gman and both researched toilets form the counterattack squad")
+	_expect(executor.state.formation.hero_ids().size() == 3, "G-Toilet and both researched toilets form the counterattack squad")
 	_expect_ok(_settle("stage_1_4", "victory", executor.state.formation.hero_ids()), "reinforced squad captures the high wall")
 	_expect_task("operation.choose_growth", false, 0)
 	var construct_support := _command("construct_facility", {
@@ -381,7 +381,7 @@ func _verify_objective_event_guards() -> void:
 	})
 	_expect(
 		int(OnboardingService.snapshot(probe).get("progress", -1)) == 2,
-		"Gman star-up cannot satisfy the verified reinforcement choice after industrial setup"
+		"G-Toilet star-up cannot satisfy the verified reinforcement choice after industrial setup"
 	)
 	var growth_settlement := OnboardingService.apply_event(probe, {
 		"type": "hero_star_upgraded",
@@ -408,7 +408,7 @@ func _verify_legacy_save_migration() -> void:
 	var status := service.bootstrap_with_manager(manager, 20260726, 200)
 	_expect(status == "created", "legacy contract is replaced before entering UI")
 	_expect(service.current_state().content_version == "toilet-factory-slg-v3-factions", "migration creates active faction content version")
-	_expect(service.current_state().roster.size() == 1, "replaced legacy contract starts with only permanent G-Man")
+	_expect(service.current_state().roster.size() == 1, "replaced legacy contract starts with only permanent G-Toilet")
 	manager.delete_local_save()
 	service.free()
 

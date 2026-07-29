@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "archetype_id": "anchor_bastion",
-  "display_name": "锚桩堡垒马桶人",
+  "display_name": "巨型飞行马桶人",
   "rating": "B",
   "class_id": "guardian",
   "branch": "heavy",
@@ -22,7 +22,7 @@
   "encounters": {
     "safe_intro": {"stage_id": "stage_3_3", "demand": "一次明确的前后排交换冲击。", "feedback": "四根锚桩落地，位移箭头折断并生成护盾。", "fallbacks": ["armored"]},
     "combination_test": {"stage_id": "stage_3_4", "demand": "换位与监军护盾组合，要求决定锚定哪一阶段。", "feedback": "保住阵位后火力继续命中原目标。", "fallbacks": ["repair", "sonic"]},
-    "spotlight": {"stage_id": "stage_4_1", "demand": "联合标记试图把被点名者推出保护区。", "feedback": "锚区保住被标记者并显示避免的位移距离。", "fallbacks": ["armored", "parasite"]},
+    "spotlight": {"stage_id": "stage_4_1", "demand": "三色标记街试图把被点名者推出保护区。", "feedback": "锚区保住被标记者并显示避免的位移距离。", "fallbacks": ["armored", "parasite"]},
     "boss_soft_counter": {"stage_id": "stage_4_5", "demand": "Boss冲击波换位但仍造成伤害。", "feedback": "成功锚定只取消换位并延长恢复窗，不取消伤害。", "fallbacks": ["armored", "repair", "saw"]}
   },
   "narrative": {

@@ -19,7 +19,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 音波马桶人
+# 故障闪电马桶人
 
 | 字段 | 当前事实 |
 |---|---|

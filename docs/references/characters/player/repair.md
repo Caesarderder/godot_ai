@@ -19,7 +19,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 维修马桶人
+# 研究员马桶人
 
 | 字段 | 当前事实 |
 |---|---|

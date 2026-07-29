@@ -112,7 +112,7 @@ func _apply_view() -> void:
 	results_panel.visible = showing_results
 	tech_preview.visible = not showing_results and not preview.is_empty()
 	if choosing_doctrine:
-		tech_identity.text = "Tier 2科技待定 · %s\n选择后从第4章生效" % String(
+		tech_identity.text = "二阶科技待定 · %s\n选择后从第4章生效" % String(
 			preview.get("faction", "阵营")
 		)
 		var coordination := choices[0] as Dictionary
@@ -128,10 +128,10 @@ func _apply_view() -> void:
 			)
 		)
 	else:
-		tech_identity.text = "Tier %d阵营科技已激活 · %s\n%s" % [
+		tech_identity.text = "%d阶阵营科技已激活 · %s\n%s" % [
 			int(preview.get("tier", 1)),
 			String(preview.get("faction", "阵营待形成")),
-			String(preview.get("title", "未来协议")),
+			String(preview.get("title", "阵营科技")),
 		]
 		tech_effect.text = "%s\n第%d章起自动生效 · 编入同阵营角色可扩大收益" % [
 			String(preview.get("effect", "")),
@@ -155,7 +155,7 @@ func _apply_view() -> void:
 	branch_row.name = "BlueprintBranchRow_%s" % selected
 	branch_heading.text = "%s · %s" % [
 		String(_view.get("branch_title", "研究分支")),
-		String(_view.get("branch_summary", "比较职责与成长质变")),
+		String(_view.get("branch_summary", "比较职责与星级能力")),
 	]
 	_clear_children(node_row)
 	var nodes := _view.get("nodes", []) as Array
@@ -268,21 +268,30 @@ func _build_node(view: Dictionary) -> PanelContainer:
 	heading.add_theme_color_override("font_color", GOLD if journey_focus else CYAN)
 	content.add_child(heading)
 	var identity := Label.new()
-	identity.text = "%s级 · %s · %s" % [
-		String(view.get("rating", "B")),
+	identity.text = "%s · %s · %s" % [
+		_rating_label(String(view.get("rating", "B"))),
 		String(view.get("faction", "独立战术")),
-		String(view.get("role_copy", "职责待确认")),
+		String(view.get("skill_name", "主动战法")),
 	]
 	identity.add_theme_font_override("font", CJK_FONT)
 	identity.add_theme_font_size_override("font_size", 10)
 	identity.add_theme_color_override("font_color", GOLD)
 	identity.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(identity)
-	var growth := Label.new()
-	growth.text = "1★ %s · 2★ %s → 3★ %s" % [
+	var promise := Label.new()
+	promise.text = "1★ %s · %s" % [
 		String(view.get("one_star_value", "拥有完整主动技能")),
+		String(view.get("role_copy", "职责待确认")),
+	]
+	promise.add_theme_font_override("font", CJK_FONT)
+	promise.add_theme_font_size_override("font_size", 9)
+	promise.add_theme_color_override("font_color", TEXT)
+	promise.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(promise)
+	var growth := Label.new()
+	growth.text = "升星：2★ %s · 3★ %s" % [
 		String(view.get("two_star_effect", "职责强化")),
-		String(view.get("three_star_effect", "技能质变")),
+		String(view.get("three_star_effect", "技能强化")),
 	]
 	growth.add_theme_font_override("font", CJK_FONT)
 	growth.add_theme_font_size_override("font_size", 9)
@@ -302,7 +311,7 @@ func _build_node(view: Dictionary) -> PanelContainer:
 	var action_id := String(view.get("action_id", ""))
 	if not action_id.is_empty():
 		var button := _button(String(view.get("action_label", "继续")), true)
-		button.custom_minimum_size.y = 32
+		button.custom_minimum_size.y = 48
 		button.name = String(view.get("action_name", "BlueprintNodeAction"))
 		button.set_meta("primary_blueprint_action", true)
 		button.set_meta("recipe_id", String(view.get("recipe_id", "")))
@@ -327,6 +336,15 @@ func _status_color(status_id: String) -> Color:
 	if status_id == "available":
 		return GOLD
 	return MUTED
+
+
+func _rating_label(rating: String) -> String:
+	return String({
+		"C": "基础",
+		"B": "标准",
+		"A": "精锐",
+		"S": "传奇",
+	}.get(rating, "标准"))
 
 
 func _focus_primary_after_layout() -> void:
@@ -399,7 +417,7 @@ func _apply_theme() -> void:
 func _button(text_value: String, primary: bool) -> Button:
 	var button := Button.new()
 	button.text = text_value
-	button.custom_minimum_size.y = 44
+	button.custom_minimum_size.y = 48
 	_style_button(button, primary)
 	return button
 

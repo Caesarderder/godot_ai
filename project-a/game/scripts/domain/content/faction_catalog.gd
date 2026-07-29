@@ -173,7 +173,7 @@ static func playstyle_for(archetype_id: String) -> String:
 static func next_star_effect(archetype_id: String, target_star: int) -> String:
 	return String((STAR_EFFECTS.get(archetype_id, {}) as Dictionary).get(
 		target_star,
-		"当前已达到本切片最高质变"
+		"当前已解锁本阶段全部星级能力"
 	))
 
 
@@ -212,7 +212,7 @@ static func tier_two_options_for(archetype_id: String) -> Array[Dictionary]:
 			continue
 		options.append({
 			"doctrine_id": doctrine_id,
-			"title": String(protocol.get("title", "Tier 2协议")),
+			"title": String(protocol.get("title", "二阶科技")),
 			"effect": String(protocol.get("effect", "")),
 			"choice_summary": String(protocol.get("choice_summary", "")),
 			"action_label": (

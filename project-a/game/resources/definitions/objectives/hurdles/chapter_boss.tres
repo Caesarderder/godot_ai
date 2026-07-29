@@ -6,6 +6,6 @@
 script = ExtResource("1")
 task_id = &"operation.chapter_boss"
 scale = "大坎"
-title = "灰镜核心巨炮"
-reason = "Boss 会检验刚才选择的成长与炮击应对。"
+title = "E11 联盟核心巨炮"
+reason = "首领会检验刚才选择的成长与炮击应对。"
 recovery = "读取炮击倒计时，用二星援军压制核心；失败后资产完全保留。"

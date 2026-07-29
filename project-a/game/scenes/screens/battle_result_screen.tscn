@@ -5,7 +5,7 @@
 [node name="BattleResultScreen" type="VBoxContainer"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 5
 script = ExtResource("1_script")
 
 [node name="OutcomeBanner" type="PanelContainer" parent="."]
@@ -19,26 +19,27 @@ horizontal_alignment = 1
 [node name="Columns" type="HBoxContainer" parent="."]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 18
+theme_override_constants/separation = 8
 
 [node name="ReportPanel" type="PanelContainer" parent="Columns"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.25
 
 [node name="ReportMargin" type="MarginContainer" parent="Columns/ReportPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
 
 [node name="Report" type="VBoxContainer" parent="Columns/ReportPanel/ReportMargin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="ReportTitle" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 layout_mode = 2
-text = "本局高光"
+text = "本局战果"
 
 [node name="RewardHeadline" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 unique_name_in_owner = true
@@ -69,6 +70,10 @@ layout_mode = 2
 [node name="CombatSummary" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 2
+max_lines_visible = 2
+text_overrun_behavior = 3
 
 [node name="Contribution" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 unique_name_in_owner = true
@@ -92,23 +97,24 @@ layout_mode = 2
 autowrap_mode = 2
 
 [node name="NextPanel" type="PanelContainer" parent="Columns"]
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="NextMargin" type="MarginContainer" parent="Columns/NextPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
 
 [node name="Next" type="VBoxContainer" parent="Columns/NextPanel/NextMargin"]
 layout_mode = 2
-theme_override_constants/separation = 7
+theme_override_constants/separation = 5
 
 [node name="NextTitle" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
 layout_mode = 2
-text = "把战果变成下一次胜利"
+text = "下一步"
 
 [node name="Safety" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
 unique_name_in_owner = true
@@ -124,17 +130,17 @@ text_overrun_behavior = 3
 
 [node name="PrimaryAction" type="Button" parent="Columns/NextPanel/NextMargin/Next"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 
 [node name="FactoryAction" type="Button" parent="Columns/NextPanel/NextMargin/Next"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "升级工厂"
 
 [node name="BaseAction" type="Button" parent="Columns/NextPanel/NextMargin/Next"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "返回基地 · 稍后继续"

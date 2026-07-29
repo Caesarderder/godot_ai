@@ -23,53 +23,42 @@ const ACT1_STAGE_IDS: Array[String] = [
 const DEFAULT_STAGE_ID: String = "stage_1_1"
 const ENDLESS_PREFIX: String = "endless_"
 const DEFAULT_STAGE_NAMES: Array[String] = ["城市外围", "火力封锁区", "基地广场"]
-const ACT1_DISPLAY_NAMES: Dictionary = {
-	"stage_2_1": "低音街垒",
-	"stage_2_2": "震荡高架",
-	"stage_2_3": "广播车队",
-	"stage_2_4": "双塔回响",
-	"stage_2_5": "共振堡垒",
-	"stage_3_1": "信号消失",
-	"stage_3_2": "烟幕换位",
-	"stage_3_3": "镜片工厂",
-	"stage_3_4": "处决画面",
-	"stage_3_5": "黑屏中继塔",
-	"stage_4_1": "联合标记",
-	"stage_4_2": "禁飞走廊",
-	"stage_4_3": "反寄生实验区",
-	"stage_4_4": "轮换防线",
-	"stage_4_5": "三联军械库",
-	"stage_5_1": "空城大道",
-	"stage_5_2": "战略仓库",
-	"stage_5_3": "泰坦足迹",
-	"stage_5_4": "中央防区",
-	"stage_5_5": "审判之门",
-}
 const CHAPTER_STAGE_NAMES: Dictionary = {
 	1: [
-		"无防备城市", "城市警报", "联盟集结", "炮台防线", "灰镜核心",
-		"摄像重装营", "失焦街区", "黑屏预警", "电视人闪袭",
-		"镜片仓库", "泰坦足迹", "抵抗军总台",
+		"E07 · 监控人登场", "E08 · 马桶人与监控人交战", "E09 · 双方战线扩大",
+		"E10 · 马桶人与监控人交战", "E11 · 双方战线推进", "E12 · 双方战线推进",
+		"E13 · 马桶人与监控人交战", "E14 · 双方战线推进", "E15 · 马桶人与监控人交战",
+		"E18 · 监控泰坦登场", "E19 · 监控泰坦推进", "E20 · 首次泰坦战",
 	],
 	2: [
-		"低音街垒", "震荡高架", "广播车队", "回声隧道", "共振前哨",
-		"巨型音箱阵", "寄生样本库", "失控广播站", "感染泰坦投影",
-		"静音走廊", "解毒车队", "共振堡垒",
+		"E21 · 监控人战线", "E22 · 马桶人反攻", "E23 · 联盟增援",
+		"E24 · 音响人登场", "E25 · 音响人联合作战", "E26 · 音响泰坦登场",
+		"E27 · 音响泰坦参战", "E28 · 音响泰坦袭击会议",
+		"E29 · 故障闪电马桶人", "E30 · 大型寄生体出击",
+		"E31 · 音响人被感染", "E32 · 被感染的音响泰坦",
 	],
 	3: [
-		"信号消失", "烟幕换位", "镜片工厂", "处决画面", "黑屏中继",
-		"电视监军", "传送残影", "控制矩阵", "夺控实验室",
-		"暗屏走廊", "泰坦回归", "黑屏母塔",
+		"E33 · 感染泰坦推进", "E35 · 感染战争持续", "E38 · 联盟反寄生推进",
+		"E39 · 电视人登场", "E40 · 电视人传送", "E41 · 电视女登场",
+		"E42 · 反寄生行动", "E43 · 双方战线推进", "E45 · 泰坦交战",
+		"E46 · 双方战线推进", "E47 · 电影泰坦对Gman",
+		"E49 · 被感染的音响泰坦撤离",
 	],
 	4: [
-		"联合标记", "禁飞走廊", "反寄生区", "轮换防线", "三军前哨",
-		"联合近卫", "装甲列车", "模块工坊", "协议封锁",
-		"渗透入口", "实验室外环", "三联军械库",
+		"E50 · 升级监控泰坦回归", "E51 · 监控泰坦反攻",
+		"E52 · 被感染的音响泰坦迎战", "E53 · Gman 3.0 迎战",
+		"E54 · 双泰坦追击", "E55 · 马桶人防线后撤",
+		"E56 · 监控泰坦决战", "E57 · 解除寄生行动",
+		"E57 · 大型寄生体脱离", "E57 · 音响泰坦获救",
+		"E57 · Gman撤退", "E57 · 泰坦反攻结束",
 	],
 	5: [
-		"空城大道", "战略仓库", "泰坦足迹", "中央防区", "审判前门",
-		"科学家机甲", "诱敌回廊", "连续炮阵", "指挥干扰核心",
-		"实验室深层", "G军团决战", "审判之门",
+		"E58 · 地球战争持续", "E60 · 地球战争持续", "E62 · 地球战争持续",
+		"E64 · 地球战争持续", "E66 · 阿尔法山围攻开始",
+		"E67 · 阿尔法山地面战", "E68 · 科学家机甲决战",
+		"E70 · 首席科学家死亡", "E71 · G小队集结",
+		"E72 · Gman对拘留者", "E73 · Gman撤离",
+		"E73 · 三泰坦追击Gman",
 	],
 }
 const CHAPTER_POWER_START: Array[int] = [1950, 9400, 13000, 17200, 22500]
@@ -96,6 +85,14 @@ static func all_stage_ids() -> Array[String]:
 	return ACT1_STAGE_IDS.duplicate()
 
 
+static func epilogue_contract() -> Dictionary:
+	return {
+		"episode": 74,
+		"display_name": "E74 · 太空马桶人舰队来袭",
+		"playable": false,
+	}
+
+
 static func has_stage(stage_id: String) -> bool:
 	return ACT1_STAGE_IDS.has(stage_id) or _endless_index(stage_id) > 0
 
@@ -120,17 +117,17 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 	if stage_id == DEFAULT_STAGE_ID:
 		# 第一关是纯粹的破坏教学：没有联盟守军或炮台，
 		# 先撞开废弃路障，再摧毁唯一城市目标。
-		config["display_name"] = "1-1 无防备城市"
+		config["display_name"] = "1-1 E07 · 监控人登场"
 		config["stage_names"] = ["城市外围"]
 		config["final_structure_id"] = "unguarded_city"
 		config["gman_opening_damage_bp"] = 30000
 		config["enemies"] = []
 		config["structures"] = [
 			_structure("abandoned_barricade", "废弃路障", "structure", 0, 430, 1, 180, 1, 0, 0),
-			_structure("unguarded_city", "无防备城市", "city", 0, 620, 1, 760, 4, 0, 0),
+			_structure("unguarded_city", "E07 城市目标", "city", 0, 620, 1, 760, 4, 0, 0),
 		]
 		config["threat_summary"] = "城市没有组织防守；先撞开废弃路障，再摧毁城市目标。"
-		config["counter_hint"] = "让 Gman 自动推进，能量充满后点击头像快速突破路障。"
+		config["counter_hint"] = "让Gman自动推进，能量充满后点击头像快速突破路障；战斗结构为玩法改编。"
 		config["reward_victory"] = {"gold": 80}
 		config["reward_defeat"] = {"gold": 0}
 		config["unlock_on_defeat"] = []
@@ -139,7 +136,7 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 		return _apply_authored_definition(config, authored_definition)
 	if stage_id == "stage_1_2":
 		# 第二关只引入城市内的第一批远程联盟成员，还没有固定火力。
-		config["display_name"] = "1-2 城市警报"
+		config["display_name"] = "1-2 E08 · 监控人反击"
 		config["solo_pressure_bp"] = 10000
 		config["stage_names"] = ["警报街区"]
 		config["final_structure_id"] = "alerted_city"
@@ -153,8 +150,8 @@ static func stage(stage_id: String = DEFAULT_STAGE_ID) -> Dictionary:
 		return _apply_authored_definition(config, authored_definition)
 	if stage_id == "stage_1_3":
 		# 第三关让零散守卫正式组成联盟，并部署一座低压预警炮塔；
-		# Gman 可以残血突破，第 4 关才升级为必败的重炮墙。
-		config["display_name"] = "1-3 联盟集结"
+		# Gman可以残血突破，第 4 关才升级为必败的重炮墙。
+		config["display_name"] = "1-3 E09 · 城市战扩大"
 		config["solo_pressure_bp"] = 13000
 		config["stage_names"] = ["联盟街垒", "城市议事厅"]
 		config["final_structure_id"] = "alliance_hall"
@@ -439,7 +436,6 @@ static func _required_counter_tech(chapter: int, stage_in_chapter: int) -> Strin
 	if stage_in_chapter not in [9, BOSS_STAGE_NUMBER]:
 		return ""
 	var chapter_techs := {
-		1: "counter.sunglasses",
 		2: "counter.resonance_insulation",
 		3: "counter.signal_anchor",
 		4: "counter.alliance_decoder",
@@ -450,13 +446,6 @@ static func _required_counter_tech(chapter: int, stage_in_chapter: int) -> Strin
 
 static func counter_tech_for_chapter(chapter: int) -> Dictionary:
 	var definitions := {
-		1: {
-			"tech_id": "counter.sunglasses",
-			"display_name": "战术墨镜",
-			"cost": 18,
-			"threat": "电视人的致盲闪屏会重创未防护的马桶人。",
-			"effect": "免疫致盲，并将闪屏伤害降低 80%。",
-		},
 		2: {
 			"tech_id": "counter.resonance_insulation",
 			"display_name": "共振绝缘层",
@@ -490,13 +479,10 @@ static func counter_tech_for_chapter(chapter: int) -> Dictionary:
 
 
 static func _resonance_profile(chapter: int, stage_in_chapter: int) -> Dictionary:
-	if chapter != 2:
+	if chapter != 2 or stage_in_chapter < 4:
 		return {}
-	var beat := (
-		stage_in_chapter
-		if stage_in_chapter <= 5
-		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
-	)
+	var canon_stage := stage_in_chapter - 3
+	var beat := mini(5, canon_stage)
 	var beats := {
 		1: {"period_ticks": 55, "warning_ticks": 10, "energy_drain": 10, "weakness_ticks": 5},
 		2: {"period_ticks": 50, "warning_ticks": 10, "energy_drain": 12, "weakness_ticks": 6},
@@ -511,13 +497,10 @@ static func _chapter_two_encounter_profile(
 	chapter: int,
 	stage_in_chapter: int
 ) -> Dictionary:
-	if chapter != 2:
+	if chapter != 2 or stage_in_chapter < 4:
 		return {}
-	var beat := (
-		stage_in_chapter
-		if stage_in_chapter <= 5
-		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
-	)
+	var canon_stage := stage_in_chapter - 3
+	var beat := mini(5, canon_stage)
 	var beats := {
 		3: {
 			"reinforcement_period_ticks": 65,
@@ -546,13 +529,10 @@ static func _chapter_three_encounter_profile(
 	chapter: int,
 	stage_in_chapter: int
 ) -> Dictionary:
-	if chapter != 3:
+	if chapter != 3 or stage_in_chapter < 4:
 		return {}
-	var beat := (
-		stage_in_chapter
-		if stage_in_chapter <= 5
-		else mini(5, int(ceil(float(stage_in_chapter - 5) * 5.0 / 7.0)))
-	)
+	var canon_stage := stage_in_chapter - 3
+	var beat := mini(5, canon_stage)
 	var beats := {
 		1: {
 			"signal_period_ticks": 60,
@@ -709,8 +689,8 @@ static func _defense_evolution(stage_id: String, chapter: int, stage_in_chapter:
 	var opening_beats: Dictionary = {
 		"stage_1_1": {
 			"tier": "unguarded_city",
-			"title": "无防备城市",
-			"description": "没有联盟、守军或炮台，Gman 摧毁唯一的城市目标即可。",
+				"title": "E07 · 监控人登场",
+				"description": "Gman摧毁教学城市目标；关卡布局是玩法改编。",
 			"features": ["单一城市目标", "零防守"],
 		},
 		"stage_1_2": {
@@ -728,7 +708,7 @@ static func _defense_evolution(stage_id: String, chapter: int, stage_in_chapter:
 		"stage_1_4": {
 			"tier": "turret_line",
 			"title": "炮台防线",
-			"description": "联盟部署固定炮台和精英守军，单靠 Gman 无法继续碾压。",
+				"description": "监控人增援固定炮台和精英守军，单靠Gman无法继续推进。",
 			"features": ["固定炮台", "精英守军", "交叉火力"],
 		},
 	}
@@ -758,42 +738,42 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 		"stage_1_1": {
 			"recommended": [],
 			"fallback": [],
-			"reason": "第一关不需要生产任何小兵，Gman 独自摧毁无防备城市。",
+				"reason": "第一关不需要生产援军，由Gman独自完成 E07 教学战。",
 		},
 		"stage_1_2": {
 			"recommended": [],
 			"fallback": ["heavy.armored", "flying.rocket"],
-			"reason": "城市只有少量临时联盟守卫，继续由 Gman 独自推进。",
+				"reason": "城市只有少量监控人守卫，继续由Gman独自推进。",
 		},
 		"stage_1_3": {
 			"recommended": [],
 			"fallback": ["heavy.armored"],
-			"reason": "联盟刚刚形成，尚未部署炮台；Gman 仍能完成最后一次单人推进。",
+				"reason": "监控人尚未部署重炮；Gman仍能完成最后一次单人推进。",
 		},
 		"stage_1_4": {
 			"recommended": [],
 			"fallback": ["ordinary.assault"],
-			"reason": "炮台防线是设计好的首次失败点；失败后由研究所研发 1-2、1-3 首通获得的永久装甲与冲锋援军。",
+				"reason": "E10 关卡是首次失败点；失败后研发马桶人的承伤与冲锋玩法。",
 		},
 		"stage_1_5": {
 			"recommended": ["heavy.armored", "ordinary.assault"],
 			"fallback": [],
-			"reason": "首次成长二选一：冲锋二星压制巨炮，或装甲二星格挡反震；两条路线都能完成首章。",
+				"reason": "首次成长二选一：冲锋玩法二星压制巨炮，或承伤玩法二星格挡反震。",
 		},
 		"stage_2_1": {
 			"recommended": ["heavy.armored", "flying.rocket"],
 			"fallback": ["ordinary.sonic"],
-			"reason": "进入声波封锁线后，用装甲保队伍站位，火箭加速拆设施。",
+			"reason": "E21 仍是监控人战线，用装甲维持站位，火箭加速拆设施。",
 		},
 		"stage_2_2": {
 			"recommended": ["heavy.armored", "ordinary.sonic"],
 			"fallback": ["flying.rocket"],
-			"reason": "能量干扰会拉长战斗，装甲与音波组合更稳定。",
+			"reason": "E22 仍由监控人远程火力施压，装甲与远程输出更稳定。",
 		},
 		"stage_2_3": {
 			"recommended": ["flying.rocket", "heavy.armored"],
 			"fallback": ["flying.bomber"],
-			"reason": "火箭处理防御设施，装甲维持推进；自爆作为本关后的爆发解法。",
+			"reason": "E23 仍未出现音响人；火箭处理防御设施，装甲维持推进。",
 		},
 		"stage_2_4": {
 			"recommended": ["flying.rocket", "heavy.armored", "ordinary.sonic"],
@@ -803,22 +783,22 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 		"stage_2_5": {
 			"recommended": ["heavy.armored", "flying.rocket", "ordinary.sonic"],
 			"fallback": ["special.repair"],
-			"reason": "中段据点需要承压、削弱和拆结构；自爆设计图留到 2-12 章节 Boss 首通后发放。",
+			"reason": "中段据点需要承压、削弱和拆结构；自爆设计图留到 2-12 章节首领首通后发放。",
 		},
 		"stage_3_1": {
 			"recommended": ["special.repair", "heavy.armored"],
 			"fallback": ["ordinary.sonic"],
-			"reason": "TV 控制会制造点杀窗口，维修和装甲提高容错。",
+			"reason": "E33 的感染战争仍由既有联盟火力承压，维修和装甲提高容错。",
 		},
 		"stage_3_2": {
 			"recommended": ["special.repair", "flying.rocket", "heavy.armored"],
 			"fallback": ["heavy.armored"],
-			"reason": "先用维修保住被控制的低血单位，火箭远程拆核心设施；净化型号将在 3-3 精英战后获得。",
+			"reason": "先用维修保住低血单位，火箭远程拆核心设施；此时电视人尚未登场。",
 		},
 		"stage_3_3": {
 			"recommended": ["ordinary.sonic", "special.repair", "heavy.armored"],
 			"fallback": ["special.parasite"],
-			"reason": "音波削弱控制链，维修与装甲兜底；首通后获得信号净化型号。",
+			"reason": "音波、维修与装甲应对既有联盟火力；E39 后才进入电视人机制。",
 		},
 		"stage_3_4": {
 			"recommended": ["ordinary.signal_purifier", "special.parasite", "special.repair"],
@@ -828,7 +808,7 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 		"stage_3_5": {
 			"recommended": ["special.repair", "special.parasite", "flying.rocket"],
 			"fallback": ["heavy.armored"],
-			"reason": "Boss 持续轰炸下，维修与寄生提升存活，火箭负责打核心结构。",
+			"reason": "首领持续轰炸下，维修与寄生提升存活，火箭负责打核心结构。",
 		},
 		"stage_4_1": {
 			"recommended": ["special.parasite", "heavy.armored"],
@@ -868,7 +848,7 @@ static func _recommendation_fields(stage_id: String) -> Dictionary:
 		"stage_4_5": {
 			"recommended": ["heavy.saw", "flying.rocket", "special.repair"],
 			"fallback": ["heavy.armored"],
-			"reason": "章节 Boss 同时考验反精英、破甲和续航，双锯火箭维修形成核心组合。",
+			"reason": "章节首领同时考验反精英、破甲和续航，双锯火箭维修形成核心组合。",
 		},
 		"stage_5_1": {
 			"recommended": ["special.repair", "heavy.saw"],
@@ -913,16 +893,16 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 	var cycle_position := ((stage_in_chapter - 1) % 3) + 1
 	var beat := 5 if is_boss else (4 if stage_in_chapter == 9 else cycle_position)
 	var chapter_threats: Dictionary = {
-		1: "Cameramen 用路障、标记射击和炮塔压住城市大道。",
-		2: "Speakermen 用声波冲锋和能量干扰拖慢技能节奏。",
-		3: "TV Men 用烟幕、传送和屏幕控制打乱稳定输出。",
+		1: "监控人用路障、标记射击和炮塔压住城市大道。",
+		2: "音响人用声波冲锋和能量干扰拖慢技能节奏。",
+		3: "电视人用烟幕、传送和屏幕控制打乱稳定输出。",
 		4: "三族联合部队开始同时反飞行、反寄生并保护装甲结构。",
 		5: "中央基地用持续炮火和诱导撤退路线检验第一幕完整阵容。",
 	}
 	var chapter_counters: Dictionary = {
 		1: "用装甲单位承压，冲锋和火箭处理路障与炮塔。",
 		2: "提前存技能，用音波、自爆和维修撑过声波高峰。",
-		3: "保留控制与召唤技能，优先打断 TV 护盾和传送节奏。",
+		3: "保留控制与召唤技能，优先打断电视人护盾和传送节奏。",
 		4: "不要纯飞行或纯寄生，改用装甲、双锯、火箭和维修混编。",
 		5: "保持一到两名三星核心，手动或自动技能都要围绕炮击窗口爆发。",
 	}
@@ -931,7 +911,7 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		2: "侧翼压力增加，后排会更早承受远程或机动单位干扰。",
 		3: "中段门槛关，敌方机制会暴露单一阵容的短板。",
 		4: "精英压力关，持续炮击和精英守军会惩罚无恢复阵容。",
-		5: "章节 Boss 关，基地结构分层破坏并持续轰炸全场。",
+		5: "章节首领关，基地结构分层破坏并持续轰炸全场。",
 	}
 	var beat_counters: Dictionary = {
 		1: "使用现有永久军团观察敌方机制；若战力不足，先培养角色或调整前后排。",
@@ -941,11 +921,11 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		5: "先拆外围模块降低炮击压力，再在核心暴露时集中技能。",
 	}
 	var chapter_feedback: Dictionary = {
-		1: "灰镜街区让玩家确认：研究突破、永久援军和自主升星会直接改变攻城结果。",
+			1: "E10 的监控人增援战让玩家确认：研究突破和永久援军会改变攻城结果。",
 		2: "震荡封锁线提醒玩家：技能节奏、范围爆发和维修同样重要。",
 		3: "黑屏城区强调反控制与特殊单位价值，战斗不再只是正面推血条。",
 		4: "三军联合防线要求玩家根据敌方模块换阵，单一套路开始失效。",
-		5: "伪胜之城制造战术胜利与战略陷阱的反差，为幕末工厂被毁做铺垫。",
+		5: "Alpha-Hills 围攻记录马桶人科学家的败亡，并在 E74 引出太空马桶人舰队。",
 	}
 	var unlock_preview := ""
 	if not unlock_victory.is_empty():
@@ -956,27 +936,28 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		threat += " 这是本章战力精英墙，会直接检验角色等级、星级和阵型承压。"
 	if stage_in_chapter == 9:
 		var tech := counter_tech_for_chapter(chapter)
-		threat += " 这是本章科技精英墙：%s" % String(tech.get("threat", "需要专项反制科技。"))
-		counter = "先在研究所研发「%s」。%s" % [
-			String(tech.get("display_name", "专项反制")),
-			String(tech.get("effect", "")),
-		]
+		if not tech.is_empty():
+			threat += " 这是本章科技精英墙：%s" % String(tech.get("threat", "需要专项反制科技。"))
+			counter = "先在研究所研发「%s」。%s" % [
+				String(tech.get("display_name", "专项反制")),
+				String(tech.get("effect", "")),
+			]
 	var opening_readability: Dictionary = {
 		"stage_1_1": {
 			"threat": "城市尚未形成任何有效抵抗，场上只有城市本体。",
-			"counter": "让 Gman 独自推进并熟悉自动攻击与技能。",
+				"counter": "让Gman独自推进并熟悉自动攻击与技能。",
 		},
 		"stage_1_2": {
-			"threat": "城市拉响警报，临时路障和警卫开始拖慢 Gman。",
-			"counter": "继续依靠 Gman 的压制力，不需要提前生产小兵。",
+				"threat": "监控人反击开始，临时路障和警卫拖慢Gman。",
+				"counter": "继续依靠Gman的压制力，不需要提前生产援军。",
 		},
 		"stage_1_3": {
 			"threat": "城市联盟成立，守军第一次组织交叉火力。",
-			"counter": "Gman 仍能独自突破；观察联盟如何为下一关架设防线。",
+				"counter": "Gman仍能独自突破；观察监控人如何为下一关架设防线。",
 		},
 		"stage_1_4": {
 			"threat": "联盟部署固定炮台、精英守军与交叉火力，形成首次必败墙。",
-			"counter": "回到开局建成的研究所，研发 1-2、1-3 获得的装甲与冲锋图纸，再把两名永久援军编入队伍反攻。",
+				"counter": "研发马桶人的承伤与冲锋玩法，再把两名永久援军编入队伍反攻。",
 		},
 	}
 	if opening_readability.has(stage_id):
@@ -984,31 +965,55 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 		threat = String(opening["threat"])
 		counter = String(opening["counter"])
 	if is_boss:
-		threat = "%s 本关是章节 Boss，最终结构会分段受损并逼玩家与基地比拼输出速度。" % String(chapter_threats[chapter])
-		counter = "%s Boss 战优先处理电池和护甲层，核心暴露后再集中释放攻城技能。" % String(chapter_counters[chapter])
+		threat = "%s 本关是章节首领，最终结构会分段受损并逼玩家与基地比拼输出速度。" % String(chapter_threats[chapter])
+		counter = "%s 首领战优先处理电池和护甲层，核心暴露后再集中释放攻城技能。" % String(chapter_counters[chapter])
 	var encounter_readability: Dictionary = {
+		"stage_2_1": {
+			"threat": "E21 仍由监控人守军推进，不会触发声波共振。",
+			"counter": "沿用永久军团处理远程火力；E24 后才需要应对音响人。",
+		},
+		"stage_2_2": {
+			"threat": "E22 仍是监控人火力与设施组合，不包含音响人机制。",
+			"counter": "保持装甲在前、远程在后，优先拆除火力设施。",
+		},
+		"stage_2_3": {
+			"threat": "E23 是音响人登场前的最后一段监控人战线。",
+			"counter": "用既有编队完成推进，为 E24 的新敌军保留调整空间。",
+		},
 		"stage_3_1": {
-			"threat": "TV 单位会短暂从战场信号中消失，原集火目标在 2 秒内无法锁定。",
-			"counter": "目标消失时立即转火场上敌人；它复现后再决定是否切回。",
+			"threat": "E33 的感染战争仍使用既有联盟敌军，不会触发电视人屏幕机制。",
+			"counter": "按 Camera 远程火力处理；E39 后才需要信号反制。",
 		},
 		"stage_3_2": {
-			"threat": "TV 精英会在前后战斗带与路线间传送，持续打乱军团锁定顺序。",
-			"counter": "观察青色传送反馈，优先处理贴近前线的精英，不要追逐退后的目标。",
+			"threat": "E35 尚未出现电视人，本关不包含传送或屏幕控制。",
+			"counter": "稳定承压并拆除设施，不需要预判电视人传送。",
 		},
 		"stage_3_3": {
+			"threat": "E38 是电视人登场前的联盟战线，本关不包含电视人控制。",
+			"counter": "完成既有敌军检查；下一关 E39 才开始电视人机制教学。",
+		},
+		"stage_3_4": {
+			"threat": "电视人单位会短暂从战场信号中消失，原集火目标在 2 秒内无法锁定。",
+			"counter": "目标消失时立即转火场上敌人；它复现后再决定是否切回。",
+		},
+		"stage_3_5": {
+			"threat": "章节首领 · 电视人精英会在前后战斗带与路线间传送，持续打乱军团锁定顺序。",
+			"counter": "首领战观察青色传送反馈，优先处理贴近前线的精英，不要追逐退后的目标。",
+		},
+		"stage_3_6": {
 			"threat": "屏幕控制会让当前低生命关键成员短暂停火，但触发次数有限。",
 			"counter": "受控成员停火时让其他角色维持推进；手动技能不要全部压在同一人身上。",
 		},
-		"stage_3_4": {
-			"threat": "TV 监军会为当前战斗带的高伤精英补充护盾，并穿插有限屏幕控制。",
+		"stage_3_7": {
+			"threat": "电视人监军会为当前战斗带的高伤精英补充护盾，并穿插有限屏幕控制。",
 			"counter": "先集中火力击穿青色护盾，再处理高伤目标；保留一轮技能应对重新加盾。",
 		},
-		"stage_3_5": {
-			"threat": "本关是章节 Boss：黑屏中继塔错峰轮换传送、屏幕控制与精英护盾，并启用核心巨炮。",
-			"counter": "Boss 战先识别当前模块；传送后重锁目标、控制时分散技能、护盾期集中爆发，巨炮预警仍优先处理。",
+		"stage_3_8": {
+			"threat": "电视人部队错峰轮换传送、屏幕控制与精英护盾。",
+			"counter": "传送后重锁目标、控制时分散技能、护盾期集中爆发。",
 		},
 		"stage_4_1": {
-			"threat": "Camera 会标记当前最高攻击主力，Speaker 守军随后集中攻击该目标。",
+			"threat": "监控人会标记当前最高攻击主力，音响人守军随后集中攻击该目标。",
 			"counter": "用装甲承压、维修续航或召唤物分担战线；红色标记期间优先开盾与治疗。",
 		},
 		"stage_4_2": {
@@ -1024,8 +1029,8 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 			"counter": "根据当前阶段保留承压、地面输出与破盾技能，不需要为单一模块牺牲整支阵容。",
 		},
 		"stage_4_5": {
-			"threat": "本关是章节 Boss：三联军械库按固定顺序轮换标记、防空、净化护盾，并启用核心巨炮。",
-			"counter": "Boss 战读取顶部模块反馈，依次用承压、地面输出和集中破盾应对；巨炮预警始终优先。",
+			"threat": "本关是章节首领：三联军械库按固定顺序轮换标记、防空、净化护盾，并启用核心巨炮。",
+			"counter": "首领战读取顶部模块反馈，依次用承压、地面输出和集中破盾应对；巨炮预警始终优先。",
 		},
 	}
 	if encounter_readability.has(stage_id):
@@ -1042,12 +1047,12 @@ static func _readability_fields(stage_id: String, chapter: int, stage_in_chapter
 
 static func _recipe_labels(recipe_ids: Array[String]) -> String:
 	var labels: Dictionary = {
-		"heavy.armored": "装甲冲城马桶人",
-		"flying.rocket": "火箭飞行马桶人",
-		"flying.bomber": "自爆飞行马桶人",
-		"special.repair": "维修马桶人",
-		"special.parasite": "寄生母体马桶人",
-		"heavy.saw": "双锯重装马桶人",
+			"heavy.armored": "激光火箭筒马桶人",
+			"flying.rocket": "飞行四发射器马桶人",
+			"flying.bomber": "炸弹桶马桶人",
+			"special.repair": "研究员马桶人",
+			"special.parasite": "大型寄生虫马桶人",
+			"heavy.saw": "飞行双圆锯马桶人",
 	}
 	var values: Array[String] = []
 	for recipe_id in recipe_ids:
@@ -1058,6 +1063,10 @@ static func _recipe_labels(recipe_ids: Array[String]) -> String:
 static func _enemy_template_for(chapter: int, stage_in_chapter: int) -> Array[Dictionary]:
 	var families: Array[String] = ["camera", "speaker", "tv", "alliance", "alliance"]
 	var family: String = families[chapter - 1]
+	if chapter == 2 and stage_in_chapter <= 3:
+		family = "camera"
+	elif chapter == 3 and stage_in_chapter <= 3:
+		family = "camera"
 	var base_label: String = String({
 		"camera": "联盟摄像兵",
 		"speaker": "联盟音箱兵",
@@ -1093,11 +1102,11 @@ static func _enemy_template_for(chapter: int, stage_in_chapter: int) -> Array[Di
 
 static func _structure_template_for(chapter: int, stage_in_chapter: int) -> Array[Dictionary]:
 	var boss_core_names := {
-		1: "灰镜核心巨炮",
+			1: "E11 联盟核心巨炮",
 		2: "共振堡垒核心",
 		3: "黑屏中继塔",
 		4: "三联军械库核心",
-		5: "审判之门",
+		5: "联盟撤离据点",
 	}
 	var core_name := String(boss_core_names.get(chapter, "联盟核心"))
 	var values: Array[Dictionary] = [
@@ -1150,9 +1159,9 @@ static func _scaled_structures(structures: Array[Dictionary], power_bp: int) -> 
 
 
 static func _shape_boss_finale(config: Dictionary) -> void:
-	# Boss 关把压力从“刚进第三段就团灭”转成最终核心的收尾检验：
+	# 首领关把压力从“刚进第三段就团灭”转成最终核心的收尾检验：
 	# 降低第三段护卫与外围设施的压制，但加厚最终核心，使首轮成长能打到
-	# Boss 并削掉血量，下一轮成长后才稳定完成击破。
+	# 首领并削掉血量，下一轮成长后才稳定完成击破。
 	var final_structure_id := String(config.get("final_structure_id", "alliance_core"))
 	var chapter := int(config.get("chapter", 2))
 	config["cannon_suppression_target"] = 800 + chapter * 100
@@ -1179,9 +1188,8 @@ static func _shape_boss_finale(config: Dictionary) -> void:
 
 
 static func _shape_chapter_two_gate(config: Dictionary) -> void:
-	# 2-4 teaches the full echo/resonance combination, but its cleanup must not
-	# outlast the chapter Boss. Keep the authored enemies and pressure intact so
-	# the 1★ wall remains real; shorten only the exposed final objective.
+	# 2-4 教学完整的回声与共振组合，但不能因此替玩家扛过章节首领。
+	# 保留既定敌军与压力，维持一星战力墙，只缩短最后暴露目标的收尾时间。
 	var final_structure_id := String(config.get("final_structure_id", "alliance_core"))
 	for structure in config.get("structures", []):
 		if String(structure.get("structure_id", "")) != final_structure_id:
@@ -1191,7 +1199,7 @@ static func _shape_chapter_two_gate(config: Dictionary) -> void:
 
 
 static func _shape_chapter_one_boss(config: Dictionary) -> void:
-	# 首章 Boss 只通过可见的敌人、结构和巨炮形成压力，不使用计时强制判负。
+	# 首章首领只通过可见的敌人、结构和巨炮形成压力，不使用计时强制判负。
 	pass
 
 
@@ -1217,7 +1225,7 @@ static func _legacy_stage_1_1_structures() -> Array[Dictionary]:
 		_structure("left_battery", "左防御设施", "battery", 2, 815, 0, 450, 13, 23, 9),
 		_structure("right_battery", "右防御设施", "battery", 2, 815, 2, 450, 13, 23, 9),
 		_structure("core_armor", "核心外层装甲", "armored", 2, 900, 1, 650, 20, 0, 0),
-		_structure("alliance_core", "灰镜核心巨炮", "core", 2, 1000, 1, 900, 16, 0, 0),
+			_structure("alliance_core", "E11 联盟核心巨炮", "core", 2, 1000, 1, 900, 16, 0, 0),
 	]
 
 

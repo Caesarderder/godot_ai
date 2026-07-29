@@ -52,7 +52,7 @@ func configure(view: Dictionary) -> void:
 
 func _rebuild() -> void:
 	var compact := bool(_view.get("compact", false))
-	hud_frame.custom_minimum_size.x = 276 if compact else 326
+	hud_frame.custom_minimum_size.x = 272 if compact else 306
 	_apply_shell_style()
 	_build_resources(compact)
 	_clear(panel_host)
@@ -73,13 +73,9 @@ func _build_resources(compact: bool) -> void:
 	_clear(resource_row)
 	var heading := VBoxContainer.new()
 	heading.custom_minimum_size.x = 56 if compact else 76
-	var heading_label := _label("后勤" if compact else "后勤库存", 15, TEXT)
+	var heading_label := _label("后勤" if compact else "后勤库存 · 全员无损", 14, TEXT)
 	heading_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	heading.add_child(heading_label)
-	if not compact:
-		var safety_label := _label("全员无损", 11, GREEN)
-		safety_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-		heading.add_child(safety_label)
 	resource_row.add_child(heading)
 	for resource_value in _view.get("resources", []):
 		resource_row.add_child(_resource_meter(resource_value as Dictionary, compact))
@@ -264,7 +260,7 @@ func _construction_panel() -> Control:
 func _facility_panel() -> Control:
 	var facility := _view.get("facility", {}) as Dictionary
 	var level := int(facility.get("level", 0))
-	var title := "%s · Lv.%d" % [String(facility.get("name", "")), level] if level > 0 else "空地块 · %s" % String(facility.get("name", ""))
+	var title := "%s · %d级" % [String(facility.get("name", "")), level] if level > 0 else "空地块 · %s" % String(facility.get("name", ""))
 	var panel := _panel(title)
 	panel.name = "SelectedFacilityPanel"
 	panel.add_child(_label(String(facility.get("copy", "")), 13, MUTED))
@@ -272,7 +268,7 @@ func _facility_panel() -> Control:
 	if not work.is_empty():
 		panel.add_child(_label(String(work.get("status", "")), 12, CYAN))
 		var claim := _button(
-			"验收完成"
+				"启用建筑"
 			if bool(work.get("ready", false))
 			else "施工中 · %d秒" % int(work.get("remaining_seconds", 0)),
 			true
@@ -347,8 +343,10 @@ func _facility_panel() -> Control:
 
 
 func _apply_shell_style() -> void:
-	resource_hud.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.94), Color(CYAN, 0.58), 10))
-	hud_frame.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.96), LINE, 12))
+	var resource_style := _box(Color(PANEL, 0.86), Color(0, 0, 0, 0), 4)
+	resource_style.set_border_width_all(0)
+	resource_hud.add_theme_stylebox_override("panel", resource_style)
+	hud_frame.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.94), Color(LINE, 0.55), 7))
 	for button: Button in [mission_tab, facility_tab, build_tab]:
 		_style_button(button, button.button_pressed)
 
@@ -364,7 +362,7 @@ func _panel(title: String) -> VBoxContainer:
 func _button(value: String, primary: bool) -> Button:
 	var button := Button.new()
 	button.text = value
-	button.custom_minimum_size.y = 44
+	button.custom_minimum_size.y = 48
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 13)
 	_style_button(button, primary)

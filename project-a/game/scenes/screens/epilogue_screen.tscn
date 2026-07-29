@@ -32,18 +32,18 @@ text = "尾声 · 第一幕完成"
 
 [node name="Victory" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
 layout_mode = 2
-text = "审判之门在炮火中倒塌，联盟中央基地停止广播。"
+text = "E73 · Gman撤离，三名泰坦紧追不舍；联盟仍是Gman阵营的敌人。"
 autowrap_mode = 2
 
 [node name="Rescue" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
 layout_mode = 2
-text = "G-Man 与永久军团完整返回；角色、碎片、科技与工厂资源全部保留。"
+text = "E74 · 太空马桶人舰队到来，旧战场秩序被打破；这不是与联盟的和解。"
 autowrap_mode = 2
 
 [node name="CampaignEpilogueFuture" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "回收核心仍在发送隐藏信标：工厂坐标可能已经泄露，新的联盟防线正在重组。"
+text = "E75 之后，为对抗太空马桶人威胁，马桶人与联盟才可能临时合作。"
 autowrap_mode = 2
 
 [node name="CampaignReplayPromise" type="Label" parent="CampaignEpilogueStory/Margin/Content"]
@@ -61,13 +61,13 @@ size_flags_vertical = 3
 [node name="Margin" type="MarginContainer" parent="CampaignEpilogueSummary"]
 layout_mode = 2
 theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 9
+theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 9
+theme_override_constants/margin_bottom = 5
 
 [node name="Content" type="VBoxContainer" parent="CampaignEpilogueSummary/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 7
+theme_override_constants/separation = 4
 
 [node name="Heading" type="Label" parent="CampaignEpilogueSummary/Margin/Content"]
 layout_mode = 2

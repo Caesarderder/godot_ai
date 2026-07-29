@@ -666,14 +666,14 @@ func _test_battle_has_no_time_limit() -> void:
 
 
 func _test_chapter_two_resonance_learning_curve() -> void:
-	var opening := StageCatalogScript.stage("stage_2_1")
-	var finale := StageCatalogScript.stage("stage_2_5")
+	var opening := StageCatalogScript.stage("stage_2_4")
+	var finale := StageCatalogScript.stage("stage_2_8")
 	_check(int(opening.get("resonance_period_ticks", 0)) == 55, "chapter two introduces resonance with an eleven-second period")
 	_check(int(opening.get("resonance_energy_drain", 0)) == 10, "chapter two opens with a light ten-energy drain")
 	_check(int(finale.get("resonance_period_ticks", 0)) == 35, "chapter-two boss reaches the established seven-second pulse")
 	_check(int(finale.get("resonance_energy_drain", 0)) == 18, "chapter-two boss preserves the established full drain")
 	var session: RefCounted = BattleSessionScript.new()
-	session.start(_siege_heroes(), "stage_2_1", opening)
+	session.start(_siege_heroes(), "stage_2_4", opening)
 	session.tick_index = 44
 	var warning_events: Array[Dictionary] = session.advance_tick()
 	var warning := _first_event(warning_events, &"resonance_warning")
@@ -694,7 +694,7 @@ func _test_chapter_two_resonance_learning_curve() -> void:
 		energy_after += int(unit.get("energy", 0))
 	_check(energy_after < energy_before, "resonance pulse changes the real allied skill economy")
 	var manual_session: RefCounted = BattleSessionScript.new()
-	manual_session.start(_siege_heroes(), "stage_2_1", opening)
+	manual_session.start(_siege_heroes(), "stage_2_4", opening)
 	var manual_unit := manual_session._living_main_allies()[0] as Dictionary
 	manual_unit["energy"] = BattleSessionScript.SKILL_COST
 	manual_session.tick_index = 54
@@ -719,20 +719,20 @@ func _test_chapter_two_resonance_learning_curve() -> void:
 
 
 func _test_chapter_two_encounter_escalation() -> void:
-	var convoy := StageCatalogScript.stage("stage_2_3")
+	var convoy := StageCatalogScript.stage("stage_2_6")
 	_check(
 		int(convoy.get("speaker_reinforcement_period_ticks", 0)) == 65
 			and int(convoy.get("speaker_reinforcement_wave_limit", 0)) == 2,
-		"stage 2-3 authors two deterministic broadcast reinforcement waves"
+		"stage 2-6 authors two deterministic broadcast reinforcement waves"
 	)
 	var convoy_session: RefCounted = BattleSessionScript.new()
-	convoy_session.start(_siege_heroes(), "stage_2_3", convoy)
+	convoy_session.start(_siege_heroes(), "stage_2_6", convoy)
 	var enemy_count_before := (convoy_session.snapshot().get("enemies", []) as Array).size()
 	convoy_session.tick_index = 65
 	var reinforcement_events: Array[Dictionary] = []
 	convoy_session._run_chapter_mechanics(reinforcement_events)
 	var reinforcement := _first_event(reinforcement_events, &"speaker_reinforcement")
-	_check(not reinforcement.is_empty(), "stage 2-3 visibly deploys its first broadcast reinforcement wave")
+	_check(not reinforcement.is_empty(), "stage 2-6 visibly deploys its first broadcast reinforcement wave")
 	_check(
 		(convoy_session.snapshot().get("enemies", []) as Array).size() == enemy_count_before + 1,
 		"broadcast reinforcement adds one real target to the current battle stage"
@@ -741,15 +741,15 @@ func _test_chapter_two_encounter_escalation() -> void:
 		String((convoy_session.snapshot().get("enemies", []) as Array)[-1].get("display_name", "")).contains("广播车增援"),
 		"the spawned pressure is player-readable instead of an invisible multiplier"
 	)
-	var echo_config := StageCatalogScript.stage("stage_2_4")
+	var echo_config := StageCatalogScript.stage("stage_2_7")
 	_check(
 		int(echo_config.get("speaker_echo_period_ticks", 0)) == 50
 			and int(echo_config.get("speaker_echo_warning_ticks", 0)) == 10
 			and int(echo_config.get("speaker_echo_impact_limit", 0)) == 2,
-		"stage 2-4 authors a two-second alternating echo warning with two readable impacts"
+		"stage 2-7 authors a two-second alternating echo warning with two readable impacts"
 	)
 	var echo_session: RefCounted = BattleSessionScript.new()
-	echo_session.start(_siege_heroes(), "stage_2_4", echo_config)
+	echo_session.start(_siege_heroes(), "stage_2_7", echo_config)
 	echo_session.tick_index = 40
 	var echo_warning_events: Array[Dictionary] = []
 	echo_session._run_chapter_mechanics(echo_warning_events)
@@ -795,24 +795,24 @@ func _test_chapter_two_encounter_escalation() -> void:
 		_first_event(capped_echo_events, &"speaker_echo_warning").is_empty(),
 		"completed echo lesson does not become unlimited attrition in a long battle"
 	)
-	var finale := StageCatalogScript.stage("stage_2_5")
+	var finale := StageCatalogScript.stage("stage_2_8")
 	_check(
 		int(finale.get("speaker_reinforcement_wave_limit", 0)) == 1
 			and int(finale.get("speaker_echo_period_ticks", 0)) > 0
 			and int(finale.get("speaker_echo_impact_limit", 0)) == 3,
-		"stage 2-5 combines one learned reinforcement wave with three alternating echoes"
+		"stage 2-8 combines one learned reinforcement wave with three alternating echoes"
 	)
 
 
 func _test_chapter_three_encounter_learning_curve() -> void:
-	var signal_config := StageCatalogScript.stage("stage_3_1")
+	var signal_config := StageCatalogScript.stage("stage_3_4")
 	_check(
 		int(signal_config.get("tv_signal_limit", 0)) == 2
 			and int(signal_config.get("tv_control_period_ticks", 0)) == 0,
-		"stage 3-1 safely introduces signal loss without stacking screen control"
+		"stage 3-4 safely introduces signal loss without stacking screen control"
 	)
 	var signal_session: RefCounted = BattleSessionScript.new()
-	signal_session.start(_siege_heroes(), "stage_3_1", signal_config)
+	signal_session.start(_siege_heroes(), "stage_3_4", signal_config)
 	signal_session.tick_index = 60
 	var signal_events: Array[Dictionary] = []
 	signal_session._run_chapter_mechanics(signal_events)
@@ -820,7 +820,7 @@ func _test_chapter_three_encounter_learning_curve() -> void:
 	_check(
 		not vanish.is_empty()
 			and int(vanish.get("duration_ticks", 0)) == 10,
-		"stage 3-1 removes one real target for a readable two-second signal loss"
+		"stage 3-4 removes one real target for a readable two-second signal loss"
 	)
 	var vanished_id := StringName(String(vanish.get("unit_id", "")))
 	_check(
@@ -841,23 +841,24 @@ func _test_chapter_three_encounter_learning_curve() -> void:
 	signal_session._run_chapter_mechanics(return_events)
 	_check(
 		not _first_event(return_events, &"tv_signal_return").is_empty(),
-		"stage 3-1 emits an explicit return fact when the target becomes lockable again"
+		"stage 3-4 emits an explicit return fact when the target becomes lockable again"
 	)
-	var teleport_config := StageCatalogScript.stage("stage_3_2")
+	var teleport_config := StageCatalogScript.stage("stage_3_5")
 	var teleport_session: RefCounted = BattleSessionScript.new()
-	teleport_session.start(_siege_heroes(), "stage_3_2", teleport_config)
-	teleport_session.tick_index = 50
+	teleport_session.start(_siege_heroes(), "stage_3_5", teleport_config)
+	teleport_session._stage_index = 1
+	teleport_session.tick_index = 40
 	var teleport_events: Array[Dictionary] = []
 	teleport_session._run_chapter_mechanics(teleport_events)
 	var teleport := _first_event(teleport_events, &"tv_teleport")
 	_check(
 		not teleport.is_empty()
 			and int(teleport.get("from_position", 0)) != int(teleport.get("road_position", 0)),
-		"stage 3-2 moves one real elite between battle bands"
+		"stage 3-5 moves one real elite between battle bands"
 	)
-	var control_config := StageCatalogScript.stage("stage_3_3")
+	var control_config := StageCatalogScript.stage("stage_3_6")
 	var control_session: RefCounted = BattleSessionScript.new()
-	control_session.start(_siege_heroes(), "stage_3_3", control_config)
+	control_session.start(_siege_heroes(), "stage_3_6", control_config)
 	control_session.tick_index = 40
 	var control_events: Array[Dictionary] = []
 	control_session._run_chapter_mechanics(control_events)
@@ -866,11 +867,11 @@ func _test_chapter_three_encounter_learning_curve() -> void:
 		not control.is_empty()
 			and int(control.get("duration_ticks", 0)) == 8
 			and int(control_config.get("tv_control_limit", 0)) == 6,
-		"stage 3-3 independently tests finite screen control"
+		"stage 3-6 independently tests finite screen control"
 	)
-	var overseer_config := StageCatalogScript.stage("stage_3_4")
+	var overseer_config := StageCatalogScript.stage("stage_3_7")
 	var overseer_session: RefCounted = BattleSessionScript.new()
-	overseer_session.start(_siege_heroes(), "stage_3_4", overseer_config)
+	overseer_session.start(_siege_heroes(), "stage_3_7", overseer_config)
 	overseer_session._stage_index = 1
 	overseer_session.tick_index = 60
 	var shield_events: Array[Dictionary] = []
@@ -880,14 +881,14 @@ func _test_chapter_three_encounter_learning_curve() -> void:
 		not shield.is_empty()
 			and int(shield.get("shielded", 0)) > 0
 			and int(shield.get("amount", 0)) == 24,
-		"stage 3-4 adds visible overseer protection to the learned control pressure"
+		"stage 3-7 adds visible overseer protection to the learned control pressure"
 	)
-	var finale := StageCatalogScript.stage("stage_3_5")
+	var finale := StageCatalogScript.stage("stage_3_8")
 	_check(
 		int(finale.get("tv_teleport_limit", 0)) > 0
 			and int(finale.get("tv_control_limit", 0)) > 0
 			and int(finale.get("tv_shield_limit", 0)) > 0,
-		"stage 3-5 rotates all three learned TV modules instead of repeating one stun rule"
+		"stage 3-8 rotates all three learned TV modules instead of repeating one stun rule"
 	)
 
 
@@ -1296,7 +1297,7 @@ func _snapshot_structure(snapshot: Dictionary, structure_id: String) -> Dictiona
 
 func _start_standard_battle(session: RefCounted, heroes: Array) -> void:
 	# Combat-mechanics tests use an explicit mature siege fixture. The real default
-	# stage is intentionally the one-city, zero-defender Gman tutorial.
+	# stage is intentionally the one-city, zero-defender G-Toilet tutorial.
 	var config := StageCatalogScript.stage("stage_1_5")
 	config["suppressible_cannon"] = false
 	config["cannon_suppression_target"] = 0

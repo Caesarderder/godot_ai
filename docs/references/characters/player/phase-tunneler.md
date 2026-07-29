@@ -20,7 +20,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 相位钻袭马桶人
+# 武士刀蜘蛛马桶人
 
 > 状态：`implemented`。目录、长期招募、4-2首通图纸、研究、编队、战斗技能、科技树与程序化表现均已接入；玩家偏好仍为 `unknown`。
 

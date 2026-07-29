@@ -20,7 +20,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 锚桩堡垒马桶人
+# 巨型飞行马桶人
 
 > 状态：`implemented`。目录、长期招募、3-2首通图纸、研究、编队、战斗技能、科技树与程序化表现均已接入；玩家偏好仍为 `unknown`。
 

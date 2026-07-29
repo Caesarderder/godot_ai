@@ -2,6 +2,7 @@ extends SceneTree
 
 const BattleSessionScript := preload("res://game/scripts/domain/battle/battle_session.gd")
 const StageCatalogScript := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const FactoryCatalogScript := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
 
 func _init() -> void:
@@ -79,10 +80,13 @@ func _heroes() -> Array[Dictionary]:
 	var skills := ["gman_overrun", "siege_shield", "plunger_charge"]
 	var skill_names := ["统帅碾压", "攻城护盾", "皮搋冲锋"]
 	for slot in 3:
+		var archetype_id := String(archetypes[slot])
 		heroes.append({
 			"hero_id": "capture_hero_%d" % slot,
-			"display_name": ["G-Man 指挥官", "装甲冲城", "冲锋马桶人"][slot],
-			"archetype_id": archetypes[slot],
+			"display_name": String(
+				FactoryCatalogScript.archetype(archetype_id).get("display_name", archetype_id)
+			),
+			"archetype_id": archetype_id,
 			"class_id": classes[slot],
 			"skill_id": skills[slot],
 			"skill_display_name": skill_names[slot],

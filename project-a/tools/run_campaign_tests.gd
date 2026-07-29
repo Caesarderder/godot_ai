@@ -53,8 +53,8 @@ func _run() -> void:
 			recommendation_signatures.append(recommendation_signature)
 		var stage_in_chapter := int(config.get("stage_in_chapter", 0))
 		if stage_in_chapter in [5, 12]:
-			_check(String(config.get("threat_summary", "")).contains("章节 Boss"), "%s marks boss threat readability" % stage_id)
-			_check(String(config.get("counter_hint", "")).contains("Boss 战"), "%s marks boss counter readability" % stage_id)
+			_check(String(config.get("threat_summary", "")).contains("章节首领"), "%s marks boss threat readability" % stage_id)
+			_check(String(config.get("counter_hint", "")).contains("首领战"), "%s marks boss counter readability" % stage_id)
 			_check(bool(config.get("suppressible_cannon", false)), "%s enables suppressible core cannon" % stage_id)
 			var expected_warning_ticks := 25 if int(config.get("chapter", 0)) == 1 else 20
 			_check(
@@ -65,7 +65,7 @@ func _run() -> void:
 			if stage_in_chapter == 12:
 				boss_suppression_targets.append(int(config.get("cannon_suppression_target", 0)))
 		else:
-			_check(not String(config.get("threat_summary", "")).contains("章节 Boss"), "%s keeps ordinary threat readability distinct from bosses" % stage_id)
+			_check(not String(config.get("threat_summary", "")).contains("章节首领"), "%s keeps ordinary threat readability distinct from bosses" % stage_id)
 			_check(not bool(config.get("suppressible_cannon", false)), "%s keeps suppressible core cannon disabled outside chapter bosses" % stage_id)
 			_check(int(config.get("cannon_suppression_target", 0)) == 0, "%s has no ordinary-stage suppression target" % stage_id)
 		var feedback := String(config.get("chapter_feedback", ""))
@@ -228,10 +228,10 @@ func _test_opening_defense_curve() -> void:
 	_check((StageCatalogScript.stage("stage_1_4").get("unlock_on_victory", []) as Array).is_empty(), "stage 1-4 does not drop the armored blueprint")
 	var wall_counter := String(StageCatalogScript.stage("stage_1_4").get("counter_hint", ""))
 	_check(wall_counter.contains("1-2、1-3") and wall_counter.contains("图纸") and wall_counter.contains("研究所"), "stage 1-4 reconnaissance names the stage-blueprint-to-research recovery")
-	_check(wall_counter.contains("永久") and wall_counter.contains("装甲") and wall_counter.contains("冲锋"), "stage 1-4 reconnaissance explains the permanent two-role counter")
+	_check(wall_counter.contains("永久") and wall_counter.contains("承伤") and wall_counter.contains("冲锋"), "stage 1-4 reconnaissance explains the permanent two-role counter")
 	_check(wall_counter.contains("图纸") and not wall_counter.contains("生产 9") and not wall_counter.contains("三合一"), "stage 1-4 reconnaissance uses the new blueprint research path")
 	var boss_counter := String(StageCatalogScript.stage("stage_1_5").get("counter_hint", ""))
-	_check(boss_counter.contains("冲锋马桶人升到二星") and boss_counter.contains("装甲马桶人升到二星"), "stage 1-5 reconnaissance preserves both verified mastery routes")
+	_check(boss_counter.contains("冲锋玩法升到二星") and boss_counter.contains("承伤玩法升到二星"), "stage 1-5 reconnaissance preserves both mastery routes")
 	var boss_recommendations := _string_array(StageCatalogScript.stage("stage_1_5").get("recommended_recipe_ids", []))
 	_check(boss_recommendations == ["heavy.armored", "ordinary.assault"], "stage 1-5 recommendations contain only the two verified first-growth heroes")
 
