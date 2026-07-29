@@ -1,19 +1,27 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "mobile_slg_ui_refresh_20260730",
-  "state": "scenario_authoring",
-  "revision": "f257e45",
-  "iteration": 0,
-  "active_work_unit": "validate scenario_mobile_ui_core",
-  "frozen_gates": [],
+  "state": "baselining",
+  "revision": "3b943e1",
+  "iteration": 1,
+  "active_work_unit": "record first HUD candidate and remaining war-zone gap",
+  "frozen_gates": [
+    "gate_runtime",
+    "gate_responsive"
+  ],
   "gate_status": {
-    "gate_runtime": "pending",
+    "gate_runtime": "pass",
     "gate_visual_hierarchy": "pending",
-    "gate_responsive": "pending",
+    "gate_responsive": "pass",
     "gate_player_learning": "pending"
   },
   "open_findings": [],
-  "evidence_ledger": [],
+  "evidence_ledger": [
+    "ev_ui_runtime_3b943e1",
+    "ev_ui_responsive_3b943e1",
+    "ev_ui_visual_3b943e1",
+    "ev_ui_human_required_3b943e1"
+  ],
   "decisions": [
     {
       "at": "2026-07-29T18:09:35Z",
@@ -29,6 +37,32 @@
       "at": "2026-07-29T18:09:35Z",
       "decision": "RunSpec, ownership, evidence route, and host capability audit are ready.",
       "evidence_ids": []
+    },
+    {
+      "at": "2026-07-29T18:13:41Z",
+      "decision": "Integrated first HUD candidate was committed and pushed.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-29T18:14:24Z",
+      "decision": "Scenario ran twice through fresh Godot processes and produced stable named captures and assertions.",
+      "evidence_ids": [
+        "ev_ui_runtime_3b943e1"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:14:24Z",
+      "decision": "Shipping UI routes and screen actions pass current runtime suites.",
+      "evidence_ids": [
+        "ev_ui_runtime_3b943e1"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:14:24Z",
+      "decision": "Responsive battle HUD assertions pass at canonical short landscape sizes.",
+      "evidence_ids": [
+        "ev_ui_responsive_3b943e1"
+      ]
     }
   ]
 }

@@ -1,0 +1,34 @@
+{
+  "evidence_id": "ev_ui_runtime_3b943e1",
+  "revision": "3b943e1",
+  "gate_id": "gate_runtime",
+  "claim": "Real screens boot and shipping actions remain wired.",
+  "scenario_id": "scenario_mobile_ui_core",
+  "evidence_type": "test",
+  "artifact_or_command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd",
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "repository UI smoke and battle HUD suites",
+    "version": "3b943e1",
+    "independence": "not_applicable"
+  },
+  "observation": "UI SMOKE TESTS PASS；BATTLE_HUD_SCREEN_TESTS_OK。战斗暂停、自动/手动技能、爆发、撤退、角色技能和直接主视口相机断言全部通过。",
+  "inference": "覆盖层重构未切断 shipping signals 或战斗状态投影。",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "自动测试不证明视觉质量或真人理解。"
+  ],
+  "created_at": "2026-07-30T00:00:00+08:00",
+  "schema_version": "caesar-loop/v2",
+  "run_id": "mobile_slg_ui_refresh_20260730"
+}

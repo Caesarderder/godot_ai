@@ -1,0 +1,34 @@
+{
+  "evidence_id": "ev_ui_human_required_3b943e1",
+  "revision": "3b943e1",
+  "gate_id": "gate_player_learning",
+  "claim": "A fresh target player identifies goal, risk, and next action within two seconds.",
+  "scenario_id": "scenario_mobile_ui_core",
+  "evidence_type": "player_observation",
+  "artifact_or_command": "Uncoached target-player session described by scenario_mobile_ui_core",
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "target mobile landscape Web",
+    "device": "",
+    "viewport": "844x390",
+    "seed": 1042,
+    "build_mode": "release candidate"
+  },
+  "grader": {
+    "kind": "human",
+    "name": "uncoached target-player observation",
+    "version": "planned-v1",
+    "independence": "independent"
+  },
+  "observation": "当前主机没有可用的未接触项目目标玩家，尚未执行两秒理解和失败归因观察。",
+  "inference": "该门必须保留 human_required，自动代理不得代替真人证据。",
+  "result": "human_required",
+  "confidence": 1.0,
+  "freshness": "current",
+  "limitations": [
+    "Required human evidence is unavailable in the current host."
+  ],
+  "created_at": "2026-07-30T00:00:00+08:00",
+  "schema_version": "caesar-loop/v2",
+  "run_id": "mobile_slg_ui_refresh_20260730"
+}

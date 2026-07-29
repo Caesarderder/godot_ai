@@ -1,0 +1,26 @@
+{
+  "run_id": "mobile_slg_ui_refresh_20260730",
+  "iteration": 1,
+  "work_unit": "将共享壳层与战斗HUD从整宽后台面板改为游戏世界覆盖层",
+  "status": "progress",
+  "changed_files": [
+    "project-a/game/scenes/screens/battle_hud_screen.tscn",
+    "project-a/game/scripts/ui/battle_hud_screen.gd",
+    "project-a/scripts/slg_main.gd"
+  ],
+  "evidence_ids": [
+    "ev_ui_runtime_3b943e1",
+    "ev_ui_responsive_3b943e1",
+    "ev_ui_visual_3b943e1",
+    "ev_ui_human_required_3b943e1"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "不再使用VBox布局流为战斗HUD永久预留整宽顶部和底部空间。"
+  ],
+  "next_action": "把战区从章节/关卡/详情三层后台卡片重构为地图主视图与单个情境指挥卡。",
+  "blocker": null,
+  "schema_version": "caesar-loop/v2"
+}
