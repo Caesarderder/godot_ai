@@ -4,15 +4,22 @@
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_factory_tabs"]
 
-[node name="FactoryScreen" type="VBoxContainer"]
+[node name="FactoryScreen" type="Control"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 5
+mouse_filter = 2
 script = ExtResource("1_script")
 
 [node name="FactoryResourceHUD" type="PanelContainer" parent="."]
 unique_name_in_owner = true
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = -8.0
+offset_bottom = 52.0
+grow_horizontal = 2
 
 [node name="FactoryResourceRow" type="HBoxContainer" parent="FactoryResourceHUD"]
 unique_name_in_owner = true
@@ -20,33 +27,50 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 5
 
-[node name="FactoryResponsiveBody" type="HBoxContainer" parent="."]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 8
+[node name="FactoryResponsiveBody" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [node name="FactoryWorldInteractionArea" type="Control" parent="FactoryResponsiveBody"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 
 [node name="FactoryHudFrame" type="PanelContainer" parent="FactoryResponsiveBody"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(306, 0)
-layout_mode = 2
-size_flags_vertical = 3
+custom_minimum_size = Vector2(286, 0)
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -294.0
+offset_top = 54.0
+offset_right = -8.0
+offset_bottom = -124.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 1
 
 [node name="Margin" type="MarginContainer" parent="FactoryResponsiveBody/FactoryHudFrame"]
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 7
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 7
+theme_override_constants/margin_bottom = 6
 
 [node name="Layout" type="VBoxContainer" parent="FactoryResponsiveBody/FactoryHudFrame/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="FactoryHudTabs" type="HBoxContainer" parent="FactoryResponsiveBody/FactoryHudFrame/Margin/Layout"]
 layout_mode = 2

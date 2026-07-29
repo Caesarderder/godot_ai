@@ -1,5 +1,5 @@
 class_name FactoryScreen
-extends VBoxContainer
+extends Control
 
 signal panel_selected(panel_id: String)
 signal action_requested(action_id: String, payload: Dictionary)
@@ -52,7 +52,7 @@ func configure(view: Dictionary) -> void:
 
 func _rebuild() -> void:
 	var compact := bool(_view.get("compact", false))
-	hud_frame.custom_minimum_size.x = 272 if compact else 306
+	hud_frame.custom_minimum_size.x = 258 if compact else 286
 	_apply_shell_style()
 	_build_resources(compact)
 	_clear(panel_host)
@@ -343,10 +343,10 @@ func _facility_panel() -> Control:
 
 
 func _apply_shell_style() -> void:
-	var resource_style := _box(Color(PANEL, 0.86), Color(0, 0, 0, 0), 4)
-	resource_style.set_border_width_all(0)
+	var resource_style := _box(Color(PANEL, 0.74), Color(CYAN, 0.24), 10)
+	resource_style.set_border_width_all(1)
 	resource_hud.add_theme_stylebox_override("panel", resource_style)
-	hud_frame.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.94), Color(LINE, 0.55), 7))
+	hud_frame.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.88), Color(CYAN, 0.35), 10))
 	for button: Button in [mission_tab, facility_tab, build_tab]:
 		_style_button(button, button.button_pressed)
 
