@@ -16,6 +16,7 @@ const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_gener
 const WarReadinessReport := preload("res://game/scripts/domain/progression/war_readiness_report.gd")
 const CampaignObjectiveProjection := preload("res://game/scripts/domain/objectives/campaign_objective_projection.gd")
 const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const ResearchBreakthroughService := preload(
 	"res://game/scripts/domain/recruitment/research_breakthrough_service.gd"
 )
@@ -4652,7 +4653,7 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	header_panel.visible = screen != Screen.BATTLE
 	header_panel.add_theme_stylebox_override(
 		"panel",
-		_box(Color(PANEL, 0.68 if reveal_world else 0.82), 9, Color(CYAN, 0.28))
+		UiArtDirectionScript.panel_style(0.72 if reveal_world else 0.9)
 	)
 	root.add_child(header_panel)
 	var header := HBoxContainer.new()
@@ -5163,13 +5164,10 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 		button.custom_minimum_size = Vector2(112, 48)
 		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		button.add_theme_font_size_override("font_size", 14)
-		var nav_style := _box(
-			Color(CYAN, 0.2) if int(entry[1]) == active else Color(PANEL_2, 0.72),
-			12,
-			Color(CYAN, 0.7) if int(entry[1]) == active else Color(0, 0, 0, 0)
+		button.add_theme_stylebox_override(
+			"normal",
+			UiArtDirectionScript.button_style(int(entry[1]) == active)
 		)
-		nav_style.set_border_width_all(1 if int(entry[1]) == active else 0)
-		button.add_theme_stylebox_override("normal", nav_style)
 		nav.add_child(button)
 		if int(entry[1]) in [Screen.BASE, Screen.GOALS]:
 			var badge := NotificationBadgeScript.new() as NotificationBadge
@@ -5262,11 +5260,11 @@ func _button(value: String, callback: Callable, primary: bool) -> Button:
 	node.add_theme_font_size_override("font_size", 15)
 	node.custom_minimum_size.y = 48.0
 	node.focus_mode = Control.FOCUS_ALL
-	node.add_theme_stylebox_override("normal", _box(GOLD if primary else PANEL_2, 3, GOLD if primary else LINE))
-	node.add_theme_stylebox_override("hover", _box(GOLD.lightened(0.12) if primary else PANEL_2.lightened(0.1), 3, GOLD))
-	node.add_theme_stylebox_override("pressed", _box(GOLD.darkened(0.18) if primary else PANEL, 3, GOLD))
-	node.add_theme_stylebox_override("focus", _box(Color(GOLD, 0.22), 3, Color.WHITE))
-	node.add_theme_stylebox_override("disabled", _box(Color("#101417"), 3, Color("#2a3033")))
+	node.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	node.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	node.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	node.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
+	node.add_theme_stylebox_override("disabled", UiArtDirectionScript.button_style(false, "disabled"))
 	node.add_theme_color_override("font_color", BG if primary else TEXT)
 	node.add_theme_color_override("font_hover_color", BG if primary else TEXT)
 	node.add_theme_color_override("font_pressed_color", BG if primary else TEXT)

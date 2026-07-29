@@ -8,6 +8,7 @@ signal preparation_requested(action_id: String)
 
 const STAGE_DETAIL_PANEL_SCENE := preload("res://game/scenes/ui/stage_detail_panel.tscn")
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -158,24 +159,14 @@ func _button(value: String, selected: bool) -> Button:
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_color_override("font_color", TEXT)
 	button.add_theme_color_override("font_disabled_color", MUTED)
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = PANEL_2
-	normal.border_color = CYAN if selected else LINE
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(9)
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color("#24333a")
-	var pressed := normal.duplicate() as StyleBoxFlat
-	pressed.bg_color = Color("#17383a")
-	pressed.border_color = GOLD if selected else CYAN
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", pressed)
-	var focus := pressed.duplicate() as StyleBoxFlat
-	focus.border_color = Color.WHITE
-	focus.set_border_width_all(2)
-	button.add_theme_stylebox_override("focus", focus)
-	button.add_theme_stylebox_override("disabled", normal)
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(selected))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(selected, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(selected, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(selected, "focus"))
+	button.add_theme_stylebox_override("disabled", UiArtDirectionScript.button_style(false, "disabled"))
+	button.add_theme_color_override("font_color", PANEL_2 if selected else TEXT)
+	button.add_theme_color_override("font_hover_color", PANEL_2 if selected else TEXT)
+	button.add_theme_color_override("font_pressed_color", PANEL_2 if selected else TEXT)
 	return button
 
 

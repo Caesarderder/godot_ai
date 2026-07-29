@@ -36,6 +36,39 @@ capture. The procedural fail-safe must remain visibly classified as a placeholde
 
 ## Third-party visual batches
 
+### `kenney_ui_sci_fi_v2`
+
+| Field | Value |
+|---|---|
+| Status | `approved` |
+| Registry source | `kenney` |
+| Pack / creator | UI Pack - Sci-Fi 2.0 / Kenney |
+| Official asset page | https://kenney.nl/assets/ui-pack-sci-fi |
+| Download date | 2026-07-30 |
+| Upstream archive | 768,505 bytes; SHA-256 `4ae5a4949b71ba6c08bfb4d4708b3880915782f7deae7bc5872e1d56f0a668af` |
+| License | Creative Commons Zero (CC0 1.0) |
+| License file | `assets/licenses/kenney_ui_sci_fi_cc0.txt` |
+| Commercial use | Allowed |
+| Attribution | Not required; optional credit: `Kenney` |
+| Imported subset | Four 2× PNG sources under `assets/ui/frames/kenney_ui_sci_fi/`: neutral button, primary button, panel frame and cyan progress fill |
+| Original subset path | `PNG/Grey/Double/`, `PNG/Yellow/Double/`, `PNG/Extra/Double/`, `PNG/Blue/Double/` |
+| Modifications | Semantic `snake_case` renames only; pixels unchanged. Runtime tint and 9-slice margins are owned by `game/scripts/ui/ui_art_direction.gd` |
+| Intended scope | Shared App Shell headers, primary/secondary actions, navigation dock and compact progress carriers |
+| Omitted | 1,113 unused files including duplicate colors/scales, cursors, fonts, previews, SVG sources and unrelated controls |
+| Source size retained | 4 PNG files totaling under 6 KiB compressed, plus the 1 KiB license text |
+| Style review | Selected angular header blade, corner screws and restrained cyan/yellow state family match the accepted dark industrial command-console thesis; red/green variants are reserved for semantic danger/success and were not imported |
+| Godot import | Pending current-batch Godot 4.6.3 import and representative 844×390 capture |
+| Web verification | Pending current-batch Web export payload comparison |
+
+SHA-256:
+
+```text
+a66013bdbdfa50e24e1bf5bb89e584e2218b995890df4076d9c1786153ba4e31  button_frame_neutral.png
+28aae0671d5f036228b5835ab9452ab80071cb70e6c89dc8195d9c31c5a70752  button_frame_primary.png
+596c7fc0e44f6f719aaf59dcfa936d6b02a2d2f19dfabe4ba4d492ae08e14bb2  panel_frame.png
+af13ccda23a736cdf18049cbe05586178e7cde8fddb5617bcf19cd5b10fcc3b9  progress_fill_cyan.png
+```
+
 ### `kenney_game_icons_v1`
 
 | Field | Value |

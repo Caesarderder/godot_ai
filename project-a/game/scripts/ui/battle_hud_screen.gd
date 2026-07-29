@@ -8,6 +8,7 @@ signal retreat_requested
 signal skill_requested(unit_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const ICON_PAUSE := preload("res://assets/ui/icons/kenney_game_icons/pause.png")
 const ICON_TARGET := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const ICON_RETREAT := preload("res://assets/ui/icons/kenney_game_icons/exit_right.png")
@@ -646,10 +647,10 @@ func _apply_theme() -> void:
 		button.add_theme_constant_override("icon_max_width", 18)
 		button.add_theme_font_override("font", CJK_FONT)
 		button.add_theme_font_size_override("font_size", 13)
-		button.add_theme_stylebox_override("normal", _box(Color("#1a2228"), 7, LINE))
-		button.add_theme_stylebox_override("hover", _box(Color("#24333a"), 7, CYAN))
-		button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), 7, CYAN))
-		button.add_theme_stylebox_override("focus", _box(Color("#17383a"), 7, Color.WHITE))
+		button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(false))
+		button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(false, "hover"))
+		button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(false, "pressed"))
+		button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(false, "focus"))
 	_apply_burst_emphasis(false)
 
 

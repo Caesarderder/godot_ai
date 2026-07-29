@@ -5,6 +5,7 @@ signal panel_selected(panel_id: String)
 signal action_requested(action_id: String, payload: Dictionary)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const NotificationBadgeScript := preload(
 	"res://game/scripts/presentation/notification_badge.gd"
 )
@@ -373,10 +374,13 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 13)
-	button.add_theme_stylebox_override("normal", _box(Color("#244546") if primary else PANEL_2, CYAN if primary else LINE, 7))
-	button.add_theme_stylebox_override("hover", _box(Color("#315a5b"), CYAN, 7))
-	button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), CYAN, 7))
-	button.add_theme_stylebox_override("focus", _box(Color("#17383a"), Color.WHITE, 7))
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
+	button.add_theme_color_override("font_color", PANEL if primary else TEXT)
+	button.add_theme_color_override("font_hover_color", PANEL if primary else TEXT)
+	button.add_theme_color_override("font_pressed_color", PANEL if primary else TEXT)
 
 
 func _label(value: String, size: int, color: Color) -> Label:

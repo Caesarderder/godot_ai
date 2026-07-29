@@ -15,6 +15,7 @@ signal action_requested(action_id: String, payload: Dictionary)
 signal hero_selected(hero_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
@@ -1234,10 +1235,13 @@ func _style_tab(button: Button, active: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_stylebox_override("normal", _box(Color("#244546") if active else PANEL_2, CYAN if active else LINE))
-	button.add_theme_stylebox_override("hover", _box(Color("#315a5b"), CYAN))
-	button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), CYAN))
-	button.add_theme_stylebox_override("focus", _box(Color("#17383a"), Color.WHITE))
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(active))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(active, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(active, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(active, "focus"))
+	button.add_theme_color_override("font_color", PANEL_2 if active else TEXT)
+	button.add_theme_color_override("font_hover_color", PANEL_2 if active else TEXT)
+	button.add_theme_color_override("font_pressed_color", PANEL_2 if active else TEXT)
 
 
 func _button(value: String, primary: bool) -> Button:
@@ -1247,10 +1251,13 @@ func _button(value: String, primary: bool) -> Button:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 13)
-	button.add_theme_stylebox_override("normal", _box(Color("#244546") if primary else PANEL_2, CYAN if primary else LINE))
-	button.add_theme_stylebox_override("hover", _box(Color("#315a5b"), CYAN))
-	button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), CYAN))
-	button.add_theme_stylebox_override("focus", _box(Color("#17383a"), Color.WHITE))
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
+	button.add_theme_color_override("font_color", PANEL_2 if primary else TEXT)
+	button.add_theme_color_override("font_hover_color", PANEL_2 if primary else TEXT)
+	button.add_theme_color_override("font_pressed_color", PANEL_2 if primary else TEXT)
 	return button
 
 
