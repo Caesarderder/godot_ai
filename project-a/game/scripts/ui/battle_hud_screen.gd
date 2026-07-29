@@ -1,5 +1,5 @@
 class_name BattleHudScreen
-extends VBoxContainer
+extends Control
 
 signal pause_requested
 signal skill_mode_requested
@@ -535,7 +535,7 @@ func _build_unit_card(snapshot: Dictionary) -> Dictionary:
 	var unit_id := String(snapshot.get("hero_id", ""))
 	var root := PanelContainer.new()
 	root.name = "BattleUnitCard_%s" % unit_id
-	root.custom_minimum_size = Vector2(108, 64)
+	root.custom_minimum_size = Vector2(108, 68)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_stylebox_override("panel", _unit_card_style(false))
 	var stack := VBoxContainer.new()
@@ -627,10 +627,13 @@ func _meter_row(tag_text: String, color: Color, value: int, maximum: int) -> Dic
 
 
 func _apply_theme() -> void:
-	var bottom_style := _box(Color(PANEL, 0.9), 5, Color(0, 0, 0, 0))
-	bottom_style.set_border_width_all(0)
+	var bottom_style := _box(Color(PANEL, 0.82), 10, Color(CYAN, 0.24))
+	bottom_style.set_border_width_all(1)
 	%BattleBottomHud.add_theme_stylebox_override("panel", bottom_style)
-	var status_style := _box(Color(PANEL, 0.9), 4, Color(0, 0, 0, 0))
+	var tactical_style := _box(Color(PANEL, 0.76), 10, Color(CYAN, 0.22))
+	tactical_style.set_border_width_all(1)
+	$TacticalBar.add_theme_stylebox_override("panel", tactical_style)
+	var status_style := _box(Color("#071018e6"), 7, Color(0, 0, 0, 0))
 	status_style.set_border_width_all(0)
 	status_label.add_theme_stylebox_override("normal", status_style)
 	pause_button.icon = ICON_PAUSE

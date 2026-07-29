@@ -4648,9 +4648,11 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	var header_panel := PanelContainer.new()
 	header_panel.name = "AppShellHeader"
 	header_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_panel.custom_minimum_size.y = 42
+	header_panel.visible = screen != Screen.BATTLE
 	header_panel.add_theme_stylebox_override(
 		"panel",
-		_box(Color(PANEL, 0.9 if reveal_world else 0.82), 2, Color(EMBER, 0.55))
+		_box(Color(PANEL, 0.68 if reveal_world else 0.82), 9, Color(CYAN, 0.28))
 	)
 	root.add_child(header_panel)
 	var header := HBoxContainer.new()
@@ -4661,7 +4663,7 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	titles.custom_minimum_size.x = 112
 	header.add_child(titles)
-	var title_label := _label(title_text, 19, TEXT)
+	var title_label := _label(title_text, 17, TEXT)
 	title_label.clip_text = true
 	title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -5130,7 +5132,7 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 	nav.name = "PrimaryNavigation"
 	nav.alignment = BoxContainer.ALIGNMENT_CENTER
 	nav.add_theme_constant_override("separation", 4)
-	nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nav.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	shell.add_child(nav)
 	var entries: Array = [
 		["工厂", Screen.BASE, _open_factory_navigation],
@@ -5158,17 +5160,15 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 				"%d 项奖励待领取" % badge_count
 				if badge_count > 0 else "暂无待领取奖励"
 			)
-		button.custom_minimum_size = Vector2(0, 48)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size = Vector2(112, 48)
+		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		button.add_theme_font_size_override("font_size", 14)
 		var nav_style := _box(
-			Color(CYAN, 0.12) if int(entry[1]) == active else Color(PANEL_2, 0.38),
-			0,
+			Color(CYAN, 0.2) if int(entry[1]) == active else Color(PANEL_2, 0.72),
+			12,
 			Color(CYAN, 0.7) if int(entry[1]) == active else Color(0, 0, 0, 0)
 		)
-		nav_style.set_border_width_all(0)
-		if int(entry[1]) == active:
-			nav_style.set_border_width(SIDE_BOTTOM, 2)
+		nav_style.set_border_width_all(1 if int(entry[1]) == active else 0)
 		button.add_theme_stylebox_override("normal", nav_style)
 		nav.add_child(button)
 		if int(entry[1]) in [Screen.BASE, Screen.GOALS]:
