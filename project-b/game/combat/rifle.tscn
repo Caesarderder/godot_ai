@@ -1,0 +1,113 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://game/combat/rifle.gd" id="1_script"]
+[ext_resource type="Resource" path="res://game/combat/rifle_default.tres" id="2_config"]
+
+[sub_resource type="StandardMaterial3D" id="MatGunmetal"]
+albedo_color = Color(0.12, 0.17, 0.2, 1)
+metallic = 0.72
+roughness = 0.28
+
+[sub_resource type="StandardMaterial3D" id="MatPolymer"]
+albedo_color = Color(0.075, 0.095, 0.11, 1)
+metallic = 0.15
+roughness = 0.68
+
+[sub_resource type="StandardMaterial3D" id="MatCyan"]
+albedo_color = Color(0.05, 0.52, 0.72, 1)
+emission_enabled = true
+emission = Color(0.08, 0.78, 1, 1)
+emission_energy_multiplier = 3.2
+
+[sub_resource type="StandardMaterial3D" id="MatMuzzle"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.78, 0.93, 1, 0.9)
+emission_enabled = true
+emission = Color(0.42, 0.82, 1, 1)
+emission_energy_multiplier = 5.5
+
+[sub_resource type="BoxMesh" id="MeshReceiver"]
+material = SubResource("MatGunmetal")
+size = Vector3(0.18, 0.18, 0.62)
+
+[sub_resource type="BoxMesh" id="MeshStock"]
+material = SubResource("MatPolymer")
+size = Vector3(0.22, 0.24, 0.38)
+
+[sub_resource type="CylinderMesh" id="MeshBarrel"]
+material = SubResource("MatGunmetal")
+top_radius = 0.038
+bottom_radius = 0.05
+height = 0.58
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="MeshSight"]
+material = SubResource("MatCyan")
+size = Vector3(0.055, 0.045, 0.16)
+
+[sub_resource type="SphereMesh" id="MeshFlash"]
+material = SubResource("MatMuzzle")
+radius = 0.105
+height = 0.19
+radial_segments = 10
+rings = 5
+
+[node name="Rifle" type="Node3D"]
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+
+[node name="WeaponBody" type="Node3D" parent="."]
+unique_name_in_owner = true
+position = Vector3(0.31, -0.29, -0.67)
+rotation = Vector3(-0.035, -0.028, 0.0)
+
+[node name="Receiver" type="MeshInstance3D" parent="WeaponBody"]
+mesh = SubResource("MeshReceiver")
+
+[node name="Stock" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(0.02, -0.025, 0.34)
+rotation = Vector3(0.15, 0.0, 0.0)
+mesh = SubResource("MeshStock")
+
+[node name="Barrel" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(0.0, 0.015, -0.54)
+rotation = Vector3(1.5708, 0.0, 0.0)
+mesh = SubResource("MeshBarrel")
+
+[node name="Sight" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(0.0, 0.125, -0.06)
+mesh = SubResource("MeshSight")
+
+[node name="TopRail" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(0.0, 0.105, -0.28)
+scale = Vector3(0.8, 0.18, 1.2)
+mesh = SubResource("MeshReceiver")
+
+[node name="OpticHousing" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(0.0, 0.16, -0.18)
+scale = Vector3(0.58, 0.55, 0.4)
+mesh = SubResource("MeshStock")
+
+[node name="Foregrip" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(0.0, -0.13, -0.35)
+rotation = Vector3(0.24, 0.0, 0.0)
+scale = Vector3(0.42, 0.75, 0.34)
+mesh = SubResource("MeshStock")
+
+[node name="SideStatus" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(-0.096, 0.01, -0.05)
+scale = Vector3(0.18, 0.32, 1.55)
+mesh = SubResource("MeshSight")
+
+[node name="Magazine" type="MeshInstance3D" parent="WeaponBody"]
+position = Vector3(0.0, -0.18, 0.05)
+rotation = Vector3(0.18, 0.0, 0.0)
+scale = Vector3(0.55, 0.8, 0.35)
+mesh = SubResource("MeshStock")
+
+[node name="MuzzleFlash" type="MeshInstance3D" parent="WeaponBody"]
+unique_name_in_owner = true
+position = Vector3(0.0, 0.015, -0.88)
+mesh = SubResource("MeshFlash")
+visible = false

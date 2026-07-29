@@ -1,0 +1,374 @@
+[gd_scene load_steps=22 format=3]
+
+[sub_resource type="Environment" id="EnvironmentNightglass"]
+background_mode = 1
+background_color = Color(0.008, 0.018, 0.032, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.12, 0.24, 0.34, 1)
+ambient_light_energy = 0.72
+reflected_light_source = 2
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.08, 0.18, 0.25, 1)
+fog_light_energy = 0.65
+fog_density = 0.018
+fog_height = 1.0
+fog_height_density = 0.22
+
+[sub_resource type="StandardMaterial3D" id="MatConcrete"]
+albedo_color = Color(0.075, 0.115, 0.145, 1)
+roughness = 0.78
+
+[sub_resource type="StandardMaterial3D" id="MatConcreteDark"]
+albedo_color = Color(0.035, 0.055, 0.072, 1)
+roughness = 0.86
+
+[sub_resource type="StandardMaterial3D" id="MatSteel"]
+albedo_color = Color(0.055, 0.08, 0.095, 1)
+metallic = 0.74
+roughness = 0.31
+
+[sub_resource type="StandardMaterial3D" id="MatCyan"]
+albedo_color = Color(0.035, 0.48, 0.72, 1)
+emission_enabled = true
+emission = Color(0.025, 0.7, 1, 1)
+emission_energy_multiplier = 4.5
+
+[sub_resource type="StandardMaterial3D" id="MatAmber"]
+albedo_color = Color(0.9, 0.25, 0.025, 1)
+emission_enabled = true
+emission = Color(1, 0.18, 0.015, 1)
+emission_energy_multiplier = 3.5
+
+[sub_resource type="BoxMesh" id="MeshFloor"]
+material = SubResource("MatConcreteDark")
+size = Vector3(34, 0.4, 42)
+
+[sub_resource type="BoxShape3D" id="ShapeFloor"]
+size = Vector3(34, 0.4, 42)
+
+[sub_resource type="BoxMesh" id="MeshWallLong"]
+material = SubResource("MatConcrete")
+size = Vector3(34, 4.6, 0.6)
+
+[sub_resource type="BoxShape3D" id="ShapeWallLong"]
+size = Vector3(34, 4.6, 0.6)
+
+[sub_resource type="BoxMesh" id="MeshWallSide"]
+material = SubResource("MatConcrete")
+size = Vector3(0.6, 4.6, 42)
+
+[sub_resource type="BoxShape3D" id="ShapeWallSide"]
+size = Vector3(0.6, 4.6, 42)
+
+[sub_resource type="BoxMesh" id="MeshCover"]
+material = SubResource("MatSteel")
+size = Vector3(4.2, 1.45, 1.15)
+
+[sub_resource type="BoxShape3D" id="ShapeCover"]
+size = Vector3(4.2, 1.45, 1.15)
+
+[sub_resource type="CylinderMesh" id="MeshCore"]
+material = SubResource("MatCyan")
+top_radius = 1.1
+bottom_radius = 1.35
+height = 3.6
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="MeshStrip"]
+material = SubResource("MatCyan")
+size = Vector3(7.2, 0.08, 0.08)
+
+[sub_resource type="BoxMesh" id="MeshThreatStrip"]
+material = SubResource("MatAmber")
+size = Vector3(4.8, 0.08, 0.08)
+
+[sub_resource type="BoxMesh" id="MeshPillar"]
+material = SubResource("MatSteel")
+size = Vector3(1.15, 5.4, 1.15)
+
+[sub_resource type="BoxMesh" id="MeshBeam"]
+material = SubResource("MatSteel")
+size = Vector3(16.0, 0.85, 1.15)
+
+[sub_resource type="BoxMesh" id="MeshWallPanel"]
+material = SubResource("MatConcrete")
+size = Vector3(5.4, 2.6, 0.28)
+
+[sub_resource type="CylinderMesh" id="MeshThreatPylon"]
+material = SubResource("MatAmber")
+top_radius = 0.12
+bottom_radius = 0.18
+height = 3.4
+radial_segments = 8
+
+[node name="Blacksite" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("EnvironmentNightglass")
+
+[node name="MoonKey" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.95, -0.5, 0.0)
+light_color = Color(0.48, 0.72, 1, 1)
+light_energy = 1.05
+shadow_enabled = true
+directional_shadow_max_distance = 48.0
+
+[node name="CyanPractical" type="OmniLight3D" parent="."]
+position = Vector3(0, 3.2, -8)
+light_color = Color(0.08, 0.68, 1, 1)
+light_energy = 5.5
+omni_range = 12.0
+
+[node name="ThreatPracticalLeft" type="OmniLight3D" parent="."]
+position = Vector3(-11, 2.5, -13)
+light_color = Color(1, 0.19, 0.035, 1)
+light_energy = 3.0
+omni_range = 7.5
+
+[node name="ThreatPracticalRight" type="OmniLight3D" parent="."]
+position = Vector3(11, 2.5, -13)
+light_color = Color(1, 0.19, 0.035, 1)
+light_energy = 3.0
+omni_range = 7.5
+
+[node name="CloseThreatLeft" type="SpotLight3D" parent="."]
+position = Vector3(-5.5, 3.4, 4.2)
+rotation = Vector3(-1.05, 0.0, -0.18)
+light_color = Color(1, 0.24, 0.045, 1)
+light_energy = 7.0
+spot_range = 10.0
+spot_angle = 48.0
+
+[node name="CloseThreatRight" type="SpotLight3D" parent="."]
+position = Vector3(6.0, 3.4, 1.2)
+rotation = Vector3(-1.05, 0.0, 0.18)
+light_color = Color(1, 0.24, 0.045, 1)
+light_energy = 7.0
+spot_range = 10.0
+spot_angle = 48.0
+
+[node name="Floor" type="StaticBody3D" parent="."]
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+position = Vector3(0, -0.2, -4)
+mesh = SubResource("MeshFloor")
+
+[node name="Collision" type="CollisionShape3D" parent="Floor"]
+position = Vector3(0, -0.2, -4)
+shape = SubResource("ShapeFloor")
+
+[node name="NorthWall" type="StaticBody3D" parent="."]
+position = Vector3(0, 2.3, -25)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="NorthWall"]
+mesh = SubResource("MeshWallLong")
+
+[node name="Collision" type="CollisionShape3D" parent="NorthWall"]
+shape = SubResource("ShapeWallLong")
+
+[node name="SouthWall" type="StaticBody3D" parent="."]
+position = Vector3(0, 2.3, 17)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="SouthWall"]
+mesh = SubResource("MeshWallLong")
+
+[node name="Collision" type="CollisionShape3D" parent="SouthWall"]
+shape = SubResource("ShapeWallLong")
+
+[node name="WestWall" type="StaticBody3D" parent="."]
+position = Vector3(-17, 2.3, -4)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="WestWall"]
+mesh = SubResource("MeshWallSide")
+
+[node name="Collision" type="CollisionShape3D" parent="WestWall"]
+shape = SubResource("ShapeWallSide")
+
+[node name="EastWall" type="StaticBody3D" parent="."]
+position = Vector3(17, 2.3, -4)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="EastWall"]
+mesh = SubResource("MeshWallSide")
+
+[node name="Collision" type="CollisionShape3D" parent="EastWall"]
+shape = SubResource("ShapeWallSide")
+
+[node name="CoverA" type="StaticBody3D" parent="."]
+position = Vector3(-7.2, 0.725, 2.5)
+rotation = Vector3(0, 0.23, 0)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="CoverA"]
+mesh = SubResource("MeshCover")
+
+[node name="Collision" type="CollisionShape3D" parent="CoverA"]
+shape = SubResource("ShapeCover")
+
+[node name="CoverB" type="StaticBody3D" parent="."]
+position = Vector3(7.4, 0.725, -2.5)
+rotation = Vector3(0, -0.26, 0)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="CoverB"]
+mesh = SubResource("MeshCover")
+
+[node name="Collision" type="CollisionShape3D" parent="CoverB"]
+shape = SubResource("ShapeCover")
+
+[node name="CoverC" type="StaticBody3D" parent="."]
+position = Vector3(-3.2, 0.725, -10.5)
+rotation = Vector3(0, 1.5708, 0)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="CoverC"]
+mesh = SubResource("MeshCover")
+
+[node name="Collision" type="CollisionShape3D" parent="CoverC"]
+shape = SubResource("ShapeCover")
+
+[node name="CoverD" type="StaticBody3D" parent="."]
+position = Vector3(6.8, 0.725, -15.2)
+rotation = Vector3(0, 0.18, 0)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="CoverD"]
+mesh = SubResource("MeshCover")
+
+[node name="Collision" type="CollisionShape3D" parent="CoverD"]
+shape = SubResource("ShapeCover")
+
+[node name="SignalCore" type="Node3D" parent="."]
+position = Vector3(0, 1.8, -20.4)
+
+[node name="Core" type="MeshInstance3D" parent="SignalCore"]
+mesh = SubResource("MeshCore")
+
+[node name="RingUpper" type="MeshInstance3D" parent="SignalCore"]
+position = Vector3(0, 1.55, 0)
+rotation = Vector3(0, 0, 1.5708)
+scale = Vector3(0.42, 1.4, 0.42)
+mesh = SubResource("MeshCore")
+
+[node name="ApproachStripLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-6.5, 0.035, -8)
+rotation = Vector3(0, 1.5708, 0)
+mesh = SubResource("MeshStrip")
+
+[node name="ApproachStripRight" type="MeshInstance3D" parent="."]
+position = Vector3(6.5, 0.035, -8)
+rotation = Vector3(0, 1.5708, 0)
+mesh = SubResource("MeshStrip")
+
+[node name="ThreatStripLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-11.5, 2.8, -24.65)
+mesh = SubResource("MeshThreatStrip")
+
+[node name="ThreatStripRight" type="MeshInstance3D" parent="."]
+position = Vector3(11.5, 2.8, -24.65)
+mesh = SubResource("MeshThreatStrip")
+
+[node name="CombatGate" type="Node3D" parent="."]
+position = Vector3(0, 0, -11.8)
+
+[node name="LeftPillar" type="MeshInstance3D" parent="CombatGate"]
+position = Vector3(-7.4, 2.7, 0)
+mesh = SubResource("MeshPillar")
+
+[node name="RightPillar" type="MeshInstance3D" parent="CombatGate"]
+position = Vector3(7.4, 2.7, 0)
+mesh = SubResource("MeshPillar")
+
+[node name="OverheadBeam" type="MeshInstance3D" parent="CombatGate"]
+position = Vector3(0, 5.0, 0)
+mesh = SubResource("MeshBeam")
+
+[node name="LeftPanel" type="MeshInstance3D" parent="CombatGate"]
+position = Vector3(-10.6, 2.0, 0.25)
+rotation = Vector3(0, 0.1, 0)
+mesh = SubResource("MeshWallPanel")
+
+[node name="RightPanel" type="MeshInstance3D" parent="CombatGate"]
+position = Vector3(10.6, 2.0, 0.25)
+rotation = Vector3(0, -0.1, 0)
+mesh = SubResource("MeshWallPanel")
+
+[node name="ThreatPylonLeft" type="MeshInstance3D" parent="CombatGate"]
+position = Vector3(-6.6, 2.1, 0.55)
+mesh = SubResource("MeshThreatPylon")
+
+[node name="ThreatPylonRight" type="MeshInstance3D" parent="CombatGate"]
+position = Vector3(6.6, 2.1, 0.55)
+mesh = SubResource("MeshThreatPylon")
+
+[node name="CoreFrameLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-3.1, 2.7, -20.4)
+mesh = SubResource("MeshPillar")
+
+[node name="CoreFrameRight" type="MeshInstance3D" parent="."]
+position = Vector3(3.1, 2.7, -20.4)
+mesh = SubResource("MeshPillar")
+
+[node name="CoreFrameTop" type="MeshInstance3D" parent="."]
+position = Vector3(0, 5.0, -20.4)
+scale = Vector3(0.45, 1, 1)
+mesh = SubResource("MeshBeam")
+
+[node name="CeilingBeamNear" type="MeshInstance3D" parent="."]
+position = Vector3(0, 5.8, 8.0)
+rotation = Vector3(0, 0, 0.0)
+scale = Vector3(1.8, 0.6, 0.65)
+mesh = SubResource("MeshBeam")
+
+[node name="CeilingBeamMid" type="MeshInstance3D" parent="."]
+position = Vector3(0, 5.8, 0.5)
+rotation = Vector3(0, 0, 0.0)
+scale = Vector3(1.8, 0.6, 0.65)
+mesh = SubResource("MeshBeam")
+
+[node name="CeilingBeamFar" type="MeshInstance3D" parent="."]
+position = Vector3(0, 5.8, -7.0)
+rotation = Vector3(0, 0, 0.0)
+scale = Vector3(1.8, 0.6, 0.65)
+mesh = SubResource("MeshBeam")
+
+[node name="CeilingSupportNearLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-14.0, 2.7, 8.0)
+mesh = SubResource("MeshPillar")
+
+[node name="CeilingSupportNearRight" type="MeshInstance3D" parent="."]
+position = Vector3(14.0, 2.7, 8.0)
+mesh = SubResource("MeshPillar")
+
+[node name="CeilingSupportMidLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-14.0, 2.7, 0.5)
+mesh = SubResource("MeshPillar")
+
+[node name="CeilingSupportMidRight" type="MeshInstance3D" parent="."]
+position = Vector3(14.0, 2.7, 0.5)
+mesh = SubResource("MeshPillar")
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+unique_name_in_owner = true
+position = Vector3(0, 0.05, 13.2)
+
+[node name="EnemySpawn1" type="Marker3D" parent="."]
+unique_name_in_owner = true
+position = Vector3(-3.6, 0.05, 6.4)
+
+[node name="EnemySpawn2" type="Marker3D" parent="."]
+unique_name_in_owner = true
+position = Vector3(4.4, 0.05, 4.1)
+
+[node name="EnemySpawn3" type="Marker3D" parent="."]
+unique_name_in_owner = true
+position = Vector3(-6.8, 0.05, -8.6)
+
+[node name="EnemySpawn4" type="Marker3D" parent="."]
+unique_name_in_owner = true
+position = Vector3(7.4, 0.05, -14.2)

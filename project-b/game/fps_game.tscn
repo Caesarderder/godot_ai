@@ -1,0 +1,30 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/fps_game.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://levels/blacksite.tscn" id="2_level"]
+[ext_resource type="PackedScene" path="res://game/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://game/enemies/sentry.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://game/ui/combat_hud.tscn" id="5_hud"]
+
+[node name="FpsGame" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Blacksite" parent="." instance=ExtResource("2_level")]
+unique_name_in_owner = true
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+unique_name_in_owner = true
+
+[node name="Enemies" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Sentry1" parent="Enemies" instance=ExtResource("4_enemy")]
+
+[node name="Sentry2" parent="Enemies" instance=ExtResource("4_enemy")]
+
+[node name="Sentry3" parent="Enemies" instance=ExtResource("4_enemy")]
+
+[node name="Sentry4" parent="Enemies" instance=ExtResource("4_enemy")]
+
+[node name="CombatHud" parent="." instance=ExtResource("5_hud")]
+unique_name_in_owner = true
