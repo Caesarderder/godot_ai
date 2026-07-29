@@ -57,8 +57,8 @@ capture. The procedural fail-safe must remain visibly classified as a placeholde
 | Omitted | 1,113 unused files including duplicate colors/scales, cursors, fonts, previews, SVG sources and unrelated controls |
 | Source size retained | 4 PNG files totaling under 6 KiB compressed, plus the 1 KiB license text |
 | Style review | Selected angular header blade, corner screws and restrained cyan/yellow state family match the accepted dark industrial command-console thesis; red/green variants are reserved for semantic danger/success and were not imported |
-| Godot import | Pending current-batch Godot 4.6.3 import and representative 844×390 capture |
-| Web verification | Pending current-batch Web export payload comparison |
+| Godot import | Godot 4.6.3 imports all four retained PNGs successfully; UI smoke, factory, legion and battle HUD tests pass; representative 844×390 captures were reviewed for a consistent frame language, active-state gold and cyan status semantics |
+| Web verification | Reproducible measurement export passes local artifact checks except the dirty-source release-candidate gate; `index.pck` is 20,475,788 bytes versus 20,381,628 bytes previously (+94,160 bytes), and the gzip initial payload remains below the 30 MiB hard limit. This measurement is not labeled a release candidate because regenerated screenshot evidence remained dirty |
 
 SHA-256:
 
