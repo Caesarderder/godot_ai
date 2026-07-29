@@ -47,9 +47,9 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-settings-844x390.png"):
 		quit(1)
 		return
-	var settings_scroll := main.find_child("SettingsScroll", true, false) as ScrollContainer
-	if settings_scroll != null:
-		settings_scroll.scroll_vertical = int(settings_scroll.get_v_scroll_bar().max_value)
+	var settings_data_tab := main.find_child("SettingsDataTab", true, false) as Button
+	if settings_data_tab != null:
+		settings_data_tab.pressed.emit()
 	for _frame in 3:
 		await process_frame
 	if not _save_viewport("res://artifacts/ui-settings-storage-844x390.png"):
@@ -58,9 +58,6 @@ func _capture() -> void:
 	main.call("_set_local_playtest_logging", true)
 	for _frame in 6:
 		await process_frame
-	settings_scroll = main.find_child("SettingsScroll", true, false) as ScrollContainer
-	if settings_scroll != null:
-		settings_scroll.scroll_vertical = int(settings_scroll.get_v_scroll_bar().max_value)
 	for _frame in 3:
 		await process_frame
 	if not _save_viewport("res://artifacts/ui-settings-playtest-844x390.png"):

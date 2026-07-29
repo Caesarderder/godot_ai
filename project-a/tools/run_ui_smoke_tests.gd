@@ -732,6 +732,8 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	var settings_scroll := instance.find_child("SettingsScroll", true, false) as ScrollContainer
 	var settings_data_scroll := instance.find_child("SettingsDataScroll", true, false) as ScrollContainer
 	var settings_columns := instance.find_child("SettingsLandscapeColumns", true, false) as HBoxContainer
+	var settings_experience_tab := instance.find_child("SettingsExperienceTab", true, false) as Button
+	var settings_data_tab := instance.find_child("SettingsDataTab", true, false) as Button
 	var playtest_toggle := instance.find_child("SettingsLocalPlaytestToggle", true, false) as CheckButton
 	var settings_help := instance.find_child("SettingsHelpButton", true, false) as Button
 	_ok(volume_slider != null and volume_slider.custom_minimum_size.y >= 44.0, "SLG settings volume slider is touch sized")
@@ -753,7 +755,24 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(import_save_button != null and import_save_button.text == "选择备份并校验", "SLG settings validates an import before overwrite")
 	_ok(settings_scroll != null and settings_scroll.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED, "SLG settings scrolls vertically instead of shrinking touch targets")
 	_ok(settings_data_scroll != null and settings_data_scroll.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED, "SLG settings gives local data an independent landscape column")
-	_ok(settings_columns != null and settings_columns.get_child_count() == 2, "SLG settings uses two balanced landscape columns")
+	_ok(settings_columns != null and settings_columns.get_child_count() == 2, "SLG settings retains isolated experience and data surfaces")
+	_ok(
+		settings_experience_tab != null
+			and settings_data_tab != null
+			and settings_experience_tab.custom_minimum_size.y >= 44.0
+			and settings_data_tab.custom_minimum_size.y >= 44.0,
+		"SLG settings exposes touch-sized progressive section navigation"
+	)
+	if settings_data_tab != null:
+		settings_data_tab.pressed.emit()
+		await _wait_frames(1)
+	_ok(
+		settings_data_scroll != null
+			and settings_data_scroll.visible
+			and settings_scroll != null
+			and not settings_scroll.visible,
+		"local data replaces the experience form instead of competing beside it"
+	)
 	_ok(playtest_toggle != null and not playtest_toggle.button_pressed, "local playtest reporting is explicit opt-in")
 	_ok(settings_help != null and settings_help.custom_minimum_size.y >= 48.0, "settings exposes the same gameplay and production information")
 	var hidden_playtest_export := instance.find_child("SettingsExportPlaytestButton", true, false) as Button

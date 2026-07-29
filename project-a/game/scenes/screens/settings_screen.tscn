@@ -8,11 +8,27 @@ size_flags_vertical = 3
 theme_override_constants/separation = 8
 script = ExtResource("1_script")
 
+[node name="SettingsSectionTabs" type="HBoxContainer" parent="."]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="SettingsExperienceTab" type="Button" parent="SettingsSectionTabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 44)
+layout_mode = 2
+text = "体验设置"
+
+[node name="SettingsDataTab" type="Button" parent="SettingsSectionTabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 44)
+layout_mode = 2
+text = "本地数据"
+
 [node name="SettingsLandscapeColumns" type="HBoxContainer" parent="."]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 12
 
 [node name="SettingsScroll" type="ScrollContainer" parent="SettingsLandscapeColumns"]
 layout_mode = 2
@@ -27,80 +43,95 @@ size_flags_horizontal = 3
 
 [node name="Margin" type="MarginContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 10
+theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
+theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 8
 
 [node name="Content" type="VBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="SettingsExperienceHeading" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
-unique_name_in_owner = true
+[node name="ExperienceColumns" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
 layout_mode = 2
-text = "体验设置"
+theme_override_constants/separation = 18
 
-[node name="VolumeRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
+[node name="AudioColumn" type="VBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="VolumeRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/VolumeRow"]
-custom_minimum_size = Vector2(110, 0)
+[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/VolumeRow"]
+custom_minimum_size = Vector2(82, 0)
 layout_mode = 2
 text = "主音量"
 
-[node name="SettingsMasterVolumeSlider" type="HSlider" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/VolumeRow"]
+[node name="SettingsMasterVolumeSlider" type="HSlider" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/VolumeRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(150, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 100.0
 step = 1.0
 value = 80.0
 
-[node name="SettingsMasterVolumeValue" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/VolumeRow"]
+[node name="SettingsMasterVolumeValue" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/VolumeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 text = "80"
 
-[node name="MusicVolumeRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
+[node name="MusicVolumeRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/MusicVolumeRow"]
-custom_minimum_size = Vector2(110, 0)
+[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/MusicVolumeRow"]
+custom_minimum_size = Vector2(82, 0)
 layout_mode = 2
-text = "音乐音量"
+text = "音乐"
 
-[node name="SettingsMusicVolumeSlider" type="HSlider" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/MusicVolumeRow"]
+[node name="SettingsMusicVolumeSlider" type="HSlider" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/MusicVolumeRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(150, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 100.0
 step = 1.0
 value = 55.0
 
-[node name="SettingsMusicVolumeValue" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/MusicVolumeRow"]
+[node name="SettingsMusicVolumeValue" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/MusicVolumeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 text = "55"
 
-[node name="QualityRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
+[node name="SettingsHelpButton" type="Button" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "打开玩法指南"
+
+[node name="GameplayColumn" type="VBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="QualityRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/QualityRow"]
-custom_minimum_size = Vector2(110, 0)
+[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/QualityRow"]
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
 text = "特效质量"
 
-[node name="SettingsEffectsQualityOption" type="OptionButton" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/QualityRow"]
+[node name="SettingsEffectsQualityOption" type="OptionButton" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/QualityRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(150, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 item_count = 3
@@ -112,41 +143,35 @@ popup/item_2/text = "high"
 popup/item_2/id = 2
 selected = 1
 
-[node name="ReducedRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
+[node name="ReducedRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ReducedRow"]
-custom_minimum_size = Vector2(110, 0)
+[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/ReducedRow"]
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
 text = "减少动态"
 
-[node name="SettingsReducedMotionToggle" type="CheckButton" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ReducedRow"]
+[node name="SettingsReducedMotionToggle" type="CheckButton" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/ReducedRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(150, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AutoRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
+[node name="AutoRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/AutoRow"]
-custom_minimum_size = Vector2(110, 0)
+[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/AutoRow"]
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
-text = "全局自动技能"
+text = "自动技能"
 
-[node name="SettingsGlobalAutoSkillToggle" type="CheckButton" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/AutoRow"]
+[node name="SettingsGlobalAutoSkillToggle" type="CheckButton" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/AutoRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(150, 44)
 layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="SettingsHelpButton" type="Button" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-text = "玩法说明与制作信息"
 
 [node name="SettingsDataScroll" type="ScrollContainer" parent="SettingsLandscapeColumns"]
 layout_mode = 2
@@ -161,88 +186,97 @@ size_flags_horizontal = 3
 
 [node name="Margin" type="MarginContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 10
+theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
+theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 8
 
 [node name="Content" type="VBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="SettingsDataHeading" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
-unique_name_in_owner = true
+[node name="DataColumns" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
 layout_mode = 2
-text = "本地数据"
+theme_override_constants/separation = 18
 
-[node name="PlaytestRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
+[node name="PlaytestColumn" type="VBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="PlaytestRow" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/PlaytestRow"]
-custom_minimum_size = Vector2(170, 0)
+[node name="Label" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn/PlaytestRow"]
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
-text = "本地试玩报告（不联网）"
+text = "本地试玩报告 · 不联网"
 
-[node name="SettingsLocalPlaytestToggle" type="CheckButton" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/PlaytestRow"]
+[node name="SettingsLocalPlaytestToggle" type="CheckButton" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn/PlaytestRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(90, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SettingsPlaytestStatus" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
+[node name="SettingsPlaytestStatus" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 2
 
-[node name="SettingsPlaytestActions" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
+[node name="SettingsPlaytestActions" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="SettingsExportPlaytestButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/SettingsPlaytestActions"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "下载试玩报告"
-
-[node name="SettingsClearPlaytestButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/SettingsPlaytestActions"]
+[node name="SettingsExportPlaytestButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn/SettingsPlaytestActions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "清空试玩记录"
+text = "下载报告"
 
-[node name="SettingsPersistenceStatus" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
+[node name="SettingsClearPlaytestButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn/SettingsPlaytestActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "清空记录"
+
+[node name="StorageColumn" type="VBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="SettingsPersistenceStatus" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 2
 
-[node name="BackupActions" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
+[node name="BackupActions" type="HBoxContainer" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="SettingsExportSaveButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/BackupActions"]
+[node name="SettingsExportSaveButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn/BackupActions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "下载存档备份"
+text = "下载备份"
 
-[node name="SettingsImportSaveButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/BackupActions"]
+[node name="SettingsImportSaveButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn/BackupActions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "选择备份并校验"
 
-[node name="SettingsImportPreview" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
+[node name="SettingsImportPreview" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 2
 
-[node name="SettingsDeleteLocalSaveButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content"]
+[node name="SettingsDeleteLocalSaveButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -255,12 +289,12 @@ theme_override_constants/separation = 10
 
 [node name="SettingsSaveButton" type="Button" parent="SettingsFixedActions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 48)
+custom_minimum_size = Vector2(220, 48)
 layout_mode = 2
-text = "保存设置"
+text = "保存体验设置"
 
 [node name="SettingsBackButton" type="Button" parent="SettingsFixedActions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 48)
+custom_minimum_size = Vector2(220, 48)
 layout_mode = 2
 text = "返回"

@@ -5,6 +5,7 @@ signal setting_changed(setting_id: String, value: Variant)
 signal action_requested(action_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const BG := Color("#090d10")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
@@ -17,6 +18,10 @@ const GREEN := Color("#78b982")
 
 @onready var experience_panel: PanelContainer = %SettingsExperiencePanel
 @onready var data_panel: PanelContainer = %SettingsDataPanel
+@onready var experience_scroll: ScrollContainer = $SettingsLandscapeColumns/SettingsScroll
+@onready var data_scroll: ScrollContainer = $SettingsLandscapeColumns/SettingsDataScroll
+@onready var experience_tab: Button = %SettingsExperienceTab
+@onready var data_tab: Button = %SettingsDataTab
 @onready var volume: HSlider = %SettingsMasterVolumeSlider
 @onready var volume_value: Label = %SettingsMasterVolumeValue
 @onready var music_volume: HSlider = %SettingsMusicVolumeSlider
@@ -32,9 +37,11 @@ const GREEN := Color("#78b982")
 @onready var import_preview: Label = %SettingsImportPreview
 @onready var delete_button: Button = %SettingsDeleteLocalSaveButton
 @onready var save_button: Button = %SettingsSaveButton
+@onready var back_button: Button = %SettingsBackButton
 
 var _view: Dictionary = {}
 var _projecting := false
+var _active_section := "experience"
 
 
 func _ready() -> void:
@@ -45,6 +52,8 @@ func _ready() -> void:
 	reduced_motion.toggled.connect(_emit_setting.bind("reduced_motion"))
 	global_auto_skill.toggled.connect(_emit_setting.bind("global_auto_skill"))
 	local_playtest.toggled.connect(_emit_setting.bind("local_playtest_logging"))
+	experience_tab.pressed.connect(_select_section.bind("experience"))
+	data_tab.pressed.connect(_select_section.bind("data"))
 	_bind_action(%SettingsHelpButton, "help")
 	_bind_action(%SettingsExportPlaytestButton, "export_playtest")
 	_bind_action(%SettingsClearPlaytestButton, "clear_playtest")
@@ -55,6 +64,8 @@ func _ready() -> void:
 	_bind_action(%SettingsBackButton, "back")
 	if not _view.is_empty():
 		_apply_view()
+	else:
+		_select_section(_active_section)
 	_focus_primary_after_layout()
 
 
@@ -91,7 +102,24 @@ func _apply_view() -> void:
 		if bool(_view.get("delete_armed", false))
 		else "删除本地存档"
 	)
+	if (
+		bool(_view.get("local_playtest_logging", false))
+		or has_import
+		or bool(_view.get("delete_armed", false))
+	):
+		_active_section = "data"
+	_select_section(_active_section)
 	_projecting = false
+
+
+func _select_section(section_id: String) -> void:
+	_active_section = section_id if section_id == "data" else "experience"
+	var show_experience := _active_section == "experience"
+	experience_scroll.visible = show_experience
+	data_scroll.visible = not show_experience
+	save_button.visible = show_experience
+	_style_section_tab(experience_tab, show_experience)
+	_style_section_tab(data_tab, not show_experience)
 
 
 func _on_volume_changed(value: float) -> void:
@@ -129,38 +157,47 @@ func _focus_primary_after_layout() -> void:
 
 func _apply_theme() -> void:
 	for panel in [experience_panel, data_panel]:
-		var panel_style := StyleBoxFlat.new()
-		panel_style.bg_color = Color(PANEL, 0.94)
-		panel_style.border_color = Color(LINE, 0.8)
-		panel_style.set_border_width_all(1)
-		panel_style.set_corner_radius_all(3)
-		panel.add_theme_stylebox_override("panel", panel_style)
+		panel.add_theme_stylebox_override("panel", UiArtDirectionScript.panel_style())
 	for label in find_children("*", "Label", true, false):
 		(label as Label).add_theme_font_override("font", CJK_FONT)
 		(label as Label).add_theme_color_override("font_color", TEXT)
-	for heading in [%SettingsExperienceHeading, %SettingsDataHeading]:
-		heading.add_theme_font_size_override("font_size", 16)
-		heading.add_theme_color_override("font_color", CYAN)
 	for control in find_children("*", "Control", true, false):
 		(control as Control).add_theme_font_override("font", CJK_FONT)
 	for button in find_children("*", "Button", true, false):
-		_style_button(button as Button, button == save_button)
+		if button != experience_tab and button != data_tab:
+			_style_button(button as Button, button == save_button)
 	for slider in [volume, music_volume]:
 		_style_slider(slider)
 	import_preview.add_theme_color_override("font_color", GOLD)
 	playtest_status.add_theme_color_override("font_color", GREEN)
+	playtest_status.add_theme_font_size_override("font_size", 11)
+	persistence_status.add_theme_font_size_override("font_size", 11)
 	volume_value.add_theme_color_override("font_color", CYAN)
 	music_volume_value.add_theme_color_override("font_color", CYAN)
+	delete_button.add_theme_color_override("font_color", Color("#f18a7f"))
+	_select_section(_active_section)
+
+
+func _style_section_tab(button: Button, active: bool) -> void:
+	button.focus_mode = Control.FOCUS_ALL
+	button.add_theme_font_override("font", CJK_FONT)
+	button.add_theme_font_size_override("font_size", 14)
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(active))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(active, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(active, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(active, "focus"))
+	button.add_theme_color_override("font_color", PANEL if active else TEXT)
+	button.add_theme_color_override("font_hover_color", PANEL if active else TEXT)
+	button.add_theme_color_override("font_pressed_color", PANEL if active else TEXT)
 
 
 func _style_button(button: Button, primary: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_size_override("font_size", 14)
-	var normal := _button_style(GOLD if primary else PANEL_2, GOLD if primary else LINE)
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", _button_style(normal.bg_color.lightened(0.1), GOLD))
-	button.add_theme_stylebox_override("pressed", _button_style(PANEL, GOLD))
-	button.add_theme_stylebox_override("focus", _button_style(Color(GOLD, 0.22), Color.WHITE))
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
 	button.add_theme_color_override("font_color", BG if primary else TEXT)
 	button.add_theme_color_override("font_hover_color", BG if primary else TEXT)
 

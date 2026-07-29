@@ -34,6 +34,10 @@ func _run() -> void:
 	var playtest_status := settings.get_node("%SettingsPlaytestStatus") as Label
 	var import_button := settings.get_node("%SettingsImportSaveButton") as Button
 	var save := settings.get_node("%SettingsSaveButton") as Button
+	var experience_tab := settings.get_node("%SettingsExperienceTab") as Button
+	var data_tab := settings.get_node("%SettingsDataTab") as Button
+	var experience_scroll := settings.get_node("SettingsLandscapeColumns/SettingsScroll") as ScrollContainer
+	var data_scroll := settings.get_node("SettingsLandscapeColumns/SettingsDataScroll") as ScrollContainer
 	_check(is_equal_approx(volume.value, 37.0), "master volume is projected")
 	_check(is_equal_approx(music_volume.value, 29.0), "music volume is projected")
 	_check(quality.get_item_text(quality.selected) == "high", "effects quality is projected")
@@ -41,6 +45,12 @@ func _run() -> void:
 	_check(not playtest_status.visible, "playtest details stay hidden before opt-in")
 	_check(import_button.text == "选择备份并校验", "import starts with validation intent")
 	_check(save.has_focus(), "save action receives initial focus")
+	_check(experience_scroll.visible and not data_scroll.visible, "settings defaults to the common experience section")
+	_check(
+		experience_tab.custom_minimum_size.y >= 44.0
+			and data_tab.custom_minimum_size.y >= 44.0,
+		"settings section navigation remains touch sized"
+	)
 
 	var changed := {"id": "", "value": null}
 	settings.connect("setting_changed", func(id: String, value: Variant) -> void:
@@ -54,6 +64,12 @@ func _run() -> void:
 
 	var requested := {"id": ""}
 	settings.connect("action_requested", func(id: String) -> void: requested["id"] = id)
+	data_tab.pressed.emit()
+	await process_frame
+	_check(
+		data_scroll.visible and not experience_scroll.visible and not save.visible,
+		"local data is progressively disclosed without an unrelated save action"
+	)
 	import_button.pressed.emit()
 	_check(requested["id"] == "import_save", "import emits semantic action")
 
@@ -72,6 +88,7 @@ func _run() -> void:
 		"delete_armed": true,
 	})
 	_check(playtest_status.visible and playtest_status.text.contains("不含设备"), "opt-in playtest scope is projected")
+	_check(data_scroll.visible, "data-risk state returns to the local-data section")
 	_check(import_button.text == "确认覆盖当前进度", "validated import requires confirmation")
 	_check((settings.get_node("%SettingsImportPreview") as Label).visible, "validated import preview is visible")
 	_check((settings.get_node("%SettingsDeleteLocalSaveButton") as Button).text.contains("再次点击"), "delete requires a second click")
