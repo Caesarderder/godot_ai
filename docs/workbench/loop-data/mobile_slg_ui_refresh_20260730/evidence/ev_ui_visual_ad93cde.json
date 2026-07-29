@@ -26,7 +26,7 @@
   "inference": "次级信息开始遵守渐进披露与统一美术语义，但设置、部分结算和研究页尚未全部完成同等收敛，视觉门保持 directional。",
   "result": "directional",
   "confidence": 0.93,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "评审非独立。",
     "静态截图不证明真人查找速度。",

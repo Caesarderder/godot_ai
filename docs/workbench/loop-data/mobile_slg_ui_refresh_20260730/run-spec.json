@@ -50,8 +50,8 @@
   "scenarios": [
     {
       "scenario_id": "scenario_mobile_ui_core",
-      "purpose": "Expose the factory, selected war-zone stage, legion formation, active battle HUD, and gameplay field guide at canonical mobile landscape sizes.",
-      "player_question": "Can the player see the game world, identify the current objective, find the single primary action, or locate one needed help topic without searching?",
+      "purpose": "Expose the factory, selected war-zone stage, legion formation, active battle HUD, gameplay field guide, and settings experience/data states at canonical mobile landscape sizes.",
+      "player_question": "Can the player see the game world, identify the current objective, find the single primary action, or locate one needed help/settings topic without searching?",
       "gate_ids": [
         "gate_runtime",
         "gate_visual_hierarchy",
@@ -65,8 +65,8 @@
       },
       "setup": {
         "entry": "launch the authored UI review capture against the real main scene",
-        "state": "fresh state for factory and stage 1-1; deterministic active battle fixture; authored default legion and help states",
-        "camera_or_view": "shipping factory camera, war-zone screen, legion formation, battle camera, and help field guide",
+        "state": "fresh state for factory and stage 1-1; deterministic active battle fixture; authored default legion, help, settings experience and local-data states",
+        "camera_or_view": "shipping factory camera, war-zone screen, legion formation, battle camera, help field guide, and settings section navigation",
         "viewport": "844x390 and 568x320",
         "target_device": "representative mobile browser"
       },
@@ -81,7 +81,7 @@
         },
         {
           "at": "after capture",
-          "action": "open legion formation and gameplay help through shipping screen methods"
+          "action": "open legion formation, gameplay help, and both settings sections through shipping screen methods"
         },
         {
           "at": "after capture",
@@ -93,7 +93,7 @@
           "observation_id": "world_action_hierarchy",
           "source": "runtime captures, node geometry, and UI smoke assertions",
           "window": "stable frame after 4-6 process frames per screen",
-          "artifact": "project-a/artifacts/ui-{camp,expedition,legion,help,battle}-844x390.png"
+          "artifact": "project-a/artifacts/ui-{camp,expedition,legion,help,settings,settings-storage,settings-playtest,battle}-844x390.png"
         }
       ],
       "determinism": {
@@ -112,7 +112,7 @@
         ]
       },
       "strict_regression_route": {
-        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_help_screen_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a -s tools/capture_ui_review.gd",
+        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_help_screen_tests.gd && godot --headless --path project-a -s tools/run_settings_screen_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a -s tools/capture_ui_review.gd",
         "isolation": "fresh processes, fixed fixture state, viewport and output filenames",
         "outputs": [
           "test assertions",

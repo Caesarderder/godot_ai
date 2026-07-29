@@ -1,8 +1,8 @@
 {
   "schema_version": "caesar-loop/v2",
-  "evidence_id": "ev_ui_human_required_ad93cde",
+  "evidence_id": "ev_ui_human_required_df6c4f3",
   "run_id": "mobile_slg_ui_refresh_20260730",
-  "revision": "ad93cde",
+  "revision": "df6c4f3",
   "gate_id": "gate_player_learning",
   "claim": "A fresh target player identifies goal, risk, and next action within two seconds.",
   "scenario_id": "scenario_mobile_ui_core",
@@ -22,11 +22,11 @@
     "version": "planned-v1",
     "independence": "independent"
   },
-  "observation": "当前主机没有未接触项目的目标玩家，不能验证两秒理解或帮助主题的真人查找速度。",
+  "observation": "当前主机没有未接触项目的目标玩家，不能验证两秒理解或危险数据动作的风险识别。",
   "inference": "该门继续保持 human_required。",
   "result": "human_required",
   "confidence": 1.0,
-  "freshness": "stale",
+  "freshness": "current",
   "limitations": [
     "Required human evidence is unavailable in the current host."
   ],

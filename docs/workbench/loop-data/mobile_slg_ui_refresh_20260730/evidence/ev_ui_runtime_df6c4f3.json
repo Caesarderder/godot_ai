@@ -1,0 +1,34 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_ui_runtime_df6c4f3",
+  "run_id": "mobile_slg_ui_refresh_20260730",
+  "revision": "df6c4f3",
+  "gate_id": "gate_runtime",
+  "claim": "Real screens boot and shipping actions remain wired.",
+  "scenario_id": "scenario_mobile_ui_core",
+  "evidence_type": "test",
+  "artifact_or_command": "godot --headless --path project-a -s tools/run_settings_screen_tests.gd && godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_ui_focus_tests.gd && godot --path project-a -s tools/capture_ui_review.gd",
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "settings, global UI, focus and capture suites",
+    "version": "df6c4f3",
+    "independence": "not_applicable"
+  },
+  "observation": "设置专项、全局 UI smoke、焦点和截图流程全部通过；音量、画质、减少动态、自动技能、试玩报告、备份、导入校验和二次删除继续通过原 shipping signals。",
+  "inference": "体验/数据分区只改变呈现层，没有绕过 SettingsStore、存档或本地报告所有者。",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [
+    "自动测试不证明危险操作文案的真人理解。"
+  ],
+  "created_at": "2026-07-30T00:00:00+08:00"
+}

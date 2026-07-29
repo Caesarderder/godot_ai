@@ -26,7 +26,7 @@
   "inference": "帮助页降低信息密度的同时保留了横屏触控与短屏适配契约。",
   "result": "pass",
   "confidence": 0.96,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "未覆盖 iOS Safari 实机安全区和真实手指遮挡。"
   ],

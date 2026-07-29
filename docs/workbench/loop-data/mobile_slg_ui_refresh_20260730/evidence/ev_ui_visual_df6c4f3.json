@@ -1,0 +1,36 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_ui_visual_df6c4f3",
+  "run_id": "mobile_slg_ui_refresh_20260730",
+  "revision": "df6c4f3",
+  "gate_id": "gate_visual_hierarchy",
+  "claim": "The world dominates and the current objective plus one primary action are visually clear.",
+  "scenario_id": "scenario_mobile_ui_core",
+  "evidence_type": "capture",
+  "artifact_or_command": "project-a/artifacts/ui-settings-844x390.png; project-a/artifacts/ui-settings-storage-844x390.png; project-a/artifacts/ui-settings-playtest-844x390.png",
+  "environment": {
+    "engine": "Godot 4.6.3 Compatibility",
+    "platform": "macOS OpenGL over Metal",
+    "device": "Apple M4",
+    "viewport": "844x390",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "same-context comparative visual inspection",
+    "version": "4",
+    "independence": "non_independent"
+  },
+  "observation": "原设置页让体验与本地数据两列同时竞争注意力；当前默认只显示六个常用体验入口，本地数据通过明确标签切换。危险删除使用红色文字但不成为主按钮，金色只标当前分区和保存。三张截图均继续使用统一深色螺钉框架，默认与存储截图分别从 46,684/47,097 bytes 降至 37,774/37,187 bytes。",
+  "inference": "设置页已达到与帮助页一致的渐进披露和视觉语义；研究与部分结算页仍需收敛，视觉门继续保持 directional。",
+  "result": "directional",
+  "confidence": 0.94,
+  "freshness": "current",
+  "limitations": [
+    "评审非独立。",
+    "截图不能证明真人对导入和删除风险的理解。",
+    "仍有低频研究与结算页面待审查。"
+  ],
+  "created_at": "2026-07-30T00:00:00+08:00"
+}

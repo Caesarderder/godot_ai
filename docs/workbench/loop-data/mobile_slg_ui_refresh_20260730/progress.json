@@ -2,8 +2,8 @@
   "schema_version": "caesar-loop/v2",
   "run_id": "mobile_slg_ui_refresh_20260730",
   "state": "slice_building",
-  "revision": "ad93cde",
-  "iteration": 3,
+  "revision": "df6c4f3",
+  "iteration": 4,
   "active_work_unit": "compact secondary screens under the unified UI art direction",
   "frozen_gates": [
     "gate_runtime",
@@ -28,7 +28,11 @@
     "ev_ui_runtime_ad93cde",
     "ev_ui_responsive_ad93cde",
     "ev_ui_visual_ad93cde",
-    "ev_ui_human_required_ad93cde"
+    "ev_ui_human_required_ad93cde",
+    "ev_ui_runtime_df6c4f3",
+    "ev_ui_responsive_df6c4f3",
+    "ev_ui_visual_df6c4f3",
+    "ev_ui_human_required_df6c4f3"
   ],
   "decisions": [
     {
@@ -165,6 +169,57 @@
       "decision": "No uncoached target player is available on this host.",
       "evidence_ids": [
         "ev_ui_human_required_ad93cde"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:41:43Z",
+      "decision": "Settings now progressively discloses common experience controls and local-data risk actions.",
+      "evidence_ids": [
+        "ev_ui_human_required_3b943e1",
+        "ev_ui_human_required_6035159",
+        "ev_ui_human_required_ad93cde",
+        "ev_ui_responsive_3b943e1",
+        "ev_ui_responsive_6035159",
+        "ev_ui_responsive_ad93cde",
+        "ev_ui_runtime_3b943e1",
+        "ev_ui_runtime_6035159",
+        "ev_ui_runtime_ad93cde",
+        "ev_ui_visual_3b943e1",
+        "ev_ui_visual_6035159",
+        "ev_ui_visual_ad93cde"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:41:43Z",
+      "decision": "Extend the reusable UI scenario with both settings sections and their canonical captures.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-29T18:42:38Z",
+      "decision": "Settings shipping actions, focus and integrated UI routes pass at the current revision.",
+      "evidence_ids": [
+        "ev_ui_runtime_df6c4f3"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:42:38Z",
+      "decision": "Common and local-data settings actions remain first-screen reachable and touch-sized.",
+      "evidence_ids": [
+        "ev_ui_responsive_df6c4f3"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:42:38Z",
+      "decision": "Settings now matches the progressive disclosure system; research and result screens remain.",
+      "evidence_ids": [
+        "ev_ui_visual_df6c4f3"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:42:38Z",
+      "decision": "No uncoached target player is available on this host.",
+      "evidence_ids": [
+        "ev_ui_human_required_df6c4f3"
       ]
     }
   ]

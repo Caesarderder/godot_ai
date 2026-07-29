@@ -26,7 +26,7 @@
   "inference": "渐进披露式帮助页没有切断标题页、设置页或输入焦点契约。",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "自动测试不证明真人首次阅读效率。"
   ],
