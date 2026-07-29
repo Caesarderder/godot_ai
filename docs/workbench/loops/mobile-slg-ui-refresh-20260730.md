@@ -30,21 +30,21 @@ revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 title: 重构真实运行的手机横屏 UI，让3D游戏世界成为主体，并以情境面板和单一主行动承载工厂、战区与战斗操作。
 state: slice_building
 phase: slice_building
-iteration: 2/12
-revision: 6035159
+iteration: 3/12
+revision: ad93cde
 active_unit: compact secondary screens under the unified UI art direction
 run_dir: docs/workbench/loop-data/mobile_slg_ui_refresh_20260730
 run_spec: docs/workbench/loop-data/mobile_slg_ui_refresh_20260730/run-spec.json
 progress: docs/workbench/loop-data/mobile_slg_ui_refresh_20260730/progress.json
 knowledge_node: docs/workbench/loops/mobile-slg-ui-refresh-20260730.md
-updated_at: 2026-07-29T18:30:51Z
+updated_at: 2026-07-29T18:36:25Z
 terminal: no
 ## Player Outcome
 - target: 首次接触本作的手机轻量SLG玩家
 - platform: mobile landscape Web
 - outcome: 能指出当前目标、主要风险和下一步行动，同时持续看见游戏世界
 ## Test Scenarios
-- [ready] scenario_mobile_ui_core :: Can the player see the game world, identify the current objective, and find the single primary action without searching? :: fast=godot --headless --path project-a -s tools/capture_ui_review.gd :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a -s tools/capture_ui_review.gd
+- [ready] scenario_mobile_ui_core :: Can the player see the game world, identify the current objective, find the single primary action, or locate one needed help topic without searching? :: fast=godot --headless --path project-a -s tools/capture_ui_review.gd :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_help_screen_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a -s tools/capture_ui_review.gd
 ## Quality Gates
 - [pass] gate_runtime :: correctness :: Real screens boot and shipping actions remain wired. :: evidence=1
 - [pending] gate_visual_hierarchy :: visual :: The world dominates and the current objective plus one primary action are visually clear. :: evidence=1
@@ -54,13 +54,17 @@ terminal: no
 - [clear] 无未关闭 finding
 ## Evidence
 - [human_required] ev_ui_human_required_3b943e1 :: player_observation :: gate=gate_player_learning :: freshness=stale :: Uncoached target-player session described by scenario_mobile_ui_core
-- [human_required] ev_ui_human_required_6035159 :: player_observation :: gate=gate_player_learning :: freshness=current :: Uncoached target-player session described by scenario_mobile_ui_core
+- [human_required] ev_ui_human_required_6035159 :: player_observation :: gate=gate_player_learning :: freshness=stale :: Uncoached target-player session described by scenario_mobile_ui_core
+- [human_required] ev_ui_human_required_ad93cde :: player_observation :: gate=gate_player_learning :: freshness=current :: Uncoached target-player session described by scenario_mobile_ui_core
 - [pass] ev_ui_responsive_3b943e1 :: test :: gate=gate_responsive :: freshness=stale :: godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd
-- [pass] ev_ui_responsive_6035159 :: test :: gate=gate_responsive :: freshness=current :: godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd; godot --headless --path project-a -s tools/run_legion_screen_tests.gd; project-a/artifacts/ui-legion-844x390.png
+- [pass] ev_ui_responsive_6035159 :: test :: gate=gate_responsive :: freshness=stale :: godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd; godot --headless --path project-a -s tools/run_legion_screen_tests.gd; project-a/artifacts/ui-legion-844x390.png
+- [pass] ev_ui_responsive_ad93cde :: test :: gate=gate_responsive :: freshness=current :: godot --headless --path project-a -s tools/run_help_screen_tests.gd; godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; project-a/artifacts/ui-help-844x390.png
 - [pass] ev_ui_runtime_3b943e1 :: test :: gate=gate_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd
-- [pass] ev_ui_runtime_6035159 :: test :: gate=gate_runtime :: freshness=current :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_factory_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --path project-a -s tools/capture_ui_review.gd
+- [pass] ev_ui_runtime_6035159 :: test :: gate=gate_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_factory_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --path project-a -s tools/capture_ui_review.gd
+- [pass] ev_ui_runtime_ad93cde :: test :: gate=gate_runtime :: freshness=current :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_help_screen_tests.gd && godot --headless --path project-a -s tools/run_ui_focus_tests.gd && godot --path project-a -s tools/capture_ui_review.gd
 - [directional] ev_ui_visual_3b943e1 :: capture :: gate=gate_visual_hierarchy :: freshness=stale :: project-a/artifacts/ui-battle-844x390.png; project-a/artifacts/ui-camp-844x390.png; project-a/artifacts/ui-expedition-844x390.png
-- [directional] ev_ui_visual_6035159 :: capture :: gate=gate_visual_hierarchy :: freshness=current :: project-a/artifacts/ui-battle-844x390.png; project-a/artifacts/ui-camp-844x390.png; project-a/artifacts/ui-expedition-844x390.png; project-a/artifacts/ui-legion-844x390.png; project-a/assets/asset_manifest.md
+- [directional] ev_ui_visual_6035159 :: capture :: gate=gate_visual_hierarchy :: freshness=stale :: project-a/artifacts/ui-battle-844x390.png; project-a/artifacts/ui-camp-844x390.png; project-a/artifacts/ui-expedition-844x390.png; project-a/artifacts/ui-legion-844x390.png; project-a/assets/asset_manifest.md
+- [directional] ev_ui_visual_ad93cde :: capture :: gate=gate_visual_hierarchy :: freshness=current :: project-a/artifacts/ui-{camp,expedition,legion,help,battle}-844x390.png
 ## Host Capabilities
 - [unsupported] fresh_agent_context :: Current run uses one active implementation context.
 - [unsupported] parallel_agents :: No delegation requested for this run.
@@ -71,13 +75,13 @@ terminal: no
 - [supported] persistent_run_state :: Repository-local Caesar Loop ledgers and Workbench projection are available.
 - [unsupported] target_player_access :: No uncoached target players are available to the current host.
 ## Decisions
-- 2026-07-29T18:14:24Z :: Shipping UI routes and screen actions pass current runtime suites.
-- 2026-07-29T18:14:24Z :: Responsive battle HUD assertions pass at canonical short landscape sizes.
-- 2026-07-29T18:30:38Z :: Integrated world-first factory and war-zone screens, unified lightweight sci-fi UI art, and a one-screen legion formation.
-- 2026-07-29T18:30:47Z :: Current shipping UI suites and capture route pass.
-- 2026-07-29T18:30:48Z :: Current battle and legion layouts pass canonical landscape assertions.
-- 2026-07-29T18:30:48Z :: High-frequency screens materially improved; secondary pages still need the same hierarchy treatment.
 - 2026-07-29T18:30:48Z :: No uncoached target player is available on this host.
 - 2026-07-29T18:30:48Z :: The baseline and representative world-first slice now have current runtime, responsive, visual-directional and human-required evidence.
-summary: scenarios=1 gates=4 evidence=8 current=4 findings=0 iterations=2
+- 2026-07-29T18:35:28Z :: Gameplay help was rebuilt as a four-topic field guide on the integrated branch.
+- 2026-07-29T18:35:28Z :: Extend the authored UI scenario to cover legion and progressive-disclosure guidance screens now included in the redesign.
+- 2026-07-29T18:36:20Z :: Current expanded UI scenario and shipping help interactions pass.
+- 2026-07-29T18:36:20Z :: Four help topics and the return path remain visible and touch-sized at canonical landscape size.
+- 2026-07-29T18:36:20Z :: Help now uses progressive disclosure; remaining secondary screens still require convergence.
+- 2026-07-29T18:36:20Z :: No uncoached target player is available on this host.
+summary: scenarios=1 gates=4 evidence=12 current=4 findings=0 iterations=3
 ```

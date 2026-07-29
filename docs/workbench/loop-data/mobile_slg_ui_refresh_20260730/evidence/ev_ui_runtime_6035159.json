@@ -24,7 +24,7 @@
   "inference": "地图化战区、世界覆盖式工厂、紧凑战斗 HUD 和一屏阵型未破坏 shipping 交互。",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "自动测试不证明视觉质量或真人理解。"
   ],

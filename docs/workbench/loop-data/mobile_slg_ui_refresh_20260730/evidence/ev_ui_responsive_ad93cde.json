@@ -1,0 +1,34 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_ui_responsive_ad93cde",
+  "run_id": "mobile_slg_ui_refresh_20260730",
+  "revision": "ad93cde",
+  "gate_id": "gate_responsive",
+  "claim": "The redesigned UI remains usable at required landscape sizes and safe areas.",
+  "scenario_id": "scenario_mobile_ui_core",
+  "evidence_type": "test",
+  "artifact_or_command": "godot --headless --path project-a -s tools/run_help_screen_tests.gd; godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; project-a/artifacts/ui-help-844x390.png",
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "help and global UI responsive assertions",
+    "version": "ad93cde",
+    "independence": "not_applicable"
+  },
+  "observation": "844×390 截图中四个主题入口与返回按钮全部首屏可见；主题按钮和返回路径均保持至少 48px 触控高度，短屏仍保留独立滚动容器。",
+  "inference": "帮助页降低信息密度的同时保留了横屏触控与短屏适配契约。",
+  "result": "pass",
+  "confidence": 0.96,
+  "freshness": "current",
+  "limitations": [
+    "未覆盖 iOS Safari 实机安全区和真实手指遮挡。"
+  ],
+  "created_at": "2026-07-30T00:00:00+08:00"
+}

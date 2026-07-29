@@ -1,0 +1,32 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "mobile_slg_ui_refresh_20260730",
+  "iteration": 3,
+  "work_unit": "把六块同权重玩法说明重构为四主题渐进披露式战地指南",
+  "status": "progress",
+  "changed_files": [
+    "project-a/game/scenes/screens/help_screen.tscn",
+    "project-a/game/scripts/ui/help_screen.gd",
+    "project-a/scripts/slg_main.gd",
+    "project-a/tools/run_help_screen_tests.gd",
+    "project-a/tools/run_ui_smoke_tests.gd",
+    "project-a/artifacts/ui-help-844x390.png"
+  ],
+  "evidence_ids": [
+    "ev_ui_runtime_ad93cde",
+    "ev_ui_responsive_ad93cde",
+    "ev_ui_visual_ad93cde",
+    "ev_ui_human_required_ad93cde"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [
+    "首个候选的循环摘要卡把第 3、4 个主题挤出首屏；已在同迭代中删除并把循环摘要提升到页面副标题。"
+  ],
+  "rejected_approaches": [
+    "不保留六块同时展开的说明卡。",
+    "不让核心循环摘要占用左侧主题导航的首屏空间。"
+  ],
+  "next_action": "继续收敛设置、研究和结算等低频页面，并保持同一渐进披露与美术语义。",
+  "blocker": null
+}

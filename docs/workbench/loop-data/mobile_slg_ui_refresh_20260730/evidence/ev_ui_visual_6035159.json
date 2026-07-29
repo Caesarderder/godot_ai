@@ -24,7 +24,7 @@
   "inference": "高频主循环已形成统一的游戏化视觉语言并显著降低面板占用；但部分低频结果、帮助和设置页仍偏后台表单，因此当前证据保持 directional。",
   "result": "directional",
   "confidence": 0.92,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "评审非独立。",
     "低频次级页面仍需同一规范收敛。",

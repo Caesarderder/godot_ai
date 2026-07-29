@@ -2,18 +2,18 @@
   "schema_version": "caesar-loop/v2",
   "run_id": "mobile_slg_ui_refresh_20260730",
   "state": "slice_building",
-  "revision": "6035159",
-  "iteration": 2,
+  "revision": "ad93cde",
+  "iteration": 3,
   "active_work_unit": "compact secondary screens under the unified UI art direction",
   "frozen_gates": [
     "gate_runtime",
     "gate_responsive"
   ],
   "gate_status": {
-    "gate_runtime": "pass",
-    "gate_visual_hierarchy": "pending",
+    "gate_player_learning": "human_required",
     "gate_responsive": "pass",
-    "gate_player_learning": "human_required"
+    "gate_runtime": "pass",
+    "gate_visual_hierarchy": "pending"
   },
   "open_findings": [],
   "evidence_ledger": [
@@ -24,7 +24,11 @@
     "ev_ui_runtime_6035159",
     "ev_ui_responsive_6035159",
     "ev_ui_visual_6035159",
-    "ev_ui_human_required_6035159"
+    "ev_ui_human_required_6035159",
+    "ev_ui_runtime_ad93cde",
+    "ev_ui_responsive_ad93cde",
+    "ev_ui_visual_ad93cde",
+    "ev_ui_human_required_ad93cde"
   ],
   "decisions": [
     {
@@ -114,6 +118,53 @@
         "ev_ui_responsive_6035159",
         "ev_ui_visual_6035159",
         "ev_ui_human_required_6035159"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:35:28Z",
+      "decision": "Gameplay help was rebuilt as a four-topic field guide on the integrated branch.",
+      "evidence_ids": [
+        "ev_ui_human_required_3b943e1",
+        "ev_ui_human_required_6035159",
+        "ev_ui_responsive_3b943e1",
+        "ev_ui_responsive_6035159",
+        "ev_ui_runtime_3b943e1",
+        "ev_ui_runtime_6035159",
+        "ev_ui_visual_3b943e1",
+        "ev_ui_visual_6035159"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:35:28Z",
+      "decision": "Extend the authored UI scenario to cover legion and progressive-disclosure guidance screens now included in the redesign.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-29T18:36:20Z",
+      "decision": "Current expanded UI scenario and shipping help interactions pass.",
+      "evidence_ids": [
+        "ev_ui_runtime_ad93cde"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:36:20Z",
+      "decision": "Four help topics and the return path remain visible and touch-sized at canonical landscape size.",
+      "evidence_ids": [
+        "ev_ui_responsive_ad93cde"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:36:20Z",
+      "decision": "Help now uses progressive disclosure; remaining secondary screens still require convergence.",
+      "evidence_ids": [
+        "ev_ui_visual_ad93cde"
+      ]
+    },
+    {
+      "at": "2026-07-29T18:36:20Z",
+      "decision": "No uncoached target player is available on this host.",
+      "evidence_ids": [
+        "ev_ui_human_required_ad93cde"
       ]
     }
   ]

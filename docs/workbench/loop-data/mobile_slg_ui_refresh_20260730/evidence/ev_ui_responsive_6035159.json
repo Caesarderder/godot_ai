@@ -24,7 +24,7 @@
   "inference": "当前高频界面满足自动响应式门槛，紧凑化没有以牺牲触控目标为代价。",
   "result": "pass",
   "confidence": 0.96,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "未覆盖 iOS Safari 实机安全区和真实手指遮挡。"
   ],

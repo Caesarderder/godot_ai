@@ -23,6 +23,8 @@
       "factory world HUD",
       "war-zone selection",
       "battle HUD",
+      "legion formation",
+      "secondary guidance screens",
       "responsive 844x390 and 568x320"
     ],
     "out_of_scope": [
@@ -48,8 +50,8 @@
   "scenarios": [
     {
       "scenario_id": "scenario_mobile_ui_core",
-      "purpose": "Expose the factory, selected war-zone stage, and active battle HUD at canonical mobile landscape sizes.",
-      "player_question": "Can the player see the game world, identify the current objective, and find the single primary action without searching?",
+      "purpose": "Expose the factory, selected war-zone stage, legion formation, active battle HUD, and gameplay field guide at canonical mobile landscape sizes.",
+      "player_question": "Can the player see the game world, identify the current objective, find the single primary action, or locate one needed help topic without searching?",
       "gate_ids": [
         "gate_runtime",
         "gate_visual_hierarchy",
@@ -63,8 +65,8 @@
       },
       "setup": {
         "entry": "launch the authored UI review capture against the real main scene",
-        "state": "fresh state for factory and stage 1-1; deterministic active battle fixture",
-        "camera_or_view": "shipping factory camera, war-zone screen, and battle camera",
+        "state": "fresh state for factory and stage 1-1; deterministic active battle fixture; authored default legion and help states",
+        "camera_or_view": "shipping factory camera, war-zone screen, legion formation, battle camera, and help field guide",
         "viewport": "844x390 and 568x320",
         "target_device": "representative mobile browser"
       },
@@ -79,6 +81,10 @@
         },
         {
           "at": "after capture",
+          "action": "open legion formation and gameplay help through shipping screen methods"
+        },
+        {
+          "at": "after capture",
           "action": "start deterministic battle fixture and let HUD receive real snapshots"
         }
       ],
@@ -87,7 +93,7 @@
           "observation_id": "world_action_hierarchy",
           "source": "runtime captures, node geometry, and UI smoke assertions",
           "window": "stable frame after 4-6 process frames per screen",
-          "artifact": "project-a/artifacts/ui-{camp,expedition,battle}-844x390.png"
+          "artifact": "project-a/artifacts/ui-{camp,expedition,legion,help,battle}-844x390.png"
         }
       ],
       "determinism": {
@@ -106,7 +112,7 @@
         ]
       },
       "strict_regression_route": {
-        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a -s tools/capture_ui_review.gd",
+        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_help_screen_tests.gd && godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a -s tools/capture_ui_review.gd",
         "isolation": "fresh processes, fixed fixture state, viewport and output filenames",
         "outputs": [
           "test assertions",
@@ -158,6 +164,7 @@
         "world-driven screens visually retain roughly 65% open world",
         "no full-width opaque battle bands",
         "one dominant action per state",
+        "secondary information uses progressive disclosure",
         "text hierarchy is game-like rather than dashboard-like"
       ],
       "freeze_on_pass": true
@@ -197,7 +204,7 @@
   "ownership": [
     {
       "owner": "UI integration owner",
-      "surface": "shared App Shell, world HUD, war-zone and battle HUD",
+      "surface": "shared App Shell, world HUD, war-zone, legion, help and battle HUD",
       "public_contract": "UI projects state and emits existing signals/commands without direct domain mutation",
       "coupling": "coupled"
     }
