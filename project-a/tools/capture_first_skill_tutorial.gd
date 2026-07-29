@@ -40,7 +40,7 @@ func _capture() -> void:
 	world.call("_update_camera", 0.0)
 	var hero: Dictionary = {
 		"hero_id": String(_permanent_hero(battle_snapshot).get("unit_id", "hero_gman")),
-		"display_name": String(_permanent_hero(battle_snapshot).get("display_name", "Gman 先锋")),
+		"display_name": String(_permanent_hero(battle_snapshot).get("display_name", "Gman")),
 		"archetype_id": "gman",
 		"class_id": "commander",
 		"skill_id": "gman_overrun",

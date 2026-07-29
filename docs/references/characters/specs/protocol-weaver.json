@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "archetype_id": "protocol_weaver",
-  "display_name": "协议编织母体",
+  "display_name": "寄生虫马桶人",
   "rating": "S",
   "class_id": "arcanist",
   "branch": "special",
@@ -22,7 +22,7 @@
   "encounters": {
     "safe_intro": {"stage_id": "stage_4_4", "demand": "单个精英周期获得可夺取护盾。", "feedback": "金色协议线从敌人流向己方并变为阵营色。", "fallbacks": ["sonic"]},
     "combination_test": {"stage_id": "stage_4_5", "demand": "Boss军械模块轮换护盾与增伤，要求选夺取时机。", "feedback": "被夺取图标划除，己方HUD显示改写版本与剩余时间。", "fallbacks": ["rocket", "saw"]},
-    "spotlight": {"stage_id": "stage_5_3", "demand": "泰坦足迹给精英短暂加速，夺取可反转追击节奏。", "feedback": "敌方加速熄灭，己方推进速度出现同色轨迹。", "fallbacks": ["armored", "repair"]},
+    "spotlight": {"stage_id": "stage_5_3", "demand": "断墙巨人脚印给精英短暂加速，夺取可反转追击节奏。", "feedback": "敌方加速熄灭，己方推进速度出现同色轨迹。", "fallbacks": ["armored", "repair"]},
     "boss_soft_counter": {"stage_id": "stage_5_5", "demand": "终局Boss多模块轮换，但每轮仅一个效果可夺取。", "feedback": "协议槽保存一次Boss增益并在重放后清空。", "fallbacks": ["armored", "repair", "saw"]}
   },
   "narrative": {

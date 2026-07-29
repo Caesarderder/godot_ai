@@ -30,9 +30,10 @@ func _run() -> void:
 		"nodes": [
 			{
 				"recipe_id": "ordinary.assault",
-				"display_name": "冲锋蓝图",
+				"display_name": "普通马桶人",
 				"rating": "B",
 				"faction": "快攻破城",
+				"skill_name": "皮搋冲锋",
 				"role_copy": "前线突破",
 				"one_star_value": "重击最近守军",
 				"two_star_effect": "突进顺劈多个目标",
@@ -47,9 +48,10 @@ func _run() -> void:
 			},
 			{
 				"recipe_id": "ordinary.sonic",
-				"display_name": "音波蓝图",
+				"display_name": "故障闪电马桶人",
 				"rating": "A",
 				"faction": "干扰增殖",
+				"skill_name": "音波干扰",
 				"role_copy": "群体控制",
 				"one_star_value": "伤害并削弱同路守军",
 				"two_star_effect": "虚弱覆盖跨线目标",
@@ -77,8 +79,8 @@ func _run() -> void:
 	)
 	_check(_collect_text(screen).contains("长期资源保持不变"), "available blueprint node repeats the zero-cost boundary beside its CTA")
 	_check(_collect_text(screen).contains("两条独立研发路线"), "branch copy does not imply a false prerequisite chain")
-	_check(_collect_text(screen).contains("1★ 重击最近守军"), "node explains the complete one-star role")
-	_check(_collect_text(screen).contains("2★ 突进顺劈多个目标"), "node exposes the next qualitative star breakpoint")
+	_check(_collect_text(screen).contains("1★ 重击最近守军 · 前线突破"), "node explains the complete one-star role and battle promise")
+	_check(_collect_text(screen).contains("升星：2★ 突进顺劈多个目标"), "node separates qualitative star growth from the base role")
 	_check(_collect_text(screen).contains("来源：1-2 首通或信号招募"), "node exposes its acquisition route")
 	var requested := {"id": "", "recipe_id": ""}
 	screen.connect("action_requested", func(id: String, payload: Dictionary) -> void:
@@ -99,6 +101,10 @@ func _run() -> void:
 				control.name,
 				str(control.get_global_rect()),
 			]
+		)
+		_check(
+			control.get_global_rect().size.y >= 48.0,
+			"%s exposes a real 48 px global touch rect at 844x390" % control.name
 		)
 		_check(control.focus_mode == Control.FOCUS_ALL, "%s remains keyboard/gamepad focusable" % control.name)
 		control.grab_focus()
@@ -127,6 +133,15 @@ func _run() -> void:
 			},
 		],
 	})
+	await process_frame
+	var pending_claim := screen.find_child("ClaimFoundationalBlueprint", true, false) as Button
+	_check(
+		pending_claim != null
+			and pending_claim.is_visible_in_tree()
+			and pending_claim.get_global_rect().size.y >= 48.0
+			and _within_844x390(pending_claim),
+		"dynamic blueprint claim action keeps a real 48 px rect inside 844x390"
+	)
 	await create_timer(1.4).timeout
 	_check(
 		requested["id"] == "refresh",
@@ -149,20 +164,20 @@ func _run() -> void:
 				"id": "armored",
 				"rarity": "A",
 				"kind": "hero",
-				"title": "A · 装甲马桶人",
+				"title": "精锐 · 激光火箭筒马桶人",
 				"subtitle": "重装 · 承伤保护",
 				"impact": "反攻：承伤保护队伍",
 			},
 			{"id": "porcelain_0", "rarity": "R", "kind": "porcelain", "title": "R · 陶瓷", "subtitle": "+80"},
 		],
 		"nodes": [
-			{"recipe_id": "heavy.armored", "display_name": "装甲蓝图", "status_id": "unlocked", "status_copy": "已解锁 · 永久角色已入列", "action_id": ""},
+			{"recipe_id": "heavy.armored", "display_name": "激光火箭筒马桶人", "status_id": "unlocked", "status_copy": "已解锁 · 永久角色已入列", "action_id": ""},
 			{"recipe_id": "heavy.saw", "display_name": "双锯蓝图", "status_id": "researching", "status_copy": "研发完成 · 等待领取", "action_id": "claim_research", "action_label": "领取新角色", "action_name": "ClaimFoundationalBlueprint", "disabled": false},
 		],
 	})
 	_check(not (screen.get_node("%ClaimResearchBreakthroughTen") as Button).visible, "claimed breakthrough cannot repeat")
 	_check((screen.get_node("%ResearchBreakthroughResults") as PanelContainer).visible, "ten-pull results are projected")
-	_check(_collect_text(screen).contains("装甲马桶人"), "permanent reinforcement reveal is readable")
+	_check(_collect_text(screen).contains("激光火箭筒马桶人"), "permanent reinforcement reveal is readable")
 	_check(_collect_text(screen).contains("承伤保护队伍"), "reinforcement reveal explains its immediate counterplay value")
 	_check(_collect_text(screen).contains("高墙反攻条件已经凑齐"), "celebration connects rewards to the overcome hurdle")
 	_check(not (screen.get_node("%BlueprintTabs") as HBoxContainer).visible, "result focus mode hides unrelated research branches")

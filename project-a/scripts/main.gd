@@ -176,7 +176,7 @@ func _show_boot() -> void:
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_theme_constant_override("separation", 12)
 	center.add_child(column)
-	var title := _label("马桶人工厂攻城", 32, COLOR_TEXT)
+	var title := _label("马桶人进化-维度爆裂", 32, COLOR_TEXT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(title)
 	status_label = _label("正在装配马桶军团...", 18, COLOR_MUTED)
@@ -217,11 +217,11 @@ func _show_title() -> void:
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_theme_constant_override("separation", 10)
 	panel.add_child(column)
-	var title := _label("马桶人工厂攻城", 34, COLOR_TEXT)
+	var title := _label("马桶人进化-维度爆裂", 34, COLOR_TEXT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	column.add_child(title)
-	var subtitle := _label("Gman 单人开局，夺取图纸，让马桶博士扩建军团。", 16, COLOR_MUTED)
+	var subtitle := _label("Gman单人开局，夺取图纸，让马桶博士扩建军团。", 16, COLOR_MUTED)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(subtitle)
 	var is_fresh_campaign: bool = game.current_state().attempt_counters.is_empty() and (game.current_state().stage_progress.get("cleared_stages", []) as Array).is_empty()
@@ -586,7 +586,7 @@ func _derive_next_action(state: RefCounted, now_unix: int = -1) -> Dictionary:
 	if state.attempt_counters.is_empty():
 		return {
 			"title": "出征侦察",
-			"body": "先让 Gman 独自摧毁无防备城市。前三关不开放工厂，第 4 关遇到联盟炮台后再寻找扩军方案。",
+			"body": "先让Gman独自摧毁无防备城市。前三关不开放工厂，第 4 关遇到联盟炮台后再寻找扩军方案。",
 			"cta_label": "去侦察",
 			"target": "expedition",
 			"stage_id": StageCatalog.DEFAULT_STAGE_ID,
@@ -627,7 +627,7 @@ func _derive_next_action(state: RefCounted, now_unix: int = -1) -> Dictionary:
 		}
 	if highest_stage == "stage_1_4" and highest_attempted and not _has_hero_by_archetype_and_star(state, "assault", 2):
 		return {
-			"title": "完成第一次技能质变",
+			"title": "解锁第一次技能强化",
 			"body": "九个一星冲锋兵已经到位。选择三个三合一，得到会在冲锋后顺劈的二星主力，并保留六个一星兵。",
 			"cta_label": "去培育合成",
 			"target": "cultivation",
@@ -636,7 +636,7 @@ func _derive_next_action(state: RefCounted, now_unix: int = -1) -> Dictionary:
 	if highest_stage == "stage_1_4" and highest_attempted and not highest_cleared:
 		return {
 			"title": "检查满编军团",
-			"body": "上次是 Gman 单人承受炮火；本次已有六名援军与一名二星主力。检查前后排后，重返同一炮台防线。",
+			"body": "上次是Gman单人承受炮火；本次已有六名援军与一名二星主力。检查前后排后，重返同一炮台防线。",
 			"cta_label": "去编队复仇",
 			"target": "formation",
 			"stage_id": highest_stage,
@@ -966,7 +966,7 @@ func _build_quests_body() -> Control:
 	scroll.add_child(column)
 	column.add_child(_build_goal_tabs(false))
 	var state: RefCounted = game.current_state()
-	var rank_label := _label("战功 Lv%d  ·  %s" % [_war_merit_rank(state), _war_merit_next_progress(state)], 16, COLOR_ACCENT)
+	var rank_label := _label("战功%d级  ·  %s" % [_war_merit_rank(state), _war_merit_next_progress(state)], 16, COLOR_ACCENT)
 	rank_label.name = "QuestWarMeritLabel"
 	column.add_child(rank_label)
 	var entries := _quest_active_entries(state, true)
@@ -1038,7 +1038,7 @@ func _build_war_merit_body() -> Control:
 	var state: RefCounted = game.current_state()
 	var reached := WarMeritTrack.reached_level(state)
 	var overview := _label(
-		"免费战令 Lv%d · %s · 可领取 %d" % [
+		"免费战令%d级 · %s · 可领取 %d" % [
 			reached,
 			_war_merit_next_progress(state),
 			WarMeritTrack.claimable_count(state),
@@ -1704,7 +1704,7 @@ func _build_logistics_panel(state: RefCounted, now_unix: int) -> Control:
 	column.add_child(facilities_row)
 	var porcelain_level := int(state.factory.facilities.get("porcelain_plant", 1))
 	var porcelain_upgrade := _button(
-		"陶瓷厂 Lv%d\n升级：金%d 技术%d" % [porcelain_level, 40 * porcelain_level, 2 * porcelain_level],
+		"陶瓷厂%d级\n升级：金%d 技术%d" % [porcelain_level, 40 * porcelain_level, 2 * porcelain_level],
 		COLOR_PANEL_ALT,
 		Vector2(180, 58),
 		13
@@ -1765,7 +1765,7 @@ func _build_blueprint_draw_panel(state: RefCounted) -> Control:
 	row.add_child(copy)
 	copy.add_child(_label("图纸研发 · 马桶钻", 17, COLOR_ACCENT))
 	copy.add_child(_label(
-		"马桶钻 %d · S 定向保底 %d/100" % [
+		"马桶钻 %d · 传奇定向保底 %d/100" % [
 			int(state.economy.toilet_gems),
 			int(state.pity.get("s_pity_count", 0)),
 		],
@@ -1828,9 +1828,9 @@ func _build_blueprint_research_panel(state: RefCounted, now_unix: int) -> Contro
 		copy.add_child(_label("图纸商业价值≈%d金" % EconomyValuation.blueprint_value_gold(recipe_id), 12, COLOR_ACCENT))
 		var debrief_text := ""
 		if recipe_id == "ordinary.assault":
-			debrief_text = "战术复盘：上次炮台伤害集中在 Gman；冲锋兵将分担第一轮火力。"
+			debrief_text = "战术复盘：上次炮台伤害集中在Gman；冲锋兵将分担第一轮火力。"
 		elif recipe_id == "heavy.armored":
-			debrief_text = "战术预览：装甲护盾承接核心巨炮，保护 Gman 持续输出。"
+			debrief_text = "战术预览：装甲护盾承接核心巨炮，保护Gman持续输出。"
 		if not debrief_text.is_empty():
 			var debrief := _label(debrief_text, 12, COLOR_PRIMARY)
 			debrief.name = "ResearchTacticalDebriefLabel"
@@ -2120,7 +2120,7 @@ func _build_model_tech_body() -> Control:
 		var hero_copy := VBoxContainer.new()
 		hero_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		hero_row.add_child(hero_copy)
-		hero_copy.add_child(_label("%s · Lv%d · ★%d" % [String(hero.display_name), int(hero.level), int(hero.star)], 17, COLOR_TEXT))
+		hero_copy.add_child(_label("%s · %d级 · ★%d" % [String(hero.display_name), int(hero.level), int(hero.star)], 17, COLOR_TEXT))
 		hero_copy.add_child(_label(
 			"战备 %d%% · 经验 %d/320 · 工厂专长随星级解锁" % [int(hero.readiness), int(hero.xp)],
 			13,
@@ -2355,7 +2355,7 @@ func _build_training_panel() -> Control:
 	var power_after := CombatPower.hero_power(preview)
 	var training_gold_cost := HeroProgression.next_book_gold_cost(selected)
 	var archetype: Dictionary = FactoryCatalog.archetype(String(selected.archetype_id))
-	detail.add_child(_label("%s  L%d  XP %d/320  ★%d" % [selected.display_name, selected.level, selected.xp, selected.star], 15, COLOR_TEXT))
+	detail.add_child(_label("%s  %d级  经验 %d/320  ★%d" % [selected.display_name, selected.level, selected.xp, selected.star], 15, COLOR_TEXT))
 	detail.add_child(_label("%s · %s · 技能 T%d" % [
 		_role_name(String(archetype.get("role", ""))),
 		String(archetype.get("active_skill", "")),
@@ -2622,7 +2622,7 @@ func _show_expedition() -> void:
 	var chapter_column := VBoxContainer.new()
 	chapter_column.add_theme_constant_override("separation", 8)
 	map_scroll.add_child(chapter_column)
-	var chapter_names := ["灰镜", "震荡", "黑屏", "联防", "伪胜"]
+	var chapter_names := ["E07–E20", "E21–E32", "E33–E49", "E50–E57", "E58–E73"]
 	var stage_ids := StageCatalog.all_stage_ids()
 	var cleared: Array = state.stage_progress.get("cleared_stages", [])
 	for chapter_index in 5:
@@ -2673,7 +2673,7 @@ func _show_expedition() -> void:
 	var readiness_id := CombatPower.readiness(team_power, recommended_power, minimum_power)
 	var growth_plan := GrowthPlan.for_stage(state, stage_config)
 	if state.attempt_counters.is_empty():
-		var first_battle_brief := _label("前三关只派 Gman；第 4 关失败后才开放博士工厂。", 13, COLOR_ACCENT)
+		var first_battle_brief := _label("前三关只派Gman；第 4 关失败后才开放博士工厂。", 13, COLOR_ACCENT)
 		first_battle_brief.name = "FirstBattleTutorialBrief"
 		detail_column.add_child(first_battle_brief)
 	detail_column.add_child(_label(String(stage_config.get("display_name", selected_stage_id)), 20, COLOR_TEXT))
@@ -2762,9 +2762,9 @@ func _stage_is_unlocked(stage_id: String, state: RefCounted) -> bool:
 
 func _chapter_threat_text(chapter: int, is_boss: bool) -> String:
 	var threats := {
-		1: "Cameramen 火力线：标记、盾卫与炮塔",
-		2: "Speakermen 封锁线：冲锋、震荡与能量干扰",
-		3: "TV Men 黑屏城区：传送、控制与周期护盾",
+		1: "监控人火力线：标记、盾卫与炮塔",
+		2: "音响人封锁线：冲锋、震荡与能量干扰",
+		3: "电视人黑屏城区：传送、控制与周期护盾",
 		4: "三军联合防线：防空、净化与协同火控",
 		5: "联盟中央基地：持续轰炸与综合机制验收",
 	}
@@ -3164,7 +3164,7 @@ func _show_result(result: Dictionary, settlement: Dictionary, error_message: Str
 	if gman_max_hp > 0:
 		var gman_hp := maxi(0, int(result.get("gman_hp", 0)))
 		var gman_hp_percent := clampi(int(round(float(gman_hp) * 100.0 / float(gman_max_hp))), 0, 100)
-		var gman_status := "Gman 已阵亡" if gman_hp == 0 else "Gman 剩余生命 %d%%" % gman_hp_percent
+		var gman_status := "Gman已阵亡" if gman_hp == 0 else "Gman剩余生命 %d%%" % gman_hp_percent
 		var gman_status_label := _label(gman_status, 14, COLOR_DANGER if gman_hp_percent <= 35 else COLOR_PRIMARY)
 		gman_status_label.name = "ResultGmanHealthLabel"
 		column.add_child(gman_status_label)
@@ -3211,7 +3211,7 @@ func _show_result(result: Dictionary, settlement: Dictionary, error_message: Str
 		if stage_id == "stage_1_4":
 			var failure_debrief := _accent_panel(Color(0.16, 0.075, 0.06, 0.96), COLOR_DANGER, 7)
 			failure_debrief.name = "FailureDebriefPanel"
-			failure_debrief.add_child(_label("失败复盘：Gman 承受了集中炮火，但首座炮台已受损——补充前排即可突破。", 12, COLOR_TEXT))
+			failure_debrief.add_child(_label("失败复盘：Gman承受了集中炮火，但首座炮台已受损——补充前排即可突破。", 12, COLOR_TEXT))
 			column.add_child(failure_debrief)
 		column.add_child(_label(_failure_advice(result, recommended_action), 13, COLOR_ACCENT))
 	if victory and stage_id == "stage_5_5":
@@ -3309,7 +3309,7 @@ func _failure_advice(result: Dictionary, action: Dictionary = {}) -> String:
 	var stage_reached := int(result.get("stage_reached", 0))
 	var next_text := "下一步：%s" % String(action.get("title", "回营地调整"))
 	if String(result.get("stage_id", "")) == "stage_1_4":
-		return "Gman 独自承受了炮台持续集火；受损炮台证明只差援军。%s" % next_text
+		return "Gman独自承受了炮台持续集火；炮台已经受损，只差援军补上火力。%s" % next_text
 	var stage_config := StageCatalog.stage(String(result.get("stage_id", StageCatalog.DEFAULT_STAGE_ID)))
 	var plan := GrowthPlan.for_stage(game.current_state(), stage_config)
 	if int(plan.get("power_gap", 0)) > 0:

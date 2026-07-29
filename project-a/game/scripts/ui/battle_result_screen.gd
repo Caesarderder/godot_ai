@@ -31,6 +31,7 @@ const GREEN := Color("#78b982")
 @onready var primary_action: Button = %PrimaryAction
 @onready var factory_action: Button = %FactoryAction
 @onready var base_action: Button = %BaseAction
+@onready var report_stack: VBoxContainer = $Columns/ReportPanel/ReportMargin/Report
 
 var _view: Dictionary = {}
 
@@ -73,6 +74,27 @@ func _apply_view() -> void:
 	_set_optional(growth, String(_view.get("growth", "")))
 	_set_optional(safety, String(_view.get("safety", "")))
 	_set_optional(qualification, String(_view.get("qualification", "")))
+	_merge_optional(
+		combat_summary,
+		[
+			String(_view.get("combat_summary", "")),
+			String(_view.get("contribution", "")),
+		]
+	)
+	contribution.visible = false
+	_merge_optional(
+		mission_progress,
+		[
+			String(_view.get("hero_experience", "")),
+			String(_view.get("mission_progress", "")),
+			String(_view.get("unlocked_hero", "")),
+			String(_view.get("materials", "")),
+			String(_view.get("breakthrough", "")),
+		]
+	)
+	for merged_source in [hero_experience, unlocked_hero, materials, breakthrough]:
+		merged_source.visible = false
+	_prioritize_report_rows()
 	primary_action.text = String(_view.get("primary_label", "继续"))
 	primary_action.visible = not primary_action.text.is_empty()
 	# Generic factory navigation competes with the causal recovery/continuation
@@ -86,10 +108,8 @@ func _apply_view() -> void:
 func _apply_theme() -> void:
 	for panel: PanelContainer in [$Columns/ReportPanel, $Columns/NextPanel]:
 		var style := StyleBoxFlat.new()
-		style.bg_color = PANEL
-		style.border_color = LINE
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(10)
+		style.bg_color = Color(PANEL, 0.82)
+		style.set_corner_radius_all(5)
 		panel.add_theme_stylebox_override("panel", style)
 	for label: Label in [
 		outcome_text, reward_headline, hero_experience, materials, mission_progress, breakthrough, unlocked_hero,
@@ -143,6 +163,30 @@ func _style_button(button: Button, primary: bool) -> void:
 func _set_optional(label: Label, value: String) -> void:
 	label.text = value
 	label.visible = not value.is_empty()
+
+
+func _merge_optional(target: Label, values: Array) -> void:
+	var non_empty: Array[String] = []
+	for value in values:
+		var copy := String(value).strip_edges()
+		if not copy.is_empty():
+			non_empty.append(copy)
+	target.text = " · ".join(non_empty)
+	target.visible = not target.text.is_empty()
+
+
+func _prioritize_report_rows() -> void:
+	var priority: Array[Control] = [
+		reward_headline,
+		hurdle_proof,
+		debrief,
+		combat_summary,
+		mission_progress,
+	]
+	var target_index := 1
+	for row in priority:
+		report_stack.move_child(row, target_index)
+		target_index += 1
 
 
 func _semantic_color(color_id: String) -> Color:

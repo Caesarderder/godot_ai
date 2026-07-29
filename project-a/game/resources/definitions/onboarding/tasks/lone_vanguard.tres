@@ -8,6 +8,6 @@
 script = ExtResource("1")
 task_id = &"operation.lone_vanguard"
 title = "行动一：建设研究所"
-lesson = "先在基地建成研究所，再让 Gman 进攻第一座城镇；后续关卡获得的图纸会在这里转化为永久角色。"
+lesson = "先在基地建成研究所，再让Gman完成 E07 教学战；后续图纸会在这里转化为永久角色。"
 objectives = Array[Resource]([ExtResource("2"), ExtResource("3")])
 toilet_coins = 30

@@ -5,6 +5,7 @@ signal attack_requested(stage_id: String)
 signal preparation_requested(action_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const PANEL := Color("#12171c")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -18,6 +19,9 @@ const GREEN := Color("#78b982")
 @onready var status_label: Label = %Status
 @onready var threat_summary: Label = %ThreatSummary
 @onready var decision_hint: Label = %DecisionHint
+@onready var boss_recovery_routes: VBoxContainer = %BossRecoveryRoutes
+@onready var assault_recovery_route: Label = %BossRecoveryRoute_assault
+@onready var armored_recovery_route: Label = %BossRecoveryRoute_armored
 @onready var power_line: Label = %PowerLine
 @onready var capability: ProgressBar = %Capability
 @onready var risk_label: Label = %Risk
@@ -76,16 +80,17 @@ func _apply_configuration() -> void:
 		_report.get("faction_protocol_preview", {}) as Dictionary
 	)
 	var formation_plan := _report.get("formation_plan", {}) as Dictionary
+	_configure_boss_recovery_routes()
 	if not faction_proof.is_empty():
 		decision_hint.text = "%s\n%s" % [
-			String(faction_proof.get("headline", "阵营验证")),
+			String(faction_proof.get("headline", "核心磨合")),
 			String(faction_proof.get("focus", "")),
 		]
 		decision_hint.add_theme_color_override("font_color", CYAN)
 	elif not faction_protocol_preview.is_empty():
-		decision_hint.text = "阵营科技待命 · Tier %d「%s」· 开战自动生效\n%s" % [
+		decision_hint.text = "阵营科技待命 · %d阶「%s」· 开战自动生效\n%s" % [
 			int(faction_protocol_preview.get("tier", 1)),
-			String(faction_protocol_preview.get("title", "阵营协议")),
+			String(faction_protocol_preview.get("title", "阵营科技")),
 			(
 				"阵容核对 · 已覆盖：%s｜待补：%s" % [
 					String(formation_plan.get("covered_copy", "无")),
@@ -102,7 +107,7 @@ func _apply_configuration() -> void:
 		)
 	else:
 		var plan_status := String(formation_plan.get("status_id", "missing"))
-		var plan_consequence := "当前主解完整，可直接验证技能时机。"
+		var plan_consequence := "当前打法完整，可以直接出击。"
 		if plan_status == "partial":
 			plan_consequence = "已有可用解法；补齐建议角色会让职责更完整。"
 		elif plan_status == "missing":
@@ -180,7 +185,18 @@ func _apply_configuration() -> void:
 
 
 func _apply_theme() -> void:
-	for label: Label in [stage_name, status_label, threat_summary, decision_hint, power_line, risk_label, threat_level, next_action]:
+	for label: Label in [
+		stage_name,
+		status_label,
+		threat_summary,
+		decision_hint,
+		assault_recovery_route,
+		armored_recovery_route,
+		power_line,
+		risk_label,
+		threat_level,
+		next_action,
+	]:
 		label.add_theme_font_override("font", CJK_FONT)
 	stage_name.add_theme_font_size_override("font_size", 23)
 	status_label.add_theme_font_size_override("font_size", 12)
@@ -188,6 +204,9 @@ func _apply_theme() -> void:
 	threat_summary.add_theme_color_override("font_color", MUTED)
 	decision_hint.add_theme_font_size_override("font_size", 13)
 	decision_hint.add_theme_color_override("font_color", GOLD)
+	for route_label in [assault_recovery_route, armored_recovery_route]:
+		route_label.add_theme_font_size_override("font_size", 12)
+		route_label.add_theme_color_override("font_color", CYAN)
 	power_line.add_theme_font_size_override("font_size", 17)
 	power_line.add_theme_color_override("font_color", CYAN)
 	risk_label.add_theme_font_size_override("font_size", 15)
@@ -220,6 +239,26 @@ func _apply_theme() -> void:
 	growth_button.add_theme_color_override("font_color", PANEL)
 	growth_button.add_theme_color_override("font_hover_color", PANEL)
 	growth_button.add_theme_color_override("font_pressed_color", PANEL)
+
+
+func _configure_boss_recovery_routes() -> void:
+	boss_recovery_routes.visible = _stage_id == "stage_1_5"
+	if not boss_recovery_routes.visible:
+		return
+	var assault_name := String(
+		FactoryCatalog.recipe("ordinary.assault").get(
+			"display_name",
+			"头套马桶人"
+		)
+	)
+	var armored_name := String(
+		FactoryCatalog.recipe("heavy.armored").get(
+			"display_name",
+			"装甲马桶人"
+		)
+	)
+	assault_recovery_route.text = "快攻 · %s升至2★ → 抢拆炮台" % assault_name
+	armored_recovery_route.text = "守势 · %s升至2★ → 格挡反震" % armored_name
 
 
 func _style_pressure_test_action() -> void:

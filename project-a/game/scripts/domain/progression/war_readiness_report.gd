@@ -58,7 +58,7 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 		next_action = {
 			"id": "formation",
 			"title": "调整本关阵容",
-			"detail": "仓库已有本关建议角色但尚未上阵；先换阵可让抽取与培养选择在战斗中得到验证。",
+			"detail": "仓库已有本关建议角色但尚未上阵；先换阵，让抽取与培养选择真正影响战局。",
 			"hero_id": "",
 		}
 	if stage_id == "stage_1_4" and not cleared_stages.has(stage_id):
@@ -98,7 +98,7 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 			next_action = {
 				"id": "attack",
 				"title": "三人小队可以反攻",
-				"detail": "装甲与冲锋已经入队；立即返回 1-4 验证新职责组合。",
+				"detail": "承伤与冲锋玩法马桶人已经入队；立即返回 1-4 发动三人反攻。",
 				"hero_id": "",
 			}
 	if (
@@ -108,8 +108,8 @@ static func derive(state: RefCounted, stage_config: Dictionary) -> Dictionary:
 	):
 		next_action = {
 			"id": "upgrade",
-			"title": "先完成冲锋/装甲二星成长",
-			"detail": "核心巨炮是首次成长验收：任选冲锋快攻或装甲守势升至2★，再用战斗验证质变。",
+			"title": "先完成冲锋或承伤玩法的二星成长",
+			"detail": "核心巨炮需要一次明确成长：任选冲锋玩法快攻或承伤玩法守势升至2★，再迎战巨炮。",
 			"hero_id": "",
 			"blocks_attack": true,
 		}

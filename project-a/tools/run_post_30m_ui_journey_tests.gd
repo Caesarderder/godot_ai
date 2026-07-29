@@ -123,7 +123,7 @@ func _run() -> void:
 	) as Label
 	_check(
 		journey_promise != null
-			and journey_promise.text.contains("研发 → 入队 → 3场实战 → 质变突破")
+			and journey_promise.text.contains("研发 → 入队 → 3场磨合 → 挑战强敌")
 			and journey_promise.get_global_rect().end.y <= 310.0,
 		"the reward moment keeps the immediate faction journey visible above navigation"
 	)
@@ -196,7 +196,7 @@ func _run() -> void:
 		_check(
 			_tree_has_text(candidate_panel, "目标后排 1")
 				and _tree_has_text(candidate_panel, "部署后4人军团")
-				and _tree_has_text(candidate_panel, "完成3场实战证明"),
+				and _tree_has_text(candidate_panel, "完成3场磨合"),
 			"formation handoff keeps the target slot, immediate consequence, and next proof goal together"
 		)
 	var formation_scroll := main.find_child("LegionContentScroll_formation", true, false) as ScrollContainer
@@ -226,29 +226,29 @@ func _run() -> void:
 	_check(
 		formation_toast != null
 			and formation_toast.visible
-			and formation_toast.text.contains("阵营初阵已成")
-			and formation_toast.text.contains("去2-1验证"),
+			and formation_toast.text.contains("核心初阵已成")
+			and formation_toast.text.contains("前往2-1迎战"),
 		"first core deployment immediately celebrates formation and names the next proof"
 	)
 
 	main.call("_show_goals")
 	await _wait_frames(4)
 	_check(_tree_has_text(main, "阵营初阵已成"), "formation completion receives an explicit milestone celebration")
-	_check(_tree_has_text(main, "实战证明 0/3"), "formation completion advances to a visible three-battle proof goal")
-	_check(_tree_has_text(main, "第1场验证"), "proof goal names the immediate attempt instead of only showing a counter")
+	_check(_tree_has_text(main, "已完成 0/3"), "formation completion advances to a visible three-battle route")
+	_check(_tree_has_text(main, "第1场磨合"), "route goal names the immediate attempt instead of only showing a counter")
 	_check(_tree_has_text(main, "首战观察"), "proof goal teaches what to watch for in the new core")
 	var proof_cta := main.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
-	_check(proof_cta != null and proof_cta.text.contains("开始第1场验证"), "proof goal retains one clear map action")
+	_check(proof_cta != null and proof_cta.text.contains("开始第1场出击"), "route goal retains one clear map action")
 	if proof_cta != null:
 		proof_cta.pressed.emit()
 		await _wait_frames(4)
 	_check(String(main.get("selected_stage_id")) == "stage_2_1", "proof action focuses the exact next second-chapter stage")
-	_check(_tree_has_text(main, "阵营验证"), "2-1 reconnaissance preserves the faction-proof identity")
+	_check(_tree_has_text(main, "核心出征"), "2-1 reconnaissance preserves the faction-route identity")
 	_check(_tree_has_text(main, String(faction_hero.display_name) + "核心已上阵"), "reconnaissance names the deployed core")
 	_check(_tree_has_text(main, "首战观察"), "reconnaissance preserves the route-specific learning goal")
 	var proof_attack: Button = _button_with_text(
 		main,
-		"验证%s核心" % String(faction_hero.display_name)
+		"让%s出征" % String(faction_hero.display_name)
 	)
 	_check(
 		proof_attack != null
@@ -288,9 +288,9 @@ func _run() -> void:
 	main.set("last_settlement", first_proof_settlement)
 	main.call("_show_result")
 	await _wait_frames(5)
-	_check(_tree_has_text(main, "阵营实战证明 1/3"), "first proof victory celebrates visible one-of-three progress")
+	_check(_tree_has_text(main, "核心磨合 1/3"), "first route victory celebrates visible one-of-three progress")
 	_check(_tree_has_text(main, String(faction_hero.display_name) + "核心贡献 740 伤害"), "proof result attributes factual contribution to the selected core")
-	var second_proof := _button_with_text(main, "开始第2场验证")
+	var second_proof := _button_with_text(main, "开始第2场出击")
 	_check(second_proof != null and second_proof.is_visible_in_tree(), "proof result exposes one explicit second validation action")
 	if second_proof != null:
 		second_proof.pressed.emit()
@@ -317,9 +317,9 @@ func _run() -> void:
 	main.set("last_settlement", second_proof_settlement)
 	main.call("_show_result")
 	await _wait_frames(5)
-	_check(_tree_has_text(main, "阵营实战证明 2/3"), "second proof victory celebrates visible two-of-three progress")
+	_check(_tree_has_text(main, "核心磨合 2/3"), "second route victory celebrates visible two-of-three progress")
 	_check(_tree_has_text(main, String(faction_hero.display_name) + "核心贡献 810 伤害"), "second proof preserves factual core attribution")
-	var third_proof := _button_with_text(main, "开始第3场验证")
+	var third_proof := _button_with_text(main, "开始第3场出击")
 	_check(third_proof != null and third_proof.is_visible_in_tree(), "second result exposes one explicit third validation action")
 	if third_proof != null:
 		third_proof.pressed.emit()
@@ -346,9 +346,9 @@ func _run() -> void:
 	main.set("last_settlement", third_proof_settlement)
 	main.call("_show_result")
 	await _wait_frames(5)
-	_check(_tree_has_text(main, "阵营实战证明 3/3"), "third victory closes the visible proof milestone")
+	_check(_tree_has_text(main, "核心磨合 3/3"), "third victory closes the visible route milestone")
 	_check(_tree_has_text(main, "基础打法已经站稳"), "three-of-three receives a completed milestone rather than an in-progress banner")
-	_check(_tree_has_text(main, "三场基础验证完成"), "third result explains why the journey now escalates")
+	_check(_tree_has_text(main, "基础打法已经站稳"), "third result explains why the journey now escalates")
 	var pressure_test := _button_with_text(main, "试探后段防线")
 	_check(pressure_test != null and pressure_test.is_visible_in_tree(), "3/3 result exposes one explicit late-line pressure test")
 	if pressure_test != null:
@@ -451,13 +451,13 @@ func _run() -> void:
 	if star != null:
 		star.pressed.emit()
 		await _wait_frames(4)
-	_check(_tree_has_text(main, "质变解锁"), "star success immediately names the unlocked qualitative effect")
+	_check(_tree_has_text(main, "新能力"), "star success immediately names the unlocked combat effect")
 	var star_toast := main.get("toast") as Label
 	var member_tab := main.find_child("LegionRosterTab", true, false) as Button
 	_check(
 		star_toast != null
 			and star_toast.visible
-			and star_toast.text.contains("质变解锁")
+			and star_toast.text.contains("新能力")
 			and star_toast.get_global_rect().position.y >= 16.0
 			and star_toast.get_global_rect().end.y
 				<= (
@@ -515,7 +515,7 @@ func _run() -> void:
 			and _tree_has_text(main, FactionCatalogScript.next_star_effect(archetype_id, 2)),
 		"2-4 reconnaissance names the exact new qualitative effect being validated"
 	)
-	var breakthrough_attack := _button_with_text(main, "验证2★质变")
+	var breakthrough_attack := _button_with_text(main, "试用2★新能力")
 	_check(breakthrough_attack != null and breakthrough_attack.is_visible_in_tree(), "grown core receives one explicit 2-4 validation action")
 	var redundant_growth := _button_with_text(main, "先培养军团")
 	_check(redundant_growth == null or not redundant_growth.is_visible_in_tree(), "completed prescribed growth cannot be contradicted by generic readiness")
@@ -557,7 +557,7 @@ func _run() -> void:
 			and _tree_has_text(main, FactionCatalogScript.next_star_effect(archetype_id, 2)),
 		"2-5 reconnaissance names the exact matured qualitative effect"
 	)
-	var boss_attack := _button_with_text(main, "检验2★质变")
+	var boss_attack := _button_with_text(main, "迎战章节首领")
 	_check(boss_attack != null and boss_attack.is_visible_in_tree(), "chapter boss receives one explicit qualitative validation action")
 	var proof_runtime := {
 		"deployed_unit_ids": [hero_id],
@@ -567,7 +567,7 @@ func _run() -> void:
 		main.call("_faction_mastery_proof_copy", proof_runtime, "victory", "stage_2_5")
 	)
 	_check(
-		mastery_proof.contains("阵营质变验证")
+		mastery_proof.contains("2★能力")
 			and mastery_proof.contains(String(faction_hero.display_name))
 			and mastery_proof.contains("3 次"),
 		"chapter-two result attributes the breakthrough to the exact drawn hero's two-star mechanic"
@@ -610,7 +610,7 @@ func _run() -> void:
 		"cannon_hit_count": 6,
 	}, "victory", "stage_2_5"))
 	_check(
-		chapter_exam_debrief.contains("章节考试")
+		chapter_exam_debrief.contains("章节决战")
 			and chapter_exam_debrief.contains("广播增援1波")
 			and chapter_exam_debrief.contains("声塔命中3次")
 			and chapter_exam_debrief.contains("共振12次")
@@ -634,12 +634,12 @@ func _run() -> void:
 		"tv_shield_count": 5,
 	}, "victory", "stage_3_5"))
 	_check(
-		tv_exam_debrief.contains("章节考试")
+		tv_exam_debrief.contains("章节决战")
 			and tv_exam_debrief.contains("信号消失2次")
 			and tv_exam_debrief.contains("换位3次")
 			and tv_exam_debrief.contains("控制4次")
 			and tv_exam_debrief.contains("护盾5次")
-			and tv_exam_debrief.contains("转火、重锁目标与破盾验证"),
+			and tv_exam_debrief.contains("转火、重锁目标与破盾"),
 		"stage 3-5 settlement closes every learned TV module before the permanent doctrine choice"
 	)
 	var alliance_debrief := String(main.call("_battle_debrief_copy", {
@@ -825,7 +825,7 @@ func _run() -> void:
 	main.call("_show_result")
 	await _wait_frames(4)
 	_check(
-		_tree_has_text(main, "章节考试")
+		_tree_has_text(main, "章节决战")
 			and _tree_has_text(main, "信号消失2次")
 			and _tree_has_text(main, "换位3次")
 			and _tree_has_text(main, "控制4次")
@@ -835,7 +835,7 @@ func _run() -> void:
 	var choose_tech_action := main.find_child("PrimaryAction", true, false) as Button
 	_check(
 		choose_tech_action != null
-			and choose_tech_action.text.contains("选择 Tier 2")
+			and choose_tech_action.text.contains("选择二阶科技")
 			and not _tree_has_text(main, "查看第4章新战线"),
 		"3-5 settlement makes doctrine selection the sole high-priority handoff before chapter four"
 	)
@@ -845,7 +845,7 @@ func _run() -> void:
 	await _wait_frames(4)
 	tech_preview = main.find_child("FactionTechPreview", true, false) as Control
 	_check(
-		_tree_has_text(tech_preview, "Tier 2科技待定")
+		_tree_has_text(tech_preview, "二阶科技待定")
 			and _tree_has_text(tech_preview, "全队协同")
 			and _tree_has_text(tech_preview, "阵营专精")
 			and _tree_has_text(tech_preview, "覆盖2个战区")
@@ -853,20 +853,20 @@ func _run() -> void:
 			and _tree_has_text(tech_preview, "覆盖1个战区")
 			and _tree_has_text(tech_preview, "结构承伤 +40%")
 			and _tree_has_text(tech_preview, "永久选择 · 不可更改"),
-		"chapter-three completion compares both permanent Tier 2 tradeoffs with exact values"
+		"chapter-three completion compares both permanent second-tier tradeoffs with exact values"
 	)
 	_check(
 		tech_preview != null
 			and tech_preview.get_global_rect().end.x <= float(root.size.x)
 			and tech_preview.get_global_rect().end.y <= float(root.size.y),
-		"both Tier 2 choices remain fully visible inside the 844x390 viewport"
+		"both second-tier choices remain fully visible inside the 844x390 viewport"
 	)
 	var coordination_choice := main.find_child("CoordinationChoice", true, false) as Button
 	_check(
 		coordination_choice != null
 			and coordination_choice.visible
 			and not coordination_choice.disabled,
-		"Tier 2 coordination choice is an actionable 48px control"
+		"second-tier coordination choice is an actionable 48px control"
 	)
 	if coordination_choice != null:
 		coordination_choice.pressed.emit()
@@ -877,14 +877,14 @@ func _run() -> void:
 			and String(tier_two.get("doctrine_id", "")) == "coordination"
 			and int(tier_two.get("activation_chapter", 0)) == 4
 			and String(main.get("selected_stage_id")) == "stage_4_1",
-		"durable doctrine choice activates Tier 2 and hands off to exact chapter-four reconnaissance"
+		"durable doctrine choice activates the second tier and hands off to exact chapter-four reconnaissance"
 	)
 	main.call("_show_blueprints")
 	await _wait_frames(4)
 	tech_preview = main.find_child("FactionTechPreview", true, false) as Control
 	var hidden_coordination := main.find_child("CoordinationChoice", true, false) as Button
 	_check(
-		_tree_has_text(tech_preview, "Tier 2阵营科技已激活")
+		_tree_has_text(tech_preview, "2阶阵营科技已激活")
 			and _tree_has_text(tech_preview, "第4章起自动生效")
 			and hidden_coordination != null
 			and not hidden_coordination.visible,
@@ -923,7 +923,7 @@ func _run() -> void:
 	await _wait_frames(4)
 	var chapter_four_action := main.find_child("PrimaryAction", true, false) as Button
 	_check(
-		_tree_has_text(main, "Tier 2科技兑现")
+		_tree_has_text(main, "2阶科技生效")
 			and _tree_has_text(main, "全队协同")
 			and _tree_has_text(main, "覆盖2个战区")
 			and _tree_has_text(main, "影响3个目标"),

@@ -1,0 +1,379 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://game/ui/combat_hud.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleObjective"]
+bg_color = Color(0.018, 0.04, 0.058, 0.88)
+border_width_left = 2
+border_width_bottom = 2
+border_color = Color(0.212, 0.843, 1, 0.8)
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleHealth"]
+bg_color = Color(0.018, 0.04, 0.058, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_color = Color(0.212, 0.843, 1, 0.65)
+corner_radius_top_right = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleAmmo"]
+bg_color = Color(0.018, 0.04, 0.058, 0.9)
+border_width_right = 2
+border_width_top = 2
+border_color = Color(0.212, 0.843, 1, 0.65)
+corner_radius_top_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleOutcome"]
+bg_color = Color(0.008, 0.018, 0.03, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.212, 0.843, 1, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleCritical"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 12
+border_width_top = 12
+border_width_right = 12
+border_width_bottom = 12
+border_color = Color(1, 0.04, 0.12, 0.42)
+
+[sub_resource type="StyleBoxFlat" id="StyleReloadTrack"]
+bg_color = Color(0.05, 0.09, 0.12, 0.88)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleReloadFill"]
+bg_color = Color(1, 0.62, 0.24, 0.95)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="CombatHud" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ObjectivePanel" type="PanelContainer" parent="Root"]
+layout_mode = 0
+offset_right = 356.0
+offset_bottom = 72.0
+theme_override_styles/panel = SubResource("StyleObjective")
+
+[node name="ObjectiveMargin" type="MarginContainer" parent="Root/ObjectivePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 12
+
+[node name="ObjectiveStack" type="VBoxContainer" parent="Root/ObjectivePanel/ObjectiveMargin"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Operation" type="Label" parent="Root/ObjectivePanel/ObjectiveMargin/ObjectiveStack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.212, 0.843, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "OPERATION NIGHTGLASS"
+
+[node name="ObjectiveValue" type="Label" parent="Root/ObjectivePanel/ObjectiveMargin/ObjectiveStack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.918, 0.965, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "CLEAR SENTRIES  0 / 4"
+
+[node name="StatusLine" type="Label" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -170.0
+offset_top = 26.0
+offset_right = 170.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.56, 0.76, 0.86, 1)
+theme_override_font_sizes/font_size = 13
+text = "NIGHTGLASS // LIVE"
+horizontal_alignment = 1
+
+[node name="TargetStatus" type="Label" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -330.0
+offset_top = 22.0
+offset_right = -24.0
+offset_bottom = 48.0
+theme_override_colors/font_color = Color(0.48, 0.68, 0.76, 1)
+theme_override_font_sizes/font_size = 13
+text = "TARGET FEED  //  SEARCHING"
+horizontal_alignment = 2
+
+[node name="CrosshairHorizontal" type="ColorRect" parent="Root"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -14.0
+offset_top = -1.0
+offset_right = 14.0
+offset_bottom = 1.0
+color = Color(0.85, 0.96, 1, 0.82)
+
+[node name="CrosshairVertical" type="ColorRect" parent="Root"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1.0
+offset_top = -14.0
+offset_right = 1.0
+offset_bottom = 14.0
+color = Color(0.85, 0.96, 1, 0.82)
+
+[node name="CrosshairGap" type="ColorRect" parent="Root"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -3.0
+offset_top = -3.0
+offset_right = 3.0
+offset_bottom = 3.0
+color = Color(0.01, 0.025, 0.04, 1)
+
+[node name="HitMarker" type="Label" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -28.0
+offset_top = -31.0
+offset_right = 28.0
+offset_bottom = 31.0
+theme_override_font_sizes/font_size = 42
+text = "×"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HealthPanel" type="PanelContainer" parent="Root"]
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -96.0
+offset_right = 296.0
+offset_bottom = 0.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleHealth")
+
+[node name="HealthMargin" type="MarginContainer" parent="Root/HealthPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 12
+
+[node name="HealthStack" type="VBoxContainer" parent="Root/HealthPanel/HealthMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HealthCaption" type="Label" parent="Root/HealthPanel/HealthMargin/HealthStack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "OPERATOR VITALS"
+
+[node name="HealthRow" type="HBoxContainer" parent="Root/HealthPanel/HealthMargin/HealthStack"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HealthValue" type="Label" parent="Root/HealthPanel/HealthMargin/HealthStack/HealthRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 36)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.918, 0.965, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "100"
+
+[node name="HealthBar" type="Control" parent="Root/HealthPanel/HealthMargin/HealthStack/HealthRow"]
+custom_minimum_size = Vector2(208, 10)
+layout_mode = 2
+
+[node name="Track" type="ColorRect" parent="Root/HealthPanel/HealthMargin/HealthStack/HealthRow/HealthBar"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 13.0
+offset_bottom = 23.0
+grow_horizontal = 2
+color = Color(0.1, 0.16, 0.19, 1)
+
+[node name="HealthFill" type="ColorRect" parent="Root/HealthPanel/HealthMargin/HealthStack/HealthRow/HealthBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 13.0
+offset_bottom = 23.0
+grow_horizontal = 2
+pivot_offset = Vector2(0, 5)
+color = Color(0.212, 0.843, 1, 1)
+
+[node name="AmmoPanel" type="PanelContainer" parent="Root"]
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -296.0
+offset_top = -96.0
+offset_bottom = 0.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleAmmo")
+
+[node name="AmmoMargin" type="MarginContainer" parent="Root/AmmoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 12
+
+[node name="AmmoStack" type="VBoxContainer" parent="Root/AmmoPanel/AmmoMargin"]
+layout_mode = 2
+alignment = 2
+
+[node name="WeaponCaption" type="Label" parent="Root/AmmoPanel/AmmoMargin/AmmoStack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "NV-7 CARBINE  //  AUTO"
+horizontal_alignment = 2
+
+[node name="AmmoRow" type="HBoxContainer" parent="Root/AmmoPanel/AmmoMargin/AmmoStack"]
+layout_mode = 2
+alignment = 2
+
+[node name="AmmoValue" type="Label" parent="Root/AmmoPanel/AmmoMargin/AmmoStack/AmmoRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.918, 0.965, 1, 1)
+theme_override_font_sizes/font_size = 42
+text = "30"
+
+[node name="ReserveValue" type="Label" parent="Root/AmmoPanel/AmmoMargin/AmmoStack/AmmoRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.48, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 20
+text = "/ 120"
+vertical_alignment = 2
+
+[node name="DamageVignette" type="ColorRect" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.5, 0.0, 0.04, 0.33)
+modulate = Color(1, 1, 1, 0)
+
+[node name="CriticalFrame" type="Panel" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleCritical")
+
+[node name="ReloadProgress" type="ProgressBar" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -270.0
+offset_top = -112.0
+offset_right = -24.0
+offset_bottom = -101.0
+grow_horizontal = 0
+grow_vertical = 0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleReloadTrack")
+theme_override_styles/fill = SubResource("StyleReloadFill")
+
+[node name="OutcomePanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -290.0
+offset_top = -155.0
+offset_right = 290.0
+offset_bottom = 155.0
+theme_override_styles/panel = SubResource("StyleOutcome")
+
+[node name="OutcomeMargin" type="MarginContainer" parent="Root/OutcomePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 46
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 46
+theme_override_constants/margin_bottom = 40
+
+[node name="OutcomeStack" type="VBoxContainer" parent="Root/OutcomePanel/OutcomeMargin"]
+layout_mode = 2
+theme_override_constants/separation = 22
+alignment = 1
+
+[node name="OutcomeTitle" type="Label" parent="Root/OutcomePanel/OutcomeMargin/OutcomeStack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.212, 0.843, 1, 1)
+theme_override_font_sizes/font_size = 34
+text = "BLACKSITE SECURED"
+horizontal_alignment = 1
+
+[node name="Rule" type="ColorRect" parent="Root/OutcomePanel/OutcomeMargin/OutcomeStack"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+color = Color(0.212, 0.843, 1, 0.65)
+
+[node name="OutcomeSummary" type="Label" parent="Root/OutcomePanel/OutcomeMargin/OutcomeStack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.88, 0.94, 1)
+theme_override_font_sizes/font_size = 18
+text = "TIME  000.0s     ACCURACY  00%\nHOSTILES  0     SHOTS  0\n\nPRESS ENTER TO REDEPLOY"
+horizontal_alignment = 1

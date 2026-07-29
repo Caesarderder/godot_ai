@@ -14,7 +14,7 @@ func _run() -> void:
 	screen.call("configure", {
 		"stage_id": "stage_1_4",
 		"report": {
-			"stage_name": "1-4 灰镜高墙",
+			"stage_name": "1-4 E10 · 监控人增援",
 			"cp_ready": 860,
 			"recommended_power": 1100,
 			"capability_ratio": 0.78,

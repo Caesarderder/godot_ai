@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 objective_id = &"research_assault_blueprint"
-label = "在研究所研发冲锋马桶人图纸"
+label = "在研究所研发马桶人冲锋玩法图纸"
 event_type = &"foundational_blueprint_unlocked"
 recipe_id = &"ordinary.assault"
 target = "research"
-cta_label = "研发冲锋马桶人"
+cta_label = "研发冲锋玩法"

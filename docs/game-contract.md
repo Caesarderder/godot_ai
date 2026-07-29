@@ -24,7 +24,7 @@ related:
   - reference.campaign-60-stage-progression
 ---
 
-# 马桶人工厂攻城项目契约
+# 马桶人进化-维度爆裂项目契约
 
 本文件是制作人、策划、程序、美术、音频和测试共享的项目级状态源。详细规则由
 [主 GDD](references/product-design/skibidi-toilet-idle-siege-gdd.md) 维护；当前代码事实由

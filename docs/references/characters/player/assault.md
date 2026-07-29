@@ -19,7 +19,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 冲锋马桶人
+# 普通马桶人
 
 | 字段 | 当前事实 |
 |---|---|

@@ -125,7 +125,7 @@ func _rebuild() -> void:
 
 
 func _boss_ready_panel(boss_ready: Dictionary) -> Control:
-	var panel := _panel("成长已生效 · 立即验证你的选择")
+	var panel := _panel("成长已生效 · 立即投入战斗")
 	panel.name = "BossReadyPanel"
 	panel.add_child(_label(
 		"%s · %s" % [
@@ -142,7 +142,7 @@ func _boss_ready_panel(boss_ready: Dictionary) -> Control:
 		"军团战力 %d / 推荐 %d · %s" % [
 			team_power,
 			recommended_power,
-			"已达验证线" if team_power >= recommended_power else "机制操作可弥补部分战力差",
+			"已达推荐线" if team_power >= recommended_power else "技能与站位可弥补部分战力差",
 		],
 		14,
 		GREEN if team_power >= recommended_power else GOLD
@@ -152,7 +152,10 @@ func _boss_ready_panel(boss_ready: Dictionary) -> Control:
 		12,
 		GREEN
 	))
-	var action := _button("验证成长 · 进攻 1-5 灰镜核心巨炮", true)
+	var action := _button(
+		"进攻 %s" % String(boss_ready.get("stage_name", "章节决战")),
+		true
+	)
 	action.name = "BossReadyAttackButton"
 	action.custom_minimum_size.y = 52
 	action.pressed.connect(action_requested.emit.bind("boss", {
@@ -163,7 +166,7 @@ func _boss_ready_panel(boss_ready: Dictionary) -> Control:
 
 
 func _growth_choice_panel(first_growth: Dictionary) -> Control:
-	var panel := _panel("首次战斗成长 · 冲锋/装甲二选一升至 2★ · 挑战 %s" % String(first_growth.get("target_stage", "章节 Boss")))
+	var panel := _panel("首次战斗成长 · 冲锋/装甲二选一升至 2★ · 挑战 %s" % String(first_growth.get("target_stage", "章节首领")))
 	panel.name = "FirstGrowthChoice"
 	var choices := first_growth.get("choices", []) as Array
 	var grid := GridContainer.new()
@@ -219,7 +222,7 @@ func _growth_choice_panel(first_growth: Dictionary) -> Control:
 		var upgraded := bool(choice.get("already_upgraded", false))
 		var action := _button("已完成二星成长" if upgraded else "选择此路线并升至 2★", true)
 		action.name = "ChooseGrowth_%s" % String(choice.get("archetype_id", ""))
-		action.custom_minimum_size.y = 38
+		action.custom_minimum_size.y = 48
 		action.disabled = upgraded or not bool(choice.get("affordable", false))
 		action.pressed.connect(action_requested.emit.bind("star", {
 			"hero_id": String(choice.get("hero_id", "")),
@@ -316,7 +319,7 @@ func _candidate_panel(slot_id: String) -> Control:
 	panel.name = "FormationCandidatePanel"
 	if target_empty:
 		panel.add_child(_label(
-			"%s · %s · 1★主动「%s」\n目标%s · 部署后%d人军团 · 接下来完成3场实战证明" % [
+			"%s · %s · 1★主动「%s」\n目标%s · 部署后%d人军团 · 接下来完成3场磨合" % [
 				String(journey_candidate.get("faction", "阵营待确认")),
 				String(journey_candidate.get("playstyle", "灵活应战")),
 				String(journey_candidate.get("skill_name", "待命")),
@@ -324,7 +327,7 @@ func _candidate_panel(slot_id: String) -> Control:
 				_formation_deployed_count() + 1,
 			]
 			if not journey_candidate.is_empty()
-			else "部署后形成%d人军团 · 下一步：完成3场实战证明" % (
+			else "部署后形成%d人军团 · 下一步：完成3场磨合" % (
 				_formation_deployed_count() + 1
 			),
 			11,
@@ -411,7 +414,7 @@ func _recruit_panel() -> Control:
 	var foundational := _view.get("foundational_signal", {}) as Dictionary
 	if bool(foundational.get("unlocked", false)):
 		panel.add_child(_label(
-			"阵营起手十连 · 真正参与 A/S 保底 · 新图纸研发角色，重复型号转专属碎片",
+			"阵营起手十连 · 真正参与精锐与传奇保底 · 新图纸研发角色，重复型号转专属碎片",
 			13,
 			GREEN
 		))
@@ -430,7 +433,7 @@ func _recruit_panel() -> Control:
 		panel.add_child(_label("解锁信号招募后才开放免费十连；1-2、1-3 的首批角色图纸不依赖抽取。", 12, GREEN))
 		return panel
 	panel.add_child(_label(
-		"招募券 %d · S 图纸保底 %d/60 · 十抽至少 A · 定向保底%s" % [
+		"招募券 %d · 传奇图纸保底 %d/60 · 十抽至少精锐 · 定向保底%s" % [
 			int(_view.get("recruit_tickets", 0)),
 			int(_view.get("recruit_s_pity", 0)),
 			"已生效" if bool(_view.get("recruit_target_guaranteed", false)) else "未触发",
@@ -438,8 +441,8 @@ func _recruit_panel() -> Control:
 		14,
 		GOLD
 	))
-	panel.add_child(_label("图纸评级 B 80% / A 18% / S 2% · 重复图纸只转该型号专属碎片", 12, MUTED))
-	panel.add_child(_label("定向 S：寄生母体设计图 · 十抽至少出现一张 A 级或更高图纸", 12, TEXT))
+	panel.add_child(_label("图纸评级 标准80% / 精锐18% / 传奇2% · 重复图纸只转该型号专属碎片", 12, MUTED))
+	panel.add_child(_label("定向传奇：寄生母体设计图 · 十抽至少出现一张精锐或更高图纸", 12, TEXT))
 	var actions := HBoxContainer.new()
 	var single := _button("招募 1 次", true)
 	single.disabled = int(_view.get("recruit_tickets", 0)) < 1
@@ -467,7 +470,7 @@ func _recruit_panel() -> Control:
 			)
 			choice_panel.name = "RecruitFactionCoreChoice"
 			var journey := _label(
-				"两套2★路线均已就绪 · 选定后：研发 → 入队 → 3场实战 → 质变突破",
+				"两套2★路线均已就绪 · 选定后：研发 → 入队 → 3场磨合 → 挑战强敌",
 				12,
 				CYAN
 			)
@@ -489,8 +492,8 @@ func _recruit_panel() -> Control:
 					_faction_accent(String(choice.get("faction", "")))
 				)
 				card.add_child(_label(
-					"新角色设计 · %s级 · %s · %s\n%s · 2★%s（碎片已齐）" % [
-						String(choice.get("rating", "B")),
+					"新角色设计 · %s · %s · %s\n%s · 2★%s（碎片已齐）" % [
+						_rating_label(String(choice.get("rating", "B"))),
 						String(choice.get("display_name", "")),
 						String(choice.get("faction", "")),
 						String(choice.get("synergy_summary", "")),
@@ -531,7 +534,7 @@ func _recruit_panel() -> Control:
 				GOLD
 			))
 			focus_card.add_child(_label(
-				"2★质变：%s" % String(focus.get("next_star_effect", "")),
+				"2★新能力：%s" % String(focus.get("next_star_effect", "")),
 				12,
 				CYAN
 			))
@@ -554,7 +557,7 @@ func _recruit_panel() -> Control:
 			var pity_bonus := draw.get("pity_bonus", {}) as Dictionary
 			var bonus_copy := ""
 			if not pity_bonus.is_empty():
-				bonus_copy = "\n60抽保底 · S级%s%s" % [
+				bonus_copy = "\n60抽保底 · 传奇%s%s" % [
 					String(pity_bonus.get("display_name", "")),
 					(
 						"碎片 +%d" % int(pity_bonus.get("amount", 0))
@@ -564,7 +567,7 @@ func _recruit_panel() -> Control:
 				]
 			var card := _label(
 				"%s · %s\n%s%s" % [
-					rarity,
+					_rating_label(rarity),
 					String(draw.get("display_name", "")),
 					(
 						"新设计图纸"
@@ -590,7 +593,7 @@ func _codex_panel() -> Control:
 	var panel := _panel("马桶角色图鉴")
 	panel.name = "ToiletRoleCodex"
 	panel.add_child(_label(
-		"B / A / S 为当前三档角色评级；图纸来自信号招募，永久角色只在研究所完成研发。",
+		"标准、精锐、传奇为当前三档角色评级；图纸来自信号招募，永久角色只在研究所完成研发。",
 		13,
 		CYAN
 	))
@@ -608,7 +611,11 @@ func _codex_panel() -> Control:
 		card.name = "Codex_%s" % String(entry.get("archetype_id", "unknown"))
 		card.custom_minimum_size = Vector2(330, 88)
 		card.add_child(_label(
-			"%s 评级 · %s" % [rating, String(entry.get("display_name", "未知马桶人"))],
+			"%s · %s · %s" % [
+				_rating_label(rating),
+				String(entry.get("display_name", "未知马桶人")),
+				String(entry.get("role_copy", "玩法职责待确认")),
+			],
 			16,
 			rating_color
 		))
@@ -676,7 +683,7 @@ func _roster_panel() -> Control:
 		var hero_id := String(hero.get("hero_id", ""))
 		var selected := hero_id == _selected_hero_id
 		var entry := _button(
-			"%s%s%s\nLv.%d · %d★  战力 %d" % [
+			"%s%s%s\n%d级 · %d★  战力 %d" % [
 				"◆ " if selected else "",
 				String(hero.get("display_name", "未知角色")),
 				" · ★阵营核心" if bool(hero.get("journey_focus", false)) else "",
@@ -912,7 +919,7 @@ func _hero_card(hero: Dictionary) -> Control:
 	identity_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	identity.add_child(identity_copy)
 	identity_copy.add_child(_label(
-		"%s%s  ·  Lv.%d  %d★  ·  %s  ·  碎片%d" % [
+		"%s%s  ·  %d级  %d★  ·  %s  ·  碎片%d" % [
 			"★阵营核心 · " if bool(hero.get("journey_focus", false)) else "",
 			String(hero.get("display_name", "未知角色")),
 			int(hero.get("level", 1)),
@@ -924,9 +931,9 @@ func _hero_card(hero: Dictionary) -> Control:
 		TEXT
 	))
 	identity_copy.add_child(_label(
-		"%s · %s评级 · %s  |  经验 %s · 无损可出征" % [
+		"%s · %s · %s  |  经验 %s · 无损可出征" % [
 			String(CLASS_NAMES.get(String(hero.get("class_id", "")), "未知职业")),
-			String(hero.get("aptitude_id", "?")),
+			_rating_label(String(hero.get("aptitude_id", "B"))),
 			String(hero.get("role", "待命")),
 			"上限" if int(hero.get("level", 1)) >= 5 else "%d/%d" % [
 				int(hero.get("xp", 0)),
@@ -975,7 +982,7 @@ func _hero_card(hero: Dictionary) -> Control:
 	skill_board.add_theme_constant_override("separation", 1)
 	data_board.add_child(skill_board)
 	var skill_name := _label(
-		"主动技能  %s Lv.%d" % [
+		"主动技能  %s %d级" % [
 			String(hero.get("skill_name", "")),
 			int(hero.get("skill_level", 1)),
 		],
@@ -1028,7 +1035,7 @@ func _hero_card(hero: Dictionary) -> Control:
 			cultivation,
 			"升至%d★\n解锁 · %s" % [
 				target_star,
-				String(hero.get("next_star_effect", "职责质变")),
+				String(hero.get("next_star_effect", "职责强化")),
 			],
 			"star",
 			hero,
@@ -1049,7 +1056,7 @@ func _hero_card(hero: Dictionary) -> Control:
 	if int(hero.get("skill_level", 1)) < 3:
 		var research := _add_cultivation_action(
 			cultivation,
-			"研究技能 Lv.%d" % (int(hero.get("skill_level", 1)) + 1),
+			"研究技能%d级" % (int(hero.get("skill_level", 1)) + 1),
 			"skill",
 			hero,
 			hero.get("skill_resource_context", {}) as Dictionary,
@@ -1163,7 +1170,7 @@ func _skill_research_status(error: String) -> String:
 		"RESEARCH_LAB_LEVEL_TOO_LOW":
 			return "需先升级研究所"
 		"NOT_ENOUGH_SKILL_CHIPS":
-			return "军团数据不足 · 击败章节 Boss 或领取长期进度"
+			return "军团数据不足 · 击败章节首领或领取长期进度"
 		"NOT_ENOUGH_TOILET_COINS":
 			return "金币不足 · 继续攻城获得战果"
 		_:
@@ -1245,6 +1252,15 @@ func _button(value: String, primary: bool) -> Button:
 	button.add_theme_stylebox_override("pressed", _box(Color("#17383a"), CYAN))
 	button.add_theme_stylebox_override("focus", _box(Color("#17383a"), Color.WHITE))
 	return button
+
+
+func _rating_label(rating: String) -> String:
+	return String({
+		"C": "基础",
+		"B": "标准",
+		"A": "精锐",
+		"S": "传奇",
+	}.get(rating, "标准"))
 
 
 func _panel(title: String) -> PanelVBox:

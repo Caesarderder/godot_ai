@@ -19,7 +19,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 双锯重装马桶人
+# 飞行双圆锯马桶人
 
 | 字段 | 当前事实 |
 |---|---|

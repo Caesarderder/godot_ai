@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "archetype_id": "phase_tunneler",
-  "display_name": "相位钻袭马桶人",
+  "display_name": "武士刀蜘蛛马桶人",
   "rating": "B",
   "class_id": "fighter",
   "branch": "ordinary",
@@ -22,7 +22,7 @@
   "encounters": {
     "safe_intro": {"stage_id": "stage_4_3", "demand": "一座低耐久防空台位于盾卫后方。", "feedback": "地面钻线直达后排，摧毁后原路亮线返回。", "fallbacks": ["rocket"]},
     "combination_test": {"stage_id": "stage_4_4", "demand": "净化装置与前排混编，要求选择绕后目标。", "feedback": "泄压口吸引回头单位并显示正面减压tick。", "fallbacks": ["parasite", "bomber"]},
-    "spotlight": {"stage_id": "stage_4_4", "demand": "轮换防线的后排支援只有短暂暴露窗。", "feedback": "窗口内击破后返还能量并标记路径斩击。", "fallbacks": ["saw", "rocket"]},
+    "spotlight": {"stage_id": "stage_4_4", "demand": "换防桥头的后排支援只有短暂暴露窗。", "feedback": "窗口内击破后返还能量并标记路径斩击。", "fallbacks": ["saw", "rocket"]},
     "boss_soft_counter": {"stage_id": "stage_4_5", "demand": "Boss核心不可绕后，但三个军械模块可被逐一钻袭。", "feedback": "模块摧毁减少Boss下一轮军械组合。", "fallbacks": ["rocket", "saw", "armored"]}
   },
   "narrative": {

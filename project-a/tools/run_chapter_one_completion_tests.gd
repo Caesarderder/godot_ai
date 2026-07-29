@@ -1,5 +1,7 @@
 extends SceneTree
 
+const StageCatalog := preload("res://game/scripts/domain/content/stage_catalog.gd")
+
 var failures: Array[String] = []
 
 
@@ -63,8 +65,14 @@ func _run() -> void:
 	})
 	main.call("_show_result")
 	await _wait_frames(4)
-	_check(_tree_has_text(main, "第一章完成 · 灰镜核心已摧毁"), "chapter boss gets a distinct completion title")
-	_check(_tree_has_text(main, "你的成长选择通过实战验证"), "chapter result closes the player-choice promise")
+	var chapter_boss_name := String(
+		StageCatalog.stage("stage_1_5").get("display_name", "stage_1_5")
+	)
+	_check(
+		_tree_has_text(main, "第一章完成 · %s已攻克" % chapter_boss_name),
+		"chapter completion title uses the canonical current stage name"
+	)
+	_check(_tree_has_text(main, "你的成长选择扭转了战局"), "chapter result closes the player-choice promise")
 	_check(_tree_has_text(main, "冲锋压炮 4 次"), "assault mastery proof uses runtime cannon facts")
 	_check(
 		_tree_has_text(main, "首章解锁 · 第2章战线 · 信号招募"),

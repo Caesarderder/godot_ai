@@ -260,7 +260,7 @@ func _mission_panel() -> Control:
 			continue
 		panel.add_child(_mission_row(mission))
 	if not bool(_view.get("weekly_unlocked", false)):
-		panel.add_child(_label("周任务将在指挥官 Lv10 开放", 13, MUTED))
+		panel.add_child(_label("周任务将在指挥官10级开放", 13, MUTED))
 	return panel
 
 
@@ -315,7 +315,7 @@ func _build_pass() -> void:
 	for level_value in pass_view.get("levels", []):
 		var level := level_value as Dictionary
 		var card := _button(
-			"Lv%d%s\n%s" % [
+			"%d级%s\n%s" % [
 				int(level.get("level", 0)),
 				" ✓" if bool(level.get("claimed", false)) else "",
 				_reward_copy(level.get("reward", {}) as Dictionary),
@@ -377,9 +377,9 @@ func _commander_panel(view: Dictionary) -> Control:
 	panel.add_child(row)
 	var summary := VBoxContainer.new()
 	summary.custom_minimum_size.x = 170
-	summary.add_child(_label("指挥官 Lv%d" % int(view.get("level", 1)), 16, GOLD))
+	summary.add_child(_label("指挥官%d级" % int(view.get("level", 1)), 16, GOLD))
 	summary.add_child(_label(
-		"%d / %d XP" % [int(view.get("xp", 0)), int(view.get("next_xp", 0))],
+		"经验 %d / %d" % [int(view.get("xp", 0)), int(view.get("next_xp", 0))],
 		11,
 		MUTED
 	))
@@ -402,7 +402,7 @@ func _commander_panel(view: Dictionary) -> Control:
 func _lock_panel(view: Dictionary) -> Control:
 	var panel := _panel("%s · 尚未解锁" % String(view.get("title", "")))
 	panel.add_child(_label(
-		"双条件进度：指挥官 Lv%d/%d · %s %s" % [
+		"双条件进度：指挥官%d/%d级 · %s %s" % [
 			int(view.get("level", 1)),
 			int(view.get("required_level", 1)),
 			String(view.get("stage_copy", "")),

@@ -7,5 +7,5 @@ script = ExtResource("1")
 task_id = &"operation.choose_growth"
 scale = "中坎"
 title = "让工厂支援 1-5 备战"
-reason = "基础三人编队无法稳定跨过 Boss 巨炮，军团成长需要真实后勤来源。"
+reason = "基础三人编队无法稳定跨过首领巨炮，军团成长需要真实后勤来源。"
 recovery = "任选一座资源设施投产并收取验收批次，再按喜欢的职责选择冲锋或装甲二星。"

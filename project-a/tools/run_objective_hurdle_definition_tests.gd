@@ -42,14 +42,14 @@ func _run() -> void:
 	var high_wall := ObjectiveHurdleCatalogScript.hurdle_view("operation.high_wall")
 	_check(String(high_wall.get("scale", "")) == "大坎", "the first forced loss remains a major hurdle")
 	_check(
-		String(high_wall.get("recovery", "")).contains("研发冲锋")
-			and String(high_wall.get("recovery", "")).contains("研究所"),
+		String(high_wall.get("recovery", "")).contains("冲锋")
+			and String(high_wall.get("recovery", "")).contains("承伤"),
 		"the first forced loss points to its deterministic stage-reward-to-research recovery"
 	)
 	high_wall["title"] = "mutated view"
 	_check(
 		String(ObjectiveHurdleCatalogScript.hurdle_view("operation.high_wall").get("title", ""))
-			== "1-4 灰镜高墙",
+			== "1-4 监控人火力点",
 		"callers receive a detached view and cannot mutate the shared Resource"
 	)
 	_check(

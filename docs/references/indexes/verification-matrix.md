@@ -130,7 +130,7 @@ related:
   确认。结果截图现由真实技能卡 `pressed` 信号经 App Shell、`BattleWorld.request_skill()` 和
   一个 5Hz tick 产生；工具监听并断言动态角色 ID、`skill_used`、正数 `effective_damage`、
   施法后能量与世界 VFX，不再直接调用 HUD 或手工写两条 96 伤害。当前新档权威结果为
-  “G-Man 指挥官 · 统帅碾压：造成 54 伤害”。两者都不替代目标玩家首次理解盲测。
+  “Gman 指挥官 · 统帅碾压：造成 54 伤害”。两者都不替代目标玩家首次理解盲测。
   1-1 通过 StageCatalog 显式提供一次 `30000bp` 首次反攻强化，HUD 在点击前公开该事实；后续
   施法和其他关卡保持 `20000bp`。98 场首章扫描测得 1-1 为 44.6–58.8 秒，并继续满足单人
   1-4 0/7、援军 1-4 7/7、未成长 1-5 0/7、冲锋/装甲二星 1-5 各 7/7；14 条手动技能新档
@@ -283,7 +283,7 @@ related:
   `run_chapter_one_completion_tests.gd` 锁定第二章成长直达成员页、精确 `80 金币 + 4 军团数据` 成本与
   可操作按钮；`ui-chapter-two-skill-growth-844x390.png` 提供基准横屏首屏证据。revision
   `ea51420b56cb` 的真实 Chrome 150 新档又在 474.1 秒内从 2-1 侦察进入成员培养，点击正式
-  G-Man 技能按钮，证明 Lv.2 与六项精确成本持久化，再通过底部战区导航返回 2-1，尝试数保持
+  Gman 技能按钮，证明 Lv.2 与六项精确成本持久化，再通过底部战区导航返回 2-1，尝试数保持
   0；698 次战斗技能触控期间三类运行错误均为 0。新增三张
   `browser-chapter-two-skill-growth-*` 截图覆盖交易前、交易后和回访侦察。
 - 当前替代证据：clean candidate `5f5b5e5721cb` / `0.13.53-faction-ten-handoff.1` 已由
@@ -294,7 +294,7 @@ related:
   runtime/console/network 错误均为 0。`browser-first-industrial-gift-claimed-844x390.png`、
   `browser-chapter-one-faction-recruit-844x390.png`、`browser-faction-recruit-result-844x390.png`
   与 `browser-faction-blueprint-focus-844x390.png` 是本轮新转折证据。此项取代旧的“首章后直接
-  升级 G-Man 技能”浏览器路径；阵营核心研发、入队、三场证明和专属碎片升星仍缺同一新档的
+  升级 Gman 技能”浏览器路径；阵营核心研发、入队、三场证明和专属碎片升星仍缺同一新档的
   连续 Web 证据。
 - 首章后成长周期：`run_progression_cycle_scan.gd` 从 7 个固定 seed 的保守 1-5 后账本出发，
   先领取新游福利、开启 18/10/8 后勤箱并使用一次免材料升星核心，再用明确贪心策略消费永久

@@ -12,6 +12,8 @@ const APTITUDE_WEIGHT_BP: Dictionary = {"B": 8000, "A": 1800, "S": 200}
 const TRAIT_IDS: Array[String] = [
 	"brave", "patient", "reckless", "focused", "lucky", "stubborn", "swift", "calm"
 ]
+# Legacy deterministic-name pools remain public for save/test compatibility.
+# Canon-restored player display names no longer construct fictional individuals from them.
 const GIVEN_NAMES: Array[String] = ["Ari", "Bren", "Cato", "Dara", "Eli", "Faye", "Galen", "Hana"]
 const FAMILY_NAMES: Array[String] = ["Ash", "Brook", "Crown", "Dusk", "Ember", "Frost"]
 const CLASS_BASE_STATS: Dictionary = {
@@ -39,7 +41,7 @@ const INITIAL_CLASSES: Array[String] = [
 
 static func create_initial_roster(run_seed: int) -> Array[RefCounted]:
 	var specs: Array[Dictionary] = [
-		{"archetype": "gman", "class": "guardian", "name": "G-Man 指挥官"},
+		{"archetype": "gman", "class": "guardian", "name": "Gman"},
 	]
 	var roster: Array[RefCounted] = []
 	for index in specs.size():
@@ -74,7 +76,7 @@ static func generate_hero(run_seed: int, roster_index: int) -> RefCounted:
 		hero.trait_ids[1] = TRAIT_IDS[(TRAIT_IDS.find(hero.trait_ids[0]) + 1) % TRAIT_IDS.size()]
 	hero.skill_ids = ["%s_basic" % hero.archetype_id, FactoryCatalogScript.active_skill_for_archetype(hero.archetype_id)]
 	hero.equipment_by_slot = {"weapon": "", "armor": "", "accessory": ""}
-	hero.display_name = "%s · %s %s" % [archetype_display_name(hero.archetype_id), _pick(GIVEN_NAMES, ["given", token]), _pick(FAMILY_NAMES, ["family", token])]
+	hero.display_name = "%s · %03d" % [archetype_display_name(hero.archetype_id), roster_index + 1]
 	hero.level = 1
 	hero.xp = 0
 	hero.base_stats = (CLASS_BASE_STATS[hero.class_id] as Dictionary).duplicate(true)
@@ -95,7 +97,7 @@ static func generate_archetype(run_seed: int, roster_index: int, archetype_id: S
 	hero.skill_ids.clear()
 	hero.skill_ids.append("%s_basic" % archetype_id)
 	hero.skill_ids.append(FactoryCatalogScript.active_skill_for_archetype(archetype_id))
-	hero.display_name = "%s · %s %s" % [archetype_display_name(archetype_id), _pick(GIVEN_NAMES, ["given", hero.seed_token]), _pick(FAMILY_NAMES, ["family", hero.seed_token])]
+	hero.display_name = "%s · %03d" % [archetype_display_name(archetype_id), roster_index + 1]
 	var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
 	if not recipe.is_empty():
 		hero.aptitude_id = String(recipe.get("rating", "B"))
@@ -109,33 +111,10 @@ static func merged_hero_id(run_seed: int, roster_index: int, consumed_ids: Array
 
 
 static func archetype_display_name(archetype_id: String) -> String:
-	var names := {
-		"gman": "Gman",
-		"assault": "冲锋马桶人",
-		"sonic": "音波马桶人",
-		"rocket": "火箭飞行马桶人",
-		"bomber": "自爆飞行马桶人",
-		"armored": "装甲冲城马桶人",
-		"saw": "双锯重装马桶人",
-		"repair": "维修马桶人",
-		"parasite": "寄生母体马桶人",
-		"signal_purifier": "信号净化马桶人",
-		"anchor_bastion": "锚桩堡垒马桶人",
-		"magnetic_conductor": "磁轨牵引马桶人",
-		"phase_tunneler": "相位钻袭马桶人",
-		"protocol_weaver": "协议编织母体",
-		"ram_breaker": "破盾撞角马桶人",
-		"smoke_screen": "烟幕喷射马桶人",
-		"mortar": "曲射臼炮马桶人",
-		"interceptor": "预警截击马桶人",
-		"bulwark": "联结壁垒马桶人",
-		"crusher": "液压粉碎马桶人",
-		"echo_mimic": "回声拟态母体",
-		"drain_engine": "虹吸引擎马桶人",
-		"swarm_beacon": "群落信标马桶人",
-		"chronolock": "时序锁定母体",
-	}
-	return String(names.get(archetype_id, "马桶人"))
+	var data := FactoryCatalogScript.archetype(archetype_id)
+	if not data.is_empty():
+		return String(data.get("display_name", ""))
+	return "内容未载入（%s）" % archetype_id
 
 
 static func _pick(values: Array[String], parts: Array[String]) -> String:

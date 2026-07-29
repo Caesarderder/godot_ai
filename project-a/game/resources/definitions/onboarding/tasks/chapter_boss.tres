@@ -6,8 +6,8 @@
 [resource]
 script = ExtResource("1")
 task_id = &"operation.chapter_boss"
-title = "行动七：摧毁灰镜核心"
-lesson = "用刚才选择的永久成长击破核心巨炮，完成工厂—军团—攻城闭环。"
+title = "行动七：摧毁联盟核心巨炮"
+lesson = "用刚才选择的永久成长击破 E11 联盟核心巨炮，完成工厂—军团—攻城闭环。"
 objectives = Array[Resource]([ExtResource("2")])
 hero_shards = 4
 porcelain = 24

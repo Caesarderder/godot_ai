@@ -19,7 +19,7 @@ related:
   - reference.character-roster-index
 ---
 
-# 火箭飞行马桶人
+# 飞行四发射器马桶人
 
 | 字段 | 当前事实 |
 |---|---|

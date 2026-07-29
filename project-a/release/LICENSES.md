@@ -1,6 +1,6 @@
 # Release asset and license inventory
 
-Candidate scope: Project A Godot Web export, Earth Skibidi versus Alliance playable slice.
+Candidate scope: 《马桶人进化-维度爆裂》Godot Web export, Earth Skibidi versus Alliance playable slice.
 
 This inventory covers the assets currently intended to ship from `project-a/`.
 

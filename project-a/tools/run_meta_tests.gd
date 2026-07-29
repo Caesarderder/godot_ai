@@ -58,6 +58,7 @@ func _init() -> void:
 func _run_all() -> void:
 	_test_new_game_contract()
 	_test_seeded_hero_generation()
+	_test_content_display_contract()
 	_test_progression_clamp_bulk_equivalence()
 	_test_war_merit_reward_track()
 	_test_fingerprint_and_idempotency()
@@ -65,6 +66,7 @@ func _run_all() -> void:
 	_test_revision_contract()
 	_test_save_failure_does_not_swap()
 	_test_save_codec_roundtrip_and_strict_values()
+	_test_legacy_hero_display_names_refresh_on_load()
 	_test_save_manager_atomic_roundtrip()
 	_test_save_export_import_contract()
 	_test_save_manager_deletes_all_local_candidates()
@@ -86,13 +88,13 @@ func _test_new_game_contract() -> void:
 	var state := GameStateScript.create_new(12345, 100)
 	_eq(state.schema_version, 11, "new game uses the character-fragment schema v11 envelope")
 	_eq(state.content_version, "toilet-factory-slg-v3-factions", "new game uses the faction-progression contract")
-	_eq(state.roster.size(), 1, "new game grants only permanent G-Man")
+	_eq(state.roster.size(), 1, "new game grants only permanent G-Toilet")
 	_eq(state.economy.toilet_coins, 20, "new game starts with only 20 toilet coins")
 	_eq(state.economy.toilet_gems, 0, "new game starts without premium currency")
 	_eq(state.economy.xp_books, 0, "new game keeps retired xp books empty")
 	_eq(state.economy.forge_stones, 0, "new game starts with zero forge stones")
 	_eq(state.economy.recruit_tickets, 0, "new game has no implicit recruitment tickets")
-	_eq(state.formation.hero_ids(), state.roster_ids(), "new game deploys only permanent G-Man")
+	_eq(state.formation.hero_ids(), state.roster_ids(), "new game deploys only permanent G-Toilet")
 	_eq(state.factory.materials, {"porcelain": 30, "parts": 0, "sludge": 0}, "new game starts with exactly one research-lab budget")
 	_eq(state.factory.discovered_blueprints, {}, "new game starts without discovered blueprints")
 	_eq(state.factory.blueprints.size(), 4, "compatibility data preserves four hidden legacy blueprints")
@@ -210,8 +212,8 @@ func _test_seeded_hero_generation() -> void:
 	var archetypes: Array[String] = []
 	for hero in state_a.roster:
 		archetypes.append(hero.archetype_id)
-	_eq(archetypes, ["gman"], "starter roster contains only permanent G-Man")
-	_eq(state_a.roster[0].display_name, "G-Man 指挥官", "starter commander has the canonical display name")
+	_eq(archetypes, ["gman"], "starter roster contains only permanent G-Toilet")
+	_eq(state_a.roster[0].display_name, "Gman", "starter commander has the canonical display name")
 	_eq(state_a.roster[0].to_dict(), state_b.roster[0].to_dict(), "same run seed is stable and ignores save_id/time")
 	_ok(state_a.roster[0].to_dict() != state_c.roster[0].to_dict(), "different run seed changes generated hero")
 	_ok(HeroGenerator.GIVEN_NAMES.size() * HeroGenerator.FAMILY_NAMES.size() >= 40, "name pool has at least 40 combinations")
@@ -226,6 +228,75 @@ func _test_seeded_hero_generation() -> void:
 			var delta := int(hero.base_stats[key]) - baseline
 			var extent := int(HeroGenerator.STAT_VARIANCE[key])
 			_ok(delta >= -extent and delta <= extent, "L1 five-stat variance stays bounded for %s.%s" % [hero.hero_id, key])
+
+
+func _test_content_display_contract() -> void:
+	var expected_names := {
+		"gman": "Gman",
+		"assault": "普通马桶人",
+		"sonic": "故障闪电马桶人",
+		"rocket": "飞行四发射器马桶人",
+		"bomber": "炸弹桶马桶人",
+		"armored": "激光火箭筒马桶人",
+		"saw": "飞行双圆锯马桶人",
+		"repair": "研究员马桶人",
+		"parasite": "大型寄生虫马桶人",
+		"signal_purifier": "钢爪马桶人科学家",
+		"anchor_bastion": "巨型飞行马桶人",
+		"magnetic_conductor": "冲击波直升机马桶人",
+		"phase_tunneler": "武士刀蜘蛛马桶人",
+		"protocol_weaver": "寄生虫马桶人",
+		"ram_breaker": "喷气背包钢爪马桶人",
+		"smoke_screen": "硫酸桶马桶人",
+		"mortar": "喷气背包六发射器马桶人",
+		"interceptor": "直升机马桶人",
+		"bulwark": "多头马桶人",
+		"crusher": "圆锯突变马桶人",
+		"echo_mimic": "DJ马桶人",
+		"drain_engine": "吸尘小便池人",
+		"swarm_beacon": "直升机寄生虫马桶人",
+		"chronolock": "硫酸骷髅马桶人",
+	}
+	var unique_display_names: Dictionary = {}
+	for archetype_id in expected_names:
+		var display_name := String(expected_names[archetype_id])
+		_ok(
+			not unique_display_names.has(display_name),
+			"every stable player archetype has a unique display name: %s" % display_name
+		)
+		unique_display_names[display_name] = archetype_id
+		_eq(
+			HeroGenerator.archetype_display_name(archetype_id),
+			display_name,
+			"%s has one concise player-facing title" % archetype_id
+		)
+		var archetype := FactoryCatalogScript.archetype(archetype_id)
+		if not archetype.is_empty():
+			_eq(
+				String(archetype.get("display_name", "")),
+				display_name,
+				"%s catalog title matches hero projection" % archetype_id
+			)
+		var recipe := FactoryCatalogScript.recipe_for_archetype(archetype_id)
+		if not recipe.is_empty():
+			_eq(
+				String(recipe.get("display_name", "")),
+				display_name,
+				"%s recipe title matches hero projection" % archetype_id
+			)
+	_eq(
+		HeroGenerator.archetype_display_name("missing_test_archetype"),
+		"内容未载入（missing_test_archetype）",
+		"unknown archetypes preserve a diagnostic identifier instead of masking missing content"
+	)
+	var assault_recipe := FactoryCatalogScript.recipe("ordinary.assault")
+	_eq(String(assault_recipe.get("recipe_id", "")), "ordinary.assault", "display cleanup preserves recipe id")
+	_eq(int(assault_recipe.get("duration_seconds", 0)), 5, "display cleanup preserves recipe duration")
+	_eq(
+		assault_recipe.get("cost", {}),
+		{"porcelain": 20, "parts": 8, "sludge": 4},
+		"display cleanup preserves recipe cost"
+	)
 
 
 func _test_recruit_four_to_eight_and_ticket_cost() -> void:
@@ -301,7 +372,7 @@ func _test_battle_settlement() -> void:
 	)
 	_eq(victory["event"]["reward"], {"gold": 80, "xp_books": 0, "porcelain": 24, "parts": 16, "sludge": 12}, "opening victory reward is owned by domain reducer")
 	_eq(executor.state.economy.gold, gold_before + 80, "victory grants fixed gold")
-	_eq(executor.state.economy.xp_books, books_before, "opening victory does not accelerate Gman with a training book")
+	_eq(executor.state.economy.xp_books, books_before, "opening victory does not accelerate G-Toilet with a training book")
 	_eq(victory["event"]["hero_xp_each"], 30, "victory reports the exact per-hero battle experience")
 	_eq(victory["event"]["hero_xp_recipients"], 1, "victory reports how many deployed heroes gained experience")
 	_ok(bool(victory["event"]["first_victory"]), "first clear is explicit in the durable settlement event")
@@ -826,7 +897,7 @@ func _test_auto_skill_preference_command() -> void:
 func _test_factory_catalog_and_production() -> void:
 	var recipes := FactoryCatalogScript.recipes()
 	_eq(recipes.size(), 8, "factory exposes eight production recipes")
-	_eq(FactoryCatalogScript.recipe("ordinary.assault")["display_name"], "冲锋马桶人", "catalog exposes stable display fields")
+	_eq(FactoryCatalogScript.recipe("ordinary.assault")["display_name"], "普通马桶人", "catalog exposes stable display fields")
 	var executor := CommandExecutorScript.new(GameStateScript.create_new(446, 0), Callable(self, "_record_save_success"))
 	var before: Dictionary = executor.state.factory.materials.duplicate(true)
 	var locked := executor.execute(_env("factory-locked", "start_production", {"recipe_id": "heavy.armored", "now_unix": 90}, "factory:locked", executor))
@@ -972,6 +1043,79 @@ func _test_save_codec_roundtrip_and_strict_values() -> void:
 	invalid["economy"]["gold"] = -1
 	var invalid_decoded := SaveCodecScript.decode(invalid)
 	_ok(not bool(invalid_decoded["ok"]), "save codec rejects invariant violations")
+
+
+func _test_legacy_hero_display_names_refresh_on_load() -> void:
+	var state := GameStateScript.create_new(779, 0)
+	var assault: RefCounted = HeroGenerator.generate_archetype(
+		state.run_seed,
+		state.allocate_hero_index(),
+		"assault",
+		"fighter"
+	)
+	assault.level = 4
+	assault.star = 3
+	state.roster.append(assault)
+	_ok(state.formation.assign_next_troop(assault.hero_id), "legacy display-name fixture deploys assault hero")
+	var executor := CommandExecutorScript.new(state, Callable(self, "_record_save_success"))
+	_exec_ok(
+		executor,
+		"legacy-name-receipt",
+		"grant_resources",
+		{"resources": {"toilet_coins": 1}},
+		"legacy-name-business"
+	)
+	var legacy: Dictionary = executor.state.to_dict()
+	legacy["roster"][0]["display_name"] = "G-Man 指挥官"
+	legacy["roster"][1]["display_name"] = "冲锋马桶人 · Ari Ash ★3"
+	var identity_before: Array[Dictionary] = []
+	for hero_data in legacy["roster"]:
+		identity_before.append({
+			"hero_id": String(hero_data["hero_id"]),
+			"archetype_id": String(hero_data["archetype_id"]),
+			"level": int(hero_data["level"]),
+			"star": int(hero_data["star"]),
+		})
+	var formation_before: Dictionary = (legacy["formation"] as Dictionary).duplicate(true)
+	var receipt_ledgers_before: Dictionary = (legacy["receipt_ledgers"] as Dictionary).duplicate(true)
+	var command_receipts_before: Dictionary = (legacy["command_receipts"] as Dictionary).duplicate(true)
+	var business_receipts_before: Dictionary = (legacy["business_receipts"] as Dictionary).duplicate(true)
+
+	var decoded := SaveCodecScript.decode(legacy)
+	_ok(bool(decoded.get("ok", false)), "legacy hero display names decode without a schema bump")
+	_eq(
+		String(legacy["roster"][1]["display_name"]),
+		"冲锋马桶人 · Ari Ash ★3",
+		"display-name refresh does not mutate the caller's persisted dictionary"
+	)
+	if not bool(decoded.get("ok", false)):
+		return
+	var restored: RefCounted = decoded["state"]
+	_eq(restored.roster[0].display_name, "Gman", "legacy commander name projects from stable gman archetype")
+	_eq(
+		restored.roster[1].display_name,
+		"普通马桶人 · Ari Ash ★3",
+		"legacy role prefix projects to the current archetype name while preserving the hero suffix"
+	)
+	var identity_after: Array[Dictionary] = []
+	for hero in restored.roster:
+		identity_after.append({
+			"hero_id": String(hero.hero_id),
+			"archetype_id": String(hero.archetype_id),
+			"level": int(hero.level),
+			"star": int(hero.star),
+		})
+	_eq(identity_after, identity_before, "display-name refresh preserves hero identity and progression")
+	_eq(restored.formation.to_dict(), formation_before, "display-name refresh preserves formation")
+	_eq(restored.receipt_ledgers, receipt_ledgers_before, "display-name refresh preserves receipt ledgers")
+	_eq(restored.command_receipts, command_receipts_before, "display-name refresh preserves command receipts")
+	_eq(restored.business_receipts, business_receipts_before, "display-name refresh preserves business receipts")
+	var rewritten: Dictionary = SaveCodecScript.encode(restored)
+	_eq(
+		String(rewritten["roster"][1]["display_name"]),
+		"普通马桶人 · Ari Ash ★3",
+		"next save converges the persisted display name to the current content title"
+	)
 
 
 func _test_strict_v1_to_v2_migration() -> void:
@@ -1191,8 +1335,8 @@ func _test_game_bootstrap_contract() -> void:
 	corrupt_manager.load_result = {"ok": false, "error": "unsupported schema_version"}
 	_eq(game_node.bootstrap_with_manager(corrupt_manager, 992, 14), "created", "bootstrap destructively replaces an obsolete schema")
 	_eq(corrupt_manager.delete_calls, 1, "obsolete schema deletes its local save candidates")
-	_eq(corrupt_manager.saved_states.size(), 1, "obsolete schema writes one fresh Gman save")
-	_eq(game_node.current_state().roster.size(), 1, "obsolete schema replacement starts with only permanent G-Man")
+	_eq(corrupt_manager.saved_states.size(), 1, "obsolete schema writes one fresh G-Toilet save")
+	_eq(game_node.current_state().roster.size(), 1, "obsolete schema replacement starts with only permanent G-Toilet")
 	game_node.free()
 
 

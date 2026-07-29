@@ -341,7 +341,7 @@ related:
   完成首章；固定 55 秒 Web 截图未命中短确认窗，因此另由真实 `BattleSession` accepted event
   驱动 `BattleHudScreen` 生成 `ui-boss-cannon-suppressed-844x390.png`，不以手写 UI 假状态冒充。
 - Chrome 隔离新档旅程现从第二章侦察继续完成第一次永久技能研究：revision
-  `ea51420b56cb` 在 474.1 秒内点击“先培养军团”，进入成员培养，使用正式按钮把 G-Man
+  `ea51420b56cb` 在 474.1 秒内点击“先培养军团”，进入成员培养，使用正式按钮把 Gman
   统帅碾压从 Lv.1 研究到 Lv.2；IndexedDB 精确证明 80 币、6 技术、1 芯片和陶瓷/零件/能源
   24/16/20 原子扣除。随后通过底部“战区”返回 2-1 侦察，尝试次数仍为 0；全程 698 次战斗
   技能触控，runtime exception、非预期 console error 和 failed request 均为 0。三张

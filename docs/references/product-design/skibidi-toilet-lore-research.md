@@ -4,7 +4,7 @@ km_type: reference
 domain: product
 status: active
 owner: product-design
-last_verified: 2026-07-23
+last_verified: 2026-07-29
 source_of_truth:
   - docs/references/product-design/skibidi-toilet-lore-research.md
 validated_by:
@@ -24,7 +24,7 @@ related:
 
 ## 目标
 
-为《Skibidi Toilet：马桶人工厂攻城》的关卡、角色、稀有度、技能和内容更新提供统一的原作依据。本节点优先回答：
+为《马桶人进化-维度爆裂》的关卡、角色、稀有度、技能和内容更新提供统一的原作依据。本节点优先回答：
 
 - 哪些阵营在什么时期互为敌友；
 - 主要故事阶段发生了什么；
@@ -56,6 +56,25 @@ related:
 ### 持续更新规则
 
 这是一个会随新集数变化的活跃节点。新增角色、死亡状态、阵营关系和进化形态前，必须重新检查最新官方内容；不能只看短视频剪辑、同人动画或角色强度榜。
+
+### 当前 60 关采用的逐集硬边界
+
+本轮仅把 Wiki 可定位的事件写入玩家剧情；不确定的过渡关使用“双方交战”等中性标题，不补地点、
+组织或人物动机。必须遵守以下易错点：
+
+- E18 为 Titan Cameraman 登场，E20 为第一次泰坦级交战；
+- E24 为 Speakermen 登场，E26 为 Titan Speakerman 登场，E29 为 Glitch；
+- E28 是 Titan Speakerman 袭击 Skibidi 会议，不写成 Scientist 的寄生行动；
+- E31 是普通 Speakerman 被感染，Titan Speakerman 在 E32 才被大型寄生体控制；
+- E47 包含 Cinemaman、G-Toilet 与 Infected Titan Speakerman 的战斗；
+- E50 为升级 Titan Cameraman 回归，E57 为 Titan Speakerman 解除感染；
+- E66–E74 是 Alpha-Hills 至 Astro 舰队来袭阶段；E70 Chief Scientist 死亡，E71 G-Squad，
+  E72 G-Toilet 对 Detainer，E73 三 Titan 对 G-Toilet，E74 Astro 舰队来袭；
+- E74 只作本幕尾声，不能倒推成更早章节里 Alliance 与地球 Skibidi 已经结盟。
+
+角色显示名使用 [原作角色百科](original-series-character-codex.md) 中的 `原作明确` 或可核查族群。
+`Normal`、`Armored`、`Rocketeer`、`Large Parasitic` 等是族群原型，不给随机生成个体补写姓名或生平；
+`plunger_charge`、时间冻结、团队护盾等保留的技能 ID 是兼容性与玩法实现，说明必须标注“玩法改编”。
 
 ## 世界观总览
 

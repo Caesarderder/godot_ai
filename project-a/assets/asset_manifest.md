@@ -14,10 +14,25 @@
 | Location | `assets/3d/porcelain-raider-kit/models/` |
 | Contents | 8 GLB files: armored, assault, bomber, parasite, repair, rocket, saw, sonic |
 | Existing metadata | `assets/3d/porcelain-raider-kit/asset_manifest.json` records all 8 hashes, 1,296–1,656 triangles per model, Blender/Godot versions and test commands |
-| Intended scope | Permanent allied character presentation |
+| Intended scope | Eight named allied character variants: assault, sonic, rocket, bomber, armored, saw, repair and parasite |
 | Rights status | Project Asset Vault source `project-a-porcelain-raider-kit`, marked usable with no attribution; release inventory identifies it as an original project Blender-pipeline batch |
 | Release gate | Independent legal/IP review of the fan-content premise still applies to the product as a whole |
-| Notes | Files are referenced only through game-owned wrapper scenes. Hash, triangle and Godot import evidence already exists in the batch JSON. |
+| Notes | Files are referenced only through game-owned wrapper scenes. Hash, triangle and Godot import evidence already exists in the batch JSON. This batch does not cover the complete playable roster. |
+
+### Playable-roster visual coverage
+
+The roster catalog currently contains more archetypes than the dedicated model batch. The runtime deliberately
+keeps a procedural body as a prototype fail-safe, but that body is not evidence that every character has a
+finished visual identity.
+
+| Coverage | Archetypes | Release meaning |
+|---|---|---|
+| `unique` | `assault`, `sonic`, `rocket`, `bomber`, `armored`, `saw`, `repair`, `parasite` | Dedicated imported model and wrapper scene |
+| `variant-placeholder` | `gman`, `signal_purifier`, `anchor_bastion`, `magnetic_conductor`, `phase_tunneler`, `protocol_weaver`, `ram_breaker`, `smoke_screen`, `mortar`, `interceptor`, `bulwark`, `crusher`, `echo_mimic`, `drain_engine`, `swarm_beacon`, `chronolock` | Procedural body with role parts; acceptable for prototype readability only |
+
+Before any uncovered archetype is called visually complete, give it an asset contract, a dedicated silhouette
+or approved reusable variant, manifest provenance, import verification, and a representative 844×390 battle
+capture. The procedural fail-safe must remain visibly classified as a placeholder in production tracking.
 
 ## Third-party visual batches
 

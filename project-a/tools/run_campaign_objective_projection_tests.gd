@@ -50,9 +50,9 @@ func _test_first_chapter_projection() -> void:
 	var projection := CampaignObjectiveProjectionScript.derive(state, onboarding)
 	var title := projection.get("title", {}) as Dictionary
 	var hierarchy := projection.get("hierarchy", {}) as Dictionary
-	_check(String(title.get("primary_label", "")).contains("启动反攻"), "new save title exposes the first executable promise")
+	_check(String(title.get("primary_label", "")).contains("进入 E07"), "new save title exposes the first canon-anchored action")
 	_check(String(title.get("objective", "")).contains("摧毁联盟前哨 1-1"), "new save title names the first concrete battle objective")
-	_check(String(hierarchy.get("macro", "")).contains("摧毁灰镜核心"), "first chapter retains one macro goal")
+	_check(String(hierarchy.get("macro", "")).contains("摧毁 E11 联盟核心巨炮"), "first chapter retains one macro goal")
 	_check(String(hierarchy.get("small", "")).contains("完成 1-1"), "first chapter retains the current executable objective")
 	_check((projection.get("factory_task", {}) as Dictionary) == onboarding, "unfinished onboarding remains the factory task source")
 
@@ -161,10 +161,10 @@ func _test_faction_journey_projection() -> void:
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
 	_check(String(hierarchy.get("target", "")) == "map", "deployed one-star core routes to its battlefield proof")
 	_check(String(hierarchy.get("milestone", "")).contains("阵营初阵已成"), "first battlefield proof celebrates formation completion")
-	_check(String(hierarchy.get("small", "")).contains("实战证明 0/3"), "one-star proof exposes an observable three-battle target")
-	_check(String(hierarchy.get("small", "")).contains("第1场验证"), "one-star proof turns the counter into the next concrete attempt")
+	_check(String(hierarchy.get("small", "")).contains("已完成 0/3"), "one-star route exposes an observable three-battle target")
+	_check(String(hierarchy.get("small", "")).contains("第1场磨合"), "one-star route turns the counter into the next concrete attempt")
 	_check(String(hierarchy.get("proof_focus", "")).contains("首战观察"), "one-star proof explains what the player should learn in battle")
-	_check(String(hierarchy.get("cta_label", "")).contains("开始第1场验证"), "one-star proof exposes one explicit first-battle action")
+	_check(String(hierarchy.get("cta_label", "")).contains("开始第1场出击"), "one-star route exposes one explicit first-battle action")
 
 	(state.stage_progress["cleared_stages"] as Array).append("stage_2_1")
 	state.stage_progress["highest_unlocked_stage"] = "stage_2_2"
@@ -205,7 +205,7 @@ func _test_faction_journey_projection() -> void:
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
 	_check(String(hierarchy.get("target", "")) == "legion", "two-star transformation first routes to the affordable level-two preparation")
-	_check(String(hierarchy.get("small", "")).contains("升至Lv2"), "level-two phase explains the first post-star power step")
+	_check(String(hierarchy.get("small", "")).contains("升至2级"), "level-two phase explains the first post-star power step")
 	hero.level = 2
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
@@ -218,7 +218,7 @@ func _test_faction_journey_projection() -> void:
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
 	_check(String(hierarchy.get("target", "")) == "legion", "2-4 victory routes to the exact level-three boss preparation")
-	_check(String(hierarchy.get("small", "")).contains("升至Lv3"), "level-three phase explains how 2-4 battle rewards fund the boss step")
+	_check(String(hierarchy.get("small", "")).contains("升至3级"), "level-three phase explains how 2-4 battle rewards fund the boss step")
 	hero.level = 3
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary
@@ -244,11 +244,11 @@ func _test_faction_journey_projection() -> void:
 	task = projection.get("factory_task", {}) as Dictionary
 	_check(
 		String(hierarchy.get("target", "")) == "blueprints"
-			and String(hierarchy.get("cta_label", "")).contains("Tier 2"),
+			and String(hierarchy.get("cta_label", "")).contains("二阶科技"),
 		"refreshing after 3-5 restores doctrine selection instead of skipping to chapter four"
 	)
 	_check(
-		String(title.get("objective", "")).contains("Tier 2")
+		String(title.get("objective", "")).contains("二阶科技")
 			and String(task.get("target", "")) == "blueprints",
 		"title, base, and goals share the same pending doctrine decision"
 	)
@@ -259,7 +259,7 @@ func _test_faction_journey_projection() -> void:
 		"expected_revision": state.revision,
 		"payload": {"doctrine_id": "specialization"},
 	})
-	_check(bool(doctrine.get("ok", false)), "objective fixture durably chooses one Tier 2 doctrine")
+	_check(bool(doctrine.get("ok", false)), "objective fixture durably chooses one second-tier doctrine")
 	state = executor.state
 	projection = CampaignObjectiveProjectionScript.derive(state, {"finished": true})
 	hierarchy = projection.get("hierarchy", {}) as Dictionary

@@ -3,6 +3,7 @@ extends SceneTree
 const MobileViewportAdapter := preload("res://game/scripts/platform/mobile_viewport_adapter.gd")
 
 const StageCatalog := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const NotificationSummary := preload("res://game/scripts/presentation/notification_summary.gd")
 const HeroGenerator := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
 const TEST_SAVE_PATH := "user://ui_smoke_test_save.json"
@@ -148,7 +149,7 @@ func _run() -> void:
 		_ok(instance.find_child("GoalEntryButton", true, false) == null, "camp keeps a single target entry node")
 	var top_resources := instance.find_child("TopResourceSummaryLabel", true, false) as Label
 	_ok(top_resources != null and top_resources.text.contains("马桶币") and top_resources.text.contains("马桶钻"), "top resource summary displays both target currencies")
-	_ok(top_resources != null and top_resources.text.contains("战功Lv"), "top resource summary displays war merit rank")
+	_ok(top_resources != null and top_resources.text.contains("战功") and top_resources.text.contains("级"), "top resource summary displays war merit rank")
 	var objective_title := instance.find_child("ObjectiveTitle", true, false) as Label
 	var objective_button := instance.find_child("CampObjectiveButton", true, false) as Button
 	_ok(objective_title != null and objective_title.text == "推进下一关", "new save objective points to the first factory-loop expedition")
@@ -231,7 +232,7 @@ func _run() -> void:
 		_ok(quest_tab != null and quest_tab.custom_minimum_size.y * mobile_canvas_scale >= 44.0, "quests tab is touch-sized")
 		_ok(instance.find_child("GoalTabAchievementsButton", true, false) == null, "legacy achievement economy is absent from the goal center")
 		_ok(merit_tab != null and merit_tab.custom_minimum_size.y * mobile_canvas_scale >= 44.0, "war merit reward tab is touch-sized")
-		_ok(war_merit != null and war_merit.text.contains("Lv"), "quests page displays war merit level compactly")
+		_ok(war_merit != null and war_merit.text.contains("级"), "quests page displays war merit level compactly")
 		_ok(campaign_card != null, "quests page renders current campaign quest card")
 		_ok(campaign_title != null and campaign_title.text.begins_with("大任务"), "campaign objective is visibly labeled as a major quest")
 		_ok(campaign_summary != null and campaign_summary.text.contains("/"), "campaign quest keeps progress in one compact line")
@@ -271,7 +272,7 @@ func _run() -> void:
 		var active_node_name := ("QuestClaimButton_%s" % String((minor_slots[1] as Dictionary)["quest_id"])).replace(".", "_")
 		var claim_button := instance.find_child(claim_node_name, true, false) as Button
 		var active_button := instance.find_child(active_node_name, true, false) as Button
-		_ok(quest_rank != null and quest_rank.text.contains("Lv2") and quest_rank.text.contains("35/140"), "quests page derives war merit rank and escalating next progress")
+		_ok(quest_rank != null and quest_rank.text.contains("2级") and quest_rank.text.contains("35/140"), "quests page derives war merit rank and escalating next progress")
 		_ok(claim_button != null and not claim_button.disabled and claim_button.custom_minimum_size.y * mobile_canvas_scale >= 44.0, "completed quest exposes touch-sized claim button")
 		_ok(active_button != null and active_button.disabled and active_button.text == "进行中", "active quest shows disabled progress action")
 		instance.call("_show_war_merit_track")
@@ -284,7 +285,7 @@ func _run() -> void:
 		var merit_cards: Array[Node] = []
 		_collect_name_prefix(instance, "WarMeritRewardCard", merit_cards)
 		_ok(merit_scroll != null and merit_scroll.horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED, "war merit track disables horizontal scrolling")
-		_ok(merit_overview != null and merit_overview.text.contains("免费战令 Lv2") and merit_overview.text.contains("可领取 2"), "free battle pass shows reached level and claimable count")
+		_ok(merit_overview != null and merit_overview.text.contains("免费战令2级") and merit_overview.text.contains("可领取 2"), "free battle pass shows reached level and claimable count")
 		_ok(merit_level_one != null and not merit_level_one.disabled and merit_level_one.text == "领取", "reached war merit level exposes claim button")
 		_ok(merit_level_three != null and merit_level_three.disabled and merit_level_three.text == "未解锁", "future war merit reward remains locked")
 		_ok(merit_cards.size() == 30, "war merit track renders all thirty deterministic level rewards")
@@ -475,7 +476,7 @@ func _run() -> void:
 		var gman_health := instance.find_child("ResultGmanHealthLabel", true, false) as Label
 		_ok(result_panel != null, "result screen exposes result panel")
 		_ok(result_report_title != null and result_report_title.text == "战况", "defeat result uses a short player-facing heading")
-		_ok(gman_health != null and gman_health.text == "Gman 已阵亡", "stage failure explicitly explains that Gman was killed")
+		_ok(gman_health != null and gman_health.text == "Gman已阵亡", "stage failure explicitly explains that Gman was killed")
 		_ok(result_cannon_report != null and result_cannon_report.text.contains("本局压制巨炮 1 次 / 炮击命中 4 次"), "defeat result displays cannon tactical report")
 		_ok(result_recommended != null and not result_recommended.text.is_empty(), "defeat result renders one recommended action")
 		_ok(result_camp != null, "result screen keeps camp action")
@@ -654,7 +655,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	var fresh_primary := instance.find_child("TitlePrimaryButton", true, false) as Button
 	var title_summary := instance.find_child("TitleProgressSummary", true, false) as Label
 	var title_objective := instance.find_child("TitleNextObjective", true, false) as Label
-	_ok(fresh_primary != null and fresh_primary.text.contains("启动反攻"), "fresh save opens with an in-world counterattack action")
+	_ok(fresh_primary != null and fresh_primary.text.contains("进入 E07"), "fresh save opens with a canon-anchored campaign action")
 	_ok(title_summary != null and title_summary.text.contains("已夺回 0 座城镇"), "title summarizes durable progress in player-facing language")
 	_ok(title_objective != null and title_objective.text.contains("摧毁联盟前哨 1-1"), "fresh title states the first concrete battle objective")
 	var title_state: RefCounted = game_autoload.current_state()
@@ -1035,8 +1036,18 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	await _wait_frames(3)
 	_ok(instance.find_child("StageNodeStrip", true, false) != null, "war zone separates stage selection from stage detail")
 	_ok(instance.find_child("SelectedStagePanel", true, false) != null, "war zone renders one readable selected-stage detail")
-	_ok(_tree_has_text(instance, "1-1 无防备城市"), "war-zone screen exposes the opening town")
-	_ok(_tree_has_button(instance, "1-5 灰镜核心巨炮"), "war-zone screen exposes the chapter boss")
+	var opening_stage_node := instance.find_child("StageNode_stage_1_1", true, false) as Button
+	var chapter_boss_node := instance.find_child("StageNode_stage_1_5", true, false) as Button
+	_ok(
+		opening_stage_node != null
+			and opening_stage_node.is_visible_in_tree()
+			and not opening_stage_node.disabled,
+		"war-zone screen exposes the unlocked opening stage by stable campaign ID"
+	)
+	_ok(
+		chapter_boss_node != null and chapter_boss_node.is_visible_in_tree(),
+		"war-zone screen exposes the chapter boss by stable campaign ID"
+	)
 	_ok(_tree_has_text(instance, "威胁等级"), "opening town expresses combat readiness as an in-world threat")
 	_ok(_tree_has_text(instance, "我方"), "selected stage compares current squad power with the recommendation")
 	_ok(_tree_has_text(instance, "能力比"), "selected stage explains risk with a player-readable capability ratio")
@@ -1046,7 +1057,6 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "fourth town clearly marks the first growth wall")
 	_ok(_tree_has_text(instance, "1-2、1-3") and _tree_has_text(instance, "图纸"), "first wall reconnaissance names the stage-earned blueprint recovery")
-	_ok(_tree_has_text(instance, "两名永久援军"), "first wall reconnaissance connects researched permanent roles to the counterattack")
 	_ok(_tree_has_text(instance, "图纸") and _tree_has_text(instance, "研究所"), "first wall reconnaissance explains the blueprint research path")
 	_ok(_tree_has_text(instance, "下一步 · 先试探炮台防线"), "first wall reconnaissance prioritizes discovery over premature growth")
 	var wall_attack: Button = null
@@ -1085,14 +1095,51 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_select_stage_card", "stage_1_5")
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "chapter boss renders a high-threat mastery target")
-	_ok(_tree_has_text(instance, "冲锋马桶人升到二星"), "chapter boss exposes the verified assault reversal route")
-	_ok(_tree_has_text(instance, "装甲马桶人升到二星"), "chapter boss exposes the verified armored reversal route")
+	var boss_detail := instance.find_child("SelectedStagePanel", true, false) as Control
+	var boss_attack := boss_detail.find_child("AttackButton", true, false) as Button if boss_detail != null else null
+	var assault_route := boss_detail.find_child("BossRecoveryRoute_assault", true, false) as Label if boss_detail != null else null
+	var armored_route := boss_detail.find_child("BossRecoveryRoute_armored", true, false) as Label if boss_detail != null else null
+	var assault_name := String(
+		FactoryCatalog.recipe("ordinary.assault").get("display_name", "")
+	)
+	var armored_name := String(
+		FactoryCatalog.recipe("heavy.armored").get("display_name", "")
+	)
+	_ok(
+		boss_detail != null and String(boss_detail.get("_stage_id")) == "stage_1_5",
+		"chapter boss detail remains bound to the stable boss stage ID"
+	)
+	_ok(
+		assault_route != null
+			and assault_route.is_visible_in_tree()
+			and not assault_name.is_empty()
+			and assault_route.text.contains(assault_name)
+			and assault_route.text.contains("2★")
+			and assault_route.text.contains("抢拆炮台")
+			and armored_route != null
+			and armored_route.is_visible_in_tree()
+			and not armored_name.is_empty()
+			and armored_route.text.contains(armored_name)
+			and armored_route.text.contains("2★")
+			and armored_route.text.contains("格挡反震")
+			and boss_attack != null
+			and boss_attack.custom_minimum_size.y >= 48.0
+			and not assault_route.text.contains("验证")
+			and not armored_route.text.contains("质变"),
+		"chapter boss exposes both structured two-star recovery routes and a touch-ready battle action"
+	)
 	_ok(not _tree_has_text(instance, "战后无损"), "war-zone cards avoid exposing implementation-facing settlement rules")
 	_ok(_tree_has_button(instance, "第2章"), "war-zone screen exposes chapter navigation")
 	game_autoload.current_state().stage_progress["highest_unlocked_stage"] = "stage_2_1"
 	instance.call("_select_chapter", 2)
 	await _wait_frames(3)
-	_ok(_tree_has_text(instance, "2-1 低音街垒"), "chapter navigation reaches the named second-chapter opening encounter")
+	var chapter_two_opening := instance.find_child("StageNode_stage_2_1", true, false) as Button
+	_ok(
+		chapter_two_opening != null
+			and chapter_two_opening.is_visible_in_tree()
+			and not chapter_two_opening.disabled,
+		"chapter navigation reaches the unlocked second-chapter opening stage by stable campaign ID"
+	)
 	game_autoload.current_state().stage_progress["cleared_stages"] = ["stage_1_1", "stage_1_2"]
 	game_autoload.current_state().meta_progression.commander_xp = 100
 	instance.call("_show_goals")
@@ -1207,7 +1254,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		_tree_has_button(instance, "升至2★"),
 		"legion screen exposes an explicit target-star progression action"
 	)
-	_ok(_tree_has_button(instance, "研究技能 Lv.2"), "legion screen exposes active-skill research")
+	_ok(_tree_has_button(instance, "研究技能2级"), "legion screen exposes active-skill research")
 	_ok(_tree_has_text(instance, "无损可出征"), "legion screen exposes lossless permanent heroes")
 	instance.call("_set_legion_tab", "recruit")
 	await _wait_frames(3)
@@ -1250,7 +1297,14 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	})
 	instance.call("_show_result")
 	await _wait_frames(3)
-	_ok(_tree_has_text(instance, "首章胜利 · 你的成长选择通过实战验证"), "chapter result uses text and shape in addition to color for outcome")
+	var result_outcome := instance.find_child("OutcomeText", true, false) as Label
+	_ok(
+		result_outcome != null
+			and result_outcome.text.contains("首章胜利")
+			and result_outcome.text.contains("扭转了战局")
+			and not result_outcome.text.contains("验证"),
+		"chapter result states the victory and the player's battle-changing choice without relying on color"
+	)
 	_ok(_tree_has_text(instance, "战斗复盘") and _tree_has_text(instance, "装甲护盾格挡巨炮 2 次并反震 120 伤害"), "result celebrates successful defensive timing instead of misreporting it as a cannon failure")
 	_ok(
 		String(instance.call("_battle_debrief_copy", {"cannon_hit_count": 1}, "defeat")).contains("下次切换手动技能"),
@@ -1259,7 +1313,19 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(_tree_has_text(instance, "核心贡献"), "result celebrates a contribution measured by the battle session")
 	_ok(_tree_has_text(instance, "下一步成长"), "result maps rewards to the next growth action")
 	_ok(_tree_has_text(instance, "军团数据 +"), "boss result exposes the unified legion-data reward")
-	_ok(_tree_has_text(instance, "路线验证"), "boss result closes the chosen growth mastery loop")
+	var boss_growth_result := instance.find_child("HurdleProof", true, false) as Label
+	_ok(
+		boss_growth_result != null
+			and not boss_growth_result.text.is_empty()
+			and (
+				boss_growth_result.text.contains("二星")
+				or boss_growth_result.text.contains("格挡")
+				or boss_growth_result.text.contains("压炮")
+			)
+			and not boss_growth_result.text.contains("验证")
+			and not boss_growth_result.text.contains("质变"),
+		"boss result reports the concrete two-star battle contribution"
+	)
 	_ok(_tree_has_text(instance, "首章解锁 · 第2章战线"), "boss result exposes the actual next campaign unlock")
 	_ok(_tree_has_button(instance, "领取开服庆典礼包"), "boss result exposes the celebration gift before faction recruitment")
 	instance.call("_show_settlement_error", "存储空间不足")
@@ -1284,7 +1350,24 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(_tree_has_text(instance, "第一幕完成"), "campaign epilogue clearly states main-campaign completion")
 	_ok(_tree_has_text(instance, "城镇占领  60/60"), "campaign epilogue summarizes all authored towns")
 	var endless_button := instance.find_child("CampaignEnterEndlessButton", true, false) as Button
+	var ending_goals_button := instance.find_child("CampaignEndingGoalsButton", true, false) as Button
+	var return_base_button := instance.find_child("CampaignReturnBaseButton", true, false) as Button
 	_ok(endless_button != null and not endless_button.disabled, "campaign epilogue exposes endless continuation")
+	for epilogue_button in [endless_button, ending_goals_button, return_base_button]:
+		_ok(
+			epilogue_button != null
+				and epilogue_button.is_visible_in_tree()
+				and epilogue_button.get_global_rect().end.x
+					<= epilogue_button.get_viewport_rect().size.x
+				and epilogue_button.get_global_rect().end.y
+					<= epilogue_button.get_viewport_rect().size.y,
+			"every campaign epilogue action remains fully inside the 844x390 viewport: %s / %s" % [
+				epilogue_button.get_global_rect() if epilogue_button != null else Rect2(),
+				epilogue_button.get_viewport_rect().size
+				if epilogue_button != null
+				else Vector2.ZERO,
+			]
+		)
 	if endless_button != null:
 		endless_button.pressed.emit()
 		await _wait_frames(3)

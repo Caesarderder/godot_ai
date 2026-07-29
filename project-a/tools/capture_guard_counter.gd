@@ -1,6 +1,7 @@
 extends SceneTree
 
 const StageCatalog := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 
 
 func _init() -> void:
@@ -25,9 +26,9 @@ func _capture() -> void:
 		quit(1)
 		return
 	var heroes: Array[Dictionary] = [
-		_hero("hero_gman", "Gman 先锋", "gman", "commander", "gman_overrun", 1, 0),
-		_hero("hero_assault", "冲锋马桶人", "assault", "fighter", "plunger_charge", 1, 1),
-		_hero("hero_armored", "装甲冲城", "armored", "guardian", "siege_shield", 2, 2),
+		_hero("hero_gman", _catalog_name("gman"), "gman", "commander", "gman_overrun", 1, 0),
+		_hero("hero_assault", _catalog_name("assault"), "assault", "fighter", "plunger_charge", 1, 1),
+		_hero("hero_armored", _catalog_name("armored"), "armored", "guardian", "siege_shield", 2, 2),
 	]
 	world.call("start_battle", heroes, "stage_1_5", StageCatalog.stage("stage_1_5"))
 	world.set("_camera_progress", 820.0)
@@ -90,6 +91,10 @@ func _hero(
 		"crit_bp": 500,
 		"auto_skill": false,
 	}
+
+
+func _catalog_name(archetype_id: String) -> String:
+	return String(FactoryCatalog.archetype(archetype_id).get("display_name", archetype_id))
 
 
 func _unit(unit_id: String, hp: int, energy: int) -> Dictionary:

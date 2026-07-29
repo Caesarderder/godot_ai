@@ -325,7 +325,7 @@ func _check_structure_breakthrough_low_reduced_budget() -> void:
 	var events: Array[Dictionary] = [{
 		"type": &"structure_destroyed",
 		"structure_id": "alliance_core",
-		"display_name": "灰镜核心巨炮",
+		"display_name": "E20 · 首次泰坦战",
 		"road_position": 1000,
 		"lane": 1,
 		"kind": "core",
@@ -335,7 +335,7 @@ func _check_structure_breakthrough_low_reduced_budget() -> void:
 	_ok(feedback != null, "low reduced mode keeps textual structure completion feedback")
 	if feedback != null:
 		var label := feedback.get_node_or_null("BreakthroughLabel") as Label3D
-		_ok(label != null and label.text == "核心摧毁 · 灰镜核心巨炮", "core completion remains understandable without motion or color alone")
+		_ok(label != null and label.text == "核心摧毁 · E20 · 首次泰坦战", "core completion remains understandable without motion or color alone")
 		_ok(feedback.get_child_count() == 1, "low reduced mode omits the optional breakthrough ring")
 	_ok(float(world.get("_shake_time")) == 0.0, "reduced motion suppresses destruction shake while preserving text")
 	await _dispose_world(world)

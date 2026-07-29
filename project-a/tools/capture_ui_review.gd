@@ -1,6 +1,13 @@
 extends SceneTree
 
 const StageCatalog := preload("res://game/scripts/domain/content/stage_catalog.gd")
+const GameStateScript := preload("res://game/scripts/state/game_state.gd")
+const HeroGeneratorScript := preload("res://game/scripts/domain/recruitment/hero_generator.gd")
+
+const CAPTURE_NOW_UNIX := 1_750_000_000
+
+var _capture_main: Node
+var _capture_fixture_index := 0
 
 
 func _init() -> void:
@@ -9,6 +16,7 @@ func _init() -> void:
 
 func _capture() -> void:
 	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.size = Vector2i(844, 390)
 	change_scene_to_file("res://scenes/screens/main.tscn")
 	for _frame in 20:
 		await process_frame
@@ -17,6 +25,13 @@ func _capture() -> void:
 		push_error("UI REVIEW CAPTURE FAIL: main scene unavailable")
 		quit(1)
 		return
+	_capture_main = main
+	if _install_fresh_state(main, "title") == null:
+		quit(1)
+		return
+	main.call("_show_title")
+	for _frame in 4:
+		await process_frame
 	if not _save_viewport("res://artifacts/ui-title-844x390.png"):
 		quit(1)
 		return
@@ -60,7 +75,10 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-camp-844x390.png"):
 		quit(1)
 		return
-	var blueprint_state: RefCounted = main.get("game").current_state()
+	var blueprint_state := _install_fresh_state(main, "blueprints")
+	if blueprint_state == null:
+		quit(1)
+		return
 	blueprint_state.factory.facilities["research_lab"] = 1
 	blueprint_state.factory.facility_placements["research_lab"] = [2, 1]
 	for recipe_id in ["ordinary.assault", "heavy.armored"]:
@@ -72,10 +90,21 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-blueprint-tree-844x390.png"):
 		quit(1)
 		return
-	var construction_state: RefCounted = main.get("game").current_state()
+	for branch_id in ["heavy", "flying", "special"]:
+		main.call("_set_blueprint_branch", branch_id)
+		for _frame in 4:
+			await process_frame
+		if not _save_viewport("res://artifacts/ui-blueprint-%s-844x390.png" % branch_id):
+			quit(1)
+			return
+	var construction_state := _install_fresh_state(main, "construction")
+	if construction_state == null:
+		quit(1)
+		return
 	construction_state.factory.facilities["porcelain_plant"] = 0
 	construction_state.factory.facility_placements.erase("porcelain_plant")
 	construction_state.factory.facility_work.clear()
+	construction_state.factory.refresh_capacities()
 	construction_state.economy.toilet_coins = maxi(100, int(construction_state.economy.toilet_coins))
 	main.set("construction_facility_id", "")
 	main.set("construction_cell", Vector2i(999, 999))
@@ -115,7 +144,10 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-legion-844x390.png"):
 		quit(1)
 		return
-	var goal_state: RefCounted = main.get("game").current_state()
+	var goal_state := _install_fresh_state(main, "goals")
+	if goal_state == null:
+		quit(1)
+		return
 	goal_state.onboarding["active_index"] = 2
 	goal_state.onboarding["progress"] = {}
 	goal_state.onboarding["completed"] = {}
@@ -146,6 +178,13 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-achievements-844x390.png"):
 		quit(1)
 		return
+	capture_state = _install_fresh_state(main, "recruitment")
+	if capture_state == null:
+		quit(1)
+		return
+	capture_state.stage_progress["cleared_stages"] = StageCatalog.ACT1_STAGE_IDS.duplicate()
+	capture_state.stage_progress["highest_unlocked_stage"] = "stage_2_1"
+	capture_state.meta_progression.commander_xp = 300
 	capture_state.economy.recruit_tickets = 10
 	main.call("_signal_recruit", 10)
 	for _frame in 6:
@@ -159,14 +198,17 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-formation-edit-844x390.png"):
 		quit(1)
 		return
-	capture_state = main.get("game").current_state()
-	capture_state.stage_progress["cleared_stages"] = StageCatalog.ACT1_STAGE_IDS.duplicate()
+	capture_state = _install_fresh_state(main, "epilogue")
+	if capture_state == null:
+		quit(1)
+		return
+	capture_state.stage_progress["cleared_stages"] = StageCatalog.all_stage_ids()
 	capture_state.stage_progress["highest_unlocked_stage"] = "endless_1"
 	main.set("last_settlement", {
 		"ok": true,
 		"event": {
 			"outcome": "victory",
-			"stage_id": "stage_5_5",
+			"stage_id": "stage_5_12",
 			"ticks": 385,
 			"campaign_completed": true,
 			"first_campaign_completion": true,
@@ -180,12 +222,25 @@ func _capture() -> void:
 		"cannon_hit_count": 1,
 		"cannon_suppressed_count": 0,
 	})
-	main.call("_show_result")
+	main.call("_show_epilogue", (main.get("last_settlement") as Dictionary).get("event", {}))
 	for _frame in 6:
 		await process_frame
+	if (
+		main.find_child("CampaignEpilogueScreen", true, false) == null
+		or main.find_child("CampaignEpilogueFuture", true, false) == null
+	):
+		push_error("UI REVIEW CAPTURE FAIL [epilogue]: _show_epilogue did not build the epilogue scene")
+		quit(1)
+		return
 	if not _save_viewport("res://artifacts/ui-epilogue-844x390.png"):
 		quit(1)
 		return
+	capture_state = _install_fresh_state(main, "boss_result")
+	if capture_state == null:
+		quit(1)
+		return
+	capture_state.stage_progress["cleared_stages"] = StageCatalog.ACT1_STAGE_IDS.duplicate()
+	capture_state.stage_progress["highest_unlocked_stage"] = "stage_2_1"
 	main.set("last_settlement", {
 		"ok": true,
 		"event": {
@@ -219,6 +274,10 @@ func _capture() -> void:
 	for _frame in 6:
 		await process_frame
 	if not _save_viewport("res://artifacts/ui-boss-result-844x390.png"):
+		quit(1)
+		return
+	capture_state = _install_fresh_state(main, "counterattack_result")
+	if capture_state == null:
 		quit(1)
 		return
 	capture_state.onboarding["active_index"] = 5
@@ -269,10 +328,23 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-action-auto-settlement-844x390.png"):
 		quit(1)
 		return
+	capture_state = _install_fresh_state(main, "battle")
+	if capture_state == null:
+		quit(1)
+		return
 	capture_state.stage_progress["cleared_stages"] = [
 		"stage_1_1", "stage_1_2", "stage_1_3", "stage_1_4",
 	]
 	capture_state.stage_progress["highest_unlocked_stage"] = "stage_1_5"
+	var growth_hero: RefCounted = HeroGeneratorScript.generate_archetype(
+		capture_state.run_seed,
+		capture_state.roster.size(),
+		"assault",
+		"fighter"
+	)
+	growth_hero.star = 2
+	capture_state.roster.append(growth_hero)
+	capture_state.formation.assign_next_troop(String(growth_hero.hero_id))
 	main.set("selected_stage_id", "stage_1_5")
 	main.set("selected_chapter", 1)
 	main.call("_show_map")
@@ -284,6 +356,9 @@ func _capture() -> void:
 	main.call("_start_battle")
 	for _frame in 30:
 		await process_frame
+	if not _require_active_battle(main):
+		quit(1)
+		return
 	main.call("_set_battle_paused", false)
 	for _frame in 3:
 		await process_frame
@@ -293,14 +368,138 @@ func _capture() -> void:
 	main.call("_set_battle_paused", true)
 	for _frame in 3:
 		await process_frame
-	if not _save_viewport("res://artifacts/ui-battle-pause-844x390.png"):
+	if not _save_viewport("res://artifacts/ui-battle-pause-844x390.png", true):
 		quit(1)
 		return
 	print("UI REVIEW CAPTURE PASS")
 	quit(0)
 
 
-func _save_viewport(path: String) -> bool:
+func _install_fresh_state(main: Node, fixture_name: String) -> RefCounted:
+	var game_node := main.get("game") as Node
+	if game_node == null:
+		push_error("UI REVIEW CAPTURE FAIL [%s]: game service unavailable" % fixture_name)
+		return null
+	var executor := game_node.get("executor") as RefCounted
+	if executor == null:
+		push_error("UI REVIEW CAPTURE FAIL [%s]: command executor unavailable" % fixture_name)
+		return null
+	_capture_fixture_index += 1
+	var state := GameStateScript.create_new(
+		2026072900 + _capture_fixture_index,
+		CAPTURE_NOW_UNIX + _capture_fixture_index,
+		false
+	)
+	executor.set("state", state)
+	executor.set("save_callback", func(_candidate: RefCounted) -> bool: return true)
+	_clear_capture_transients(main)
+	var invariant_errors: Array[String] = state.validate()
+	if not invariant_errors.is_empty():
+		push_error(
+			"UI REVIEW CAPTURE FAIL [%s]: fresh fixture violates invariants: %s"
+			% [fixture_name, "; ".join(invariant_errors)]
+		)
+		return null
+	return state
+
+
+func _require_active_battle(main: Node) -> bool:
+	var battle_world := main.get("battle_world") as Node3D
+	if battle_world == null or not is_instance_valid(battle_world):
+		push_error("UI REVIEW CAPTURE FAIL [battle]: BattleWorld did not start")
+		return false
+	var pause_overlay := main.get("battle_pause_overlay") as Control
+	if pause_overlay == null or not is_instance_valid(pause_overlay):
+		push_error("UI REVIEW CAPTURE FAIL [battle]: pause overlay was not built")
+		return false
+	return true
+
+
+func _clear_capture_transients(main: Node) -> void:
+	var toast_tween := main.get("toast_tween") as Tween
+	if toast_tween != null and toast_tween.is_valid():
+		toast_tween.kill()
+	main.set("toast_tween", null)
+	var toast := main.get("toast") as Label
+	if toast != null and is_instance_valid(toast):
+		toast.text = ""
+		toast.visible = false
+		toast.modulate = Color.WHITE
+	main.set("last_settlement", {})
+	main.set("last_battle_runtime_result", {})
+	main.set("pending_battle_settlement_payload", {})
+	main.set("last_recruit_results", [])
+	main.set("formation_edit_slot", "")
+	main.set("command_serial", 0)
+	main.set("goals_tab", "action")
+	main.set("legion_tab", "formation")
+	main.set("legion_selected_hero_id", "")
+	main.set("blueprint_branch", "ordinary")
+	main.set("blueprint_focus_recipe_id", "")
+	main.set("blueprint_focus_label", "")
+	main.set("factory_hud_panel", "mission")
+	main.set("ui_scroll_positions", {})
+	main.set("selected_stage_id", StageCatalog.DEFAULT_STAGE_ID)
+	main.set("selected_chapter", 1)
+	main.set("selected_facility_id", "command_center")
+	main.set("construction_facility_id", "")
+	main.set("construction_cell", Vector2i(999, 999))
+	main.set("pending_save_import_text", "")
+	main.set("pending_save_import_summary", {})
+	main.set("local_save_delete_armed", false)
+	main.set("battle_is_paused", false)
+	main.set("battle_manual_skills", false)
+
+
+func _capture_contract_error(allow_battle_pause: bool) -> String:
+	if _capture_main == null or not is_instance_valid(_capture_main):
+		return "main scene unavailable"
+	var game_node := _capture_main.get("game") as Node
+	if game_node == null:
+		return "game service unavailable"
+	var state := game_node.current_state() as RefCounted
+	if state == null:
+		return "game state unavailable"
+	var invariant_errors: Array[String] = state.validate()
+	if not invariant_errors.is_empty():
+		return "state invariant failure: %s" % "; ".join(invariant_errors)
+	var toast := _capture_main.get("toast") as Label
+	if toast != null and is_instance_valid(toast) and not toast.text.strip_edges().is_empty():
+		return "unexpected toast: %s" % toast.text.strip_edges()
+	if not String(_capture_main.get("pending_save_import_text")).is_empty():
+		return "save import is pending"
+	var import_summary := _capture_main.get("pending_save_import_summary") as Dictionary
+	if import_summary != null and not import_summary.is_empty():
+		return "save import summary is pending"
+	if bool(_capture_main.get("local_save_delete_armed")):
+		return "save deletion confirmation is pending"
+	var settlement_payload := _capture_main.get("pending_battle_settlement_payload") as Dictionary
+	if settlement_payload != null and not settlement_payload.is_empty():
+		return "battle settlement is pending"
+	if bool(_capture_main.get("orientation_gate_active")):
+		return "orientation gate obscures evidence"
+	var pause_overlay := _capture_main.get("battle_pause_overlay") as Control
+	if (
+		not allow_battle_pause
+		and pause_overlay != null
+		and is_instance_valid(pause_overlay)
+		and pause_overlay.visible
+	):
+		return "unexpected battle pause overlay"
+	if allow_battle_pause and (
+		pause_overlay == null
+		or not is_instance_valid(pause_overlay)
+		or not pause_overlay.visible
+	):
+		return "expected battle pause overlay is missing"
+	return ""
+
+
+func _save_viewport(path: String, allow_battle_pause: bool = false) -> bool:
+	var contract_error := _capture_contract_error(allow_battle_pause)
+	if not contract_error.is_empty():
+		push_error("UI REVIEW CAPTURE FAIL [%s]: %s" % [path, contract_error])
+		return false
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
 	# Fast scripted screen changes can outpace the renderer even after idle frames.
 	# Force the current scene tree to draw so evidence never re-saves the previous screen.

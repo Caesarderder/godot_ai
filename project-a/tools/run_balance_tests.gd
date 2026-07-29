@@ -129,9 +129,9 @@ func _test_power_contract() -> void:
 	var level_one_power := CombatPowerScript.hero_power(gman)
 	HeroProgressionScript.train_with_books(gman, 16)
 	var max_level_power := CombatPowerScript.hero_power(gman)
-	_check(level_one_power > 0, "Gman has positive combat power")
-	_check(max_level_power > level_one_power, "training increases Gman combat power")
-	_check(max_level_power < level_one_power * 2, "L1-L5 training cannot double Gman power")
+	_check(level_one_power > 0, "G-Toilet has positive combat power")
+	_check(max_level_power > level_one_power, "training increases G-Toilet combat power")
+	_check(max_level_power < level_one_power * 2, "L1-L5 training cannot double G-Toilet power")
 	var two_star := HeroGeneratorScript.generate_archetype(20260726, 1, "assault", "fighter")
 	var one_star_power := CombatPowerScript.hero_power(two_star)
 	var projected_two_star_power := CombatPowerScript.projected_hero_power_for_star(two_star, 2)
@@ -235,7 +235,7 @@ func _test_progression_cost_curve() -> void:
 	_eq(HeroProgressionScript.next_book_gold_cost(gman), 0, "max-level hero has no phantom training cost")
 	var first_reward := StageCatalogScript.reward_for_context("stage_1_1", "victory", 0, false)
 	var repeat_reward := StageCatalogScript.reward_for_context("stage_1_1", "victory", 1, true)
-	_eq(int(first_reward.get("xp_books", -1)), 0, "opening victories no longer inflate Gman training")
+	_eq(int(first_reward.get("xp_books", -1)), 0, "opening victories no longer inflate G-Toilet training")
 	_eq(int(repeat_reward.get("xp_books", -1)), 0, "repeat victories never grant training books")
 	_check(EconomyValuationScript.bundle_value_gold(repeat_reward) < EconomyValuationScript.bundle_value_gold(first_reward) / 2, "repeat victory value stays below half of first clear")
 	_eq(StageCatalogScript.reward_for_context("stage_2_2", "defeat", 1, false), {"gold": 0, "xp_books": 0, "porcelain": 0, "parts": 0, "sludge": 0}, "repeat defeat cannot be farmed for growth")
@@ -244,7 +244,7 @@ func _test_progression_cost_curve() -> void:
 func _test_growth_plan() -> void:
 	var state: RefCounted = GameStateScript.create_new(20260726, 0)
 	var first_wall := GrowthPlanScript.for_stage(state, StageCatalogScript.stage("stage_1_4"))
-	_eq(first_wall["action"], "challenge", "first turret-wall attempt asks for reconnaissance instead of Gman overtraining")
+	_eq(first_wall["action"], "challenge", "first turret-wall attempt asks for reconnaissance instead of G-Toilet overtraining")
 	state.attempt_counters["stage_1_4"] = 1
 	state.factory.discovered_blueprints["ordinary.assault"] = true
 	var research_plan := GrowthPlanScript.for_stage(state, StageCatalogScript.stage("stage_1_4"))
@@ -335,8 +335,8 @@ func _test_gman_reward_ceiling() -> void:
 		while not session.is_finished and safety < 10000:
 			session.advance_tick()
 			safety += 1
-		_check(session.is_finished, "%s max-level Gman simulation resolves" % stage_id)
-		_check(String(session.result.get("outcome", "")) != "victory", "%s cannot be cleared by putting all training rewards into Gman" % stage_id)
+		_check(session.is_finished, "%s max-level G-Toilet simulation resolves" % stage_id)
+		_check(String(session.result.get("outcome", "")) != "victory", "%s cannot be cleared by putting all training rewards into G-Toilet" % stage_id)
 
 
 func _release_roster() -> Array[Dictionary]:

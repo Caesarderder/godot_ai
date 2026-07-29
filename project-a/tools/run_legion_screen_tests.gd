@@ -10,8 +10,10 @@ func _init() -> void:
 
 
 func _run() -> void:
+	root.size = Vector2i(844, 390)
 	var legion := LEGION_SCENE.instantiate() as LegionScreen
 	root.add_child(legion)
+	legion.size = Vector2(820, 342)
 	await process_frame
 	legion.configure({
 		"tab": "formation",
@@ -24,10 +26,10 @@ func _run() -> void:
 		},
 		"counterattack": {"visible": false},
 		"team_power": 5700,
-		"target_stage_name": "1-5 灰镜核心巨炮",
+		"target_stage_name": "E11 · 飞行马桶交战",
 		"recommended_power": 6500,
 		"formation": [
-			{"slot_id": "commander", "display_name": "G-Man 指挥官", "role": "统帅 · 稳定输出"},
+			{"slot_id": "commander", "display_name": "Gman", "role": "统帅 · 稳定输出"},
 			{"slot_id": "troop_1", "display_name": "冲锋马桶人", "role": "突击 · 快速压制"},
 		],
 		"candidates": [
@@ -77,6 +79,56 @@ func _run() -> void:
 	_check(request["action"] == "assign_slot" and request["hero_id"] == "hero_armored", "screen emits a semantic assignment request")
 	legion.configure({
 		"tab": "formation",
+		"first_formation": {"active": false},
+		"first_growth_choice": {
+			"active": true,
+			"target_stage": "stage_1_5",
+			"choices": [
+				{
+					"archetype_id": "assault",
+					"hero_id": "hero_assault",
+					"display_name": "普通马桶人",
+					"route": "快攻路线",
+					"verified": "二星后抢拆炮台",
+					"power_before": 1800,
+					"power_after": 2200,
+					"power_gain": 400,
+					"cost": "专属碎片 30",
+					"affordable": true,
+					"already_upgraded": false,
+				},
+				{
+					"archetype_id": "armored",
+					"hero_id": "hero_armored",
+					"display_name": "装甲马桶人",
+					"route": "守势路线",
+					"verified": "二星后格挡反震",
+					"power_before": 1900,
+					"power_after": 2300,
+					"power_gain": 400,
+					"cost": "专属碎片 30",
+					"affordable": true,
+					"already_upgraded": false,
+				},
+			],
+		},
+		"boss_ready": {"active": false},
+	})
+	await process_frame
+	for route_id in ["assault", "armored"]:
+		var growth_action := legion.find_child("ChooseGrowth_%s" % route_id, true, false) as Button
+		_check(
+			growth_action != null
+				and growth_action.is_visible_in_tree()
+				and growth_action.get_global_rect().size.y >= 48.0
+				and growth_action.get_global_rect().end.x
+					<= legion.get_global_rect().end.x + 0.5
+				and growth_action.get_global_rect().end.y
+					<= legion.get_global_rect().end.y + 0.5,
+			"first two-star route is a visible 48 px touch target inside 844x390: %s" % route_id
+		)
+	legion.configure({
+		"tab": "formation",
 		"formation_edit_slot": "troop_2",
 		"first_formation": {"active": false},
 		"counterattack": {
@@ -100,7 +152,7 @@ func _run() -> void:
 	legion.configure({
 		"tab": "recruit",
 		"recruitment_unlocked": false,
-		"recruitment_progress": "指挥官 Lv2/4 · 关卡 1-5 未通关",
+		"recruitment_progress": "指挥官2/4级 · 关卡 1-5 未通关",
 		"foundational_signal": {
 			"unlocked": false,
 			"claimable": false,
@@ -117,6 +169,11 @@ func _run() -> void:
 		"recruit_tickets": 10,
 		"recruit_s_pity": 0,
 		"recruit_target_guaranteed": false,
+		"foundational_signal": {
+			"unlocked": true,
+			"claimable": true,
+			"claimed": false,
+		},
 		"blueprint_data_copy": "重复图纸将自动转化为型号专属碎片",
 		"recruit_results": [{
 			"rarity": "B",
@@ -168,6 +225,11 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	await process_frame
+	_check(
+		_tree_has_text(legion, "真正参与精锐与传奇保底")
+			and not _tree_has_text(legion, "A/S 保底"),
+		"recruitment guarantee copy uses Chinese rating names only"
+	)
 	var reveal_card := legion.find_child(
 		"RecruitFactionChoiceCard_assault",
 		true,
@@ -193,11 +255,13 @@ func _run() -> void:
 		"faction choice first names the concrete ten-pull haul"
 	)
 	_check(
-		_tree_has_text(legion, "研发 → 入队 → 3场实战 → 质变突破"),
-		"faction choice previews the next playable proof loop"
+		_tree_has_text(legion, "研发 → 入队")
+			and _tree_has_text(legion, "3场磨合")
+			and _tree_has_text(legion, "挑战强敌"),
+		"faction choice previews the concrete research, deployment, and battle loop"
 	)
 	_check(
-		_tree_has_text(legion, "新角色设计 · B级 · 冲锋马桶人"),
+		_tree_has_text(legion, "新角色设计 · 标准 · 冲锋马桶人"),
 		"faction choice frames each candidate as a newly unlocked character design"
 	)
 	var reduced_view := (legion.get("_view") as Dictionary).duplicate(true)
@@ -221,7 +285,16 @@ func _run() -> void:
 	_check(_tree_has_text(legion, "冲锋马桶人专属碎片 +20"), "duplicate signal result projects archetype-specific fragments")
 	_check(not _tree_has_text(legion, "设计数据"), "recruitment no longer projects blueprint data as a resource")
 	_check(_tree_has_text(legion, "阵营核心 · 高速突袭"), "recruit result identifies the faction core")
-	_check(_tree_has_text(legion, "2★质变：攻击会顺劈附近敌人"), "recruit result previews the qualitative star upgrade")
+	_check(
+		_tree_has_text(legion, "2★新能力：")
+			and _tree_has_text(legion, "攻击会顺劈附近敌人"),
+		"recruit result previews the concrete two-star combat ability"
+	)
+	_check(
+		not _tree_has_text(legion, "质变")
+			and not _tree_has_text(legion, "实战验证"),
+		"recruit result avoids QA-like breakthrough and validation copy"
+	)
 	var recruit_focus_action := legion.find_child("RecruitFocusActionButton", true, false) as Button
 	_check(
 		recruit_focus_action != null and recruit_focus_action.size.y >= 48.0,
@@ -264,8 +337,8 @@ func _run() -> void:
 	})
 	await process_frame
 	_check(legion.find_child("ToiletRoleCodex", true, false) != null, "legion exposes a dedicated toilet-role codex")
-	_check(_tree_has_text(legion, "B 评级 · 冲锋马桶人"), "codex displays the B rating")
-	_check(_tree_has_text(legion, "S 评级 · 寄生母体马桶人"), "codex displays the S rating")
+	_check(_tree_has_text(legion, "标准 · 冲锋马桶人"), "codex displays the standard rating")
+	_check(_tree_has_text(legion, "传奇 · 寄生母体马桶人"), "codex displays the legendary rating")
 	_check(_tree_has_text(legion, "已获得图纸 · 等待研究所研发"), "codex distinguishes blueprint-owned from researched")
 	# The App Shell leaves roughly 238 px for LegionScreen at the 844x390 target:
 	# 48 px task tabs plus about 190 px of page content above the persistent nav.
@@ -307,7 +380,7 @@ func _run() -> void:
 			"auto_skill": false,
 			"level_resource_context": {
 				"name": "LevelResources_hero_armored",
-				"title": "升级至 Lv.2 · 当前/需要 → 操作后",
+				"title": "升级至2级 · 当前/需要 → 操作后",
 				"items": [
 					{"id": "toilet_coins", "name": "金币", "current": 120, "required": 60},
 				],
@@ -329,7 +402,7 @@ func _run() -> void:
 				},
 			"skill_resource_context": {
 				"name": "SkillResources_hero_armored",
-					"title": "技能研究 Lv.2 · 当前/需要 → 研究后",
+					"title": "技能研究2级 · 当前/需要 → 研究后",
 					"items": [
 						{"id": "toilet_coins", "name": "金币", "current": 120, "required": 80},
 						{"id": "hero_shards", "name": "军团数据", "current": 1, "required": 1},
@@ -415,7 +488,7 @@ func _run() -> void:
 			and skill_timing.text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING,
 		"touch-first skill board renders best timing without relying on hover"
 	)
-	_check(_tree_has_text(legion, "守卫 · A评级"), "detail projects class and aptitude")
+	_check(_tree_has_text(legion, "守卫 · 精锐"), "detail projects class and aptitude")
 	_check(_tree_has_text(legion, "经验 20/40"), "detail projects current and next-level XP")
 	_check(not _tree_has_text(legion, "体魄"), "detail removes the retired source attributes")
 	_check(_tree_has_text(legion, "生命") and _tree_has_text(legion, "190"), "detail projects HP")
@@ -505,7 +578,7 @@ func _run() -> void:
 		root.gui_get_focus_owner() == legion.find_child("RosterHero_hero_assault", true, false),
 		"roster rebuild restores focus to the selected hero"
 	)
-	_check(_tree_has_text(legion, "战士 · B评级"), "selected detail updates class and aptitude")
+	_check(_tree_has_text(legion, "战士 · 标准"), "selected detail updates class and aptitude")
 	_check(_tree_has_text(legion, "经验 55/100"), "selected detail updates XP without changing domain state")
 	for secondary_name in ["RosterSecondaryAction_specialist", "RosterSecondaryAction_auto"]:
 		var secondary_action := legion.find_child(secondary_name, true, false) as Button
