@@ -635,7 +635,7 @@ func _show_help(return_screen: Screen = Screen.TITLE) -> void:
 	help_return_screen = return_screen
 	screen = Screen.HELP
 	_clear()
-	var shell := _shell("玩法说明", "快速了解工厂、攻城、操作与本地数据")
+	var shell := _shell("玩法说明", "收资源 → 养军团 → 排阵 → 攻城 → 扩建")
 	shell.name = "HelpShell"
 	var help_screen := HelpScreenScene.instantiate() as Control
 	help_screen.call("configure", {

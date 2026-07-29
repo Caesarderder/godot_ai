@@ -17,17 +17,35 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	var all_text := _collect_text(help)
-	_check(all_text.contains("1-2、1-3"), "help explains the deterministic reinforcement path before the first deliberate hurdle")
-	_check(all_text.contains("信号招募") and all_text.contains("图纸") and all_text.contains("研究所逐张研发"), "help explains the signal-to-research role path")
-	_check(all_text.contains("冲锋二星") and all_text.contains("装甲二星"), "help compares both recovery routes")
-	_check(all_text.contains("完全恢复"), "help explains lossless battle recovery")
-	_check(all_text.contains("大目标、中目标、小目标"), "help points players to the objective ladder")
-	_check(all_text.contains("不使用分析 SDK"), "help explains local-data privacy")
-	_check(all_text.contains("0.11.0-test"), "runtime version is projected")
+	_check(all_text.contains("大目标、中目标、小目标"), "default help topic points players to the objective ladder")
+	var recovery := help.get_node("%HelpRecoveryTab") as Button
+	recovery.pressed.emit()
+	await process_frame
+	all_text = _collect_text(help)
+	_check(all_text.contains("1-2、1-3"), "recovery topic explains the deterministic reinforcement path")
+	_check(all_text.contains("信号招募") and all_text.contains("图纸") and all_text.contains("研究所逐张研发"), "recovery topic explains the signal-to-research role path")
+	_check(all_text.contains("冲锋二星") and all_text.contains("装甲二星"), "recovery topic compares both recovery routes")
+	_check(all_text.contains("完全恢复"), "recovery topic explains lossless battle recovery")
+	var data := help.get_node("%HelpDataTab") as Button
+	data.pressed.emit()
+	await process_frame
+	all_text = _collect_text(help)
+	_check(all_text.contains("不使用分析 SDK"), "data topic explains local-data privacy")
+	_check(all_text.contains("0.11.0-test"), "data topic projects the runtime version")
 	var columns := help.get_node("HelpLandscapeColumns") as HBoxContainer
 	_check(columns.get_child_count() == 2, "help keeps two independent landscape columns")
 	var back := help.get_node("%HelpBackButton") as Button
-	_check(back.has_focus(), "back action receives initial focus")
+	var now := help.get_node("%HelpNowTab") as Button
+	_check(
+		now.custom_minimum_size.y >= 48.0
+			and recovery.custom_minimum_size.y >= 48.0
+			and data.custom_minimum_size.y >= 48.0,
+		"help topic navigation remains touch sized"
+	)
+	_check(
+		help.get_viewport().gui_get_focus_owner() != null,
+		"help maintains keyboard and gamepad focus while switching topics"
+	)
 	var requested := {"back": false}
 	help.connect("back_requested", func() -> void: requested["back"] = true)
 	back.pressed.emit()

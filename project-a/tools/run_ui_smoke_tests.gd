@@ -680,7 +680,13 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(instance.find_child("HelpScreen", true, false) != null, "gameplay help opens as a dedicated readable screen")
 	_ok(help_columns != null and help_columns.get_child_count() == 2, "help uses two balanced landscape columns")
 	_ok(help_gameplay_scroll != null and help_info_scroll != null, "both help columns scroll independently on short screens")
+	var help_controls := instance.find_child("HelpControlsTab", true, false) as Button
+	help_controls.pressed.emit()
+	await _wait_frames(1)
 	_ok(_tree_has_text(instance, "选择建筑") and _tree_has_text(instance, "100%"), "help explains construction and manual battle skills")
+	var help_recovery := instance.find_child("HelpRecoveryTab", true, false) as Button
+	help_recovery.pressed.emit()
+	await _wait_frames(1)
 	_ok(
 		_tree_has_text(instance, "首次攻克 1-2、1-3")
 			and _tree_has_text(instance, "冲锋二星")
@@ -691,6 +697,9 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	var running_version := String(
 		ProjectSettings.get_setting("application/config/version", "")
 	)
+	var help_data := instance.find_child("HelpDataTab", true, false) as Button
+	help_data.pressed.emit()
+	await _wait_frames(1)
 	_ok(
 		_tree_has_text(instance, "不使用分析 SDK")
 			and not running_version.is_empty()
