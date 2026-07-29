@@ -1,0 +1,227 @@
+{
+  "run_id": "mobile_slg_ui_refresh_20260730",
+  "goal": "重构真实运行的手机横屏 UI，让3D游戏世界成为主体，并以情境面板和单一主行动承载工厂、战区与战斗操作。",
+  "player_outcome": {
+    "target_player": "首次接触本作的手机轻量SLG玩家",
+    "platform": "mobile landscape Web",
+    "play_window_seconds": [
+      20,
+      60
+    ],
+    "control": "点击世界对象、城镇节点或角色技能",
+    "threat": "当前战区压力与战斗预警",
+    "choice": "执行当前唯一主行动，或进入一个相邻准备动作",
+    "feedback": "世界、上下文卡与状态边缘信息同步响应",
+    "outcome": "能指出当前目标、主要风险和下一步行动，同时持续看见游戏世界"
+  },
+  "constraints": {
+    "engine": "Godot 4.6.3 GDScript Compatibility renderer",
+    "target_runtime": "single-threaded mobile browser WebGL2",
+    "asset_policy": "only repository-owned or licensed assets; online references are structural comparison only",
+    "scope": [
+      "shared App Shell",
+      "factory world HUD",
+      "war-zone selection",
+      "battle HUD",
+      "responsive 844x390 and 568x320"
+    ],
+    "out_of_scope": [
+      "domain rule changes",
+      "new currencies",
+      "live-ops systems",
+      "commercial IP clearance"
+    ],
+    "accessibility": [
+      "48px touch targets",
+      "critical state not encoded by colour alone",
+      "focus styles",
+      "safe-area support"
+    ]
+  },
+  "quality_bar": {
+    "comparison": "At 844x390 the world-driven screens keep roughly 65% of the viewport visually open and expose one dominant action; the battle HUD no longer cuts the world with full-width opaque bands.",
+    "inspect_route": "scenario_mobile_ui_core fast and strict routes",
+    "limits": [
+      "Screenshots cannot prove fun, target-player understanding, iOS Safari behavior, or target-device performance."
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "scenario_mobile_ui_core",
+      "purpose": "Expose the factory, selected war-zone stage, and active battle HUD at canonical mobile landscape sizes.",
+      "player_question": "Can the player see the game world, identify the current objective, and find the single primary action without searching?",
+      "gate_ids": [
+        "gate_runtime",
+        "gate_visual_hierarchy",
+        "gate_responsive",
+        "gate_player_learning"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_ui_review.gd and browser smoke capture",
+        "shipping_surface": "project-a/scripts/slg_main.gd and project-a/game/scripts/ui",
+        "public_adapter": "fresh fixture state followed by normal screen methods, signals, and shipping command routes"
+      },
+      "setup": {
+        "entry": "launch the authored UI review capture against the real main scene",
+        "state": "fresh state for factory and stage 1-1; deterministic active battle fixture",
+        "camera_or_view": "shipping factory camera, war-zone screen, and battle camera",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile browser"
+      },
+      "stimulus": [
+        {
+          "at": "after 20 warm-up frames",
+          "action": "open factory through shipping screen method"
+        },
+        {
+          "at": "after capture",
+          "action": "open war zone and selected stage through shipping screen method"
+        },
+        {
+          "at": "after capture",
+          "action": "start deterministic battle fixture and let HUD receive real snapshots"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "world_action_hierarchy",
+          "source": "runtime captures, node geometry, and UI smoke assertions",
+          "window": "stable frame after 4-6 process frames per screen",
+          "artifact": "project-a/artifacts/ui-{camp,expedition,battle}-844x390.png"
+        }
+      ],
+      "determinism": {
+        "level": "bounded",
+        "seed": 1042,
+        "clock": "fixed fixture state; battle simulation uses repository deterministic tick",
+        "warmup": "20 scene frames plus 4-6 frames after each screen transition",
+        "temporal_isolation": "fresh Godot process and fresh in-memory save fixture"
+      },
+      "fast_review_route": {
+        "command": "godot --headless --path project-a -s tools/capture_ui_review.gd",
+        "expected_seconds": 30,
+        "outputs": [
+          "canonical 844x390 PNG captures",
+          "nonzero failure exit"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && godot --headless --path project-a -s tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a -s tools/capture_ui_review.gd",
+        "isolation": "fresh processes, fixed fixture state, viewport and output filenames",
+        "outputs": [
+          "test assertions",
+          "canonical captures",
+          "exit codes"
+        ]
+      },
+      "reset": "discard in-memory fixture and start a fresh Godot process",
+      "failure_conditions": [
+        "screen cannot boot",
+        "primary action is clipped or unavailable",
+        "48px targets regress",
+        "expected captures are absent",
+        "UI bypasses normal screen or command owners"
+      ],
+      "limitations": [
+        "Visual comparison is directional because 3D animation timing is not frame-locked.",
+        "Target-player comprehension requires an uncoached human session."
+      ]
+    }
+  ],
+  "quality_gates": [
+    {
+      "gate_id": "gate_runtime",
+      "profile": "correctness",
+      "claim": "Real screens boot and shipping actions remain wired.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_ui_core"
+      ],
+      "grader": "runtime",
+      "assertions": [
+        "UI smoke tests pass",
+        "battle HUD tests pass",
+        "capture exits zero"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_visual_hierarchy",
+      "profile": "visual",
+      "claim": "The world dominates and the current objective plus one primary action are visually clear.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_ui_core"
+      ],
+      "grader": "model",
+      "assertions": [
+        "world-driven screens visually retain roughly 65% open world",
+        "no full-width opaque battle bands",
+        "one dominant action per state",
+        "text hierarchy is game-like rather than dashboard-like"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_responsive",
+      "profile": "correctness",
+      "claim": "The redesigned UI remains usable at required landscape sizes and safe areas.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_ui_core"
+      ],
+      "grader": "runtime",
+      "assertions": [
+        "primary touch targets remain at least 48px",
+        "844x390 and 568x320 do not clip primary actions",
+        "focus remains visible"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_player_learning",
+      "profile": "player_learning",
+      "claim": "A fresh target player identifies goal, risk, and next action within two seconds.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_ui_core"
+      ],
+      "grader": "human",
+      "assertions": [
+        "uncoached target-player observation confirms two-second answer",
+        "player explains failure and recovery route"
+      ],
+      "freeze_on_pass": true
+    }
+  ],
+  "ownership": [
+    {
+      "owner": "UI integration owner",
+      "surface": "shared App Shell, world HUD, war-zone and battle HUD",
+      "public_contract": "UI projects state and emits existing signals/commands without direct domain mutation",
+      "coupling": "coupled"
+    }
+  ],
+  "budgets": {
+    "max_iterations": 12,
+    "max_same_finding_retries": 3,
+    "no_progress_window": 3,
+    "max_wall_time_minutes": 480,
+    "max_regressions": 2
+  },
+  "stop_policy": {
+    "minimum_material_improvement": 0.03,
+    "terminal_results": [
+      "completed",
+      "budget_exhausted",
+      "no_material_progress",
+      "blocked",
+      "human_required",
+      "capability_unavailable",
+      "regression_limit",
+      "user_stopped",
+      "failed"
+    ]
+  },
+  "schema_version": "caesar-loop/v2"
+}

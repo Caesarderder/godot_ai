@@ -1,0 +1,58 @@
+{
+  "capabilities": {
+    "fresh_agent_context": {
+      "status": "unsupported",
+      "evidence": "Current run uses one active implementation context.",
+      "limits": [
+        "Visual critique is non-independent."
+      ]
+    },
+    "parallel_agents": {
+      "status": "unsupported",
+      "evidence": "No delegation requested for this run.",
+      "limits": []
+    },
+    "isolated_workspaces": {
+      "status": "unsupported",
+      "evidence": "One shared worktree is observed.",
+      "limits": [
+        "Git staging must remain path-specific."
+      ]
+    },
+    "runtime_control": {
+      "status": "supported",
+      "evidence": "Godot 4.6.3 and deterministic capture/test scripts are available.",
+      "limits": [
+        "3D animation capture timing is bounded rather than fully frame-locked."
+      ]
+    },
+    "capture": {
+      "status": "supported",
+      "evidence": "project-a/tools/capture_ui_review.gd emits canonical PNGs.",
+      "limits": [
+        "Desktop Compatibility capture is not a physical phone."
+      ]
+    },
+    "profiling": {
+      "status": "unknown",
+      "evidence": "No target-device profiler has been observed in this run.",
+      "limits": [
+        "No mobile performance claim can close."
+      ]
+    },
+    "persistent_run_state": {
+      "status": "supported",
+      "evidence": "Repository-local Caesar Loop ledgers and Workbench projection are available.",
+      "limits": []
+    },
+    "target_player_access": {
+      "status": "unsupported",
+      "evidence": "No uncoached target players are available to the current host.",
+      "limits": [
+        "Player-learning gate must remain human_required."
+      ]
+    }
+  },
+  "schema_version": "caesar-loop/v2",
+  "observed_at": "2026-07-29T18:09:35Z"
+}
