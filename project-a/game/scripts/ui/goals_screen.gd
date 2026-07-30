@@ -17,6 +17,7 @@ const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const NotificationBadgeScript := preload(
 	"res://game/scripts/presentation/notification_badge.gd"
 )
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const PANEL := Color("#12171c")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -197,32 +198,36 @@ func _new_player_welfare_panel(view: Dictionary) -> Control:
 
 
 func _goal_hierarchy(view: Dictionary) -> Control:
-	var panel := _panel("")
+	var panel := PanelContainer.new()
 	panel.name = "GoalHierarchyPanel"
+	panel.add_theme_stylebox_override("panel", UiArtDirectionScript.panel_style(true))
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_top", 7)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_bottom", 7)
+	panel.add_child(margin)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	margin.add_child(row)
+	var briefing := VBoxContainer.new()
+	briefing.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	briefing.add_theme_constant_override("separation", 3)
+	row.add_child(briefing)
 	var milestone := String(view.get("milestone", ""))
 	if not milestone.is_empty():
 		var milestone_copy := _label("✓ %s" % milestone, 16, GREEN)
 		milestone_copy.name = "GoalMilestoneBanner"
-		panel.add_child(milestone_copy)
+		briefing.add_child(milestone_copy)
 	else:
-		panel.add_child(_label("大目标 · %s" % String(view.get("macro", "")), 17, GOLD))
-	panel.add_child(_label("中目标 · %s" % String(view.get("medium", "")), 15, CYAN))
-	panel.add_child(_label("小目标 · %s" % String(view.get("small", "")), 14, TEXT))
+		briefing.add_child(_label("大目标 · %s" % String(view.get("macro", "")), 17, GOLD))
+	briefing.add_child(_label("中目标 · %s" % String(view.get("medium", "")), 14, CYAN))
+	briefing.add_child(_label("小目标 · %s" % String(view.get("small", "")), 12, TEXT))
 	var proof_focus := String(view.get("proof_focus", ""))
 	if not proof_focus.is_empty():
-		var focus_copy := _label(proof_focus, 13, CYAN)
+		var focus_copy := _label(proof_focus, 12, CYAN)
 		focus_copy.name = "GoalProofFocus"
-		panel.add_child(focus_copy)
-	if bool(view.get("actionable", not bool(view.get("finished", false)))):
-		var cta := _button(String(view.get("cta_label", "继续")), true)
-		cta.name = "GoalHierarchyPrimaryCTA"
-		cta.pressed.connect(action_requested.emit.bind("follow_task", {
-			"target": String(view.get("target", "expedition")),
-			"stage_id": String(view.get("stage_id", "")),
-			"hero_id": String(view.get("hero_id", "")),
-			"archetype_id": String(view.get("archetype_id", "")),
-		}))
-		panel.add_child(cta)
+		briefing.add_child(focus_copy)
 	var hurdle := view.get("hurdle", {}) as Dictionary
 	if not hurdle.is_empty():
 		var hurdle_copy := _label(
@@ -231,12 +236,24 @@ func _goal_hierarchy(view: Dictionary) -> Control:
 				String(hurdle.get("title", "")),
 				String(hurdle.get("recovery", "")),
 			],
-			12,
+			11,
 			GREEN
 		)
 		hurdle_copy.name = "CurrentHurdlePanel"
 		hurdle_copy.tooltip_text = String(hurdle.get("reason", ""))
-		panel.add_child(hurdle_copy)
+		briefing.add_child(hurdle_copy)
+	if bool(view.get("actionable", not bool(view.get("finished", false)))):
+		var cta := _button(String(view.get("cta_label", "继续")), true)
+		cta.name = "GoalHierarchyPrimaryCTA"
+		cta.custom_minimum_size = Vector2(230, 52)
+		cta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cta.pressed.connect(action_requested.emit.bind("follow_task", {
+			"target": String(view.get("target", "expedition")),
+			"stage_id": String(view.get("stage_id", "")),
+			"hero_id": String(view.get("hero_id", "")),
+			"archetype_id": String(view.get("archetype_id", "")),
+		}))
+		row.add_child(cta)
 	return panel
 
 
@@ -293,23 +310,35 @@ func _build_pass() -> void:
 		content.add_child(_lock_panel(_view.get("pass_lock", {}) as Dictionary))
 		return
 	var pass_view := _view.get("pass", {}) as Dictionary
-	var panel := _panel("免费战役战令 · %d/30" % int(pass_view.get("reached", 0)))
-	panel.add_child(_label(
+	var panel := _panel("")
+	var overview := HBoxContainer.new()
+	overview.add_theme_constant_override("separation", 12)
+	panel.add_child(overview)
+	var summary := VBoxContainer.new()
+	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary.add_theme_constant_override("separation", 3)
+	summary.add_child(_label("免费战役战令 · %d/30" % int(pass_view.get("reached", 0)), 17, GOLD))
+	summary.add_child(_label(
 		"%d / 3000 战功 · 赛季结束不重置英雄、工厂或招募保底" % int(pass_view.get("merit", 0)),
-		13,
+		12,
 		MUTED
 	))
-	panel.add_child(_progress(float(pass_view.get("merit", 0)), 3000.0, GOLD))
+	summary.add_child(_progress(float(pass_view.get("merit", 0)), 3000.0, GOLD))
+	overview.add_child(summary)
 	var claimable := int(pass_view.get("claimable", 0))
 	if claimable > 0:
 		var batch := _button("一键领取 %d 项奖励" % claimable, true)
+		batch.name = "MetaPassBatchClaim"
+		batch.custom_minimum_size.x = 210
 		batch.pressed.connect(action_requested.emit.bind("claim_all_pass", {}))
-		panel.add_child(batch)
+		overview.add_child(batch)
 	else:
-		panel.add_child(_label("当前已达等级奖励均已领取", 13, GREEN))
-	var track := GridContainer.new()
+		var settled := _label("当前奖励已领取", 12, GREEN)
+		settled.custom_minimum_size.x = 150
+		settled.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		overview.add_child(settled)
+	var track := HFlowContainer.new()
 	track.name = "MetaPassRewardTrack"
-	track.columns = 3
 	track.add_theme_constant_override("h_separation", 6)
 	track.add_theme_constant_override("v_separation", 6)
 	for level_value in pass_view.get("levels", []):
@@ -320,11 +349,11 @@ func _build_pass() -> void:
 				" ✓" if bool(level.get("claimed", false)) else "",
 				_reward_copy(level.get("reward", {}) as Dictionary),
 			],
-			bool(level.get("claimable", false))
+			false
 		)
 		card.name = "MetaPassLevel_%d" % int(level.get("level", 0))
 		card.disabled = not bool(level.get("claimable", false))
-		card.custom_minimum_size = Vector2(205, 66)
+		card.custom_minimum_size = Vector2(205, 52)
 		card.pressed.connect(action_requested.emit.bind("claim_pass_level", {
 			"level": int(level.get("level", 0)),
 		}))
@@ -337,47 +366,64 @@ func _build_achievements() -> void:
 	if not bool(_view.get("achievements_unlocked", false)):
 		content.add_child(_lock_panel(_view.get("achievement_lock", {}) as Dictionary))
 		return
-	var panel := _panel("永久成就")
+	var panel := _panel("")
 	var claimable := int(_view.get("achievement_claimable", 0))
+	var overview := HBoxContainer.new()
+	overview.add_theme_constant_override("separation", 12)
+	var title := _label("永久成就 · 不随赛季重置", 17, GOLD)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	overview.add_child(title)
 	if claimable > 0:
 		var batch := _button("一键领取 %d 项成就" % claimable, true)
+		batch.name = "AchievementBatchClaim"
+		batch.custom_minimum_size.x = 210
 		batch.pressed.connect(action_requested.emit.bind("claim_all_achievements", {}))
-		panel.add_child(batch)
+		overview.add_child(batch)
+	else:
+		overview.add_child(_label("继续攻城解锁进度", 12, MUTED))
+	panel.add_child(overview)
+	var grid := HFlowContainer.new()
+	grid.name = "AchievementCardGrid"
+	grid.add_theme_constant_override("h_separation", 7)
+	grid.add_theme_constant_override("v_separation", 5)
+	panel.add_child(grid)
 	for value in _view.get("achievements", []):
 		var achievement := value as Dictionary
-		var row := HBoxContainer.new()
 		var claimed := bool(achievement.get("claimed", false))
-		var copy := _label(
-			"%s  %d/%d" % [
+		var complete := bool(achievement.get("complete", false))
+		var status_copy := "已领取" if claimed else ("可领取" if complete else "进行中")
+		var card := _button(
+			"%s  ·  %d/%d\n%s" % [
 				String(achievement.get("title", "")),
 				int(achievement.get("progress", 0)),
 				int(achievement.get("target", 1)),
+				status_copy,
 			],
-			14,
-			GREEN if claimed else TEXT
+			false
 		)
-		copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(copy)
-		var claim := _button("已领取" if claimed else "领取", false)
-		claim.disabled = claimed or not bool(achievement.get("complete", false))
-		claim.pressed.connect(action_requested.emit.bind("claim_achievement", {
+		card.name = "Achievement_%s" % String(
+			achievement.get("achievement_id", "")
+		).replace(".", "_")
+		card.custom_minimum_size = Vector2(360, 52)
+		card.disabled = claimed or not complete
+		card.pressed.connect(action_requested.emit.bind("claim_achievement", {
 			"achievement_id": String(achievement.get("achievement_id", "")),
 		}))
-		row.add_child(claim)
-		panel.add_child(row)
+		grid.add_child(card)
 	content.add_child(panel)
 
 
 func _commander_panel(view: Dictionary) -> Control:
 	var panel := PanelContainer.new()
 	panel.name = "CommanderProgressPanel"
-	panel.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.94), 8, LINE))
+	panel.add_theme_stylebox_override("panel", UiArtDirectionScript.panel_style())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	panel.add_child(row)
 	var summary := VBoxContainer.new()
-	summary.custom_minimum_size.x = 170
-	summary.add_child(_label("指挥官%d级" % int(view.get("level", 1)), 16, GOLD))
+	summary.custom_minimum_size.x = 138
+	summary.add_child(_label("指挥官 %d级" % int(view.get("level", 1)), 15, GOLD))
 	summary.add_child(_label(
 		"经验 %d / %d" % [int(view.get("xp", 0)), int(view.get("next_xp", 0))],
 		11,
@@ -385,13 +431,13 @@ func _commander_panel(view: Dictionary) -> Control:
 	))
 	row.add_child(summary)
 	var progress := _progress(float(view.get("xp", 0)), float(view.get("next_xp", 1)), CYAN)
-	progress.custom_minimum_size = Vector2(220, 12)
+	progress.custom_minimum_size = Vector2(180, 10)
 	progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(progress)
 	var claimable := int(view.get("claimable", 0))
 	if claimable > 0:
-		var claim := _button("领取 %d 项等级奖励" % claimable, true)
-		claim.custom_minimum_size.x = 190
+		var claim := _button("领取 %d 项等级奖励" % claimable, false)
+		claim.custom_minimum_size.x = 185
 		claim.pressed.connect(action_requested.emit.bind("claim_all_commander", {}))
 		row.add_child(claim)
 	else:
@@ -429,7 +475,7 @@ func _reward_copy(reward: Dictionary) -> String:
 
 func _panel(title: String) -> VBoxContainer:
 	var box := GoalPanel.new()
-	box.panel_style = _box(Color(PANEL, 0.94), 6, LINE)
+	box.panel_style = UiArtDirectionScript.panel_style()
 	box.add_theme_constant_override("separation", 6)
 	if not title.is_empty():
 		box.add_child(_label(title, 17, GOLD))
@@ -443,19 +489,13 @@ func _button(copy: String, primary: bool) -> Button:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_stylebox_override(
-		"normal",
-		_box(Color("#d89d3f") if primary else Color("#1a2228"), 6, GOLD if primary else LINE)
-	)
-	button.add_theme_stylebox_override(
-		"hover",
-		_box(Color("#e5aa4c") if primary else Color("#263139"), 6, GOLD)
-	)
-	button.add_theme_stylebox_override(
-		"focus",
-		_box(Color("#5b421e") if primary else Color("#263139"), 6, Color.WHITE)
-	)
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
+	button.add_theme_stylebox_override("disabled", UiArtDirectionScript.button_style(false))
 	button.add_theme_color_override("font_color", Color("#14110c") if primary else TEXT)
+	button.add_theme_color_override("font_disabled_color", MUTED)
 	return button
 
 
@@ -491,14 +531,10 @@ func _style_tab(button: Button, active: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 15)
-	button.add_theme_stylebox_override(
-		"normal",
-		_box(Color("#c5903d") if active else Color("#1a2228"), 6, GOLD if active else LINE)
-	)
-	button.add_theme_stylebox_override(
-		"focus",
-		_box(Color("#5b421e") if active else Color("#263139"), 6, Color.WHITE)
-	)
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(active))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(active, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(active, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(active, "focus"))
 	button.add_theme_color_override("font_color", Color("#181109") if active else TEXT)
 
 

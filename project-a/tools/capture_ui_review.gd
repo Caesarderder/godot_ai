@@ -151,7 +151,7 @@ func _capture() -> void:
 	goal_state.onboarding["claimed"] = {}
 	goal_state.stage_progress["cleared_stages"] = ["stage_1_1", "stage_1_2", "stage_1_3"]
 	main.call("_show_goals")
-	for _frame in 6:
+	for _frame in 20:
 		await process_frame
 	if not _save_viewport("res://artifacts/ui-goals-844x390.png"):
 		quit(1)
@@ -164,13 +164,13 @@ func _capture() -> void:
 	]
 	capture_state.meta_progression.achievement_progress["meta.campaign.first"] = 1
 	main.call("_set_goals_tab", "pass")
-	for _frame in 6:
+	for _frame in 20:
 		await process_frame
 	if not _save_viewport("res://artifacts/ui-pass-844x390.png"):
 		quit(1)
 		return
 	main.call("_set_goals_tab", "achievements")
-	for _frame in 6:
+	for _frame in 20:
 		await process_frame
 	if not _save_viewport("res://artifacts/ui-achievements-844x390.png"):
 		quit(1)

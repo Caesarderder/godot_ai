@@ -12,6 +12,7 @@ func _init() -> void:
 func _run() -> void:
 	var goals: Control = GOALS_SCENE.instantiate()
 	root.add_child(goals)
+	goals.size = Vector2(568, 320)
 	await process_frame
 	goals.call("configure", _action_view())
 	await process_frame
@@ -29,6 +30,7 @@ func _run() -> void:
 		action_request["archetype_id"] = String(payload.get("archetype_id", ""))
 	)
 	var cta := goals.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
+	_check(_fits_compact_width(cta), "action CTA fits the 568px compact landscape fixture")
 	if cta != null:
 		cta.pressed.emit()
 	_check(action_request["id"] == "follow_task", "primary CTA emits a semantic follow request")
@@ -119,6 +121,23 @@ func _run() -> void:
 	_check(_tree_has_text(goals, "一键领取 3 项奖励"), "pass tab exposes batch claim")
 	var commander := goals.find_child("CommanderProgressPanel", true, false)
 	_check(commander != null, "long-term tabs retain commander progression")
+	goals.call("configure", _achievements_view())
+	await process_frame
+	var first_achievement := _find_text_control(goals, "第一座城")
+	_check(
+		first_achievement != null
+			and first_achievement.is_visible_in_tree()
+			and first_achievement.size.x >= 160.0,
+		"achievement cards keep their progress copy visible beside the claim action"
+	)
+	_check(
+		goals.find_child("AchievementBatchClaim", true, false) != null,
+		"achievement tab exposes one batch claim as its dominant action"
+	)
+	_check(
+		_fits_compact_width(goals.find_child("AchievementBatchClaim", true, false) as Control),
+		"achievement batch claim fits the 568px compact landscape fixture"
+	)
 	goals.queue_free()
 	await process_frame
 	if failures.is_empty():
@@ -203,6 +222,52 @@ func _pass_view() -> Dictionary:
 		"pass_unlocked": true,
 		"pass": {"merit": 350, "reached": 3, "claimable": 3, "levels": levels},
 	}
+
+
+func _achievements_view() -> Dictionary:
+	return {
+		"tab": "achievements",
+		"commander": {"level": 5, "xp": 300, "next_xp": 450, "claimable": 0},
+		"achievements_unlocked": true,
+		"achievement_claimable": 1,
+		"achievements": [
+			{
+				"achievement_id": "meta.campaign.first",
+				"title": "第一座城",
+				"progress": 1,
+				"target": 1,
+				"complete": true,
+				"claimed": false,
+			},
+			{
+				"achievement_id": "meta.campaign.ten",
+				"title": "十城战线",
+				"progress": 1,
+				"target": 10,
+				"complete": false,
+				"claimed": false,
+			},
+		],
+	}
+
+
+func _find_text_control(node: Node, fragment: String) -> Control:
+	if node is Label and (node as Label).text.contains(fragment):
+		return node as Control
+	if node is Button and (node as Button).text.contains(fragment):
+		return node as Control
+	for child in node.get_children():
+		var match := _find_text_control(child, fragment)
+		if match != null:
+			return match
+	return null
+
+
+func _fits_compact_width(control: Control) -> bool:
+	if control == null or not control.is_visible_in_tree():
+		return false
+	var rect := control.get_global_rect()
+	return rect.position.x >= 0.0 and rect.end.x <= 568.0
 
 
 func _collect_prefix(node: Node, prefix: String, output: Array[Node]) -> void:
