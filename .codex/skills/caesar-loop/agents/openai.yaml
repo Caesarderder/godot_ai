@@ -1,0 +1,4 @@
+interface:
+  display_name: "Caesar Loop"
+  short_description: "Compile game requests into Gauntlet Loop execution."
+  default_prompt: "Use $caesar-loop: turn my game request into a strong Gauntlet Loop prompt, publish it, then execute its evidence-led build and critique loop."

@@ -1,0 +1,7 @@
+# script_sha256=bde39863d91cc8f5b14fcf548c16c2c8d4411a967c3e4a514428af792e70ef1a
+hero,effect,caster_before,caster_after,target_position,distance,cast_range,target_hp,cooldown,screenshot
+aerion,SHIELD,0.32,0.32,-1.00,-1.00,-1.00,-1.0,2.0,ability-aerion-guard.png
+vesper,DASH,0.32,0.52,0.68,0.36,0.40,66.0,2.0,ability-vesper-step.png
+mira,AREA_DAMAGE,0.32,0.32,-1.00,-1.00,-1.00,-1.0,2.0,ability-mira-array.png
+orun,TEAM_HEAL,0.20,0.20,-1.00,-1.00,-1.00,-1.0,2.0,ability-orun-field.png
+sable,LONG_RANGE,0.20,0.20,0.68,0.48,0.70,48.0,2.0,ability-sable-shot.png
