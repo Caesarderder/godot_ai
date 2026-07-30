@@ -89,7 +89,7 @@ func _capture() -> void:
 		return
 	for branch_id in ["heavy", "flying", "special"]:
 		main.call("_set_blueprint_branch", branch_id)
-		for _frame in 4:
+		for _frame in 20:
 			await process_frame
 		if not _save_viewport("res://artifacts/ui-blueprint-%s-844x390.png" % branch_id):
 			quit(1)

@@ -82,6 +82,18 @@ func _run() -> void:
 	_check(_collect_text(screen).contains("1★ 重击最近守军 · 前线突破"), "node explains the complete one-star role and battle promise")
 	_check(_collect_text(screen).contains("升星：2★ 突进顺劈多个目标"), "node separates qualitative star growth from the base role")
 	_check(_collect_text(screen).contains("来源：1-2 首通或信号招募"), "node exposes its acquisition route")
+	var sonic_selector := screen.find_child("BlueprintNode_ordinary_sonic", true, false) as Button
+	sonic_selector.pressed.emit()
+	await process_frame
+	_check(
+		_collect_text(screen).contains("故障闪电马桶人")
+			and _collect_text(screen).contains("音波干扰")
+			and screen.find_child("UnlockFoundationalBlueprint_ordinary_assault", true, false) == null,
+		"selecting a locked blueprint replaces the detail and removes the unrelated research action"
+	)
+	var assault_selector := screen.find_child("BlueprintNode_ordinary_assault", true, false) as Button
+	assault_selector.pressed.emit()
+	await process_frame
 	var requested := {"id": "", "recipe_id": ""}
 	screen.connect("action_requested", func(id: String, payload: Dictionary) -> void:
 		requested["id"] = id
