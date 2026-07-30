@@ -5,6 +5,29 @@
 
 ## Project-owned and pre-existing batches
 
+### `underground_counterattack_title_v001`
+
+| Field | Value |
+|---|---|
+| Status | `approved` |
+| Asset class | Generated UI background |
+| Location | `assets/ui/backgrounds/underground-counterattack-title.webp` |
+| Generation date | 2026-07-31 |
+| Generation mode | OpenAI image generation; original project-owned art direction, no reference image |
+| Prompt summary | Wide underground porcelain-mech factory, dark industrial command atmosphere, cyan work lights, restrained amber warning light, edge silhouettes and a calm central UI-safe area; explicitly no text, logo, watermark or copyrighted character design |
+| Modifications | Generated source was center-cropped/downscaled to 844×390, then encoded as lossy WebP at quality 72 |
+| Source retention | High-resolution generated source remains outside the repository; only the final runtime derivative is committed |
+| Intended scope | Title-screen world-building layer behind the shared industrial command panel |
+| Runtime size | 844×390, 15.8 KiB |
+| Style review | Dark steel architecture, porcelain-white silhouettes, cyan status light and restrained amber accents match the shared UI art direction; central contrast is deliberately quiet so Chinese copy and the single gold primary action remain dominant |
+| Godot import | Godot 4.6.3 Compatibility import and title-screen scene test pass; 844×390 capture reviewed and compact 568×320 action bounds are covered by test |
+
+SHA-256:
+
+```text
+c010defe5355132c640ebcd3f83c001a84835a68e29762b6a1a2a548dec7552e  underground-counterattack-title.webp
+```
+
 ### `porcelain_raider_kit_v001`
 
 | Field | Value |

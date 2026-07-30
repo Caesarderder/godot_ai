@@ -1,9 +1,10 @@
 class_name TitleScreen
-extends VBoxContainer
+extends Control
 
 signal action_requested(action_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const BG := Color("#090d10")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
@@ -61,11 +62,7 @@ func _apply_view() -> void:
 
 
 func _apply_theme() -> void:
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(PANEL, 0.94)
-	panel_style.border_color = Color(LINE, 0.8)
-	panel_style.set_border_width_all(1)
-	panel_style.set_corner_radius_all(3)
+	var panel_style := UiArtDirectionScript.panel_style(true)
 	panel.add_theme_stylebox_override("panel", panel_style)
 
 	for label: Label in [heading, transmission, progress_summary, next_objective, storage_warning]:
@@ -90,30 +87,10 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 15)
-	var normal := _button_style(GOLD if primary else PANEL_2, GOLD if primary else LINE)
-	var hover := _button_style(
-		GOLD.lightened(0.12) if primary else PANEL_2.lightened(0.1),
-		GOLD
-	)
-	var pressed := _button_style(GOLD.darkened(0.18) if primary else PANEL, GOLD)
-	var focus := _button_style(Color(GOLD, 0.22), Color.WHITE)
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", pressed)
-	button.add_theme_stylebox_override("focus", focus)
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
 	button.add_theme_color_override("font_color", BG if primary else TEXT)
 	button.add_theme_color_override("font_hover_color", BG if primary else TEXT)
 	button.add_theme_color_override("font_pressed_color", BG if primary else TEXT)
-
-
-func _button_style(color: Color, border: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.border_color = border
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.content_margin_left = 9
-	style.content_margin_right = 9
-	style.content_margin_top = 6
-	style.content_margin_bottom = 6
-	return style

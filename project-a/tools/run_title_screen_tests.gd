@@ -17,7 +17,10 @@ func _run() -> void:
 		"objective": "当前目标 · 摧毁联盟前哨 1-1",
 		"storage_blocked": true,
 	})
-	root.add_child(title)
+	var host := Control.new()
+	host.size = Vector2(568, 320)
+	root.add_child(host)
+	host.add_child(title)
 	await process_frame
 	await process_frame
 	await process_frame
@@ -27,13 +30,27 @@ func _run() -> void:
 	var progress_summary := title.get_node("%TitleProgressSummary") as Label
 	var next_objective := title.get_node("%TitleNextObjective") as Label
 	var storage_warning := title.get_node("%TitleStorageWarning") as Label
+	var background := title.get_node("Background") as TextureRect
+	_check(
+		background.texture != null and background.texture.get_size() == Vector2(844, 390),
+		"title screen uses the lightweight canonical landscape background"
+	)
 	_check(primary_button.text.contains("进入 E07"), "new-save primary action is canon-anchored")
 	_check(progress_summary.text.contains("1 名战士"), "durable roster summary is projected")
 	_check(next_objective.text.contains("摧毁联盟前哨 1-1"), "next objective is projected")
 	_check(storage_warning.visible and storage_warning.text.contains("刷新后会丢失"), "blocked browser storage is explicit before play")
 	_check(primary_button.has_focus(), "primary action receives initial focus")
+	for control in [primary_button, settings_button, help_button]:
+		var rect := (control as Control).get_global_rect()
+		_check(
+			rect.position.x >= 0.0
+				and rect.end.x <= 568.0
+				and rect.position.y >= 0.0
+				and rect.end.y <= 320.0,
+			"title action fits the 568x320 compact landscape fixture: %s" % rect
+		)
 	_check(
-		primary_button.get_theme_stylebox("focus") is StyleBoxFlat,
+		primary_button.get_theme_stylebox("focus") is StyleBoxTexture,
 		"primary action owns a visible focus style"
 	)
 
