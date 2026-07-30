@@ -379,6 +379,51 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-battle-844x390.png"):
 		quit(1)
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.content_scale_size = Vector2i(568, 320)
+	root.size = Vector2i(568, 320)
+	main.set("active_layout_profile", "compact_landscape")
+	for _frame in 5:
+		await process_frame
+	var compact_battle_hud := main.get("battle_hud_screen") as BattleHudScreen
+	if compact_battle_hud != null:
+		compact_battle_hud.configure(
+			main.call("_battle_snapshots"),
+			bool(main.get("battle_manual_skills")),
+			false,
+			false,
+			true
+		)
+	await process_frame
+	if compact_battle_hud != null:
+		compact_battle_hud.set("_compact_layout", true)
+		var capture_battle_world := main.get("battle_world") as Node
+		if capture_battle_world != null:
+			compact_battle_hud.apply_snapshot(
+				capture_battle_world.call("get_battle_snapshot") as Dictionary
+			)
+	await process_frame
+	if not _save_viewport("res://artifacts/ui-battle-568x320.png"):
+		quit(1)
+		return
+	main.call("_set_battle_paused", true)
+	for _frame in 3:
+		await process_frame
+	if not _save_viewport("res://artifacts/ui-battle-pause-568x320.png", true):
+		quit(1)
+		return
+	main.call("_set_battle_paused", false)
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.content_scale_size = Vector2i(844, 390)
+	root.size = Vector2i(844, 390)
+	main.set("active_layout_profile", "standard_landscape")
+	if compact_battle_hud != null:
+		compact_battle_hud.configure(
+			main.call("_battle_snapshots"),
+			bool(main.get("battle_manual_skills"))
+		)
+	for _frame in 10:
+		await process_frame
 	main.call("_set_battle_paused", true)
 	for _frame in 3:
 		await process_frame

@@ -212,7 +212,7 @@ func _build_world_once() -> void:
 
 	_camera = Camera3D.new()
 	_camera.name = "BattleCamera"
-	_camera.fov = 48.0
+	_camera.fov = 44.0
 	_camera.current = true
 	add_child(_camera)
 
@@ -1307,7 +1307,7 @@ func _update_camera(delta: float) -> void:
 	var follow_weight := 1.0 - exp(-2.8 * safe_delta)
 	_camera_progress = lerpf(_camera_progress, desired_progress, follow_weight)
 	var focus := _world_position(int(_camera_progress), 1)
-	var camera_position := focus + Vector3(14.0, 12.0, 16.0)
+	var camera_position := focus + Vector3(12.2, 10.5, 14.0)
 	if _shake_time > 0.0:
 		_shake_time = maxf(0.0, _shake_time - delta)
 		var amount := _shake_intensity * (_shake_time + 0.05)
@@ -1318,7 +1318,7 @@ func _update_camera(delta: float) -> void:
 		)
 	else:
 		_shake_intensity = 0.0
-	_camera.look_at_from_position(camera_position, focus + Vector3(0.0, -3.0, -0.8))
+	_camera.look_at_from_position(camera_position, focus + Vector3(0.0, 0.0, -0.8))
 
 
 func _camera_focus_progress(battle_snapshot: Dictionary) -> float:

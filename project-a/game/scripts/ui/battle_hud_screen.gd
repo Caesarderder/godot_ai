@@ -27,9 +27,11 @@ const GREEN := Color("#78b982")
 @onready var skill_mode_button: Button = %BattleSkillModeButton
 @onready var burst_button: Button = %BattleBurstButton
 @onready var retreat_button: Button = %BattleRetreatButton
+@onready var bottom_hud: PanelContainer = %BattleBottomHud
 @onready var skill_grid: GridContainer = %BattleSkillGrid
 
 var _manual_skills := false
+var _compact_layout := false
 var _warning_tactic := "点亮技能集中爆发"
 var _first_skill_tutorial := false
 var _first_skill_confirmed := false
@@ -61,10 +63,13 @@ func configure(
 	reinforcement_rally: bool = false,
 	compact: bool = false
 ) -> void:
-	status_label.add_theme_font_size_override("font_size", 18 if compact else 16)
+	var compact_layout := compact or (size.x > 0.0 and size.x <= 600.0)
+	status_label.custom_minimum_size.x = 250.0 if compact_layout else 300.0
+	status_label.add_theme_font_size_override("font_size", 15 if compact_layout else 16)
 	for action in [pause_button, skill_mode_button, burst_button, retreat_button]:
-		action.add_theme_font_size_override("font_size", 16 if compact else 14)
+		action.add_theme_font_size_override("font_size", 14)
 	_manual_skills = manual_skills
+	_compact_layout = compact_layout
 	_first_skill_tutorial = first_skill_tutorial
 	_first_skill_confirmed = false
 	_skill_confirmation_updates = 0
@@ -77,14 +82,31 @@ func configure(
 	_chapter_feedback_copy = ""
 	_chapter_feedback_danger = false
 	_warning_tactic = _warning_tactic_for(snapshots)
-	skill_mode_button.text = "手动技能" if _manual_skills else "自动技能"
+	pause_button.text = ""
+	pause_button.tooltip_text = "暂停战斗"
+	_apply_skill_mode_state()
+	retreat_button.visible = false
+	retreat_button.tooltip_text = "撤退入口已移至暂停菜单，避免战斗中误触"
 	burst_button.visible = _manual_skills
 	burst_button.disabled = not _manual_skills
 	burst_button.tooltip_text = "下达全队爆发指令；接下来 2 秒内就绪的技能会立即释放"
 	skill_grid.columns = maxi(1, snapshots.size())
+	var card_width := (
+		minf(120.0, (size.x - 20.0) / float(maxi(1, snapshots.size())))
+		if compact_layout
+		else 180.0
+	)
+	var hud_width := minf(
+		size.x - (32.0 if compact_layout else 20.0),
+		card_width * float(maxi(1, snapshots.size())) + 8.0
+	)
+	var dense_cards := compact_layout and snapshots.size() > 4
+	var hud_left := 12.0 if compact_layout else 20.0
+	bottom_hud.offset_left = hud_left
+	bottom_hud.offset_right = hud_left + hud_width
 	_clear_units()
 	for snapshot in snapshots:
-		var card := _build_unit_card(snapshot)
+		var card := _build_unit_card(snapshot, compact_layout, card_width, dense_cards)
 		var unit_id := String(snapshot.get("hero_id", ""))
 		_skill_buttons[unit_id] = card["button"]
 		_unit_hud[unit_id] = card
@@ -93,7 +115,7 @@ func configure(
 
 func set_manual_skills(enabled: bool) -> void:
 	_manual_skills = enabled
-	skill_mode_button.text = "手动技能" if enabled else "自动技能"
+	_apply_skill_mode_state()
 	burst_button.visible = enabled
 	burst_button.disabled = not enabled
 
@@ -305,13 +327,28 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 				float(warning.get("remaining_ticks", 0)) / 5.0,
 				_warning_tactic,
 			]
-	var battle_status := "阶段 %d/%d · %s · 战线 %d%%%s" % [
-		int(snapshot.get("stage_index", 0)) + 1,
-		int(snapshot.get("stage_count", 3)),
-		objective_copy if not objective_copy.is_empty() else String(snapshot.get("stage_name", "推进中")),
-		clampi(int(snapshot.get("road_progress", 0)) / 10, 0, 100),
-		warning_copy,
-	]
+	var stage_index := int(snapshot.get("stage_index", 0)) + 1
+	var stage_count := int(snapshot.get("stage_count", 3))
+	var road_progress := clampi(int(snapshot.get("road_progress", 0)) / 10, 0, 100)
+	var short_objective := _short_objective_copy(snapshot)
+	var battle_status := (
+		"阶段%d/%d · %s%s" % [
+			stage_index,
+			stage_count,
+			short_objective,
+			warning_copy,
+		]
+		if _compact_layout
+		else "阶段%d/%d · %s · 战线%d%%%s" % [
+			stage_index,
+			stage_count,
+			short_objective,
+			road_progress,
+			warning_copy,
+		]
+	)
+	if not warning_copy.is_empty():
+		battle_status = warning_copy.trim_prefix(" · ")
 	var ready_unit_name := ""
 	var ready_count := 0
 	for unit_value in snapshot.get("units", []):
@@ -348,6 +385,7 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		GREEN if warning_suppressed else (RED if not warnings.is_empty() else GOLD)
 	)
 	if not warnings.is_empty():
+		status_label.text = _fit_status_copy(status_label.text)
 		return
 	if _chapter_feedback_updates > 0:
 		status_label.text = _chapter_feedback_copy
@@ -389,6 +427,7 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 			ready_unit_name,
 		]
 		status_label.add_theme_color_override("font_color", GOLD)
+	status_label.text = _fit_status_copy(status_label.text)
 
 
 func _skill_result_copy(unit_id: String, events: Array[Dictionary]) -> String:
@@ -483,6 +522,43 @@ func _objective_copy(snapshot: Dictionary) -> String:
 	return ""
 
 
+func _short_objective_copy(snapshot: Dictionary) -> String:
+	var stage_index := int(snapshot.get("stage_index", 0))
+	for structure_value in snapshot.get("structures", []):
+		var structure := structure_value as Dictionary
+		if int(structure.get("stage", -1)) != stage_index or not bool(structure.get("alive", false)):
+			continue
+		var max_hp := maxi(1, int(structure.get("max_hp", 1)))
+		var durability := clampi(
+			ceili(float(maxi(0, int(structure.get("hp", 0)))) * 100.0 / float(max_hp)),
+			0,
+			100
+		)
+		var structure_name := String(structure.get("display_name", "目标"))
+		structure_name = structure_name.trim_prefix("外围").trim_prefix("敌方")
+		return "%s%d%%" % [structure_name, durability]
+	return String(snapshot.get("stage_name", "推进"))
+
+
+func _battle_unit_short_name(value: String) -> String:
+	var short_name := value.split("·")[0].strip_edges()
+	return short_name if not short_name.is_empty() else value
+
+
+func _fit_status_copy(value: String) -> String:
+	var limit := 16 if _compact_layout else 24
+	if value.length() <= limit:
+		return value
+	var result := ""
+	for part_value in value.split(" · "):
+		var part := String(part_value).strip_edges()
+		var candidate := part if result.is_empty() else "%s · %s" % [result, part]
+		if candidate.length() > limit:
+			break
+		result = candidate
+	return result if not result.is_empty() else "战况更新"
+
+
 func _warning_tactic_for(snapshots: Array[Dictionary]) -> String:
 	for snapshot in snapshots:
 		if String(snapshot.get("skill_id", "")) == "siege_shield" and int(snapshot.get("star", 1)) >= 2:
@@ -532,33 +608,42 @@ func _apply_unit_snapshot(unit: Dictionary) -> void:
 		state_label.add_theme_color_override("font_color", MUTED)
 
 
-func _build_unit_card(snapshot: Dictionary) -> Dictionary:
+func _build_unit_card(
+	snapshot: Dictionary,
+	compact: bool = false,
+	card_width: float = 142.0,
+	dense: bool = false
+) -> Dictionary:
 	var unit_id := String(snapshot.get("hero_id", ""))
 	var root := PanelContainer.new()
 	root.name = "BattleUnitCard_%s" % unit_id
-	root.custom_minimum_size = Vector2(108, 68)
+	root.custom_minimum_size = Vector2(card_width - 8.0, 68)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_stylebox_override("panel", _unit_card_style(false))
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 2)
 	root.add_child(stack)
 	var header := HBoxContainer.new()
-	var name_label := _label("%s · %s" % [
-		String(snapshot.get("display_name", unit_id)),
-		String(snapshot.get("skill_display_name", "主动技能")),
-	], 12, TEXT)
+	var name_label := _label(
+		_battle_unit_short_name(String(snapshot.get("display_name", unit_id))),
+		11 if compact else 12,
+		TEXT
+	)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	header.add_child(name_label)
 	var state_label := _label("充能中", 10, MUTED)
 	state_label.name = "BattleUnitStateLabel"
-	state_label.custom_minimum_size.x = 52
+	state_label.custom_minimum_size.x = 0 if compact else 52
+	state_label.visible = not compact
 	state_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	header.add_child(state_label)
 	stack.add_child(header)
 	var hp := _meter_row("HP", GREEN, int(snapshot.get("max_hp", 1)), int(snapshot.get("max_hp", 1)))
+	(hp["value"] as Label).visible = not dense
 	stack.add_child(hp["root"])
 	var energy := _meter_row("EN", CYAN, 0, 100)
+	(energy["value"] as Label).visible = not dense
 	stack.add_child(energy["root"])
 	var skill := Button.new()
 	skill.name = "BattleSkillButton_%s" % unit_id
@@ -609,18 +694,20 @@ func _unit_card_style(highlighted: bool) -> StyleBoxFlat:
 
 func _meter_row(tag_text: String, color: Color, value: int, maximum: int) -> Dictionary:
 	var row := HBoxContainer.new()
+	row.custom_minimum_size.y = 14.0
 	row.add_theme_constant_override("separation", 4)
-	var tag := _label(tag_text, 9, color)
+	var tag := _label(tag_text, 10, color)
 	tag.custom_minimum_size.x = 18
 	row.add_child(tag)
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
 	bar.max_value = maxi(1, maximum)
 	bar.value = value
+	bar.custom_minimum_size.y = 7.0
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_set_progress_fill(bar, color)
 	row.add_child(bar)
-	var value_label := _label("%d%s" % [value, "%" if tag_text == "EN" else "/%d" % maximum], 9, color)
+	var value_label := _label("%d%s" % [value, "%" if tag_text == "EN" else "/%d" % maximum], 10, color)
 	value_label.custom_minimum_size.x = 42
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(value_label)
@@ -628,11 +715,11 @@ func _meter_row(tag_text: String, color: Color, value: int, maximum: int) -> Dic
 
 
 func _apply_theme() -> void:
-	var bottom_style := _box(Color(PANEL, 0.82), 10, Color(CYAN, 0.24))
+	var bottom_style := _box(Color(PANEL, 0.72), 10, Color(CYAN, 0.28))
 	bottom_style.set_border_width_all(1)
 	%BattleBottomHud.add_theme_stylebox_override("panel", bottom_style)
-	var tactical_style := _box(Color(PANEL, 0.76), 10, Color(CYAN, 0.22))
-	tactical_style.set_border_width_all(1)
+	var tactical_style := _box(Color(0, 0, 0, 0), 10, Color(0, 0, 0, 0))
+	tactical_style.set_border_width_all(0)
 	$TacticalBar.add_theme_stylebox_override("panel", tactical_style)
 	var status_style := _box(Color("#071018e6"), 7, Color(0, 0, 0, 0))
 	status_style.set_border_width_all(0)
@@ -652,6 +739,22 @@ func _apply_theme() -> void:
 		button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(false, "pressed"))
 		button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(false, "focus"))
 	_apply_burst_emphasis(false)
+
+
+func _apply_skill_mode_state() -> void:
+	if skill_mode_button == null:
+		return
+	var auto_enabled := not _manual_skills
+	skill_mode_button.text = "自动·开" if auto_enabled else "自动·关"
+	skill_mode_button.add_theme_color_override("font_color", CYAN if auto_enabled else GOLD)
+	skill_mode_button.add_theme_stylebox_override(
+		"normal",
+		_box(
+			Color("#102a31") if auto_enabled else Color("#352817"),
+			7,
+			CYAN if auto_enabled else GOLD
+		)
+	)
 
 
 func _apply_burst_emphasis(emphasized: bool) -> void:
