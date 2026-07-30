@@ -1059,7 +1059,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		_ok(instance.find_child("WarIntelligenceScreen", true, false) == null, "frontline route does not cover the world with a duplicate intelligence screen")
 		_ok(_tree_has_text(instance, "我方") and _tree_has_text(instance, "推荐"), "frontline detail uses the canonical formation power")
 		_ok(not _tree_has_text(instance, "满编战力") and not _tree_has_text(instance, "出征战力"), "frontline detail does not expose obsolete readiness power variants")
-		_ok(_tree_has_text(instance, "能力比"), "frontline detail explains stage-relative capability")
+		_ok(_tree_has_text(instance, "能力 "), "frontline detail explains stage-relative capability")
 		_ok(_tree_has_button(instance, "立即出击") or _tree_has_button(instance, "先培养军团"), "frontline detail exposes one state-correct primary recommendation")
 	instance.call("_show_map")
 	await _wait_frames(3)
@@ -1079,14 +1079,14 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	)
 	_ok(_tree_has_text(instance, "威胁等级"), "opening town expresses combat readiness as an in-world threat")
 	_ok(_tree_has_text(instance, "我方"), "selected stage compares current squad power with the recommendation")
-	_ok(_tree_has_text(instance, "能力比"), "selected stage explains risk with a player-readable capability ratio")
+	_ok(_tree_has_text(instance, "能力 "), "selected stage explains risk with a player-readable capability ratio")
 	game_autoload.current_state().stage_progress["cleared_stages"] = ["stage_1_1", "stage_1_2", "stage_1_3"]
 	game_autoload.current_state().stage_progress["highest_unlocked_stage"] = "stage_1_4"
 	instance.call("_select_stage_card", "stage_1_4")
 	await _wait_frames(2)
 	_ok(_tree_has_text(instance, "威胁等级 · 高"), "fourth town clearly marks the first growth wall")
-	_ok(_tree_has_text(instance, "1-2、1-3") and _tree_has_text(instance, "图纸"), "first wall reconnaissance names the stage-earned blueprint recovery")
-	_ok(_tree_has_text(instance, "图纸") and _tree_has_text(instance, "研究所"), "first wall reconnaissance explains the blueprint research path")
+	_ok(_tree_has_text(instance, "监控人反击") and _tree_has_text(instance, "城市战扩大"), "world route preserves the two stage-earned blueprint locations")
+	_ok(_tree_has_text(instance, "炮台防线"), "first wall reconnaissance keeps its authored battlefield identity")
 	_ok(_tree_has_text(instance, "下一步 · 先试探炮台防线"), "first wall reconnaissance prioritizes discovery over premature growth")
 	var wall_attack: Button = null
 	var visible_growth := false

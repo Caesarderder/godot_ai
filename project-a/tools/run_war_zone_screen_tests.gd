@@ -29,6 +29,14 @@ func _verify_layout(viewport_size: Vector2) -> void:
 	var war_zone := WAR_ZONE_SCENE.instantiate() as Control
 	host.add_child(war_zone)
 	war_zone.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_check(
+		war_zone.has_method("configure"),
+		"%s loads the shipping WarZoneScreen script" % viewport_size
+	)
+	if not war_zone.has_method("configure"):
+		host.queue_free()
+		await process_frame
+		return
 	var stages: Array[Dictionary] = []
 	for stage_number in range(1, 13):
 		stages.append({
@@ -57,7 +65,8 @@ func _verify_layout(viewport_size: Vector2) -> void:
 		},
 		true,
 		false,
-		"低"
+		"低",
+		viewport_size.x < 650.0
 	)
 	await process_frame
 	await process_frame
@@ -76,13 +85,53 @@ func _verify_layout(viewport_size: Vector2) -> void:
 		war_zone.find_child("StageNode_stage_1_1", true, false) != null,
 		"%s exposes the selected world node" % viewport_size
 	)
-	var stage_strip := war_zone.get_node("%StageNodeStrip") as HBoxContainer
+	var stage_strip := war_zone.get_node("%StageNodeStrip") as Control
+	var stage_nodes := _children_with_prefix(stage_strip, "StageNode_")
+	var location_nodes := _children_with_prefix(stage_strip, "StageLocation_")
 	_check(
-		stage_strip.get_child_count() == 5,
+		stage_nodes.size() == 5,
 		"%s keeps one five-node frontline window instead of a chapter-wide button matrix" % viewport_size
 	)
+	_check(
+		war_zone.get_node_or_null("StageScroll") == null,
+		"%s places stage controls on the world instead of a persistent UI strip" % viewport_size
+	)
+	for stage_node in stage_nodes:
+		var stage_control := stage_node as Control
+		_check(
+			not stage_control.get_global_rect().intersects(detail.get_global_rect()),
+			"%s keeps world node %s %s clear of briefing %s" % [
+				viewport_size,
+				stage_control.name,
+				stage_control.get_global_rect(),
+				detail.get_global_rect(),
+			]
+		)
+	_check(
+		location_nodes.size() == 5,
+		"%s gives every world node a visible location identity" % viewport_size
+	)
+	for location_node in location_nodes:
+		var location := location_node as Control
+		_check(
+			not location.get_global_rect().intersects(detail.get_global_rect()),
+			"%s keeps location %s %s clear of briefing %s" % [
+				viewport_size,
+				location.name,
+				location.get_global_rect(),
+				detail.get_global_rect(),
+			]
+		)
 	host.queue_free()
 	await process_frame
+
+
+func _children_with_prefix(parent: Node, prefix: String) -> Array[Node]:
+	var matches: Array[Node] = []
+	for child in parent.get_children():
+		if String(child.name).begins_with(prefix):
+			matches.append(child)
+	return matches
 
 
 func _inside(control: Control, host: Control) -> bool:

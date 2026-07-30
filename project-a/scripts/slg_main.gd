@@ -1182,7 +1182,8 @@ func _show_map() -> void:
 		selected_report,
 		selected_unlocked,
 		cleared.has(selected_stage_id),
-		_estimated_damage(selected_config)
+		_estimated_damage(selected_config),
+		_layout_profile() == "compact_landscape"
 	)
 	war_zone.chapter_selected.connect(_select_chapter)
 	war_zone.stage_selected.connect(_select_stage_card)

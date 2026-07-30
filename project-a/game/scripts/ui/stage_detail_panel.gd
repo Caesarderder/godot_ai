@@ -38,6 +38,7 @@ var _unlocked := false
 var _cleared := false
 var _estimated_threat := "未知"
 var _preparation_action_id := "upgrade"
+var _compact := false
 
 
 func _ready() -> void:
@@ -54,7 +55,8 @@ func configure(
 	report: Dictionary,
 	unlocked: bool,
 	cleared: bool,
-	estimated_threat: String
+	estimated_threat: String,
+	compact := false
 ) -> void:
 	_stage_id = stage_id
 	_config = config.duplicate(true)
@@ -62,20 +64,35 @@ func configure(
 	_unlocked = unlocked
 	_cleared = cleared
 	_estimated_threat = estimated_threat
+	_compact = compact
 	if is_node_ready():
 		_apply_configuration()
 
 
 func _apply_configuration() -> void:
+	var stats := get_node("Margin/Columns/Stats") as VBoxContainer
+	stats.custom_minimum_size.x = 150.0 if _compact else 220.0
 	var status := "已夺回" if _cleared else ("等待命令" if _unlocked else "信号中断")
 	var ratio_percent := clampi(int(round(float(_report.get("capability_ratio", 0.0)) * 100.0)), 0, 150)
 	var risk_id := String(_report.get("risk_id", "extreme"))
 	var risk_color := _risk_color(risk_id)
-	stage_name.text = String(_config.get("display_name", _stage_id))
+	stage_name.text = (
+		"%s · %d/%d" % [
+			_compact_stage_name(String(_config.get("display_name", _stage_id))),
+			int(_report.get("cp_ready", 0)),
+			int(_report.get("recommended_power", 0)),
+		]
+		if _compact
+		else String(_config.get("display_name", _stage_id))
+	)
 	stage_name.add_theme_color_override("font_color", GREEN if _cleared else TEXT)
 	status_label.text = status
+	status_label.visible = false
 	status_label.add_theme_color_override("font_color", GREEN if _cleared else GOLD)
-	threat_summary.text = String(_config.get("threat_summary", "联盟守军正在集结。"))
+	threat_summary.text = _brief_clause(
+		String(_config.get("threat_summary", "联盟守军正在集结。"))
+	)
+	threat_summary.visible = not _compact
 	var faction_proof := _report.get("faction_proof", {}) as Dictionary
 	var faction_protocol_preview := (
 		_report.get("faction_protocol_preview", {}) as Dictionary
@@ -122,17 +139,32 @@ func _apply_configuration() -> void:
 			String(formation_plan.get("missing_copy", "无")),
 			plan_consequence,
 		]
-	power_line.text = "我方 %d  /  推荐 %d" % [
-		int(_report.get("cp_ready", 0)),
-		int(_report.get("recommended_power", 0)),
-	]
+	decision_hint.text = _brief_clause(decision_hint.text)
+	decision_hint.visible = not _compact
+	power_line.text = (
+		"%d / %d" % [
+			int(_report.get("cp_ready", 0)),
+			int(_report.get("recommended_power", 0)),
+		]
+		if _compact
+		else "我方 %d  /  推荐 %d" % [
+			int(_report.get("cp_ready", 0)),
+			int(_report.get("recommended_power", 0)),
+		]
+	)
+	power_line.visible = not _compact
 	capability.value = mini(ratio_percent, 100)
+	capability.visible = false
 	capability.add_theme_color_override("font_color", risk_color)
-	risk_label.text = "能力比 %d%% · %s · 威胁等级 · %s" % [
-		ratio_percent,
-		String(_report.get("risk_label", "未知")),
-		_estimated_threat,
-	]
+	risk_label.text = (
+		"能力 %d%% · 威胁 %s" % [ratio_percent, _estimated_threat]
+		if _compact
+		else "能力 %d%% · %s · 威胁 %s" % [
+			ratio_percent,
+			String(_report.get("risk_label", "未知")),
+			_estimated_threat,
+		]
+	)
 	risk_label.add_theme_color_override("font_color", risk_color)
 	threat_level.text = "威胁等级 · %s" % _estimated_threat
 	threat_level.add_theme_color_override("font_color", RED if _estimated_threat == "高" else GOLD)
@@ -151,7 +183,7 @@ func _apply_configuration() -> void:
 		blocks_attack = false
 	_preparation_action_id = action_id
 	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
-	next_action.visible = needs_preparation or needs_discovery
+	next_action.visible = (needs_preparation or needs_discovery) and not _compact
 	growth_button.visible = needs_preparation
 	if action_id == "upgrade":
 		growth_button.text = "先培养军团"
@@ -162,6 +194,7 @@ func _apply_configuration() -> void:
 	else:
 		growth_button.text = String(action.get("title", "建造研究所")) if needs_preparation else "先培养军团"
 	attack_button.disabled = not _unlocked or blocks_attack
+	attack_button.custom_minimum_size.y = 48.0
 	attack_button.text = String(faction_proof.get("attack_label", "")) if not faction_proof.is_empty() else (
 		"再次夺取"
 		if _cleared
@@ -204,18 +237,18 @@ func _apply_theme() -> void:
 		next_action,
 	]:
 		label.add_theme_font_override("font", CJK_FONT)
-	stage_name.add_theme_font_size_override("font_size", 20)
+	stage_name.add_theme_font_size_override("font_size", 19)
 	status_label.add_theme_font_size_override("font_size", 12)
 	threat_summary.add_theme_font_size_override("font_size", 13)
 	threat_summary.add_theme_color_override("font_color", MUTED)
-	decision_hint.add_theme_font_size_override("font_size", 13)
+	decision_hint.add_theme_font_size_override("font_size", 12)
 	decision_hint.add_theme_color_override("font_color", GOLD)
 	for route_label in [assault_recovery_route, armored_recovery_route]:
 		route_label.add_theme_font_size_override("font_size", 12)
 		route_label.add_theme_color_override("font_color", CYAN)
-	power_line.add_theme_font_size_override("font_size", 15)
+	power_line.add_theme_font_size_override("font_size", 17)
 	power_line.add_theme_color_override("font_color", CYAN)
-	risk_label.add_theme_font_size_override("font_size", 13)
+	risk_label.add_theme_font_size_override("font_size", 15)
 	threat_level.add_theme_font_size_override("font_size", 14)
 	next_action.add_theme_font_size_override("font_size", 13)
 	next_action.add_theme_color_override("font_color", GREEN)
@@ -268,6 +301,32 @@ func _risk_color(risk_id: String) -> Color:
 			return GOLD
 		_:
 			return RED
+
+
+func _brief_clause(value: String) -> String:
+	var result := value.replace("\n", " ").strip_edges()
+	var best_candidate := ""
+	for separator in ["；", "。", "｜", "，"]:
+		if result.contains(separator):
+			var candidate := result.split(separator)[0].strip_edges()
+			if (
+				candidate.length() >= 6
+				and (best_candidate.is_empty() or candidate.length() < best_candidate.length())
+			):
+				best_candidate = candidate
+	if not best_candidate.is_empty():
+		result = best_candidate
+	if result.length() > 24:
+		result = result.left(24)
+	return result
+
+
+func _compact_stage_name(value: String) -> String:
+	var parts := value.split("·")
+	if parts.size() < 2:
+		return value
+	var mission_id := String(parts[0]).strip_edges().split(" ")[0]
+	return "%s · %s" % [mission_id, String(parts[parts.size() - 1]).strip_edges()]
 
 
 func _on_attack_pressed() -> void:
