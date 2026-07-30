@@ -6,6 +6,7 @@ signal preparation_requested(action_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const PANEL := Color("#12171c")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -175,7 +176,12 @@ func _apply_configuration() -> void:
 		)
 	)
 	if force_primary_attack:
-		_style_pressure_test_action()
+		needs_preparation = false
+	_style_action_button(growth_button, needs_preparation)
+	_style_action_button(
+		attack_button,
+		_unlocked and not blocks_attack and not needs_preparation and not needs_discovery
+	)
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = Color(PANEL, 0.9)
 	panel_style.border_color = Color(CYAN, 0.72) if _unlocked else LINE
@@ -198,18 +204,18 @@ func _apply_theme() -> void:
 		next_action,
 	]:
 		label.add_theme_font_override("font", CJK_FONT)
-	stage_name.add_theme_font_size_override("font_size", 23)
+	stage_name.add_theme_font_size_override("font_size", 20)
 	status_label.add_theme_font_size_override("font_size", 12)
-	threat_summary.add_theme_font_size_override("font_size", 15)
+	threat_summary.add_theme_font_size_override("font_size", 13)
 	threat_summary.add_theme_color_override("font_color", MUTED)
 	decision_hint.add_theme_font_size_override("font_size", 13)
 	decision_hint.add_theme_color_override("font_color", GOLD)
 	for route_label in [assault_recovery_route, armored_recovery_route]:
 		route_label.add_theme_font_size_override("font_size", 12)
 		route_label.add_theme_color_override("font_color", CYAN)
-	power_line.add_theme_font_size_override("font_size", 17)
+	power_line.add_theme_font_size_override("font_size", 15)
 	power_line.add_theme_color_override("font_color", CYAN)
-	risk_label.add_theme_font_size_override("font_size", 15)
+	risk_label.add_theme_font_size_override("font_size", 13)
 	threat_level.add_theme_font_size_override("font_size", 14)
 	next_action.add_theme_font_size_override("font_size", 13)
 	next_action.add_theme_color_override("font_color", GREEN)
@@ -217,28 +223,7 @@ func _apply_theme() -> void:
 		button.add_theme_font_override("font", CJK_FONT)
 		button.add_theme_font_size_override("font_size", 16)
 		button.focus_mode = Control.FOCUS_ALL
-	var focus := StyleBoxFlat.new()
-	focus.bg_color = Color("#5b421e")
-	focus.border_color = Color.WHITE
-	focus.set_border_width_all(2)
-	focus.set_corner_radius_all(8)
-	attack_button.add_theme_stylebox_override("focus", focus)
-	growth_button.add_theme_stylebox_override("focus", focus)
-	var growth_normal := StyleBoxFlat.new()
-	growth_normal.bg_color = GOLD
-	growth_normal.border_color = GOLD
-	growth_normal.set_border_width_all(1)
-	growth_normal.set_corner_radius_all(8)
-	var growth_hover := growth_normal.duplicate() as StyleBoxFlat
-	growth_hover.bg_color = GOLD.lightened(0.12)
-	var growth_pressed := growth_normal.duplicate() as StyleBoxFlat
-	growth_pressed.bg_color = GOLD.darkened(0.18)
-	growth_button.add_theme_stylebox_override("normal", growth_normal)
-	growth_button.add_theme_stylebox_override("hover", growth_hover)
-	growth_button.add_theme_stylebox_override("pressed", growth_pressed)
-	growth_button.add_theme_color_override("font_color", PANEL)
-	growth_button.add_theme_color_override("font_hover_color", PANEL)
-	growth_button.add_theme_color_override("font_pressed_color", PANEL)
+		_style_action_button(button, false)
 
 
 func _configure_boss_recovery_routes() -> void:
@@ -261,22 +246,16 @@ func _configure_boss_recovery_routes() -> void:
 	armored_recovery_route.text = "守势 · %s升至2★ → 格挡反震" % armored_name
 
 
-func _style_pressure_test_action() -> void:
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = GOLD
-	normal.border_color = GOLD
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(8)
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = GOLD.lightened(0.12)
-	var pressed := normal.duplicate() as StyleBoxFlat
-	pressed.bg_color = GOLD.darkened(0.18)
-	attack_button.add_theme_stylebox_override("normal", normal)
-	attack_button.add_theme_stylebox_override("hover", hover)
-	attack_button.add_theme_stylebox_override("pressed", pressed)
-	attack_button.add_theme_color_override("font_color", PANEL)
-	attack_button.add_theme_color_override("font_hover_color", PANEL)
-	attack_button.add_theme_color_override("font_pressed_color", PANEL)
+func _style_action_button(button: Button, primary: bool) -> void:
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
+	button.add_theme_stylebox_override("disabled", UiArtDirectionScript.button_style(false, "disabled"))
+	var color := PANEL if primary else TEXT
+	button.add_theme_color_override("font_color", color)
+	button.add_theme_color_override("font_hover_color", color)
+	button.add_theme_color_override("font_pressed_color", color)
 
 
 func _risk_color(risk_id: String) -> Color:

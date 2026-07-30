@@ -1051,15 +1051,16 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		"operation CTA routes to construction first, or to 1-1 when the lab is already built"
 	)
 	var intel_button := instance.find_child("OpenWarIntelligenceButton", true, false) as Button
-	_ok(intel_button != null, "factory mission panel exposes the unified war intelligence")
+	_ok(intel_button != null and intel_button.text == "前线", "factory mission panel exposes one direct frontline route")
 	if intel_button != null:
 		intel_button.pressed.emit()
 		await _wait_frames(3)
-		_ok(instance.find_child("WarIntelligenceScreen", true, false) != null, "war intelligence opens as a dedicated readable screen")
-		_ok(_tree_has_text(instance, "当前编队战力"), "war intelligence uses the canonical formation power")
-		_ok(not _tree_has_text(instance, "满编战力") and not _tree_has_text(instance, "出征战力"), "war intelligence does not expose obsolete readiness power variants")
-		_ok(_tree_has_text(instance, "能力比"), "war intelligence explains stage-relative capability")
-		_ok(_tree_has_text(instance, "战后无需维修"), "war intelligence exposes the lossless battle rule")
+		_ok(instance.find_child("WarZoneScreen", true, false) != null, "frontline route opens the world map without a briefing detour")
+		_ok(instance.find_child("WarIntelligenceScreen", true, false) == null, "frontline route does not cover the world with a duplicate intelligence screen")
+		_ok(_tree_has_text(instance, "我方") and _tree_has_text(instance, "推荐"), "frontline detail uses the canonical formation power")
+		_ok(not _tree_has_text(instance, "满编战力") and not _tree_has_text(instance, "出征战力"), "frontline detail does not expose obsolete readiness power variants")
+		_ok(_tree_has_text(instance, "能力比"), "frontline detail explains stage-relative capability")
+		_ok(_tree_has_button(instance, "立即出击") or _tree_has_button(instance, "先培养军团"), "frontline detail exposes one state-correct primary recommendation")
 	instance.call("_show_map")
 	await _wait_frames(3)
 	_ok(instance.find_child("StageNodeStrip", true, false) != null, "war zone separates stage selection from stage detail")

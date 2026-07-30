@@ -123,10 +123,10 @@ func _capture() -> void:
 		main.call("_cancel_facility_construction")
 		for _frame in 4:
 			await process_frame
-	main.call("_show_intelligence")
+	main.call("_show_current_frontline")
 	for _frame in 6:
 		await process_frame
-	if not _save_viewport("res://artifacts/ui-war-intelligence-844x390.png"):
+	if not _save_viewport("res://artifacts/ui-frontline-briefing-844x390.png"):
 		quit(1)
 		return
 	main.call("_show_map")

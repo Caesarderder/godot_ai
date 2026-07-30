@@ -11,7 +11,6 @@ const SCENES: Array[PackedScene] = [
 	preload("res://game/scenes/screens/title_screen.tscn"),
 	preload("res://game/scenes/screens/settings_screen.tscn"),
 	preload("res://game/scenes/screens/help_screen.tscn"),
-	preload("res://game/scenes/screens/intelligence_screen.tscn"),
 	preload("res://game/scenes/screens/blueprint_screen.tscn"),
 	preload("res://game/scenes/screens/epilogue_screen.tscn"),
 ]

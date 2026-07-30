@@ -34,7 +34,6 @@ const GoalsScreenScene := preload("res://game/scenes/screens/goals_screen.tscn")
 const TitleScreenScene := preload("res://game/scenes/screens/title_screen.tscn")
 const SettingsScreenScene := preload("res://game/scenes/screens/settings_screen.tscn")
 const HelpScreenScene := preload("res://game/scenes/screens/help_screen.tscn")
-const IntelligenceScreenScene := preload("res://game/scenes/screens/intelligence_screen.tscn")
 const BlueprintScreenScene := preload("res://game/scenes/screens/blueprint_screen.tscn")
 const EpilogueScreenScene := preload("res://game/scenes/screens/epilogue_screen.tscn")
 const OnboardingService := preload("res://game/scripts/domain/onboarding/onboarding_service.gd")
@@ -1048,7 +1047,7 @@ func _on_factory_action_requested(action_id: String, payload: Dictionary) -> voi
 				String(payload.get("archetype_id", ""))
 			)
 		"intelligence":
-			_show_intelligence()
+			_show_current_frontline()
 		"begin_construction":
 			_begin_facility_construction(String(payload.get("facility_id", "")))
 		"confirm_construction":
@@ -1111,34 +1110,15 @@ func _duration_copy(seconds: int) -> String:
 	return "%d分" % minutes
 
 
-func _show_intelligence() -> void:
-	screen = Screen.INTELLIGENCE
-	_clear()
+func _show_current_frontline() -> void:
 	var state: RefCounted = game.current_state()
 	var target_stage_id := String(state.stage_progress.get("highest_unlocked_stage", StageCatalog.DEFAULT_STAGE_ID))
 	if not StageCatalog.has_stage(target_stage_id):
 		target_stage_id = StageCatalog.DEFAULT_STAGE_ID
 	var config := StageCatalog.stage(target_stage_id)
-	var report := WarReadinessReport.derive(state, config)
-	var shell := _shell("指挥情报", "用同一口径判断战力、成长投资与下一行动")
-	shell.name = "WarIntelligenceShell"
-	var intelligence := IntelligenceScreenScene.instantiate() as Control
-	intelligence.call("configure", {
-		"stage_id": target_stage_id,
-		"report": report,
-	})
-	intelligence.connect("action_requested", _on_intelligence_action_requested)
-	shell.add_child(intelligence)
-	_add_nav(shell, Screen.INTELLIGENCE)
-	return
-
-
-func _on_intelligence_action_requested(action_id: String, payload: Dictionary) -> void:
-	_play_ui_click()
-	if action_id == "upgrade":
-		_show_legion()
-		return
-	_start_stage_battle(String(payload.get("stage_id", selected_stage_id)))
+	selected_stage_id = target_stage_id
+	selected_chapter = int(config.get("chapter", 1))
+	_show_map()
 
 
 
@@ -5481,7 +5461,7 @@ func _rebuild_screen_for_layout(expected_screen: Screen) -> void:
 		Screen.GOALS:
 			_show_goals()
 		Screen.INTELLIGENCE:
-			_show_intelligence()
+			_show_current_frontline()
 		Screen.RESULT:
 			_show_result()
 		Screen.BLUEPRINTS:

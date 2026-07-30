@@ -33,7 +33,7 @@ var _estimated_threat := "未知"
 
 
 func _ready() -> void:
-	resized.connect(queue_redraw)
+	resized.connect(_on_resized)
 	if not _selected_config.is_empty():
 		_rebuild()
 
@@ -68,17 +68,18 @@ func _rebuild() -> void:
 	_clear_children(detail_host)
 	for chapter in range(1, 6):
 		var chapter_button := _button("第%d章" % chapter, _selected_chapter == chapter)
-		chapter_button.custom_minimum_size = Vector2(92, 36)
+		chapter_button.custom_minimum_size = Vector2(64 if size.x < 650.0 else 92, 36)
 		chapter_button.disabled = chapter > _highest_chapter
 		chapter_button.pressed.connect(_on_chapter_pressed.bind(chapter))
 		chapter_nav.add_child(chapter_button)
 	var endless_button := _button("无尽前线", _selected_chapter == 6)
-	endless_button.custom_minimum_size = Vector2(104, 36)
+	endless_button.custom_minimum_size = Vector2(82 if size.x < 650.0 else 104, 36)
 	endless_button.disabled = _highest_chapter < 6
 	endless_button.pressed.connect(_on_chapter_pressed.bind(6))
 	chapter_nav.add_child(endless_button)
 
-	for row in _stage_rows:
+	var visible_rows := _visible_stage_rows()
+	for row in visible_rows:
 		var stage_id := String(row.get("stage_id", ""))
 		var stage_number := stage_id.trim_prefix("stage_").replace("_", "-")
 		var stage_state := "◆" if bool(row.get("unlocked", false)) else "×"
@@ -115,6 +116,12 @@ func _rebuild() -> void:
 	queue_redraw()
 
 
+func _on_resized() -> void:
+	queue_redraw()
+	if is_node_ready() and not _selected_config.is_empty():
+		_rebuild.call_deferred()
+
+
 func _draw() -> void:
 	var viewport_size := size
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
@@ -145,10 +152,26 @@ func _draw() -> void:
 
 
 func _selected_stage_index() -> int:
-	for index in range(_stage_rows.size()):
-		if String(_stage_rows[index].get("stage_id", "")) == _selected_stage_id:
+	var visible_rows := _visible_stage_rows()
+	for index in range(visible_rows.size()):
+		if String(visible_rows[index].get("stage_id", "")) == _selected_stage_id:
 			return index
 	return 0
+
+
+func _visible_stage_rows() -> Array[Dictionary]:
+	if _stage_rows.size() <= 5:
+		return _stage_rows.duplicate(true)
+	var selected_index := 0
+	for index in range(_stage_rows.size()):
+		if String(_stage_rows[index].get("stage_id", "")) == _selected_stage_id:
+			selected_index = index
+			break
+	var start := clampi(selected_index - 2, 0, _stage_rows.size() - 5)
+	var result: Array[Dictionary] = []
+	for index in range(start, start + 5):
+		result.append((_stage_rows[index] as Dictionary).duplicate(true))
+	return result
 
 
 func _button(value: String, selected: bool) -> Button:
@@ -159,15 +182,34 @@ func _button(value: String, selected: bool) -> Button:
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_color_override("font_color", TEXT)
 	button.add_theme_color_override("font_disabled_color", MUTED)
-	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(selected))
-	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(selected, "hover"))
-	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(selected, "pressed"))
-	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(selected, "focus"))
+	button.add_theme_stylebox_override(
+		"normal",
+		_selected_navigation_style() if selected else UiArtDirectionScript.button_style(false)
+	)
+	button.add_theme_stylebox_override(
+		"hover",
+		_selected_navigation_style(true) if selected else UiArtDirectionScript.button_style(false, "hover")
+	)
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(false, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(false, "focus"))
 	button.add_theme_stylebox_override("disabled", UiArtDirectionScript.button_style(false, "disabled"))
-	button.add_theme_color_override("font_color", PANEL_2 if selected else TEXT)
-	button.add_theme_color_override("font_hover_color", PANEL_2 if selected else TEXT)
-	button.add_theme_color_override("font_pressed_color", PANEL_2 if selected else TEXT)
+	button.add_theme_color_override("font_color", CYAN if selected else TEXT)
+	button.add_theme_color_override("font_hover_color", CYAN if selected else TEXT)
+	button.add_theme_color_override("font_pressed_color", TEXT)
 	return button
+
+
+func _selected_navigation_style(hover := false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#122229") if not hover else Color("#193239")
+	style.border_color = CYAN
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(7)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 5
+	style.content_margin_bottom = 5
+	return style
 
 
 func _clear_children(parent: Node) -> void:

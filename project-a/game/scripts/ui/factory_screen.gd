@@ -158,7 +158,7 @@ func _mission_panel() -> Control:
 			"archetype_id": String(task.get("archetype_id", "")),
 		}))
 	actions.add_child(primary)
-	var intelligence := _button("战况", false)
+	var intelligence := _button("前线", false)
 	intelligence.name = "OpenWarIntelligenceButton"
 	intelligence.custom_minimum_size.x = 72
 	intelligence.pressed.connect(action_requested.emit.bind("intelligence", {}))
