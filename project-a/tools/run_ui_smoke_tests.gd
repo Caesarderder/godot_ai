@@ -855,6 +855,30 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 			responsive_control != null and _control_inside_viewport(responsive_control, instance.get_viewport()),
 			"compact landscape keeps %s inside the visible viewport" % node_name
 		)
+	var compact_resource_hud := instance.find_child("FactoryResourceHUD", true, false) as Control
+	var compact_factory_hud := instance.find_child("FactoryHudFrame", true, false) as Control
+	var compact_navigation := instance.find_child("PrimaryNavigation", true, false) as Control
+	var compact_command_marker := instance.find_child("FactoryMarker_command_center", true, false) as Control
+	_ok(
+		compact_resource_hud != null
+			and compact_factory_hud != null
+			and not compact_resource_hud.get_global_rect().intersects(compact_factory_hud.get_global_rect()),
+		"compact factory keeps logistics and contextual actions as separate edge islands"
+	)
+	_ok(
+		compact_factory_hud != null
+			and compact_navigation != null
+			and not compact_factory_hud.get_global_rect().intersects(compact_navigation.get_global_rect()),
+		"compact factory detail remains clear of primary navigation"
+	)
+	_ok(
+		compact_command_marker != null
+			and compact_resource_hud != null
+			and compact_factory_hud != null
+			and not compact_command_marker.get_global_rect().intersects(compact_resource_hud.get_global_rect())
+			and not compact_command_marker.get_global_rect().intersects(compact_factory_hud.get_global_rect()),
+		"compact factory projects its building marker into unobstructed world space"
+	)
 	var standard_layout_snapshot := MobileViewportAdapter.build_snapshot(
 		{"width": 844.0, "height": 390.0},
 		Vector2(844, 390)
@@ -983,9 +1007,13 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		var projected := factory_camera.unproject_position(porcelain_building.global_position + Vector3(0.0, 1.0, 0.0))
 		var picked := instance.call("_factory_building_at", projected) as CollisionObject3D
 		_ok(picked == porcelain_building, "screen ray picking resolves the visible resource building")
-	_ok(_tree_has_text(instance, "后勤库存"), "factory screen exposes industrial resources")
+	_ok(_tree_has_text(instance, "工业材料"), "factory screen exposes industrial resources")
 	_ok(_tree_has_text(instance, "后存满"), "factory screen exposes time until capacity is full")
-	_ok(_tree_has_text(instance, "全员无损"), "factory screen exposes lossless deployment at a glance")
+	_ok(
+		factory_resource_hud != null
+			and factory_resource_hud.size.x <= instance.get_viewport().get_visible_rect().size.x * 0.5,
+		"factory logistics shrink-wrap instead of covering the world with a full-width dashboard"
+	)
 	instance.call("_activate_factory_building", "repair_center")
 	await _wait_frames(3)
 	_ok(instance.find_child("SelectedFacilityPanel", true, false) != null, "clicking a factory building opens the focused facility panel")
@@ -1043,7 +1071,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		restored_mission_tab.pressed.emit()
 		await _wait_frames(3)
 	_ok(_tree_has_text(instance, "前线来电"), "fresh save presents onboarding as an in-world transmission")
-	_ok(_tree_has_text(instance, "在基地选址并建成研究所"), "fresh-save mission starts with research-lab construction")
+	_ok(_tree_has_text(instance, "建设研究所"), "fresh-save mission starts with research-lab construction")
 	_ok(not _tree_has_text(instance, "收取一次工厂产出"), "fresh-save mission does not start with factory chores")
 	_ok(not _tree_has_text(instance, "选择并升级一名主力"), "fresh-save mission does not require growth before combat")
 	_ok(

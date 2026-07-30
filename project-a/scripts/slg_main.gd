@@ -153,7 +153,7 @@ var construction_facility_id: String = ""
 var construction_cell: Vector2i = Vector2i(999, 999)
 var factory_camera_yaw := 0.0
 var factory_camera_pitch := deg_to_rad(41.2)
-var factory_camera_size := 17.5
+var factory_camera_size := 16.0
 var factory_pointer_active := false
 var factory_pointer_index := -1
 var factory_pointer_start := Vector2.ZERO
@@ -4108,9 +4108,26 @@ func _claim_facility_work() -> void:
 func _begin_facility_construction(facility_id: String) -> void:
 	factory_hud_panel = "build"
 	construction_facility_id = facility_id
-	construction_cell = Vector2i(999, 999)
+	construction_cell = _first_available_factory_cell()
 	_reset_factory_pointer()
 	_show_base()
+
+
+func _first_available_factory_cell() -> Vector2i:
+	for cell in [
+		Vector2i(0, 0),
+		Vector2i(-1, 0),
+		Vector2i(1, 0),
+		Vector2i(0, -1),
+		Vector2i(0, 1),
+		Vector2i(-1, -1),
+		Vector2i(1, -1),
+		Vector2i(-1, 1),
+		Vector2i(1, 1),
+	]:
+		if not _is_factory_cell_occupied(cell):
+			return cell
+	return Vector2i(999, 999)
 
 
 func _cancel_facility_construction() -> void:
@@ -4751,16 +4768,16 @@ func _build_factory_world() -> void:
 	environment_resource.background_mode = Environment.BG_COLOR
 	environment_resource.background_color = Color("#151a1c")
 	environment_resource.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment_resource.ambient_light_color = Color("#6e7775")
-	environment_resource.ambient_light_energy = 0.46
+	environment_resource.ambient_light_color = Color("#739096")
+	environment_resource.ambient_light_energy = 0.56
 	environment.environment = environment_resource
 	world_host.add_child(environment)
 
 	var sun := DirectionalLight3D.new()
 	sun.name = "FactorySun"
 	sun.rotation_degrees = Vector3(-42.0, -34.0, 0.0)
-	sun.light_color = Color("#e6a66c")
-	sun.light_energy = 1.35
+	sun.light_color = Color("#d7c3a2")
+	sun.light_energy = 1.15
 	sun.shadow_enabled = true
 	world_host.add_child(sun)
 
@@ -4778,11 +4795,98 @@ func _build_factory_world() -> void:
 	island_mesh.top_radius = 10.5
 	island_mesh.bottom_radius = 9.3
 	island_mesh.height = 0.7
-	island_mesh.radial_segments = 16
+	island_mesh.radial_segments = 24
 	island.mesh = island_mesh
 	island.position.y = -0.38
-	island.material_override = _factory_material(Color("#303735"), 0.98)
+	island.material_override = _factory_material(Color("#172329"), 0.92)
 	world_host.add_child(island)
+	var rim := MeshInstance3D.new()
+	rim.name = "FactoryIslandRim"
+	var rim_mesh := CylinderMesh.new()
+	rim_mesh.top_radius = 10.85
+	rim_mesh.bottom_radius = 10.25
+	rim_mesh.height = 0.28
+	rim_mesh.radial_segments = 24
+	rim.mesh = rim_mesh
+	rim.position.y = -0.66
+	rim.material_override = _factory_material(Color("#08131a"), 0.78)
+	world_host.add_child(rim)
+	var deck := MeshInstance3D.new()
+	deck.name = "FactoryDeck"
+	var deck_mesh := CylinderMesh.new()
+	deck_mesh.top_radius = 9.6
+	deck_mesh.bottom_radius = 9.6
+	deck_mesh.height = 0.10
+	deck_mesh.radial_segments = 24
+	deck.mesh = deck_mesh
+	deck.position.y = 0.015
+	deck.material_override = _factory_material(Color("#2d4145"), 0.86)
+	world_host.add_child(deck)
+	for plate_index in range(8):
+		var plate_angle := TAU * float(plate_index) / 8.0
+		var plate := _factory_box(
+			Vector3(3.6, 0.07, 2.15),
+			Color("#20333a") if plate_index % 2 == 0 else Color("#294047")
+		)
+		plate.name = "FactoryDeckPlate_%02d" % plate_index
+		plate.position = Vector3(
+			cos(plate_angle) * 5.7,
+			0.085,
+			sin(plate_angle) * 5.7
+		)
+		plate.rotation.y = -plate_angle
+		world_host.add_child(plate)
+	for beacon_index in range(12):
+		var angle := TAU * float(beacon_index) / 12.0
+		var beacon := _factory_box(
+			Vector3(0.34, 0.16, 0.16),
+			CYAN if beacon_index % 3 == 0 else Color("#d8903d")
+		)
+		beacon.name = "FactoryEdgeBeacon_%02d" % beacon_index
+		beacon.position = Vector3(cos(angle) * 9.85, 0.14, sin(angle) * 9.85)
+		beacon.rotation.y = -angle
+		world_host.add_child(beacon)
+	for utility_index in range(8):
+		var utility_angle := TAU * float(utility_index) / 8.0 + PI / 8.0
+		var utility_root := Node3D.new()
+		utility_root.name = "FactoryUtility_%02d" % utility_index
+		utility_root.position = Vector3(
+			cos(utility_angle) * 7.6,
+			0.0,
+			sin(utility_angle) * 7.6
+		)
+		utility_root.rotation.y = -utility_angle
+		world_host.add_child(utility_root)
+		var bunker := _factory_box(Vector3(2.25, 1.05, 1.55), Color("#253b42"))
+		bunker.position.y = 0.58
+		utility_root.add_child(bunker)
+		var pipe := _factory_cylinder(0.22, 0.22, 2.55, Color("#58747a"))
+		pipe.rotation_degrees.z = 90.0
+		pipe.position = Vector3(0.0, 1.22, -0.28)
+		utility_root.add_child(pipe)
+		for tank_index in range(2):
+			var tank_height := 2.1 if (utility_index + tank_index) % 3 == 0 else 1.45
+			var tank := _factory_cylinder(
+				0.42,
+				0.5,
+				tank_height,
+				Color("#36545b") if tank_index == 0 else Color("#2e454c")
+			)
+			tank.position = Vector3(
+				-0.65 if tank_index == 0 else 0.65,
+				1.0 + tank_height * 0.5,
+				0.22
+			)
+			utility_root.add_child(tank)
+		var overhead := _factory_box(Vector3(2.9, 0.18, 0.18), Color("#4d6970"))
+		overhead.position = Vector3(0.0, 2.55, 0.2)
+		utility_root.add_child(overhead)
+		var warning := _factory_box(
+			Vector3(0.46, 0.24, 0.2),
+			CYAN if utility_index % 2 == 0 else Color("#d8903d")
+		)
+		warning.position = Vector3(0.0, 2.58, -0.62)
+		utility_root.add_child(warning)
 	_add_factory_paths()
 	_add_factory_grid()
 	for facility_id in game.current_state().factory.facility_placements:
@@ -4937,6 +5041,8 @@ func _add_factory_building(facility_id: String) -> void:
 
 
 func _add_factory_world_labels() -> void:
+	for stale_marker in ui_root.find_children("FactoryMarker_*", "Button", true, false):
+		stale_marker.free()
 	for facility_id_value in game.current_state().factory.facility_placements.keys():
 		var facility_id := String(facility_id_value)
 		var building := world_host.get_node_or_null("FactoryBuilding_%s" % facility_id) as Node3D
@@ -4956,12 +5062,14 @@ func _add_factory_world_labels() -> void:
 		var marker := _button(
 			text,
 			Callable(self, "_activate_factory_building").bind(facility_id),
-			selected_facility_id == facility_id
+			false
 		)
 		marker.name = "FactoryMarker_%s" % facility_id
 		marker.add_theme_font_size_override("font_size", 12)
-		marker.custom_minimum_size = Vector2(116, 42 if level <= 0 or FACTORY_RESOURCE_NAMES.has(facility_id) else 32)
+		marker.custom_minimum_size = Vector2(116, 52)
 		marker.size = marker.custom_minimum_size
+		if selected_facility_id == facility_id:
+			marker.add_theme_color_override("font_color", CYAN)
 		marker.set_meta("facility_id", facility_id)
 		ui_root.add_child(marker)
 	_sync_factory_world_labels()
@@ -4992,6 +5100,18 @@ func _sync_factory_world_labels() -> void:
 			building.global_position + Vector3(0.0, 3.25, 0.0)
 		)
 		var desired := projected - Vector2(marker.size.x * 0.5, marker.size.y * 0.5)
+		var resource_hud := ui_root.find_child("FactoryResourceHUD", true, false) as Control
+		var factory_hud := ui_root.find_child("FactoryHudFrame", true, false) as Control
+		if (
+			resource_hud != null
+			and Rect2(desired, marker.size).intersects(resource_hud.get_global_rect())
+		):
+			desired.y = resource_hud.get_global_rect().end.y + 4.0
+		if (
+			factory_hud != null
+			and Rect2(desired, marker.size).intersects(factory_hud.get_global_rect())
+		):
+			desired.x = factory_hud.get_global_rect().position.x - marker.size.x - 4.0
 		marker.position = Vector2(
 			clampf(desired.x, interaction_rect.position.x + 4.0, interaction_rect.end.x - marker.size.x - 4.0),
 			clampf(desired.y, interaction_rect.position.y + 4.0, interaction_rect.end.y - marker.size.y - 4.0)
@@ -5142,7 +5262,7 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 				"%d 项奖励待领取" % badge_count
 				if badge_count > 0 else "暂无待领取奖励"
 			)
-		button.custom_minimum_size = Vector2(112, 48)
+		button.custom_minimum_size = Vector2(112, 52)
 		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		button.add_theme_font_size_override("font_size", 14)
 		button.add_theme_stylebox_override(

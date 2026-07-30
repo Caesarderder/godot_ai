@@ -23,6 +23,7 @@ const GREEN := Color("#78b982")
 @onready var resource_row: HBoxContainer = %FactoryResourceRow
 @onready var hud_frame: PanelContainer = %FactoryHudFrame
 @onready var panel_host: VBoxContainer = %FactoryHudPanelHost
+@onready var tab_row: HBoxContainer = %FactoryHudTabs
 @onready var mission_tab: Button = %FactoryHudMissionTab
 @onready var facility_tab: Button = %FactoryHudFacilityTab
 @onready var build_tab: Button = %FactoryHudBuildTab
@@ -53,11 +54,17 @@ func configure(view: Dictionary) -> void:
 
 func _rebuild() -> void:
 	var compact := bool(_view.get("compact", false))
-	hud_frame.custom_minimum_size.x = 258 if compact else 286
+	var active_panel := String(_view.get("panel", "mission"))
+	var construction := _view.get("construction", {}) as Dictionary
+	var placement_active := (
+		active_panel == "build"
+		and not String(construction.get("active_id", "")).is_empty()
+	)
+	tab_row.visible = not placement_active
+	_apply_responsive_layout(compact, active_panel)
 	_apply_shell_style()
 	_build_resources(compact)
 	_clear(panel_host)
-	var active_panel := String(_view.get("panel", "mission"))
 	mission_tab.button_pressed = active_panel == "mission"
 	facility_tab.button_pressed = active_panel == "facility"
 	build_tab.button_pressed = active_panel == "build"
@@ -70,19 +77,33 @@ func _rebuild() -> void:
 			panel_host.add_child(_mission_panel())
 
 
+func _apply_responsive_layout(compact: bool, active_panel: String) -> void:
+	resource_hud.offset_right = 280.0 if compact else 330.0
+	hud_frame.custom_minimum_size.x = 258.0 if compact else 286.0
+	hud_frame.offset_left = -266.0 if compact else -294.0
+	hud_frame.offset_top = 4.0 if compact else 54.0
+	hud_frame.offset_bottom = hud_frame.offset_top
+	if active_panel == "mission":
+		hud_frame.custom_minimum_size.y = 142.0
+	elif active_panel == "facility":
+		hud_frame.custom_minimum_size.y = 190.0
+	else:
+		hud_frame.custom_minimum_size.y = 180.0
+
+
 func _build_resources(compact: bool) -> void:
 	_clear(resource_row)
 	var heading := VBoxContainer.new()
-	heading.custom_minimum_size.x = 56 if compact else 76
-	var heading_label := _label("后勤" if compact else "后勤库存 · 全员无损", 14, TEXT)
+	heading.custom_minimum_size.x = 52 if compact else 62
+	var heading_label := _label("后勤", 14, TEXT)
 	heading_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	heading.add_child(heading_label)
 	resource_row.add_child(heading)
 	for resource_value in _view.get("resources", []):
 		resource_row.add_child(_resource_meter(resource_value as Dictionary, compact))
-	var claim := _button("收取" if compact else "全部收取", true)
+	var claim := _button("收取", false)
 	claim.name = "ClaimFactoryOutputButton"
-	claim.custom_minimum_size = Vector2(76 if compact else 112, 48)
+	claim.custom_minimum_size = Vector2(72 if compact else 88, 48)
 	claim.pressed.connect(action_requested.emit.bind("claim_output", {}))
 	resource_row.add_child(claim)
 
@@ -93,7 +114,7 @@ func _resource_meter(resource: Dictionary, compact: bool) -> Control:
 	block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var line := HBoxContainer.new()
 	var name_label := _label(
-		String(resource.get("name", "")).left(1) if compact else String(resource.get("name", "")),
+		String(resource.get("name", "")).left(2) if compact else String(resource.get("name", "")),
 		11 if compact else 12,
 		TEXT
 	)
@@ -131,20 +152,20 @@ func _resource_meter(resource: Dictionary, compact: bool) -> Control:
 
 func _mission_panel() -> Control:
 	var task := _view.get("task", {}) as Dictionary
-	var panel := _panel("前线来电")
+	var panel := _panel("")
 	panel.name = "OnboardingMissionPanel"
-	var title := _label(String(task.get("title", "战线暂时平静")), 15, GOLD)
+	var title := _label(
+		"前线来电 · %s" % String(task.get("title", "战线暂时平静")),
+		14,
+		GOLD
+	)
 	title.max_lines_visible = 1
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	panel.add_child(title)
 	var objectives := task.get("objectives", []) as Array
 	if not objectives.is_empty():
 		var objective := objectives[0] as Dictionary
-		panel.add_child(_label(
-			"%s %s" % ["◆" if bool(objective.get("completed", false)) else "◇", String(objective.get("label", ""))],
-			11,
-			MUTED if bool(objective.get("completed", false)) else TEXT
-		))
+		title.tooltip_text = String(objective.get("label", ""))
 	var actions := HBoxContainer.new()
 	var primary := _button(String(task.get("cta_label", "继续")), true)
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -227,17 +248,22 @@ func _construction_panel() -> Control:
 		else:
 			panel.add_child(choices)
 		return panel
-	panel.add_child(_label("正在放置：%s" % String(construction.get("active_name", "")), 13, CYAN))
-	panel.add_child(_label(String(construction.get("active_copy", "")), 12, TEXT))
 	panel.add_child(_label(
-		"建造费用：%s · 耗时 %d 秒（确认后扣除）" % [
+		"放置 %s · %s · %d秒" % [
+			String(construction.get("active_name", "")),
 			String(construction.get("cost_copy", "")),
 			int(construction.get("build_seconds", 5)),
 		],
-		12,
-		GOLD
+		13,
+		CYAN
 	))
-	panel.add_child(_label(String(construction.get("placement_copy", "")), 12, TEXT))
+	panel.add_child(_label(
+		"轻点空格选址 · 单指旋转 · 双指缩放"
+			if not bool(construction.get("can_confirm", false))
+			else String(construction.get("placement_copy", "")),
+		11,
+		GOLD if bool(construction.get("can_confirm", false)) else MUTED
+	))
 	var actions := HBoxContainer.new()
 	actions.name = "ConstructionActions"
 	actions.add_theme_constant_override("separation", 6)

@@ -18,7 +18,11 @@ func _run() -> void:
 	_check(factory.find_child("FactoryWorldInteractionArea", true, false) != null, "screen reserves the 3D interaction area")
 	_check(factory.find_child("FactoryResourceHUD", true, false) != null, "resources remain fixed above the factory body")
 	_check(factory.find_child("ResourceMeter_陶瓷", true, false) != null, "industrial stock uses a capacity meter")
-	_check(_tree_has_text(factory, "全员无损"), "factory reinforces the lossless battle contract")
+	var resource_hud := factory.find_child("FactoryResourceHUD", true, false) as Control
+	_check(
+		resource_hud != null and resource_hud.anchor_right < 1.0 and resource_hud.offset_right <= 330.0,
+		"factory keeps logistics in a shrink-wrapped edge island"
+	)
 	_check(_tree_has_text(factory, "撞击高墙"), "mission panel projects the current player action")
 	var mission_tab := factory.find_child("FactoryHudMissionTab", true, false) as Button
 	var build_tab := factory.find_child("FactoryHudBuildTab", true, false) as Button
@@ -82,7 +86,7 @@ func _run() -> void:
 	factory.configure(build_view)
 	await process_frame
 	_check(_tree_has_text(factory, "确认后才扣除资源"), "placement makes the transaction boundary explicit")
-	_check(_tree_has_text(factory, "耗时 5 秒"), "placement states the short construction wait before confirmation")
+	_check(_tree_has_text(factory, "5秒"), "placement states the short construction wait before confirmation")
 	var confirm := factory.find_child("ConfirmFacilityConstruction", true, false) as Button
 	_check(confirm != null and not confirm.disabled, "valid placement exposes a single confirmation action")
 	var cancel := factory.find_child("CancelFacilityConstruction", true, false) as Button
