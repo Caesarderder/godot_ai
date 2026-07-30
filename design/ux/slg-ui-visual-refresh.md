@@ -109,6 +109,19 @@
    满编 5–6 人时保留姓名、HP/EN 标签和状态条，隐藏逐卡精确数字，避免缩字或溢出；
 4. 角色卡本身仍是手动技能热区，保持至少 48 px 高度和键盘焦点，不在战场中央新增按钮。
 
+### 军团
+
+军团采用 Supercell 官方《Squad Busters》对出击编成的两条原则：起始阵容围绕明确的 Hero 与
+少量成员建立；职业/职责用于帮助玩家理解成员在战斗中的作用。项目仅采用“角色形象优先、
+阵位关系直接可点、职责按需出现”的结构，不复制角色、美术或具体卡面。参考入口：
+`https://support.supercell.com/squad-busters/en/articles/prepare-your-squad.html` 与
+`https://support.supercell.com/squad-busters/en/articles/battles-in-squad-busters.html`。
+
+默认阵型不再使用六个等权纯文字按钮。首屏固定为 2×3 战术阵位：已部署角色显示轻量徽章、
+姓名与职责，空位显示直接部署入口；系统只把第一个推荐补位标成金色主行动，当前页签使用
+冷青描边而不争夺主强调。战力与下一目标压缩为一行持续语境，候选比较只在玩家点选阵位后
+进入滚动详情。568×320 使用短页签和短目标名，但保留完整阵位语义与至少 48 px 热区。
+
 ## 组件状态
 
 | 组件 | Normal | Selected / Focus | Disabled | Reward / Warning |
@@ -160,3 +173,6 @@
 - `run_ui_smoke_tests.gd` 在 844×390 与 568×320 验证工厂后勤岛、情境卡、世界建筑标记和
   底部导航互不遮挡，并覆盖建筑点击、领取、升级与建造入口；`ui-camp-844x390.png`、
   `ui-camp-568x320.png` 与 `ui-construction-placement-844x390.png` 是首屏和建造模式证据。
+- `run_legion_screen_tests.gd` 验证标准与 568 紧凑阵型的六个阵位、四个页签、信号和培养路径；
+  `ui-legion-formation-844x390.png`、`ui-legion-formation-568x320.png` 与
+  `ui-legion-844x390.png` 分别是独立双尺寸场景和主流程集成证据。

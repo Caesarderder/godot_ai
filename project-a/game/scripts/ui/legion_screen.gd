@@ -15,6 +15,7 @@ signal action_requested(action_id: String, payload: Dictionary)
 signal hero_selected(hero_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const COMMANDER_BADGE := preload("res://assets/generated/vector/characters/commander_badge.svg")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
 const PANEL := Color("#12171c")
@@ -79,6 +80,7 @@ func configure(view: Dictionary) -> void:
 func _rebuild() -> void:
 	_cancel_recruit_reveal()
 	var active_tab := String(_view.get("tab", "formation"))
+	var compact := bool(_view.get("compact", get_viewport_rect().size.x < 720.0))
 	var first_formation := _view.get("first_formation", {}) as Dictionary
 	var first_growth := _view.get("first_growth_choice", {}) as Dictionary
 	var boss_ready := _view.get("boss_ready", {}) as Dictionary
@@ -87,6 +89,10 @@ func _rebuild() -> void:
 		and not bool(first_growth.get("active", false))
 		and not bool(boss_ready.get("active", false))
 	)
+	formation_tab.text = "阵型" if compact else "出击阵型"
+	recruit_tab.text = "招募" if compact else "信号招募"
+	codex_tab.text = "图鉴" if compact else "角色图鉴"
+	roster_tab.text = "培养" if compact else "成员培养"
 	scroll.name = "LegionContentScroll_%s" % active_tab
 	_style_tab(formation_tab, active_tab == "formation")
 	_style_tab(recruit_tab, active_tab == "recruit")
@@ -238,6 +244,7 @@ func _growth_choice_panel(first_growth: Dictionary) -> Control:
 func _formation_panel() -> Control:
 	var first_formation := _view.get("first_formation", {}) as Dictionary
 	var onboarding_active := bool(first_formation.get("active", false))
+	var compact := bool(_view.get("compact", get_viewport_rect().size.x < 720.0))
 	var panel := _panel("")
 	panel.add_theme_constant_override("separation", 5)
 	if onboarding_active:
@@ -260,55 +267,59 @@ func _formation_panel() -> Control:
 	if not onboarding_active:
 		var readiness := HBoxContainer.new()
 		readiness.name = "FormationReadinessStrip"
-		readiness.add_theme_constant_override("separation", 14)
+		readiness.custom_minimum_size.y = 34
+		readiness.add_theme_constant_override("separation", 8)
+		var target_stage_name := String(_view.get("target_stage_name", "未知战区"))
 		var power_label := _label(
-			"战力 %d / %d" % [
-				int(_view.get("team_power", 0)),
-				int(_view.get("recommended_power", 0)),
-			],
-			15,
+			("%s%d/%d" % ["战力 " if compact else "出击小队 · ", int(_view.get("team_power", 0)), int(_view.get("recommended_power", 0))]),
+			14,
 			GOLD
 		)
-		power_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		power_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		power_label.custom_minimum_size.x = 132 if compact else 180
+		power_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		readiness.add_child(power_label)
+		var compact_target := target_stage_name.split(" ")[0]
 		var target_label := _label(
-			"下一目标 · %s" % String(_view.get("target_stage_name", "未知战区")),
-			13,
+			"目标 · %s" % (compact_target if compact else target_stage_name),
+			12,
 			CYAN
 		)
+		target_label.custom_minimum_size.x = 92 if compact else 230
+		target_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 		target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		target_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		target_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		readiness.add_child(target_label)
 		panel.add_child(readiness)
-		var gap := int(_view.get("recommended_power", 0)) - int(_view.get("team_power", 0))
-		panel.add_child(_label(
-			"%s · 前排承伤，后排保护关键输出；点阵位可替换。" % (
-				"+%d" % gap if gap > 0 else "已达推荐线"
-			),
-			11,
-			RED if gap > 0 else GREEN
-		))
 	var grid := GridContainer.new()
 	grid.name = "FormationSlotGrid"
 	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 8)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 6)
 	grid.add_theme_constant_override("v_separation", 6)
+	var suggested_slot_id := ""
+	for slot_value in _view.get("formation", []):
+		var suggested_slot := slot_value as Dictionary
+		if (
+			String(suggested_slot.get("slot_id", "")) != "commander"
+			and String(suggested_slot.get("hero_id", "")).is_empty()
+		):
+			suggested_slot_id = String(suggested_slot.get("slot_id", ""))
+			break
 	for slot_value in _view.get("formation", []):
 		var slot := slot_value as Dictionary
 		var slot_id := String(slot.get("slot_id", ""))
 		if bool(first_formation.get("active", false)) and not slot_id in ["commander", "troop_1", "troop_2"]:
 			continue
 		var selected := slot_id == String(_view.get("formation_edit_slot", ""))
-		var button := _button(
-			"%s · %s\n%s" % [
-				String(SLOT_NAMES.get(slot_id, slot_id)),
-				String(slot.get("display_name", "空位")),
-				String(slot.get("role", "待命")),
-			],
-			selected
+		var button := _formation_slot_card(
+			slot,
+			selected,
+			slot_id == suggested_slot_id and not selected,
+			compact,
+			onboarding_active
 		)
-		button.name = "FormationSlot_%s" % slot_id
-		button.custom_minimum_size = Vector2(220, 48 if onboarding_active else 52)
 		button.pressed.connect(action_requested.emit.bind("select_slot", {"slot": slot_id}))
 		grid.add_child(button)
 	panel.add_child(grid)
@@ -316,6 +327,96 @@ func _formation_panel() -> Control:
 	if not edit_slot.is_empty():
 		panel.add_child(_candidate_panel(edit_slot))
 	return panel
+
+
+func _formation_slot_card(
+	slot: Dictionary,
+	selected: bool,
+	suggested: bool,
+	compact: bool,
+	onboarding_active: bool
+) -> Button:
+	var slot_id := String(slot.get("slot_id", ""))
+	var occupied := not String(slot.get("hero_id", "")).is_empty()
+	var emphasized := selected or suggested
+	var button := _button("", emphasized)
+	button.name = "FormationSlot_%s" % slot_id
+	button.custom_minimum_size = Vector2(0, 54 if not onboarding_active else 56)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.tooltip_text = "%s · %s · %s" % [
+		String(SLOT_NAMES.get(slot_id, slot_id)),
+		String(slot.get("display_name", "空位")),
+		String(slot.get("role", "待命")),
+	]
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 8
+	row.offset_top = 5
+	row.offset_right = -8
+	row.offset_bottom = -5
+	row.add_theme_constant_override("separation", 8)
+	button.add_child(row)
+	var badge := PanelContainer.new()
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.custom_minimum_size = Vector2(40, 40)
+	var badge_style := _box(
+		Color("#10232a") if occupied else Color("#10191f"),
+		CYAN if occupied else LINE
+	)
+	badge_style.set_corner_radius_all(8)
+	badge.add_theme_stylebox_override("panel", badge_style)
+	row.add_child(badge)
+	if occupied and slot_id == "commander":
+		var portrait := TextureRect.new()
+		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait.texture = COMMANDER_BADGE
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		badge.add_child(portrait)
+	else:
+		var symbol := _label(
+			String(slot.get("display_name", "?")).left(1) if occupied else "+",
+			24 if occupied else 28,
+			CYAN if occupied else MUTED
+		)
+		symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		badge.add_child(symbol)
+	var copy := VBoxContainer.new()
+	copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.alignment = BoxContainer.ALIGNMENT_CENTER
+	copy.add_theme_constant_override("separation", 1)
+	row.add_child(copy)
+	var slot_label := _label(
+		String(SLOT_NAMES.get(slot_id, slot_id)),
+		10,
+		Color("#443515") if emphasized else MUTED
+	)
+	slot_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	copy.add_child(slot_label)
+	var title := _label(
+		String(slot.get("display_name", "空位")) if occupied else ("推荐部署" if suggested else "部署成员"),
+		13,
+		Color("#182127") if emphasized else TEXT
+	)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title.max_lines_visible = 1
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	copy.add_child(title)
+	if not compact and not onboarding_active:
+		var role := _label(
+			String(slot.get("role", "待命")),
+			10,
+			Color("#3d4b2d") if emphasized else (GREEN if occupied else MUTED)
+		)
+		role.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		role.max_lines_visible = 1
+		role.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		copy.add_child(role)
+	return button
 
 
 func _candidate_panel(slot_id: String) -> Control:
@@ -1247,13 +1348,15 @@ func _style_tab(button: Button, active: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(active))
-	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(active, "hover"))
-	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(active, "pressed"))
-	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(active, "focus"))
-	button.add_theme_color_override("font_color", PANEL_2 if active else TEXT)
-	button.add_theme_color_override("font_hover_color", PANEL_2 if active else TEXT)
-	button.add_theme_color_override("font_pressed_color", PANEL_2 if active else TEXT)
+	var normal := _box(PANEL_2, CYAN if active else LINE)
+	var hover := _box(Color("#203039"), CYAN if active else Color("#53616a"))
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", hover)
+	button.add_theme_stylebox_override("focus", _box(PANEL_2, Color.WHITE))
+	button.add_theme_color_override("font_color", CYAN if active else TEXT)
+	button.add_theme_color_override("font_hover_color", CYAN if active else TEXT)
+	button.add_theme_color_override("font_pressed_color", CYAN if active else TEXT)
 
 
 func _button(value: String, primary: bool) -> Button:

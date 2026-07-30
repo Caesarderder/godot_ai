@@ -615,6 +615,54 @@ func _run() -> void:
 	)
 	legion.queue_free()
 	await process_frame
+	root.size = Vector2i(568, 320)
+	var compact_legion := LEGION_SCENE.instantiate() as LegionScreen
+	compact_legion.size = Vector2(544, 296)
+	root.add_child(compact_legion)
+	compact_legion.configure({
+		"compact": true,
+		"tab": "formation",
+		"formation_edit_slot": "",
+		"first_formation": {"active": false},
+		"counterattack": {"visible": false},
+		"team_power": 1711,
+		"recommended_power": 1650,
+		"target_stage_name": "1-1 E07 · 监控人登场",
+		"formation": [
+			{"slot_id": "commander", "hero_id": "hero_gman", "display_name": "Gman", "role": "统帅 · 稳定输出"},
+			{"slot_id": "troop_1", "hero_id": "", "display_name": "空位", "role": "待命"},
+			{"slot_id": "troop_2", "hero_id": "", "display_name": "空位", "role": "待命"},
+			{"slot_id": "troop_3", "hero_id": "", "display_name": "空位", "role": "待命"},
+			{"slot_id": "troop_4", "hero_id": "", "display_name": "空位", "role": "待命"},
+			{"slot_id": "troop_5", "hero_id": "", "display_name": "空位", "role": "待命"},
+		],
+		"candidates": [],
+		"roster": [],
+	})
+	await process_frame
+	await process_frame
+	var compact_bounds := Rect2(Vector2.ZERO, Vector2(544, 296))
+	for slot_id in ["commander", "troop_1", "troop_2", "troop_3", "troop_4", "troop_5"]:
+		var slot_button := compact_legion.find_child("FormationSlot_%s" % slot_id, true, false) as Button
+		_check(
+			slot_button != null
+				and slot_button.size.y >= 48.0
+				and compact_bounds.encloses(slot_button.get_global_rect()),
+			"compact formation keeps %s as a visible 48 px world-like squad slot" % slot_id
+		)
+	for tab in [
+		compact_legion.get_node("TaskTabs/LegionFormationTab"),
+		compact_legion.get_node("TaskTabs/LegionRecruitTab"),
+		compact_legion.get_node("TaskTabs/LegionCodexTab"),
+		compact_legion.get_node("TaskTabs/LegionRosterTab"),
+	]:
+		_check(
+			(tab as Button).size.y >= 48.0
+				and compact_bounds.encloses((tab as Button).get_global_rect()),
+			"compact formation keeps every task tab visible and touch-sized"
+		)
+	compact_legion.queue_free()
+	await process_frame
 	if failures.is_empty():
 		print("LEGION_SCREEN_TESTS_OK")
 		quit(0)
