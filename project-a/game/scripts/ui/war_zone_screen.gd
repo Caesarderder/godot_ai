@@ -9,6 +9,7 @@ signal preparation_requested(action_id: String)
 const STAGE_DETAIL_PANEL_SCENE := preload("res://game/scenes/ui/stage_detail_panel.tscn")
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
+const BOSS_FORTRESS_ICON := preload("res://assets/ui/goals/chapter_stronghold.webp")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -85,13 +86,26 @@ func _rebuild() -> void:
 		if String(row.get("status", "")) == "已夺回":
 			stage_state = "%s ✓" % landmark
 		var stage_button := _stage_node_button(
-			"%s\n%s" % [stage_number, stage_state],
+			(
+				"%s\n%s" % [stage_number, "✓" if recovered else ("!" if unlocked else "?")]
+				if row_index == visible_rows.size() - 1
+				else "%s\n%s" % [stage_number, stage_state]
+			),
 			stage_id == _selected_stage_id,
 			recovered,
 			unlocked
 		)
 		stage_button.name = "StageNode_%s" % stage_id
-		var node_size := Vector2(46, 42) if _is_compact_layout() else Vector2(58, 50)
+		var boss_node := row_index == visible_rows.size() - 1
+		var node_size := (
+			Vector2(68, 58) if _is_compact_layout() else Vector2(78, 66)
+		) if boss_node else (Vector2(46, 42) if _is_compact_layout() else Vector2(58, 50))
+		if boss_node:
+			stage_button.set_meta("boss_fortress", true)
+			stage_button.icon = BOSS_FORTRESS_ICON
+			stage_button.expand_icon = true
+			stage_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+			stage_button.add_theme_constant_override("icon_max_width", 34 if _is_compact_layout() else 40)
 		stage_button.custom_minimum_size = node_size
 		stage_button.size = node_size
 		stage_button.position = _route_point(row_index, visible_rows.size()) - node_size * 0.5
@@ -102,6 +116,7 @@ func _rebuild() -> void:
 		stage_button.disabled = not bool(row.get("unlocked", false))
 		stage_button.pressed.connect(_on_stage_pressed.bind(stage_id))
 		stage_strip.add_child(stage_button)
+		stage_button.name = "StageNode_%s" % stage_id
 		var location_label := Label.new()
 		location_label.name = "StageLocation_%s" % stage_id
 		location_label.text = _stage_location_name(String(row.get("display_name", stage_id)))

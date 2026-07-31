@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "underpowered_boss-844x390.png",
+    "underpowered_boss-568x320.png",
+    "boss_ready-844x390.png",
+    "boss_ready-568x320.png",
+    "boss_cleared-844x390.png",
+    "boss_cleared-568x320.png"
+  ],
+  "assertions": [
+    "five exact stage nodes remain",
+    "underpowered preparation emits upgrade",
+    "attack and replay emit stage_1_5",
+    "visible actions remain 48px touch targets"
+  ],
+  "cases": [
+    "underpowered_boss",
+    "boss_ready",
+    "boss_cleared"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping WarZoneScreen plus StageDetailPanel signals",
+  "scenario_id": "scenario_mobile_boss_siege_briefing",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
