@@ -599,18 +599,22 @@ func _build_pass() -> void:
 	for level_value in pass_view.get("levels", []):
 		var level := level_value as Dictionary
 		var reward := level.get("reward", {}) as Dictionary
+		var level_number := int(level.get("level", 0))
 		var claimed := bool(level.get("claimed", false))
 		var claimable_level := bool(level.get("claimable", false))
+		var current := level_number == int(pass_view.get("reached", 0))
 		var status_mark := "✓" if claimed else ("领取" if claimable_level else "🔒")
+		if current:
+			status_mark = "◆%s" % status_mark
 		var card := _button(
 			"%02d\n%s  ×%d" % [
-				int(level.get("level", 0)),
+				level_number,
 				status_mark,
 				_pass_reward_amount(reward),
 			],
 			false
 		)
-		card.name = "MetaPassLevel_%d" % int(level.get("level", 0))
+		card.name = "MetaPassLevel_%d" % level_number
 		card.icon = _pass_reward_icon(reward)
 		card.expand_icon = true
 		card.add_theme_constant_override("icon_max_width", 42)
@@ -620,8 +624,9 @@ func _build_pass() -> void:
 			86 if compact else 104,
 			76 if short_screen else 88
 		)
-		card.tooltip_text = "%d级 · %s · %s" % [
-			int(level.get("level", 0)),
+		card.tooltip_text = "%d级%s · %s · %s" % [
+			level_number,
+			" · 当前" if current else "",
 			_reward_copy(reward),
 			"已领取" if claimed else ("可领取" if claimable_level else "未到达"),
 		]
@@ -634,7 +639,7 @@ func _build_pass() -> void:
 			)
 			card.add_theme_color_override("font_color", Color("#14110c"))
 		card.pressed.connect(action_requested.emit.bind("claim_pass_level", {
-			"level": int(level.get("level", 0)),
+			"level": level_number,
 		}))
 		track.add_child(card)
 	runway_scroll.add_child(track)
