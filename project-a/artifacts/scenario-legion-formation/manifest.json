@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "single_commander-844x390.png",
+    "single_commander-568x320.png",
+    "slot_selected-844x390.png",
+    "slot_selected-568x320.png",
+    "full_squad-844x390.png",
+    "full_squad-568x320.png"
+  ],
+  "assertions": [
+    "six formation slots remain visible",
+    "occupied slots preserve stable hero identity",
+    "selected empty slot exposes deploy candidates",
+    "primary action remains touch sized"
+  ],
+  "cases": [
+    "single_commander",
+    "slot_selected",
+    "full_squad"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping LegionScreen through configure and action signals",
+  "scenario_id": "scenario_legion_formation_identity",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}

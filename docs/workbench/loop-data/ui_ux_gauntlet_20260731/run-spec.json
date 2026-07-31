@@ -41,11 +41,12 @@
       "label": "Assets and modeling",
       "applicability": "in_scope",
       "scope": [
-        "title hero art and map landmark silhouettes"
+        "title hero art, map landmark silhouettes, and formation character portraits"
       ],
       "gate_ids": [
         "gate_ui_visual",
-        "gate_factory_visual"
+        "gate_factory_visual",
+        "gate_legion_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -74,12 +75,14 @@
       "label": "UI and UX",
       "applicability": "in_scope",
       "scope": [
-        "title simplicity, factory contextual HUD, war-zone hierarchy and feedback flow"
+        "title simplicity, factory contextual HUD, war-zone hierarchy, formation identity and feedback flow"
       ],
       "gate_ids": [
         "gate_ui_visual",
         "gate_ui_runtime",
-        "gate_player_learning"
+        "gate_player_learning",
+        "gate_legion_visual",
+        "gate_legion_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -156,7 +159,8 @@
       ],
       "gate_ids": [
         "gate_ui_responsive",
-        "gate_factory_responsive"
+        "gate_factory_responsive",
+        "gate_legion_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -170,7 +174,8 @@
       "gate_ids": [
         "gate_ui_runtime",
         "gate_ui_responsive",
-        "gate_factory_runtime"
+        "gate_factory_runtime",
+        "gate_legion_runtime"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -685,6 +690,191 @@
       "limitations": [
         "The focused neutral world field measures HUD occlusion but final 3D composition still requires the declared integration capture."
       ]
+    },
+    {
+      "scenario_id": "scenario_legion_formation_identity",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise shipping LegionScreen formation states without navigating the production main scene.",
+      "player_question": "Can the player identify deployed toilet characters, the recommended open position and the next formation action without reading a table?",
+      "gate_ids": [
+        "gate_legion_visual",
+        "gate_legion_runtime",
+        "gate_legion_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_legion_formation_scenario.gd and run_legion_screen_tests.gd",
+        "shipping_surface": "legion_screen.gd, legion_screen.tscn and slg_main formation view projection",
+        "public_adapter": "LegionScreen.configure plus tab_selected and action_requested signals"
+      },
+      "fixture": {
+        "subject_parameter": "formation_state",
+        "reuse_scope": "single commander, selected empty slot and full six-character squad",
+        "extension_contract": "add a formation-state dictionary to the matrix; never duplicate formation or hero progression rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate legion_screen.tscn directly with deterministic shipping view dictionaries",
+        "state": "known formation slots, hero archetypes, candidates, power and target stage",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_single",
+          "at": "case start",
+          "action": "configure one occupied commander and five open slots"
+        },
+        {
+          "stimulus_id": "select_open_slot",
+          "at": "after single commander",
+          "action": "select troop_1 and expose two real deployment candidates"
+        },
+        {
+          "stimulus_id": "show_full_squad",
+          "at": "after selected slot",
+          "action": "configure six occupied slots and a direct counterattack action"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "legion_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-legion-formation/manifest.json"
+        },
+        {
+          "observation_id": "legion_standard",
+          "source": "fixed 844x390 captures",
+          "window": "single, selected and full states",
+          "artifact": "project-a/artifacts/scenario-legion-formation"
+        },
+        {
+          "observation_id": "legion_compact",
+          "source": "fixed 568x320 captures",
+          "window": "single, selected and full states",
+          "artifact": "project-a/artifacts/scenario-legion-formation"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "single_commander",
+          "state": "one permanent Gman and five empty positions",
+          "stimulus_ids": [
+            "show_single"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "Gman portrait is recognizable",
+            "six tactical positions are visible",
+            "one recommended open slot dominates empty slots"
+          ],
+          "observation_ids": [
+            "legion_manifest",
+            "legion_standard",
+            "legion_compact"
+          ]
+        },
+        {
+          "case_id": "slot_selected",
+          "state": "recommended open position selected with assault and armored candidates",
+          "stimulus_ids": [
+            "select_open_slot"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "candidate portraits lead the cards",
+            "recommended deployment is the primary action",
+            "formation remains visible while detail is contextual"
+          ],
+          "observation_ids": [
+            "legion_manifest",
+            "legion_standard",
+            "legion_compact"
+          ]
+        },
+        {
+          "case_id": "full_squad",
+          "state": "six permanent toilet characters deployed with counterattack ready",
+          "stimulus_ids": [
+            "show_full_squad"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "all six character identities remain distinguishable",
+            "front and rear rows are spatially encoded",
+            "counterattack is the sole dominant action"
+          ],
+          "observation_ids": [
+            "legion_manifest",
+            "legion_standard",
+            "legion_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reconfigure a fresh LegionScreen for each state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "single commander captures",
+          "selected slot captures",
+          "full squad captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed view dictionaries with no domain timer",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_legion_formation_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --path project-a -s tools/capture_legion_formation_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and LegionScreen after capture",
+      "failure_conditions": [
+        "formation reads as a text table",
+        "character portrait is absent or mismatched",
+        "selected slot hides formation context",
+        "primary action clips",
+        "touch target drops below 44 px"
+      ],
+      "limitations": [
+        "Static captures cannot prove player preference or direct touch feel."
+      ]
     }
   ],
   "integration_policy": {
@@ -819,6 +1009,59 @@
         "states goal and next action",
         "selects a frontier landmark without search",
         "expresses interest in revealing the next occupied location"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_legion_visual",
+      "profile": "visual",
+      "claim": "The formation screen reads as a six-character toilet resistance squad rather than a generic roster table.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_legion_formation_identity"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "character portraits dominate occupied slots",
+        "front and rear rows remain readable",
+        "recommended empty slot and selected candidate have distinct silhouettes",
+        "tool navigation uses icon-led compact controls"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_legion_runtime",
+      "profile": "correctness",
+      "claim": "Formation selection and deployment preserve shipping tab and action signals across empty, selected and full squad states.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_legion_formation_identity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "slot selection emits the exact slot ID",
+        "deployment emits the exact hero and slot IDs",
+        "counterattack preserves its stage ID",
+        "portrait lookup follows stable archetype IDs"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_legion_responsive",
+      "profile": "correctness",
+      "claim": "Formation portraits, six slots and the primary action remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_legion_formation_identity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "six slots fit without horizontal clipping",
+        "interactive targets remain at least 44 px",
+        "candidate detail remains inside the compact viewport"
       ],
       "freeze_on_pass": true
     }

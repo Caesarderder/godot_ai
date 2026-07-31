@@ -1,0 +1,76 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_legion_baseline_visual_2e23dd4",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "2e23dd4",
+  "valid_through_revision": "2e23dd4",
+  "gate_id": "gate_legion_visual",
+  "claim": "The formation screen reads as a six-character toilet resistance squad rather than a generic roster table.",
+  "scenario_id": "scenario_legion_formation_identity",
+  "execution_id": "legion_baseline_2e23dd4",
+  "evidence_type": "capture",
+  "artifact_or_command": "project-a/artifacts/scenario-legion-formation/baseline bundle",
+  "case_results": [
+    {
+      "case_id": "single_commander",
+      "result": "fail",
+      "assertions": [
+        "wide text tabs dominate and Gman is a tiny generic badge"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-legion-formation/baseline/single_commander-844x390.png"
+      ]
+    },
+    {
+      "case_id": "slot_selected",
+      "result": "fail",
+      "assertions": [
+        "candidate choice is a text block without character art"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-legion-formation/baseline/slot_selected-844x390.png"
+      ]
+    },
+    {
+      "case_id": "full_squad",
+      "result": "fail",
+      "assertions": [
+        "occupied slots use single Chinese characters instead of recognizable toilet characters"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-legion-formation/baseline/full_squad-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "single commander captures",
+    "selected slot captures",
+    "full squad captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "maker baseline audit",
+    "version": "1",
+    "independence": "non_independent"
+  },
+  "observation": "The formation reads as a six-cell administration table; tabs, plus signs and labels outweigh the existing toilet-character art.",
+  "inference": "Visual baseline fails and requires character-first reconstruction.",
+  "result": "fail",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Non-independent baseline audit cannot close the mixed gate."
+  ],
+  "created_at": "2026-07-31T20:35:00+08:00"
+}

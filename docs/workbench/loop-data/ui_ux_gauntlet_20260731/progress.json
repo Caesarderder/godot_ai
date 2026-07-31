@@ -1,10 +1,10 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
-  "state": "integrating",
+  "state": "unit_looping",
   "revision": "2e23dd4",
   "iteration": 2,
-  "active_work_unit": null,
+  "active_work_unit": "legion character-first formation and contextual deployment",
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -15,6 +15,9 @@
     "gate_factory_responsive": "pass",
     "gate_factory_runtime": "pass",
     "gate_factory_visual": "pass",
+    "gate_legion_responsive": "pending",
+    "gate_legion_runtime": "pending",
+    "gate_legion_visual": "pending",
     "gate_player_learning": "stale",
     "gate_ui_responsive": "stale",
     "gate_ui_runtime": "stale",
@@ -41,7 +44,10 @@
     "ev_factory_runtime_2e23dd4",
     "ev_factory_responsive_2e23dd4",
     "ev_factory_visual_critic_2e23dd4",
-    "ev_factory_visual_runtime_2e23dd4"
+    "ev_factory_visual_runtime_2e23dd4",
+    "ev_legion_baseline_runtime_2e23dd4",
+    "ev_legion_baseline_responsive_2e23dd4",
+    "ev_legion_baseline_visual_2e23dd4"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -62,8 +68,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "Expose the accepted factory result and simple human feedback route in Workbench.",
-    "updated_at": "2026-07-31T11:46:19Z"
+    "next_action": "legion character-first formation and contextual deployment",
+    "updated_at": "2026-07-31T11:53:45Z"
   },
   "decisions": [
     {
@@ -296,6 +302,16 @@
       "evidence_ids": [
         "ev_factory_visual_critic_2e23dd4"
       ]
+    },
+    {
+      "at": "2026-07-31T11:53:39Z",
+      "decision": "Add a dedicated formation-identity scenario and three legion-specific gates before changing the shipping UI.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T11:53:45Z",
+      "decision": "Qualified formation scenario and baseline expose the next user-reported AI-template UI gap.",
+      "evidence_ids": []
     }
   ]
 }
