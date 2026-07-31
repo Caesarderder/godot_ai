@@ -23,7 +23,7 @@ const GREEN := Color("#78b982")
 @onready var resource_row: HBoxContainer = %FactoryResourceRow
 @onready var hud_frame: PanelContainer = %FactoryHudFrame
 @onready var panel_host: VBoxContainer = %FactoryHudPanelHost
-@onready var tab_row: HBoxContainer = %FactoryHudTabs
+@onready var tool_rail: VBoxContainer = %FactoryToolRail
 @onready var mission_tab: Button = %FactoryHudMissionTab
 @onready var facility_tab: Button = %FactoryHudFacilityTab
 @onready var build_tab: Button = %FactoryHudBuildTab
@@ -60,7 +60,7 @@ func _rebuild() -> void:
 		active_panel == "build"
 		and not String(construction.get("active_id", "")).is_empty()
 	)
-	tab_row.visible = not placement_active
+	tool_rail.visible = not placement_active
 	mission_tab.visible = active_panel != "mission"
 	mission_tab.text = "←"
 	mission_tab.tooltip_text = "关闭面板"
@@ -85,7 +85,10 @@ func _rebuild() -> void:
 
 
 func _apply_responsive_layout(compact: bool, active_panel: String) -> void:
-	resource_hud.offset_right = 222.0 if compact else 250.0
+	resource_hud.offset_right = 218.0 if compact else 282.0
+	tool_rail.offset_left = -54.0 if compact else -58.0
+	tool_rail.offset_right = -6.0 if compact else -8.0
+	tool_rail.offset_top = 62.0 if compact else 66.0
 	var mission_mode := active_panel == "mission"
 	var build_mode := active_panel == "build"
 	if build_mode:
@@ -95,10 +98,10 @@ func _apply_responsive_layout(compact: bool, active_panel: String) -> void:
 		hud_frame.anchor_bottom = 1.0
 		hud_frame.grow_horizontal = Control.GROW_DIRECTION_BOTH
 		hud_frame.grow_vertical = Control.GROW_DIRECTION_BEGIN
-		hud_frame.custom_minimum_size.x = 520.0 if compact else 680.0
-		hud_frame.offset_left = -260.0 if compact else -340.0
-		hud_frame.offset_right = 260.0 if compact else 340.0
-		hud_frame.offset_top = -154.0
+		hud_frame.custom_minimum_size.x = 508.0 if compact else 640.0
+		hud_frame.offset_left = -254.0 if compact else -320.0
+		hud_frame.offset_right = 254.0 if compact else 320.0
+		hud_frame.offset_top = -112.0
 		hud_frame.offset_bottom = -8.0
 	else:
 		hud_frame.anchor_left = 0.0 if mission_mode else 1.0
@@ -107,17 +110,17 @@ func _apply_responsive_layout(compact: bool, active_panel: String) -> void:
 		hud_frame.anchor_bottom = 0.0
 		hud_frame.grow_horizontal = Control.GROW_DIRECTION_END if mission_mode else Control.GROW_DIRECTION_BEGIN
 		hud_frame.grow_vertical = Control.GROW_DIRECTION_END
-		hud_frame.custom_minimum_size.x = (210.0 if compact else 230.0) if mission_mode else (300.0 if compact else 340.0)
-		hud_frame.offset_left = 8.0 if mission_mode else (-308.0 if compact else -348.0)
-		hud_frame.offset_right = (218.0 if compact else 238.0) if mission_mode else -8.0
-		hud_frame.offset_top = 76.0 if mission_mode else 54.0
+		hud_frame.custom_minimum_size.x = (176.0 if compact else 194.0) if mission_mode else (246.0 if compact else 274.0)
+		hud_frame.offset_left = 8.0 if mission_mode else (-306.0 if compact else -340.0)
+		hud_frame.offset_right = (184.0 if compact else 202.0) if mission_mode else -64.0
+		hud_frame.offset_top = 76.0 if mission_mode else 62.0
 		hud_frame.offset_bottom = hud_frame.offset_top
 	if active_panel == "mission":
-		hud_frame.custom_minimum_size.y = 116.0
+		hud_frame.custom_minimum_size.y = 94.0
 	elif active_panel == "facility":
-		hud_frame.custom_minimum_size.y = 190.0
+		hud_frame.custom_minimum_size.y = 184.0
 	else:
-		hud_frame.custom_minimum_size.y = 180.0
+		hud_frame.custom_minimum_size.y = 104.0
 
 
 func _build_resources(compact: bool) -> void:
@@ -130,9 +133,10 @@ func _build_resources(compact: bool) -> void:
 	resource_row.add_child(heading)
 	for resource_value in _view.get("resources", []):
 		resource_row.add_child(_resource_meter(resource_value as Dictionary, compact))
-	var claim := _button("收取", false)
+	var claim := _button("↧", false)
 	claim.name = "ClaimFactoryOutputButton"
-	claim.custom_minimum_size = Vector2(72 if compact else 88, 48)
+	claim.tooltip_text = "收取全部工厂产出"
+	claim.custom_minimum_size = Vector2(48, 48)
 	claim.pressed.connect(action_requested.emit.bind("claim_output", {}))
 	resource_row.add_child(claim)
 
@@ -183,11 +187,7 @@ func _mission_panel() -> Control:
 	var task := _view.get("task", {}) as Dictionary
 	var panel := _panel("")
 	panel.name = "OnboardingMissionPanel"
-	var title := _label(
-		"行动 · %s" % String(task.get("title", "战线暂时平静")),
-		12,
-		GOLD
-	)
+	var title := _label("⚑ 当前行动", 11, GOLD)
 	title.max_lines_visible = 1
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	panel.add_child(title)
@@ -196,7 +196,9 @@ func _mission_panel() -> Control:
 		var objective := objectives[0] as Dictionary
 		title.tooltip_text = String(objective.get("label", ""))
 	var actions := HBoxContainer.new()
-	var primary := _button(String(task.get("cta_label", "继续")), true)
+	var primary := _button("➤  %s" % String(task.get("cta_label", "继续")), true)
+	primary.name = "FactoryMissionPrimaryAction"
+	primary.tooltip_text = String(task.get("title", "当前行动"))
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if bool(task.get("completed", false)) and not bool(task.get("claimed", false)):
 		primary.pressed.connect(action_requested.emit.bind("claim_task", {}))
@@ -216,12 +218,9 @@ func _construction_panel() -> Control:
 	var construction := _view.get("construction", {}) as Dictionary
 	var focused_growth := bool(construction.get("focused_growth", false))
 	var active_id := String(construction.get("active_id", ""))
-	var panel_title := "选择首座资源设施" if focused_growth else "网格建造"
-	# Placement already has an active Build tab and a three-step guide. Avoiding
-	# a repeated title keeps its primary confirmation inside the 390 px viewport.
-	var panel := _panel("" if not active_id.is_empty() else panel_title)
+	var panel := _panel("")
 	panel.name = "ConstructionPanel"
-	var guide := _label("① 选建筑  →  ② 点地图格子  →  ③ 确认", 11, MUTED if active_id.is_empty() else CYAN)
+	var guide := _label("＋ 建设 · 选建筑后点空地" if active_id.is_empty() else "⌖ 放置建筑", 11, MUTED if active_id.is_empty() else CYAN)
 	guide.name = "ConstructionStepGuide"
 	panel.add_child(guide)
 	if active_id.is_empty():
@@ -246,7 +245,7 @@ func _construction_panel() -> Control:
 			return panel
 		var scroll := ScrollContainer.new()
 		scroll.name = "ConstructionCatalogScroll"
-		scroll.custom_minimum_size.y = 72
+		scroll.custom_minimum_size.y = 66
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		var choices := HBoxContainer.new()
@@ -255,19 +254,15 @@ func _construction_panel() -> Control:
 		scroll.add_child(choices)
 		for option_value in construction.get("options", []):
 			var option := option_value as Dictionary
-			var choose := _button(
-				"%s · %s · %d秒%s" % [
-					String(option.get("name", "")),
-					String(option.get("cost_copy", "")),
-					int(option.get("build_seconds", 5)),
-					"\n%s" % String(option.get("growth_copy", "")) if focused_growth else "",
-				],
-				false
-			)
+			var choose := _button("%s  %s\n%s" % [
+				_facility_icon(String(option.get("facility_id", ""))),
+				String(option.get("name", "")),
+				String(option.get("cost_copy", "")),
+			], false)
 			choose.name = "ChooseFacility_%s" % String(option.get("facility_id", ""))
-			choose.custom_minimum_size = Vector2(156, 60)
+			choose.custom_minimum_size = Vector2(132, 60)
 			choose.disabled = bool(option.get("disabled", false))
-			choose.tooltip_text = String(option.get("copy", ""))
+			choose.tooltip_text = "%s · %d秒" % [String(option.get("copy", "")), int(option.get("build_seconds", 5))]
 			if focused_growth:
 				choose.custom_minimum_size.y = 54
 			choose.pressed.connect(action_requested.emit.bind("begin_construction", {
@@ -280,7 +275,8 @@ func _construction_panel() -> Control:
 			panel.add_child(scroll)
 		return panel
 	panel.add_child(_label(
-		"放置 %s · %s · %d秒" % [
+		"%s  %s · %s · %d秒" % [
+			_facility_icon(active_id),
 			String(construction.get("active_name", "")),
 			String(construction.get("cost_copy", "")),
 			int(construction.get("build_seconds", 5)),
@@ -289,7 +285,7 @@ func _construction_panel() -> Control:
 		CYAN
 	))
 	panel.add_child(_label(
-		"轻点空格选址 · 单指旋转 · 双指缩放"
+		"点空地选址 · 拖动旋转 · 双指缩放"
 			if not bool(construction.get("can_confirm", false))
 			else String(construction.get("placement_copy", "")),
 		11,
@@ -313,6 +309,20 @@ func _construction_panel() -> Control:
 	if bool(construction.get("occupied", false)):
 		panel.add_child(_label("该格子已有建筑，请换一个位置。", 12, RED))
 	return panel
+
+
+func _facility_icon(facility_id: String) -> String:
+	match facility_id:
+		"research_lab":
+			return "⌬"
+		"coin_mint":
+			return "◉"
+		"porcelain_plant":
+			return "▰"
+		"repair_center":
+			return "✚"
+		_:
+			return "▣"
 
 
 func _facility_panel() -> Control:
@@ -404,7 +414,7 @@ func _apply_shell_style() -> void:
 	var resource_style := _box(Color(PANEL, 0.74), Color(CYAN, 0.24), 10)
 	resource_style.set_border_width_all(1)
 	resource_hud.add_theme_stylebox_override("panel", resource_style)
-	hud_frame.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.88), Color(CYAN, 0.35), 10))
+	hud_frame.add_theme_stylebox_override("panel", _box(Color(PANEL, 0.82), Color(CYAN, 0.38), 10))
 	for button: Button in [mission_tab, facility_tab, build_tab]:
 		_style_button(button, button.button_pressed)
 

@@ -23,10 +23,26 @@ func _run() -> void:
 		resource_hud != null and resource_hud.anchor_right < 1.0 and resource_hud.offset_right <= 330.0,
 		"factory keeps logistics in a shrink-wrapped edge island"
 	)
-	_check(_tree_has_text(factory, "撞击高墙"), "mission panel projects the current player action")
+	var mission_action := factory.find_child("FactoryMissionPrimaryAction", true, false) as Button
+	_check(
+		mission_action != null
+		and mission_action.text.contains("前往 1-4")
+		and mission_action.tooltip_text.contains("撞击高墙"),
+		"mission beacon keeps the current action visible with detailed context on demand"
+	)
 	var mission_tab := factory.find_child("FactoryHudMissionTab", true, false) as Button
 	var build_tab := factory.find_child("FactoryHudBuildTab", true, false) as Button
 	_check(mission_tab != null and build_tab != null and mission_tab.button_group == build_tab.button_group, "three HUD tabs are one exclusive decision group")
+	var tool_rail := factory.find_child("FactoryToolRail", true, false) as Control
+	var hud_frame := factory.find_child("FactoryHudFrame", true, false) as Control
+	_check(
+		tool_rail != null and hud_frame != null and tool_rail.get_parent() == hud_frame.get_parent(),
+		"facility and build tools stay independent from the contextual content panel"
+	)
+	_check(
+		hud_frame != null and hud_frame.size.x <= 210.0 and hud_frame.size.y <= 100.0,
+		"mission state remains a compact action beacon instead of a dashboard"
+	)
 	var panel_request := {"id": ""}
 	factory.panel_selected.connect(func(panel_id: String) -> void: panel_request["id"] = panel_id)
 	if build_tab != null:
@@ -42,7 +58,15 @@ func _run() -> void:
 	_check(research_choice != null and research_choice.disabled, "research lab remains unavailable before battle evidence")
 	_check(String(research_choice.tooltip_text).contains("挑战 1-4"), "locked research explains the exact unlock action")
 	var porcelain_choice := factory.find_child("ChooseFacility_porcelain_plant", true, false) as Button
-	_check(porcelain_choice != null and porcelain_choice.text.contains("5秒"), "construction catalog exposes the five-second wait before selection")
+	_check(
+		porcelain_choice != null and porcelain_choice.tooltip_text.contains("5秒"),
+		"construction catalog keeps the five-second wait in on-demand detail"
+	)
+	var catalog_scroll := factory.find_child("ConstructionCatalogScroll", true, false) as ScrollContainer
+	_check(
+		catalog_scroll != null and catalog_scroll.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED,
+		"construction choices remain one horizontal touch strip"
+	)
 	var gift_view := _base_view()
 	gift_view["panel"] = "build"
 	(gift_view["construction"] as Dictionary)["focused_growth"] = true

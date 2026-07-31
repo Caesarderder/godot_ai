@@ -3,17 +3,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/mission_world_first-844x390.png",
       "case_id": "mission_world_first",
-      "hud_area_ratio": 0.155,
+      "hud_area_ratio": 0.106,
       "hud_rect": [
         8.0,
         76.0,
-        230.0,
-        148.0
+        194.0,
+        95.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        282.0,
+        274.0,
         60.0
       ],
       "viewport": [
@@ -24,17 +24,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/contextual_facility-844x390.png",
       "case_id": "contextual_facility",
-      "hud_area_ratio": 0.316,
+      "hud_area_ratio": 0.221,
       "hud_rect": [
-        496.0,
-        54.0,
-        340.0,
-        256.0
+        504.0,
+        62.0,
+        276.0,
+        204.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        282.0,
+        274.0,
         60.0
       ],
       "viewport": [
@@ -45,17 +45,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/construction_carousel-844x390.png",
       "case_id": "construction_carousel",
-      "hud_area_ratio": 0.467,
+      "hud_area_ratio": 0.27,
       "hud_rect": [
-        82.0,
-        181.0,
-        680.0,
-        201.0
+        102.0,
+        269.0,
+        640.0,
+        113.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        282.0,
+        274.0,
         60.0
       ],
       "viewport": [
@@ -66,17 +66,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/placement_decision-844x390.png",
       "case_id": "placement_decision",
-      "hud_area_ratio": 0.423,
+      "hud_area_ratio": 0.33,
       "hud_rect": [
-        82.0,
-        202.0,
-        680.0,
-        180.0
+        102.0,
+        238.0,
+        640.0,
+        144.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        282.0,
+        274.0,
         60.0
       ],
       "viewport": [
@@ -87,17 +87,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/mission_world_first-568x320.png",
       "case_id": "mission_world_first",
-      "hud_area_ratio": 0.243,
+      "hud_area_ratio": 0.161,
       "hud_rect": [
         8.0,
         76.0,
-        210.0,
-        148.0
+        176.0,
+        95.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        218.0,
+        210.0,
         60.0
       ],
       "viewport": [
@@ -108,17 +108,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/contextual_facility-568x320.png",
       "case_id": "contextual_facility",
-      "hud_area_ratio": 0.494,
+      "hud_area_ratio": 0.345,
       "hud_rect": [
-        260.0,
-        54.0,
-        300.0,
-        256.0
+        258.0,
+        62.0,
+        246.0,
+        204.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        218.0,
+        210.0,
         60.0
       ],
       "viewport": [
@@ -129,17 +129,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/construction_carousel-568x320.png",
       "case_id": "construction_carousel",
-      "hud_area_ratio": 0.647,
+      "hud_area_ratio": 0.385,
       "hud_rect": [
-        24.0,
-        111.0,
-        520.0,
-        201.0
+        30.0,
+        199.0,
+        508.0,
+        113.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        218.0,
+        210.0,
         60.0
       ],
       "viewport": [
@@ -150,17 +150,17 @@
     {
       "artifact": "artifacts/scenario-factory-hud/placement_decision-568x320.png",
       "case_id": "placement_decision",
-      "hud_area_ratio": 0.587,
+      "hud_area_ratio": 0.472,
       "hud_rect": [
-        24.0,
-        132.0,
-        520.0,
-        180.0
+        30.0,
+        168.0,
+        508.0,
+        144.0
       ],
       "resource_rect": [
         8.0,
         4.0,
-        218.0,
+        210.0,
         60.0
       ],
       "viewport": [
