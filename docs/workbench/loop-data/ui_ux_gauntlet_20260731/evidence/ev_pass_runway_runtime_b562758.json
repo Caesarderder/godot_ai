@@ -1,0 +1,73 @@
+{
+  "evidence_id": "ev_pass_runway_runtime_b562758",
+  "revision": "b562758",
+  "valid_through_revision": "b562758",
+  "gate_id": "gate_pass_runway_runtime",
+  "claim": "All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim.",
+  "scenario_id": "scenario_mobile_battle_pass_supply_runway",
+  "execution_id": "pass_runway_runtime_b562758",
+  "evidence_type": "test",
+  "artifact_or_command": "godot --headless --path project-a -s tools/run_goals_screen_tests.gd && godot --path project-a -s tools/capture_battle_pass_runway_scenario.gd",
+  "case_results": [
+    {
+      "case_id": "claimable_runway",
+      "result": "pass",
+      "assertions": [
+        "thirty exact tier nodes; exact level-two and batch actions"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-battle-pass-runway/claimable_runway-844x390.png"
+      ]
+    },
+    {
+      "case_id": "settled_runway",
+      "result": "pass",
+      "assertions": [
+        "no batch action and all reached tiers disabled"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-battle-pass-runway/settled_runway-844x390.png"
+      ]
+    },
+    {
+      "case_id": "future_focus",
+      "result": "pass",
+      "assertions": [
+        "current frontier auto-focuses while all thirty ids remain"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-battle-pass-runway/future_focus-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "claimable captures",
+    "settled captures",
+    "future-focus captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "battle-pass shipping contract assertions",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "GOALS_SCREEN_TESTS_OK and BATTLE_PASS_RUNWAY_SCENARIO_OK; exact durable actions and all semantic tier identities pass.",
+  "inference": "The horizontal composition preserves the progression and claim contract.",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

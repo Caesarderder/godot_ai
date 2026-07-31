@@ -45,7 +45,7 @@
   "inference": "The accepted hero reveal preserves the shared responsive contract while removing the baseline six-reward clipping failure.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Physical-device safe areas remain covered by the shared Web adapter rather than these fixed captures."
   ],

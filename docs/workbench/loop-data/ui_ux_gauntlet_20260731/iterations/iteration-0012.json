@@ -1,0 +1,29 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 12,
+  "work_unit": "mobile battle pass supply runway",
+  "status": "progress",
+  "changed_files": [
+    "project-a/game/scripts/ui/goals_screen.gd",
+    "project-a/game/scripts/autoloads/mobile_scroll_input.gd",
+    "project-a/tools/capture_battle_pass_runway_scenario.gd",
+    "project-a/tools/run_mobile_scroll_input_tests.gd",
+    "project-a/tools/run_goals_screen_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_pass_runway_runtime_b562758",
+    "ev_pass_runway_responsive_b562758",
+    "ev_pass_runway_visual_critic_b562758"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "Keeping the wrapping four-column reward inventory grid.",
+    "Relying on Godot default vertical wheel behavior for a horizontal-only strip.",
+    "Inferring the current frontier only from the claimed-to-locked boundary."
+  ],
+  "next_action": "Close the focused unit and run the declared shared mobile UI integration checkpoint.",
+  "blocker": null
+}

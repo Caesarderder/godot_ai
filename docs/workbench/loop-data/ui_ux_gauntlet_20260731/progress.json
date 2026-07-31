@@ -1,10 +1,10 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
-  "state": "unit_looping",
-  "revision": "51187cb",
-  "iteration": 11,
-  "active_work_unit": "mobile battle pass supply runway",
+  "state": "integrating",
+  "revision": "b562758",
+  "iteration": 13,
+  "active_work_unit": null,
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -36,7 +36,12 @@
     "gate_doctrine_deck_visual",
     "gate_breakthrough_reveal_runtime",
     "gate_breakthrough_reveal_responsive",
-    "gate_breakthrough_reveal_visual"
+    "gate_breakthrough_reveal_visual",
+    "gate_pass_runway_runtime",
+    "gate_pass_runway_responsive",
+    "gate_pass_runway_visual",
+    "gate_ui_runtime",
+    "gate_ui_responsive"
   ],
   "gate_status": {
     "gate_achievement_cabinet_responsive": "pass",
@@ -69,12 +74,12 @@
     "gate_legion_responsive": "pass",
     "gate_legion_runtime": "pass",
     "gate_legion_visual": "pass",
-    "gate_pass_runway_responsive": "stale",
-    "gate_pass_runway_runtime": "stale",
-    "gate_pass_runway_visual": "stale",
+    "gate_pass_runway_responsive": "pass",
+    "gate_pass_runway_runtime": "pass",
+    "gate_pass_runway_visual": "pass",
     "gate_player_learning": "stale",
-    "gate_ui_responsive": "stale",
-    "gate_ui_runtime": "stale",
+    "gate_ui_responsive": "pass",
+    "gate_ui_runtime": "pass",
     "gate_ui_visual": "pass"
   },
   "open_findings": [],
@@ -159,7 +164,13 @@
     "ev_breakthrough_visual_runtime_5a8d8a4",
     "ev_breakthrough_visual_critic_5a8d8a4",
     "ev_ui_breakthrough_integration_runtime_5a8d8a4",
-    "ev_ui_breakthrough_integration_responsive_5a8d8a4"
+    "ev_ui_breakthrough_integration_responsive_5a8d8a4",
+    "ev_pass_runway_runtime_b562758",
+    "ev_pass_runway_responsive_b562758",
+    "ev_pass_runway_visual_critic_b562758",
+    "ev_pass_runway_visual_runtime_b562758",
+    "ev_ui_pass_integration_runtime_b562758",
+    "ev_ui_pass_integration_responsive_b562758"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -180,8 +191,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "mobile battle pass supply runway",
-    "updated_at": "2026-07-31T14:49:22Z"
+    "next_action": "Focused mobile battle-pass supply-runway unit accepted; enter the declared shared mobile UI integration checkpoint.",
+    "updated_at": "2026-07-31T14:59:38Z"
   },
   "decisions": [
     {
@@ -1971,6 +1982,149 @@
         "ev_ui_integration_runtime_eacfb8b",
         "ev_ui_touch_integration_responsive_c48c224",
         "ev_ui_touch_integration_runtime_c48c224"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:56:41Z",
+      "decision": "Current-tier marker resolves the independent critic's only threshold-level frontier ambiguity without changing pass actions or global scroll contracts. Affected gates=['gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_achievement_cabinet_responsive_ecb65b2",
+        "ev_achievement_cabinet_runtime_ecb65b2",
+        "ev_achievement_cabinet_visual_critic_ecb65b2",
+        "ev_achievement_cabinet_visual_runtime_ecb65b2",
+        "ev_action_compass_responsive_07e7e65",
+        "ev_action_compass_runtime_07e7e65",
+        "ev_action_compass_visual_critic_07e7e65",
+        "ev_action_compass_visual_runtime_07e7e65",
+        "ev_blueprint_forge_responsive_4336f06",
+        "ev_blueprint_forge_runtime_4336f06",
+        "ev_blueprint_forge_visual_critic_4336f06",
+        "ev_blueprint_forge_visual_runtime_4336f06",
+        "ev_breakthrough_responsive_5a8d8a4",
+        "ev_breakthrough_runtime_5a8d8a4",
+        "ev_breakthrough_visual_critic_5a8d8a4",
+        "ev_breakthrough_visual_runtime_5a8d8a4",
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_codex_responsive_e1da84a",
+        "ev_codex_runtime_e1da84a",
+        "ev_codex_visual_critic_e1da84a",
+        "ev_codex_visual_runtime_e1da84a",
+        "ev_doctrine_responsive_83972d3",
+        "ev_doctrine_responsive_c48c224",
+        "ev_doctrine_runtime_83972d3",
+        "ev_doctrine_runtime_c48c224",
+        "ev_doctrine_visual_critic_c48c224",
+        "ev_doctrine_visual_runtime_c48c224",
+        "ev_faction_choice_model_critic_01bc769",
+        "ev_faction_choice_responsive_01bc769",
+        "ev_faction_choice_runtime_01bc769",
+        "ev_faction_choice_visual_critic_01bc769",
+        "ev_faction_choice_visual_diff_01bc769",
+        "ev_faction_choice_visual_runtime_01bc769",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_factory_responsive_2e23dd4",
+        "ev_factory_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4",
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_world_critic_fail_09516dd",
+        "ev_growth_duel_responsive_7626daf",
+        "ev_growth_duel_runtime_7626daf",
+        "ev_growth_duel_visual_critic_7626daf",
+        "ev_growth_duel_visual_runtime_7626daf",
+        "ev_legion_baseline_responsive_2e23dd4",
+        "ev_legion_baseline_runtime_2e23dd4",
+        "ev_legion_baseline_visual_2e23dd4",
+        "ev_legion_responsive_eacfb8b",
+        "ev_legion_runtime_eacfb8b",
+        "ev_legion_visual_critic_eacfb8b",
+        "ev_legion_visual_runtime_eacfb8b",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_achievement_integration_responsive_ecb65b2",
+        "ev_ui_achievement_integration_runtime_ecb65b2",
+        "ev_ui_action_integration_responsive_07e7e65",
+        "ev_ui_action_integration_runtime_07e7e65",
+        "ev_ui_blueprint_integration_responsive_4336f06",
+        "ev_ui_blueprint_integration_runtime_4336f06",
+        "ev_ui_breakthrough_integration_responsive_5a8d8a4",
+        "ev_ui_breakthrough_integration_runtime_5a8d8a4",
+        "ev_ui_codex_integration_responsive_e1da84a",
+        "ev_ui_codex_integration_runtime_e1da84a",
+        "ev_ui_faction_integration_responsive_01bc769",
+        "ev_ui_faction_integration_runtime_01bc769",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb",
+        "ev_ui_growth_integration_responsive_7626daf",
+        "ev_ui_growth_integration_runtime_7626daf",
+        "ev_ui_integration_responsive_eacfb8b",
+        "ev_ui_integration_runtime_eacfb8b",
+        "ev_ui_touch_integration_responsive_c48c224",
+        "ev_ui_touch_integration_runtime_c48c224"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:58:32Z",
+      "decision": "Thirty tier identities and exact individual/batch actions pass in the focused shipping fixture.",
+      "evidence_ids": [
+        "ev_pass_runway_runtime_b562758"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:58:32Z",
+      "decision": "Finger drag and hovered wheel move the horizontal-only runway at both mobile landscape sizes.",
+      "evidence_ids": [
+        "ev_pass_runway_responsive_b562758"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:58:59Z",
+      "decision": "Deterministic six-capture evidence and independent 8.8/8.6 re-review jointly pass the visual gate.",
+      "evidence_ids": [
+        "ev_pass_runway_visual_runtime_b562758",
+        "ev_pass_runway_visual_critic_b562758"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:59:38Z",
+      "decision": "Runtime, responsive and mixed visual gates pass at b562758; independent critic minimum improved from 8.4 to 8.6 after the current-frontier marker.",
+      "evidence_ids": [
+        "ev_pass_runway_runtime_b562758",
+        "ev_pass_runway_responsive_b562758",
+        "ev_pass_runway_visual_runtime_b562758",
+        "ev_pass_runway_visual_critic_b562758"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:59:38Z",
+      "decision": "Focused mobile battle-pass supply-runway unit accepted; enter the declared shared mobile UI integration checkpoint.",
+      "evidence_ids": [
+        "ev_pass_runway_runtime_b562758",
+        "ev_pass_runway_responsive_b562758",
+        "ev_pass_runway_visual_runtime_b562758",
+        "ev_pass_runway_visual_critic_b562758"
+      ]
+    },
+    {
+      "at": "2026-07-31T15:00:59Z",
+      "decision": "Shared mobile UI smoke and focused shipping suites pass after the global wheel/touch change.",
+      "evidence_ids": [
+        "ev_ui_pass_integration_runtime_b562758"
+      ]
+    },
+    {
+      "at": "2026-07-31T15:00:59Z",
+      "decision": "Real-browser touch drag and both declared phone landscape sizes pass at the integrated revision.",
+      "evidence_ids": [
+        "ev_ui_pass_integration_responsive_b562758"
       ]
     }
   ]

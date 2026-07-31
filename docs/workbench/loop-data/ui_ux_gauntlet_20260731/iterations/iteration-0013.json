@@ -1,0 +1,28 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 13,
+  "work_unit": "mobile battle pass supply runway",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/goals_screen.gd",
+    "project-a/game/scripts/autoloads/mobile_scroll_input.gd",
+    "project-a/tools/capture_battle_pass_runway_scenario.gd",
+    "project-a/tools/run_mobile_scroll_input_tests.gd",
+    "project-a/tools/run_goals_screen_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_pass_runway_runtime_b562758",
+    "ev_pass_runway_responsive_b562758",
+    "ev_pass_runway_visual_runtime_b562758",
+    "ev_pass_runway_visual_critic_b562758"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "Accepting the first narrow-margin 8.4 frontier result without an exact current marker."
+  ],
+  "next_action": "Close the focused unit and enter the shared mobile UI integration checkpoint.",
+  "blocker": null
+}

@@ -43,7 +43,7 @@
   "inference": "The hero reveal integrates without changing shipping navigation, focus or reward commands.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Full browser campaign path was not rerun for this visual-only result change."
   ],
