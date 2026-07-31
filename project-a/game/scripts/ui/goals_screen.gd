@@ -654,7 +654,9 @@ func _pass_reward_amount(reward: Dictionary) -> int:
 
 func _build_achievements() -> void:
 	if not bool(_view.get("achievements_unlocked", false)):
-		content.add_child(_lock_panel(_view.get("achievement_lock", {}) as Dictionary))
+		content.add_child(_achievement_lock_panel(
+			_view.get("achievement_lock", {}) as Dictionary
+		))
 		return
 	var panel := _panel("")
 	panel.name = "AchievementMedalWall"
@@ -772,6 +774,97 @@ func _build_achievements() -> void:
 			))
 		medal_slot.add_child(card)
 	content.add_child(panel)
+
+
+func _achievement_lock_panel(view: Dictionary) -> Control:
+	var compact := bool(_view.get("compact", false))
+	var panel := _panel("")
+	panel.name = "AchievementLockedCabinet"
+	var overview := HBoxContainer.new()
+	overview.custom_minimum_size.y = 52
+	overview.add_theme_constant_override("separation", 8)
+	panel.add_child(overview)
+	var lock_icon := TextureRect.new()
+	lock_icon.texture = ICON_ACHIEVEMENT_LOCK
+	lock_icon.custom_minimum_size = Vector2(48, 48)
+	lock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	overview.add_child(lock_icon)
+	var lock_title := _label("荣誉柜封存", 16, GOLD)
+	lock_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lock_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	overview.add_child(lock_title)
+	var requirements := HBoxContainer.new()
+	requirements.name = "AchievementUnlockRequirements"
+	requirements.add_theme_constant_override("separation", 6)
+	overview.add_child(requirements)
+	requirements.add_child(_achievement_requirement(
+		ICON_COMMANDER_RANK,
+		"LV %d/%d" % [int(view.get("level", 1)), int(view.get("required_level", 1))],
+		int(view.get("level", 1)) >= int(view.get("required_level", 1)),
+		compact
+	))
+	requirements.add_child(_achievement_requirement(
+		ICON_ACHIEVEMENT_FORTRESS,
+		"1-2 %s" % ("✓" if bool(view.get("stage_complete", false)) else "✕"),
+		bool(view.get("stage_complete", false)),
+		compact
+	))
+	var cabinet := HBoxContainer.new()
+	cabinet.name = "AchievementLockedMedalCabinet"
+	cabinet.add_theme_constant_override("separation", 5 if compact else 8)
+	cabinet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_child(cabinet)
+	var locked_icons: Array[Texture2D] = [
+		ICON_ACHIEVEMENT_FORTRESS,
+		ICON_ACHIEVEMENT_FACTORY,
+		ICON_ACHIEVEMENT_CAMPAIGN,
+		ICON_ACHIEVEMENT_BATTLE,
+		ICON_COMMANDER_RANK,
+		ICON_ACHIEVEMENT_CAMPAIGN,
+	]
+	for medal_icon in locked_icons:
+		var slot := PanelContainer.new()
+		slot.custom_minimum_size = Vector2(76 if compact else 98, 66 if compact else 76)
+		slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		slot.add_theme_stylebox_override("panel", UiArtDirectionScript.button_style(false))
+		var emblem := TextureRect.new()
+		emblem.texture = medal_icon
+		emblem.modulate = Color(0.28, 0.34, 0.35, 0.52)
+		emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.add_child(emblem)
+		var seal := _label("⌁", 19, MUTED)
+		seal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		seal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.add_child(seal)
+		cabinet.add_child(slot)
+	return panel
+
+
+func _achievement_requirement(
+	icon_texture: Texture2D,
+	copy: String,
+	complete: bool,
+	compact: bool
+) -> Control:
+	var badge := HBoxContainer.new()
+	badge.custom_minimum_size = Vector2(84 if compact else 104, 44)
+	badge.add_theme_constant_override("separation", 3)
+	var icon := TextureRect.new()
+	icon.texture = icon_texture
+	icon.custom_minimum_size = Vector2(32, 32)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.modulate = Color.WHITE if complete else Color(0.68, 0.68, 0.68, 0.8)
+	badge.add_child(icon)
+	var label := _label(copy, 11, GREEN if complete else MUTED)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	badge.add_child(label)
+	return badge
 
 
 func _select_achievement_detail(
