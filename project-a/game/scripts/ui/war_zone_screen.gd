@@ -98,14 +98,14 @@ func _rebuild() -> void:
 		stage_button.name = "StageNode_%s" % stage_id
 		var boss_node := row_index == visible_rows.size() - 1
 		var node_size := (
-			Vector2(68, 58) if _is_compact_layout() else Vector2(78, 66)
+			Vector2(84, 74) if _is_compact_layout() else Vector2(94, 82)
 		) if boss_node else (Vector2(46, 42) if _is_compact_layout() else Vector2(58, 50))
 		if boss_node:
 			stage_button.set_meta("boss_fortress", true)
 			stage_button.icon = BOSS_FORTRESS_ICON
 			stage_button.expand_icon = true
 			stage_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-			stage_button.add_theme_constant_override("icon_max_width", 34 if _is_compact_layout() else 40)
+			stage_button.add_theme_constant_override("icon_max_width", 46 if _is_compact_layout() else 52)
 		stage_button.custom_minimum_size = node_size
 		stage_button.size = node_size
 		stage_button.position = _route_point(row_index, visible_rows.size()) - node_size * 0.5
@@ -122,7 +122,9 @@ func _rebuild() -> void:
 		location_label.text = _stage_location_name(String(row.get("display_name", stage_id)))
 		location_label.position = _route_point(row_index, visible_rows.size()) + Vector2(
 			-43 if _is_compact_layout() else -48,
-			31 if _is_compact_layout() and row_index % 2 == 0 else (29 if not _is_compact_layout() else 27)
+			(
+				48 if _is_compact_layout() else 53
+			) if boss_node else (31 if _is_compact_layout() and row_index % 2 == 0 else (29 if not _is_compact_layout() else 27))
 		)
 		location_label.size = Vector2(86, 18) if _is_compact_layout() else Vector2(96, 18)
 		location_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -214,10 +216,12 @@ func _draw() -> void:
 		)
 		var hostile := index > clampi(_selected_stage_index(), 0, 4)
 		var node_color := Color("#f08b58") if hostile else CYAN
-		draw_circle(point, 34.0 if active else 28.0, Color(node_color, 0.07 if not active else 0.18))
+		var boss_landmark := index == route_points.size() - 1
+		var halo_radius := (48.0 if active else 42.0) if boss_landmark else (34.0 if active else 28.0)
+		draw_circle(point, halo_radius, Color(node_color, 0.07 if not active else 0.18))
 		draw_arc(
 			point,
-			35.0 if active else 31.0,
+			halo_radius + 2.0,
 			0.0,
 			TAU,
 			32,
