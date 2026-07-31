@@ -1,0 +1,76 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_war_zone_gesture_visual_baseline_301d08a",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "301d08a",
+  "valid_through_revision": "301d08a",
+  "gate_id": "gate_war_zone_gesture_visual",
+  "claim": "The campaign map reads as an explorable occupied city route with cohesive raster landmark states and world-first hierarchy.",
+  "scenario_id": "scenario_war_zone_gesture_icons",
+  "execution_id": "war_zone_visual_baseline_301d08a",
+  "evidence_type": "visual_diff",
+  "artifact_or_command": "Review pre-change baseline-war-zone-844x390.png and shipping Unicode node construction",
+  "case_results": [
+    {
+      "case_id": "secured_route",
+      "result": "fail",
+      "assertions": [
+        "recovered nodes use Unicode diamond/check glyphs rather than raster state icons"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/baseline-war-zone-844x390.png"
+      ]
+    },
+    {
+      "case_id": "frontline_target",
+      "result": "fail",
+      "assertions": [
+        "frontline uses Unicode square/cross state syntax"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/baseline-war-zone-844x390.png"
+      ]
+    },
+    {
+      "case_id": "locked_frontier",
+      "result": "fail",
+      "assertions": [
+        "unknown nodes rely on question/cross glyphs and have weak hostile identity"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/baseline-war-zone-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "844 capture",
+    "568 capture",
+    "drag signal trace",
+    "wheel signal trace",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 Compatibility",
+    "platform": "macOS",
+    "device": "Apple M4",
+    "viewport": "844x390 baseline",
+    "seed": 20260801,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "baseline visual inspection",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "The city route is world-first, but every normal landmark encodes state with small Unicode glyphs and no direct map gesture exists.",
+  "inference": "The baseline does not meet the raster-semantic or direct-exploration contract.",
+  "result": "fail",
+  "confidence": 0.98,
+  "freshness": "stale",
+  "limitations": [
+    "Only the 844 baseline capture predates implementation; the shipping source proves the same Unicode construction at compact size."
+  ],
+  "created_at": "2026-08-01T00:25:00Z"
+}

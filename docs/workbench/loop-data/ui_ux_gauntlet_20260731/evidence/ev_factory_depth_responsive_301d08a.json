@@ -3,7 +3,7 @@
   "evidence_id": "ev_factory_depth_responsive_301d08a",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "301d08a",
-  "valid_through_revision": "301d08a",
+  "valid_through_revision": "e43fe45",
   "gate_id": "gate_factory_depth_responsive",
   "claim": "Mission, facility and construction states retain visible 48px icon actions at 844x390 and 568x320 without increasing HUD coverage.",
   "scenario_id": "scenario_factory_depth_icon_semantics",

@@ -1,0 +1,80 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_war_zone_gesture_critic_fail_a0b49c8",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "a0b49c8",
+  "valid_through_revision": "a0b49c8",
+  "gate_id": "gate_war_zone_gesture_visual",
+  "claim": "The campaign map reads as an explorable occupied city route with cohesive raster landmark states and world-first hierarchy.",
+  "scenario_id": "scenario_war_zone_gesture_icons",
+  "execution_id": "war_zone_critic_a0b49c8",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "Independent review of first candidate dual-size map captures against baseline",
+  "case_results": [
+    {
+      "case_id": "secured_route",
+      "result": "pass",
+      "assertions": [
+        "cyan recovered route and PNG checks read clearly",
+        "city/world hierarchy scores 8.6"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/war-zone-844x390.png"
+      ]
+    },
+    {
+      "case_id": "frontline_target",
+      "result": "fail",
+      "assertions": [
+        "844 primary CTA loses its label and becomes an ambiguous blank gold control",
+        "responsive/clipping dimension scores 6.5"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/war-zone-844x390.png"
+      ]
+    },
+    {
+      "case_id": "locked_frontier",
+      "result": "pass",
+      "assertions": [
+        "locks, hostile route and fortress imply unexplored territory",
+        "568 viewport scores 8.4"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/war-zone-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "844 capture",
+    "568 capture",
+    "drag signal trace",
+    "wheel signal trace",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "visual evidence review",
+    "platform": "independent agent",
+    "device": "artifact inspection",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260801,
+    "build_mode": "review"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent war-zone visual critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Independent critic returned FAIL: overall 7.8, 844 score 7.5, 568 score 8.4, lowest dimension 6.5; the 844 CTA label is missing.",
+  "inference": "The raster world direction improves the baseline but the standard-width action regression blocks acceptance.",
+  "result": "fail",
+  "confidence": 0.98,
+  "freshness": "stale",
+  "limitations": [
+    "Static review does not exercise gestures; runtime evidence covers them separately."
+  ],
+  "created_at": "2026-08-01T00:32:00Z"
+}

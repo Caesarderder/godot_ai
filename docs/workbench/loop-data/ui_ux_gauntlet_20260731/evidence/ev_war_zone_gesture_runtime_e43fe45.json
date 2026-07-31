@@ -1,0 +1,80 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_war_zone_gesture_runtime_e43fe45",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "e43fe45",
+  "valid_through_revision": "e43fe45",
+  "gate_id": "gate_war_zone_gesture_runtime",
+  "claim": "Touch drag and desktop wheel traverse only adjacent reachable campaign landmarks while preserving canonical stage and attack signals.",
+  "scenario_id": "scenario_war_zone_gesture_icons",
+  "execution_id": "war_zone_runtime_e43fe45",
+  "evidence_type": "test",
+  "artifact_or_command": "godot --headless --path project-a --script tools/run_war_zone_screen_tests.gd; godot --headless --path project-a --script tools/run_ui_smoke_tests.gd",
+  "case_results": [
+    {
+      "case_id": "secured_route",
+      "result": "pass",
+      "assertions": [
+        "leftward touch drag emits exact next reachable stage ID",
+        "click selection remains available"
+      ],
+      "artifacts": [
+        "project-a/tools/run_war_zone_screen_tests.gd"
+      ]
+    },
+    {
+      "case_id": "frontline_target",
+      "result": "pass",
+      "assertions": [
+        "desktop wheel emits exact previous reachable stage ID",
+        "canonical attack signal remains covered by shared UI smoke"
+      ],
+      "artifacts": [
+        "project-a/tools/run_war_zone_screen_tests.gd",
+        "project-a/tools/run_ui_smoke_tests.gd"
+      ]
+    },
+    {
+      "case_id": "locked_frontier",
+      "result": "pass",
+      "assertions": [
+        "wheel and drag refuse the locked stage beyond the frontline",
+        "no stage ID is emitted for blocked traversal"
+      ],
+      "artifacts": [
+        "project-a/tools/run_war_zone_screen_tests.gd"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "844 capture",
+    "568 capture",
+    "drag signal trace",
+    "wheel signal trace",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 Compatibility",
+    "platform": "macOS",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260801,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "shipping war-zone gesture assertions",
+    "version": "2",
+    "independence": "not_applicable"
+  },
+  "observation": "WAR_ZONE_SCREEN_TESTS_OK and UI SMOKE TESTS PASS at the final revision; touch drag and wheel select only adjacent unlocked IDs.",
+  "inference": "Direct map traversal works without changing unlock or action contracts.",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [
+    "Existing shared UI shutdown leak warnings remain non-failing."
+  ],
+  "created_at": "2026-08-01T00:40:00Z"
+}

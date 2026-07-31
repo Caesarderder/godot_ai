@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_achievement_cabinet_responsive_ecb65b2",
   "revision": "ecb65b2",
-  "valid_through_revision": "301d08a",
+  "valid_through_revision": "e43fe45",
   "gate_id": "gate_achievement_cabinet_responsive",
   "claim": "Medal identity, state and the sole primary action remain visible and touch-sized at 844x390 and 568x320.",
   "scenario_id": "scenario_mobile_achievement_medal_cabinet",

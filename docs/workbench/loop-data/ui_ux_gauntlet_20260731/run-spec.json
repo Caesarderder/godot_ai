@@ -58,7 +58,8 @@
         "gate_pass_runway_visual",
         "gate_chapter_victory_visual",
         "gate_boss_briefing_visual",
-        "gate_factory_depth_visual"
+        "gate_factory_depth_visual",
+        "gate_war_zone_gesture_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -123,7 +124,9 @@
         "gate_high_dpi_visual",
         "gate_high_dpi_responsive",
         "gate_factory_depth_visual",
-        "gate_factory_depth_responsive"
+        "gate_factory_depth_responsive",
+        "gate_war_zone_gesture_visual",
+        "gate_war_zone_gesture_responsive"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -138,7 +141,9 @@
         "gate_ui_runtime",
         "gate_boss_briefing_responsive",
         "gate_high_dpi_responsive",
-        "gate_factory_depth_responsive"
+        "gate_factory_depth_responsive",
+        "gate_war_zone_gesture_runtime",
+        "gate_war_zone_gesture_responsive"
       ],
       "rationale": "The player must manipulate the real shipping screen without blocked map targets."
     },
@@ -224,7 +229,9 @@
         "gate_doctrine_deck_responsive",
         "gate_breakthrough_reveal_responsive",
         "gate_pass_runway_responsive",
-        "gate_chapter_victory_responsive"
+        "gate_chapter_victory_responsive",
+        "gate_war_zone_gesture_visual",
+        "gate_war_zone_gesture_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -263,7 +270,8 @@
         "gate_boss_briefing_runtime",
         "gate_boss_briefing_responsive",
         "gate_high_dpi_runtime",
-        "gate_factory_depth_runtime"
+        "gate_factory_depth_runtime",
+        "gate_war_zone_gesture_runtime"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -3274,6 +3282,185 @@
       "limitations": [
         "Static captures cannot measure physical OLED black crush."
       ]
+    },
+    {
+      "scenario_id": "scenario_war_zone_gesture_icons",
+      "scenario_kind": "whole_path_integration",
+      "purpose": "Exercise the shipping campaign map as an icon-led world surface with touch-drag and desktop-wheel stage traversal.",
+      "player_question": "Can a phone player explore secured, frontline and unknown city landmarks directly on the world without decoding Unicode glyphs or opening a stage matrix?",
+      "gate_ids": [
+        "gate_war_zone_gesture_visual",
+        "gate_war_zone_gesture_runtime",
+        "gate_war_zone_gesture_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_war_zone_exploration.gd and run_war_zone_screen_tests.gd",
+        "shipping_surface": "project-a/game/scripts/ui/war_zone_screen.gd",
+        "public_adapter": "WarZoneScreen stage_selected and chapter_selected signals"
+      },
+      "fixture": {
+        "subject_parameter": "chapter-one five-landmark frontier",
+        "reuse_scope": "secured route, selected frontline and locked frontier",
+        "extension_contract": "preserve canonical stage IDs, unlock rules and attack signals"
+      },
+      "setup": {
+        "execution_surface": "main_scene",
+        "entry": "configure chapter one at stage 1-3",
+        "state": "two recovered, one frontline, two unknown landmarks",
+        "camera_or_view": "world-first city route",
+        "viewport": "844x390 and 568x320",
+        "target_device": "mobile landscape Web and desktop browser"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "render_route",
+          "at": "case start",
+          "action": "render five city landmarks"
+        },
+        {
+          "stimulus_id": "drag_route",
+          "at": "after render",
+          "action": "touch-drag horizontally across the map"
+        },
+        {
+          "stimulus_id": "wheel_route",
+          "at": "desktop review",
+          "action": "wheel across the map"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "map_captures",
+          "source": "real Compatibility-renderer captures",
+          "window": "stable route states",
+          "artifact": "project-a/artifacts/scenario-war-zone-exploration"
+        },
+        {
+          "observation_id": "gesture_assertions",
+          "source": "shipping scene input and signal assertions",
+          "window": "drag and wheel traversal",
+          "artifact": "WAR_ZONE_SCREEN_TESTS output"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "secured_route",
+          "state": "recovered landmarks behind the frontline",
+          "stimulus_ids": [
+            "render_route",
+            "drag_route"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "recovered state uses raster icon plus cyan route",
+            "drag can select the previous reachable landmark",
+            "world remains dominant"
+          ],
+          "observation_ids": [
+            "map_captures",
+            "gesture_assertions"
+          ]
+        },
+        {
+          "case_id": "frontline_target",
+          "state": "selected unlocked stage 1-3",
+          "stimulus_ids": [
+            "render_route",
+            "wheel_route"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "frontline uses raster target semantics",
+            "wheel selects adjacent reachable stages",
+            "one primary action remains visible"
+          ],
+          "observation_ids": [
+            "map_captures",
+            "gesture_assertions"
+          ]
+        },
+        {
+          "case_id": "locked_frontier",
+          "state": "unknown landmarks beyond stage 1-3",
+          "stimulus_ids": [
+            "render_route",
+            "drag_route",
+            "wheel_route"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "locked state uses raster lock semantics",
+            "gesture traversal never bypasses unlock rules",
+            "hostile fog and silhouettes imply unexplored territory"
+          ],
+          "observation_ids": [
+            "map_captures",
+            "gesture_assertions"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh scene per target viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "844 capture",
+          "568 capture",
+          "drag signal trace",
+          "wheel signal trace",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "gesture direction ambiguity",
+          "node or detail overlap"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260801,
+        "clock": "not used",
+        "warmup": "six stable render frames",
+        "temporal_isolation": "fresh scene"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a --script tools/capture_war_zone_exploration.gd",
+        "expected_seconds": 15,
+        "outputs": [
+          "dual-size map captures",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a --script tools/run_war_zone_screen_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd",
+        "isolation": "fresh Godot processes",
+        "outputs": [
+          "gesture assertions",
+          "shared UI assertions",
+          "exit code"
+        ]
+      },
+      "reset": "free WarZoneScreen and input state",
+      "failure_conditions": [
+        "Unicode status glyph remains",
+        "touch drag or wheel does nothing",
+        "locked stage becomes selectable",
+        "detail card covers a world node",
+        "map reverts to a button matrix"
+      ],
+      "limitations": [
+        "Focused automation does not measure physical finger friction."
+      ]
     }
   ],
   "integration_policy": {
@@ -4151,6 +4338,60 @@
         "construction drag preserved"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_war_zone_gesture_visual",
+      "profile": "visual",
+      "claim": "The campaign map reads as an explorable occupied city route with cohesive raster landmark states and world-first hierarchy.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_war_zone_gesture_icons"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "city and route dominate",
+        "PNG states are distinct",
+        "unknown territory invites exploration",
+        "detail remains compact"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_war_zone_gesture_runtime",
+      "profile": "correctness",
+      "claim": "Touch drag and desktop wheel traverse only adjacent reachable campaign landmarks while preserving canonical stage and attack signals.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_war_zone_gesture_icons"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "drag traversal emits exact stage ID",
+        "wheel traversal emits exact stage ID",
+        "locked stages are skipped",
+        "attack signal is unchanged"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_war_zone_gesture_responsive",
+      "profile": "correctness",
+      "claim": "Five campaign landmarks, raster states and the primary action remain visible and touch-ready at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_war_zone_gesture_icons"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "44px node targets",
+        "no node-detail overlap",
+        "no icon clipping",
+        "both target viewports pass"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -4248,6 +4489,12 @@
       "owner": "factory depth and icon semantics work-unit owner",
       "surface": "slg_main factory world, bottom navigation and FactoryScreen mission icon",
       "public_contract": "existing action IDs and HUD geometry",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "war-zone gesture and icon semantics work-unit owner",
+      "surface": "WarZoneScreen world nodes and input traversal",
+      "public_contract": "existing stage_selected, chapter_selected, attack_requested and preparation_requested signals",
       "coupling": "coupled"
     }
   ],

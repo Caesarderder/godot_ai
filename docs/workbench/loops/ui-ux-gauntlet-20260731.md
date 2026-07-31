@@ -4,7 +4,7 @@ km_type: reference
 domain: workflow
 status: active
 owner: maintainers
-last_verified: 2026-07-31
+last_verified: 2026-08-01
 source_of_truth:
   - docs/workbench/loop-data/ui_ux_gauntlet_20260731
 validated_by:
@@ -30,14 +30,14 @@ revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
 state: integrating
 phase: integrating
-iteration: 16/8
-revision: caa9def
+iteration: 18/8
+revision: e43fe45
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T15:54:40Z
+updated_at: 2026-07-31T16:16:26Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -60,10 +60,12 @@ terminal: no
 - [ready] scenario_mobile_chapter_victory_tableau :: Does clearing the chapter feel like the resistance heroes broke the wall, with rewards and the sole next action understood at a glance? :: fast=godot --path project-a -s tools/capture_chapter_victory_tableau_scenario.gd :: strict=godot --headless --path project-a -s tools/run_chapter_one_completion_tests.gd && godot --path project-a -s tools/capture_chapter_victory_tableau_scenario.gd
 - [ready] scenario_mobile_boss_siege_briefing :: Can the player feel the final fortress ahead, understand readiness and choose prepare or attack without the briefing covering the route? :: fast=godot --path project-a -s tools/capture_boss_siege_briefing_scenario.gd :: strict=godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd && godot --path project-a -s tools/capture_boss_siege_briefing_scenario.gd
 - [ready] scenario_high_dpi_web_clarity :: Does the factory world and HUD remain crisp on a Retina/high-DPI browser while touch coordinates and mobile layout stay correct? :: fast=GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node tools/run_web_browser_smoke.mjs :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node project-a/tools/run_web_browser_smoke.mjs
+- [ready] scenario_factory_depth_icon_semantics :: Can the player read the toilet command landmark, surrounding industrial structures and three bottom destinations at a glance without more text or larger HUD panels? :: fast=godot --path project-a -s tools/capture_ui_review.gd :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node project-a/tools/run_web_browser_smoke.mjs
+- [ready] scenario_war_zone_gesture_icons :: Can a phone player explore secured, frontline and unknown city landmarks directly on the world without decoding Unicode glyphs or opening a stage matrix? :: fast=godot --path project-a --script tools/capture_war_zone_exploration.gd :: strict=godot --headless --path project-a --script tools/run_war_zone_screen_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd
 ## Quality Gates
 - [pass] gate_ui_visual :: visual :: The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports. :: evidence=2
-- [pass] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=1
-- [pass] gate_ui_responsive :: correctness :: All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320. :: evidence=1
+- [stale] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=0
+- [stale] gate_ui_responsive :: correctness :: All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320. :: evidence=0
 - [pass] gate_factory_visual :: visual :: The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard. :: evidence=2
 - [pass] gate_factory_runtime :: correctness :: Factory HUD controls preserve shipping panel and semantic action signals across mission, facility, build and placement states. :: evidence=1
 - [pass] gate_factory_responsive :: correctness :: Factory world targets and contextual controls remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
@@ -107,29 +109,35 @@ terminal: no
 - [pass] gate_high_dpi_runtime :: correctness :: The shipping Web canvas allocates physical backing pixels for browser devicePixelRatio instead of upscaling an 844x390 bitmap. :: evidence=1
 - [pass] gate_high_dpi_responsive :: correctness :: High-DPI rendering preserves the logical mobile layout and exact touch mapping. :: evidence=1
 - [pass] gate_high_dpi_visual :: visual :: The factory world, Chinese HUD text and raster icons look materially crisper at DPR 2 without changing the accepted composition. :: evidence=2
+- [pass] gate_factory_depth_visual :: visual :: Factory buildings separate clearly from the deck and raster destination icons read as one cohesive industrial mobile HUD. :: evidence=2
+- [pass] gate_factory_depth_runtime :: correctness :: Factory navigation preserves exact map, legion and goals actions while material changes remain Web Compatibility safe. :: evidence=1
+- [pass] gate_factory_depth_responsive :: correctness :: Mission, facility and construction states retain visible 48px icon actions at 844x390 and 568x320 without increasing HUD coverage. :: evidence=1
+- [pass] gate_war_zone_gesture_visual :: visual :: The campaign map reads as an explorable occupied city route with cohesive raster landmark states and world-first hierarchy. :: evidence=2
+- [pass] gate_war_zone_gesture_runtime :: correctness :: Touch drag and desktop wheel traverse only adjacent reachable campaign landmarks while preserving canonical stage and attack signals. :: evidence=1
+- [pass] gate_war_zone_gesture_responsive :: correctness :: Five campaign landmarks, raster states and the primary action remain visible and touch-ready at 844x390 and 568x320. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
-- [pass] ev_ui_codex_integration_responsive_e1da84a :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: dual-size main-scene capture plus UI smoke geometry assertions
-- [pass] ev_ui_codex_integration_runtime_e1da84a :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
-- [pass] ev_ui_drag_integration_responsive_874a992 :: test :: gate=gate_ui_responsive :: freshness=stale :: GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs plus dual-size focused captures
-- [pass] ev_ui_drag_integration_runtime_874a992 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; focused goals and mobile-scroll suites
-- [pass] ev_ui_faction_integration_responsive_01bc769 :: capture :: gate=gate_ui_responsive :: freshness=stale :: App Shell dual viewport captures plus compact layout and focus assertions
-- [pass] ev_ui_faction_integration_runtime_01bc769 :: test :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd, run_ui_focus_tests.gd, focused LegionScreen tests and App Shell capture
-- [human_required] ev_ui_gauntlet_human_required_16b05bb :: player_observation :: gate=gate_player_learning :: freshness=stale :: Workbench feedback session required
 - [pass] ev_ui_gauntlet_responsive_baseline_16b05bb :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a -s tools/capture_war_zone_exploration.gd
 - [pass] ev_ui_gauntlet_runtime_baseline_16b05bb :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd
 - [fail] ev_ui_gauntlet_visual_baseline_16b05bb :: capture :: gate=gate_ui_visual :: freshness=stale :: project-a/artifacts/scenario-war-zone-exploration
 - [pass] ev_ui_growth_integration_responsive_7626daf :: capture :: gate=gate_ui_responsive :: freshness=stale :: cd project-a && godot --path . -s tools/capture_first_growth_duel_scenario.gd
 - [pass] ev_ui_growth_integration_runtime_7626daf :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_legion_screen_tests.gd && godot --headless --path . -s tools/run_first_growth_flow_tests.gd && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
-- [pass] ev_ui_hidpi_integration_responsive_caa9def :: test :: gate=gate_ui_responsive :: freshness=current :: GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs; GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node tools/run_web_browser_smoke.mjs
-- [pass] ev_ui_hidpi_integration_runtime_caa9def :: test :: gate=gate_ui_runtime :: freshness=current :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
+- [pass] ev_ui_hidpi_integration_responsive_caa9def :: test :: gate=gate_ui_responsive :: freshness=stale :: GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs; GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node tools/run_web_browser_smoke.mjs
+- [pass] ev_ui_hidpi_integration_runtime_caa9def :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
 - [pass] ev_ui_integration_responsive_eacfb8b :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: canonical dual-size capture plus UI smoke geometry assertions
 - [pass] ev_ui_integration_runtime_eacfb8b :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
 - [pass] ev_ui_pass_integration_responsive_b562758 :: test :: gate=gate_ui_responsive :: freshness=stale :: GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs plus dual-size focused captures
 - [pass] ev_ui_pass_integration_runtime_b562758 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; goals and mobile-scroll focused suites
 - [pass] ev_ui_touch_integration_responsive_c48c224 :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a --script res://tools/capture_faction_doctrine_deck_scenario.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd
 - [pass] ev_ui_touch_integration_runtime_c48c224 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd && GODOT_WEB_TOUCH_DRAG_ONLY=1 node project-a/tools/run_web_browser_smoke.mjs
+- [fail] ev_war_zone_gesture_critic_fail_a0b49c8 :: model_critique :: gate=gate_war_zone_gesture_visual :: freshness=stale :: Independent review of first candidate dual-size map captures against baseline
+- [pass] ev_war_zone_gesture_responsive_e43fe45 :: test :: gate=gate_war_zone_gesture_responsive :: freshness=current :: WAR_ZONE_SCREEN_TESTS plus dual-size Compatibility captures
+- [fail] ev_war_zone_gesture_runtime_baseline_301d08a :: runtime_state :: gate=gate_war_zone_gesture_runtime :: freshness=stale :: Source and test audit before gesture implementation
+- [pass] ev_war_zone_gesture_runtime_e43fe45 :: test :: gate=gate_war_zone_gesture_runtime :: freshness=current :: godot --headless --path project-a --script tools/run_war_zone_screen_tests.gd; godot --headless --path project-a --script tools/run_ui_smoke_tests.gd
+- [fail] ev_war_zone_gesture_visual_baseline_301d08a :: visual_diff :: gate=gate_war_zone_gesture_visual :: freshness=stale :: Review pre-change baseline-war-zone-844x390.png and shipping Unicode node construction
+- [pass] ev_war_zone_gesture_visual_critic_e43fe45 :: model_critique :: gate=gate_war_zone_gesture_visual :: freshness=current :: Independent final review after 844 CTA icon-budget correction
+- [pass] ev_war_zone_gesture_visual_runtime_e43fe45 :: visual_diff :: gate=gate_war_zone_gesture_visual :: freshness=current :: godot --path project-a --script tools/capture_war_zone_exploration.gd
 ## Host Capabilities
 - [supported] fresh_agent_context :: The host exposes isolated child-agent critic threads when required by an active Caesar Loop.
 - [unsupported] parallel_agents :: No parallel maker execution is authorized for this work unit.
@@ -140,13 +148,13 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T15:49:53Z :: High-DPI browser scenario now verifies 2x physical backing pixels, stable CSS layout, high-DPI touch mapping and a real overflowing settings drag surface. Affected gates=['gate_high_dpi_responsive', 'gate_high_dpi_runtime', 'gate_high_dpi_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_boss_briefing_responsive', 'gate_boss_briefing_runtime', 'gate_boss_briefing_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_chapter_victory_responsive', 'gate_chapter_victory_runtime', 'gate_chapter_victory_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_ui_visual'].
-- 2026-07-31T15:53:41Z :: Chromium reports an exact 1688x780 backing buffer for an 844x390 CSS canvas at DPR 2.
-- 2026-07-31T15:53:41Z :: High-DPI construction touch and real overflowing settings drag both succeed with CSS coordinates.
-- 2026-07-31T15:53:42Z :: Runtime capture and independent review confirm materially sharper text, 3D silhouettes and icons at 8.8/10 overall.
-- 2026-07-31T15:53:42Z :: High-DPI Web clarity passes physical backing, touch mapping and independent mixed visual gates.
-- 2026-07-31T15:53:52Z :: High-DPI clarity unit is closed; refresh shared UI gates with current headless and real-browser interaction evidence.
-- 2026-07-31T15:54:31Z :: Shared UI smoke passes after the high-DPI browser scenario update.
-- 2026-07-31T15:54:31Z :: Real touch drag and DPR 2 coordinate mapping both pass in the shipping Web route.
-summary: scenarios=16 gates=46 evidence=105 current=62 findings=0 iterations=16
+- 2026-07-31T16:10:17Z :: The new gesture-and-icon scenario is validated and ready for baseline and implementation.
+- 2026-07-31T16:14:33Z :: First war-zone gesture and PNG-node candidate replaces the Unicode/click-only baseline. Affected gates=['gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime', 'gate_war_zone_gesture_responsive', 'gate_war_zone_gesture_runtime', 'gate_war_zone_gesture_visual']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_boss_briefing_responsive', 'gate_boss_briefing_runtime', 'gate_boss_briefing_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_chapter_victory_responsive', 'gate_chapter_victory_runtime', 'gate_chapter_victory_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_depth_responsive', 'gate_factory_depth_runtime', 'gate_factory_depth_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_high_dpi_responsive', 'gate_high_dpi_runtime', 'gate_high_dpi_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_ui_visual'].
+- 2026-07-31T16:14:58Z :: Second candidate caps raster action icon width so the 844 CTA retains its label; rerun all war-zone gesture gates. Affected gates=['gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime', 'gate_war_zone_gesture_responsive', 'gate_war_zone_gesture_runtime', 'gate_war_zone_gesture_visual']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_boss_briefing_responsive', 'gate_boss_briefing_runtime', 'gate_boss_briefing_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_chapter_victory_responsive', 'gate_chapter_victory_runtime', 'gate_chapter_victory_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_depth_responsive', 'gate_factory_depth_runtime', 'gate_factory_depth_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_high_dpi_responsive', 'gate_high_dpi_runtime', 'gate_high_dpi_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_ui_visual'].
+- 2026-07-31T16:16:18Z :: Touch drag, desktop wheel, canonical IDs and lock protection pass.
+- 2026-07-31T16:16:18Z :: Both target phone viewports retain five nodes and the complete touch-sized CTA.
+- 2026-07-31T16:16:18Z :: Real-render evidence and independent critic pass at 8.4 overall with 8.2 lowest dimension.
+- 2026-07-31T16:16:26Z :: Final map candidate passes runtime, responsive and mixed visual gates after resolving the 844 CTA regression.
+- 2026-07-31T16:16:26Z :: War-zone gesture and raster icon work unit is accepted with final-revision evidence.
+summary: scenarios=18 gates=52 evidence=116 current=68 findings=0 iterations=18
 ```

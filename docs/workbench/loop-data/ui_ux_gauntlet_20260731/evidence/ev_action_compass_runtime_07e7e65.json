@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_action_compass_runtime_07e7e65",
   "revision": "07e7e65",
-  "valid_through_revision": "301d08a",
+  "valid_through_revision": "e43fe45",
   "gate_id": "gate_action_compass_runtime",
   "claim": "Current action, reward claim and mission lock preserve durable target and reward command identities.",
   "scenario_id": "scenario_mobile_objective_action_compass",

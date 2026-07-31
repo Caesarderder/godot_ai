@@ -3,7 +3,7 @@
   "evidence_id": "ev_legion_visual_runtime_eacfb8b",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "eacfb8b",
-  "valid_through_revision": "301d08a",
+  "valid_through_revision": "e43fe45",
   "gate_id": "gate_legion_visual",
   "claim": "The formation screen reads as a six-character toilet resistance squad rather than a generic roster table.",
   "scenario_id": "scenario_legion_formation_identity",

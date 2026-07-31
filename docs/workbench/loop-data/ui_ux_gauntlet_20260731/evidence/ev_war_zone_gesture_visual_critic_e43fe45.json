@@ -1,0 +1,81 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_war_zone_gesture_visual_critic_e43fe45",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "e43fe45",
+  "valid_through_revision": "e43fe45",
+  "gate_id": "gate_war_zone_gesture_visual",
+  "claim": "The campaign map reads as an explorable occupied city route with cohesive raster landmark states and world-first hierarchy.",
+  "scenario_id": "scenario_war_zone_gesture_icons",
+  "execution_id": "war_zone_visual_critic_e43fe45",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "Independent final review after 844 CTA icon-budget correction",
+  "case_results": [
+    {
+      "case_id": "secured_route",
+      "result": "pass",
+      "assertions": [
+        "city/world hierarchy 8.6",
+        "recovered route and PNG state semantics are immediately readable"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/war-zone-844x390.png"
+      ]
+    },
+    {
+      "case_id": "frontline_target",
+      "result": "pass",
+      "assertions": [
+        "compact detail hierarchy 8.2",
+        "844 CTA label and target icon are both complete"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/war-zone-844x390.png"
+      ]
+    },
+    {
+      "case_id": "locked_frontier",
+      "result": "pass",
+      "assertions": [
+        "exploration desire 8.4",
+        "responsive/clipping 8.4",
+        "both viewports remain inside safe bounds"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-war-zone-exploration/war-zone-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "844 capture",
+    "568 capture",
+    "drag signal trace",
+    "wheel signal trace",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "visual evidence review",
+    "platform": "independent agent",
+    "device": "artifact inspection",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260801,
+    "build_mode": "review"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent war-zone visual critic",
+    "version": "2",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Independent final critic returned PASS: overall 8.4, both viewports 8.4, lowest dimension 8.2, confidence 0.98.",
+  "inference": "The corrected candidate clears the visual threshold and resolves the first candidate's blank-CTA regression.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Locked landmarks remain intentionally dark; fortress art is more detailed than flat state icons; compact view omits two tactical-copy lines; CTA target icon is small but legible."
+  ],
+  "created_at": "2026-08-01T00:40:00Z"
+}

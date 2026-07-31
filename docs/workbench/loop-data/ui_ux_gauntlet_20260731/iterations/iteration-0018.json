@@ -1,0 +1,31 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 18,
+  "work_unit": "war-zone map gesture and icon semantics",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/war_zone_screen.gd",
+    "project-a/game/scripts/ui/stage_detail_panel.gd",
+    "project-a/tools/run_war_zone_screen_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_war_zone_gesture_runtime_e43fe45",
+    "ev_war_zone_gesture_responsive_e43fe45",
+    "ev_war_zone_gesture_visual_runtime_e43fe45",
+    "ev_war_zone_gesture_visual_critic_e43fe45"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [
+    "First candidate a0b49c8 failed independent review at 7.8 because the 844 CTA raster icon consumed its label; e43fe45 fixes and regression-tests the icon budget."
+  ],
+  "rejected_approaches": [
+    "Keeping Unicode status glyphs inside stage buttons.",
+    "Adding another chapter-wide stage matrix or persistent instruction panel.",
+    "Allowing drag or wheel traversal to select a locked landmark.",
+    "Treating the first candidate's complete 568 CTA as proof that the 844 layout was acceptable."
+  ],
+  "next_action": "Close the accepted war-zone gesture unit, return to integration and continue auditing remaining mobile surfaces.",
+  "blocker": null
+}

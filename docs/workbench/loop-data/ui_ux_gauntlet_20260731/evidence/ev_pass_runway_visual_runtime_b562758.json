@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_pass_runway_visual_runtime_b562758",
   "revision": "b562758",
-  "valid_through_revision": "301d08a",
+  "valid_through_revision": "e43fe45",
   "gate_id": "gate_pass_runway_visual",
   "claim": "Battle pass reads as a touch-draggable supply runway with a clear current frontier rather than a four-column inventory dashboard.",
   "scenario_id": "scenario_mobile_battle_pass_supply_runway",

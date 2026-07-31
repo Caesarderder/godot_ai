@@ -3,7 +3,7 @@
   "evidence_id": "ev_factory_depth_runtime_301d08a",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "301d08a",
-  "valid_through_revision": "301d08a",
+  "valid_through_revision": "e43fe45",
   "gate_id": "gate_factory_depth_runtime",
   "claim": "Factory navigation preserves exact map, legion and goals actions while material changes remain Web Compatibility safe.",
   "scenario_id": "scenario_factory_depth_icon_semantics",
