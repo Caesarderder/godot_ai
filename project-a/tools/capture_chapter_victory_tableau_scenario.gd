@@ -44,22 +44,24 @@ func _capture() -> void:
 
 
 func _capture_case(case_id: String, viewport_size: Vector2i, path: String) -> bool:
-	DisplayServer.window_set_size(viewport_size)
-	root.content_scale_size = viewport_size
-	root.size = viewport_size
-	Input.warp_mouse(Vector2(2, 2))
 	for child in root.get_children():
 		child.queue_free()
 	await process_frame
+	var viewport := SubViewport.new()
+	viewport.name = "ChapterVictoryCaptureViewport"
+	viewport.size = viewport_size
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.disable_3d = true
+	root.add_child(viewport)
 	var background := ColorRect.new()
 	background.color = Color("#091015")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.add_child(background)
+	viewport.add_child(background)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 12)
-	root.add_child(margin)
+	viewport.add_child(margin)
 	var result := RESULT_SCENE.instantiate() as BattleResultScreen
 	margin.add_child(result)
 	var requested := {"id": "", "stage_id": ""}
@@ -73,8 +75,10 @@ func _capture_case(case_id: String, viewport_size: Vector2i, path: String) -> bo
 	if not _verify(result, case_id, requested):
 		return false
 	RenderingServer.force_draw(false)
-	var image := root.get_texture().get_image()
-	if image == null or image.save_png(path) != OK:
+	var image := viewport.get_texture().get_image()
+	if image == null or image.get_size() != viewport_size:
+		return _fail("capture size mismatch: expected %s, got %s" % [viewport_size, Vector2i.ZERO if image == null else image.get_size()])
+	if image.save_png(path) != OK:
 		return _fail("capture unavailable")
 	return true
 
