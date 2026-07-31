@@ -1,0 +1,29 @@
+{
+  "artifacts": [
+    "claimable_runway-844x390.png",
+    "claimable_runway-568x320.png",
+    "settled_runway-844x390.png",
+    "settled_runway-568x320.png",
+    "future_focus-844x390.png",
+    "future_focus-568x320.png"
+  ],
+  "assertions": [
+    "all thirty exact MetaPassLevel identities remain projected",
+    "claimable state emits exact individual and batch actions",
+    "settled state exposes no executable claim",
+    "runway is horizontal-only and focuses the current frontier",
+    "finger drag and hovered desktop wheel both move the shipping runway"
+  ],
+  "cases": [
+    "claimable_runway",
+    "settled_runway",
+    "future_focus"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping GoalsScreen plus global MobileScrollInput",
+  "scenario_id": "scenario_mobile_battle_pass_supply_runway",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
