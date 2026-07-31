@@ -1,10 +1,10 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
-  "state": "integrating",
+  "state": "unit_looping",
   "revision": "c48c224",
   "iteration": 10,
-  "active_work_unit": null,
+  "active_work_unit": "mobile breakthrough hero reveal",
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -47,6 +47,9 @@
     "gate_blueprint_forge_responsive": "pass",
     "gate_blueprint_forge_runtime": "pass",
     "gate_blueprint_forge_visual": "pass",
+    "gate_breakthrough_reveal_responsive": "pending",
+    "gate_breakthrough_reveal_runtime": "pending",
+    "gate_breakthrough_reveal_visual": "pending",
     "gate_codex_responsive": "pass",
     "gate_codex_runtime": "pass",
     "gate_codex_visual": "pass",
@@ -167,8 +170,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "Accepted doctrine command deck and real mobile touch drag enter the shared integration checkpoint.",
-    "updated_at": "2026-07-31T14:34:20Z"
+    "next_action": "mobile breakthrough hero reveal",
+    "updated_at": "2026-07-31T14:36:25Z"
   },
   "decisions": [
     {
@@ -1630,6 +1633,16 @@
         "ev_ui_touch_integration_runtime_c48c224",
         "ev_ui_touch_integration_responsive_c48c224"
       ]
+    },
+    {
+      "at": "2026-07-31T14:36:20Z",
+      "decision": "Add the next evidence-selected mobile breakthrough hero reveal challenge.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T14:36:25Z",
+      "decision": "Begin a bounded challenge against the current ten-cell text reward spreadsheet.",
+      "evidence_ids": []
     }
   ]
 }

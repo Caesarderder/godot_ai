@@ -53,7 +53,8 @@
         "gate_action_compass_visual",
         "gate_achievement_cabinet_visual",
         "gate_growth_duel_visual",
-        "gate_doctrine_deck_visual"
+        "gate_doctrine_deck_visual",
+        "gate_breakthrough_reveal_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -103,7 +104,9 @@
         "gate_growth_duel_visual",
         "gate_growth_duel_runtime",
         "gate_doctrine_deck_visual",
-        "gate_doctrine_deck_runtime"
+        "gate_doctrine_deck_runtime",
+        "gate_breakthrough_reveal_visual",
+        "gate_breakthrough_reveal_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -173,7 +176,8 @@
         "gate_action_compass_visual",
         "gate_achievement_cabinet_visual",
         "gate_growth_duel_visual",
-        "gate_doctrine_deck_visual"
+        "gate_doctrine_deck_visual",
+        "gate_breakthrough_reveal_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -194,7 +198,8 @@
         "gate_action_compass_responsive",
         "gate_achievement_cabinet_responsive",
         "gate_growth_duel_responsive",
-        "gate_doctrine_deck_responsive"
+        "gate_doctrine_deck_responsive",
+        "gate_breakthrough_reveal_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -223,7 +228,9 @@
         "gate_growth_duel_runtime",
         "gate_growth_duel_responsive",
         "gate_doctrine_deck_runtime",
-        "gate_doctrine_deck_responsive"
+        "gate_doctrine_deck_responsive",
+        "gate_breakthrough_reveal_runtime",
+        "gate_breakthrough_reveal_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -2217,6 +2224,191 @@
       "limitations": [
         "Static captures cannot prove target-player prediction of formation-wide combat effects."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_breakthrough_hero_reveal",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping BlueprintScreen research-breakthrough reward reveal and legion handoff.",
+      "player_question": "Does the ten-pull breakthrough feel like two permanent toilet heroes joining the resistance, with materials reading as secondary loot instead of ten equal text boxes?",
+      "gate_ids": [
+        "gate_breakthrough_reveal_visual",
+        "gate_breakthrough_reveal_runtime",
+        "gate_breakthrough_reveal_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_breakthrough_hero_reveal_scenario.gd and blueprint screen tests",
+        "shipping_surface": "blueprint_screen.gd ResearchBreakthroughResults composition",
+        "public_adapter": "BlueprintScreen.configure results plus action_requested open_legion"
+      },
+      "fixture": {
+        "subject_parameter": "breakthrough_results",
+        "reuse_scope": "mixed hero/resource reveal, resource-heavy reveal and reduced-motion reveal",
+        "extension_contract": "use deterministic shipping result dictionaries; never duplicate reward generation or durable roster grants"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate blueprint_screen.tscn with deterministic shipping result views",
+        "state": "first free research breakthrough already resolved",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_mixed_reveal",
+          "at": "case start",
+          "action": "show two permanent heroes plus eight research materials"
+        },
+        {
+          "stimulus_id": "show_resource_heavy",
+          "at": "after mixed reveal",
+          "action": "show two heroes with varied secondary material rewards"
+        },
+        {
+          "stimulus_id": "show_reduced_motion",
+          "at": "after resource-heavy reveal",
+          "action": "show the accepted reveal without entrance animation"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "reveal_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal/manifest.json"
+        },
+        {
+          "observation_id": "reveal_standard",
+          "source": "fixed 844x390 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal"
+        },
+        {
+          "observation_id": "reveal_compact",
+          "source": "fixed 568x320 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "mixed_reveal",
+          "state": "two permanent heroes plus eight materials",
+          "stimulus_ids": [
+            "show_mixed_reveal"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "two heroes dominate the composition",
+            "materials read as secondary loot",
+            "one legion action is obvious"
+          ],
+          "observation_ids": [
+            "reveal_manifest",
+            "reveal_standard",
+            "reveal_compact"
+          ]
+        },
+        {
+          "case_id": "resource_heavy_reveal",
+          "state": "two heroes with varied material types",
+          "stimulus_ids": [
+            "show_resource_heavy"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "resource variety remains legible without ten equal cards",
+            "hero identity keeps visual priority",
+            "no reward clips"
+          ],
+          "observation_ids": [
+            "reveal_manifest",
+            "reveal_standard",
+            "reveal_compact"
+          ]
+        },
+        {
+          "case_id": "reduced_motion_reveal",
+          "state": "same permanent reveal with reduced motion",
+          "stimulus_ids": [
+            "show_reduced_motion"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "all rewards appear immediately",
+            "layout matches the animated final state",
+            "handoff remains actionable"
+          ],
+          "observation_ids": [
+            "reveal_manifest",
+            "reveal_standard",
+            "reveal_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh BlueprintScreen per state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "mixed reveal captures",
+          "resource-heavy captures",
+          "reduced-motion captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "reveal state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed resolved reward state",
+        "warmup": "ten process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_breakthrough_hero_reveal_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state reveal bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_blueprint_screen_tests.gd && godot --path project-a -s tools/capture_breakthrough_hero_reveal_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and BlueprintScreen after capture",
+      "failure_conditions": [
+        "ten rewards read as equal text boxes",
+        "hero art is absent",
+        "materials compete with permanent characters",
+        "handoff clips or requires scroll",
+        "reduced motion hides content"
+      ],
+      "limitations": [
+        "Static captures cannot prove long-term roster attachment."
+      ]
     }
   ],
   "integration_policy": {
@@ -2779,6 +2971,59 @@
         "no interaction depends on hover"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_breakthrough_reveal_visual",
+      "profile": "visual",
+      "claim": "Research breakthrough reads as two permanent toilet heroes joining the resistance rather than a ten-cell reward spreadsheet.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_breakthrough_hero_reveal"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "hero portraits dominate",
+        "materials form a secondary icon strip",
+        "celebration has one clear handoff",
+        "visual style matches the character roster"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_breakthrough_reveal_runtime",
+      "profile": "correctness",
+      "claim": "Breakthrough result preserves all reward identities and emits the exact open_legion handoff without exposing a repeat claim.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_breakthrough_hero_reveal"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "all reward ids remain projected",
+        "open_legion signal is exact",
+        "claim action is absent after resolution"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_breakthrough_reveal_responsive",
+      "profile": "correctness",
+      "claim": "Both permanent heroes, secondary loot and the legion handoff remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_breakthrough_hero_reveal"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "handoff remains at least 48 px",
+        "both heroes stay above the fold",
+        "no horizontal overflow",
+        "no interaction depends on hover"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -2840,6 +3085,12 @@
       "owner": "faction doctrine command-deck work-unit owner",
       "surface": "BlueprintScreen faction doctrine UI plus focused fixture",
       "public_contract": "BlueprintScreen.configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "breakthrough hero-reveal work-unit owner",
+      "surface": "BlueprintScreen breakthrough result plus focused fixture",
+      "public_contract": "BlueprintScreen.configure results and action_requested",
       "coupling": "coupled"
     }
   ],
