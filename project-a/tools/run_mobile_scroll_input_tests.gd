@@ -44,9 +44,18 @@ func _run() -> void:
 	wheel.position = Vector2(140, 120)
 	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
 	wheel.pressed = true
-	Input.parse_input_event(wheel)
+	(root.get_node("MobileScrollInput") as Node).call("_input", wheel)
 	await process_frame
-	_check(scroll.scroll_vertical > before_wheel, "desktop mouse wheel remains supported")
+	_check(scroll.scroll_vertical >= before_wheel + 70, "desktop wheel deterministically scrolls a vertical list")
+
+	scroll.scroll_vertical = 0
+	_dispatch_touch(2, Vector2(140, 180), true)
+	await process_frame
+	_dispatch_drag(2, Vector2(164, 120), Vector2(24, -60))
+	await process_frame
+	_dispatch_touch(2, Vector2(164, 120), false)
+	await process_frame
+	_check(scroll.scroll_vertical >= 50, "a slightly diagonal phone swipe still claims the vertical list")
 
 	var strip := ScrollContainer.new()
 	strip.name = "MobileHorizontalProbe"
@@ -72,6 +81,14 @@ func _run() -> void:
 	_dispatch_touch(1, Vector2(410, 75), false)
 	await process_frame
 	_check(strip.scroll_horizontal >= 80, "finger drag scrolls horizontal building and character strips")
+	strip.scroll_horizontal = 0
+	_dispatch_touch(3, Vector2(500, 75), true)
+	await process_frame
+	_dispatch_drag(3, Vector2(430, 99), Vector2(-70, 24))
+	await process_frame
+	_dispatch_touch(3, Vector2(430, 99), false)
+	await process_frame
+	_check(strip.scroll_horizontal >= 60, "a slightly diagonal phone swipe still claims the horizontal runway")
 	var before_horizontal_wheel := strip.scroll_horizontal
 	var horizontal_wheel := InputEventMouseButton.new()
 	horizontal_wheel.position = Vector2(420, 75)

@@ -89,11 +89,14 @@ func _handle_mouse_drag(event: InputEventMouseMotion) -> void:
 func _handle_mouse_wheel(event: InputEventMouseButton) -> void:
 	if not event.pressed or event.button_index not in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 		return
-	var owner := _best_target(event.position, true)
-	if owner == null or _can_scroll_vertically(owner):
+	var owner := _best_wheel_target(event.position)
+	if owner == null:
 		return
 	var direction := -1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1
-	owner.scroll_horizontal += direction * 72
+	if _can_scroll_vertically(owner):
+		owner.scroll_vertical += direction * 72
+	elif _can_scroll_horizontally(owner):
+		owner.scroll_horizontal += direction * 72
 	get_viewport().set_input_as_handled()
 
 
@@ -138,6 +141,20 @@ func _scroll_by_drag(owner: ScrollContainer, relative: Vector2, distance: Vector
 
 
 func _best_target(position: Vector2, horizontal: bool) -> ScrollContainer:
+	var preferred := _smallest_target_at(position, horizontal)
+	if preferred != null:
+		return preferred
+	return _smallest_target_at(position, not horizontal)
+
+
+func _best_wheel_target(position: Vector2) -> ScrollContainer:
+	var vertical := _smallest_target_at(position, false)
+	if vertical != null:
+		return vertical
+	return _smallest_target_at(position, true)
+
+
+func _smallest_target_at(position: Vector2, horizontal: bool) -> ScrollContainer:
 	var winner: ScrollContainer
 	var winner_area := INF
 	for scroll in _scroll_targets:
