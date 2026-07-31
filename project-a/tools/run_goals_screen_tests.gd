@@ -130,12 +130,30 @@ func _run() -> void:
 	_check(commander != null, "long-term tabs retain commander progression")
 	goals.call("configure", _achievements_view())
 	await process_frame
+	_check(
+		goals.find_child("AchievementMedalWall", true, false) != null,
+		"achievement tab renders a dedicated medal wall"
+	)
 	var first_achievement := _find_text_control(goals, "第一座城")
 	_check(
 		first_achievement != null
 			and first_achievement.is_visible_in_tree()
-			and first_achievement.size.x >= 160.0,
-		"achievement cards keep their progress copy visible beside the claim action"
+			and first_achievement.size.x >= 250.0
+			and first_achievement.size.y >= 82.0,
+		"achievement medal cards keep an icon-led touch target"
+	)
+	var first_medal := goals.find_child(
+		"Achievement_meta_campaign_first",
+		true,
+		false
+	) as Button
+	_check(
+		first_medal != null and first_medal.icon != null,
+		"achievement medal exposes a raster emblem"
+	)
+	_check(
+		_fits_compact_screen(first_medal),
+		"first achievement medal fits the 568x320 compact fixture"
 	)
 	_check(
 		goals.find_child("AchievementBatchClaim", true, false) != null,

@@ -8,17 +8,39 @@ func _init() -> void:
 
 
 func _capture() -> void:
-	if not await _capture_size(Vector2i(844, 390), "res://artifacts/ui-goals-action-844x390.png"):
+	if not await _capture_size(
+		Vector2i(844, 390),
+		"res://artifacts/ui-goals-action-844x390.png",
+		_action_view(false)
+	):
 		quit(1)
 		return
-	if not await _capture_size(Vector2i(568, 320), "res://artifacts/ui-goals-action-568x320.png"):
+	if not await _capture_size(
+		Vector2i(568, 320),
+		"res://artifacts/ui-goals-action-568x320.png",
+		_action_view(true)
+	):
+		quit(1)
+		return
+	if not await _capture_size(
+		Vector2i(844, 390),
+		"res://artifacts/ui-achievement-medals-844x390.png",
+		_achievement_view(false)
+	):
+		quit(1)
+		return
+	if not await _capture_size(
+		Vector2i(568, 320),
+		"res://artifacts/ui-achievement-medals-568x320.png",
+		_achievement_view(true)
+	):
 		quit(1)
 		return
 	print("GOALS REVIEW CAPTURE PASS")
 	quit(0)
 
 
-func _capture_size(viewport_size: Vector2i, path: String) -> bool:
+func _capture_size(viewport_size: Vector2i, path: String, view: Dictionary) -> bool:
 	DisplayServer.window_set_size(viewport_size)
 	root.content_scale_size = viewport_size
 	root.size = viewport_size
@@ -38,7 +60,7 @@ func _capture_size(viewport_size: Vector2i, path: String) -> bool:
 	root.add_child(margin)
 	var goals := GOALS_SCENE.instantiate() as GoalsScreen
 	margin.add_child(goals)
-	goals.configure(_action_view(viewport_size.x < 720))
+	goals.configure(view)
 	for _frame in 6:
 		await process_frame
 	RenderingServer.force_draw(false)
@@ -120,4 +142,74 @@ func _action_view(compact: bool) -> Dictionary:
 			"stage_copy": "通关 1-1",
 			"stage_complete": true,
 		},
+	}
+
+
+func _achievement_view(compact: bool) -> Dictionary:
+	return {
+		"compact": compact,
+		"tab": "achievements",
+		"notification_counts": {
+			"goals_action": 0,
+			"goals_pass": 0,
+			"goals_achievements": 2,
+		},
+		"commander": {
+			"level": 5,
+			"xp": 300,
+			"next_xp": 450,
+			"claimable": 0,
+		},
+		"achievements_unlocked": true,
+		"achievement_claimable": 2,
+		"achievements": [
+			{
+				"achievement_id": "meta.campaign.first",
+				"title": "第一座城",
+				"progress": 1,
+				"target": 1,
+				"complete": true,
+				"claimed": false,
+			},
+			{
+				"achievement_id": "meta.campaign.ten",
+				"title": "十城推进",
+				"progress": 3,
+				"target": 10,
+				"complete": false,
+				"claimed": false,
+			},
+			{
+				"achievement_id": "meta.factory.claim_1",
+				"title": "第一次入库",
+				"progress": 1,
+				"target": 1,
+				"complete": true,
+				"claimed": false,
+			},
+			{
+				"achievement_id": "meta.factory.claim_10",
+				"title": "工厂轰鸣",
+				"progress": 4,
+				"target": 10,
+				"complete": false,
+				"claimed": false,
+			},
+			{
+				"achievement_id": "meta.legion.level_3",
+				"title": "主力成型",
+				"progress": 2,
+				"target": 3,
+				"complete": false,
+				"claimed": false,
+			},
+			{
+				"achievement_id": "meta.collection.six",
+				"title": "六人军团",
+				"progress": 4,
+				"target": 6,
+				"complete": false,
+				"claimed": false,
+			},
+		],
 	}

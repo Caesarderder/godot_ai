@@ -134,6 +134,18 @@
 次级补给横条。页签保持冷青选中态，避免与主行动争夺金色强调。生成源经过 Godot 工具脚本
 键色、裁切、缩放和有损 WebP 导出，单枚约 2KB，避免把生成大图带进运行时。
 
+成就子页采用 Supercell 官方《Clash Royale》Card Mastery / Badges 与《Brawl Stars》Records
+共同体现的原则：长期目标首先是一组可升级、可展示的徽章；总等级、下一奖励和单项进度保持
+同屏，详细条件只在点选后展开。项目只采用“徽章先于列表、完成态可展示、奖励形成成长闭环”
+的结构，不复制其徽章造型、品牌配色或具体构图。参考入口：
+`https://support.supercell.com/clash-royale/en/articles/card-mastery-4.html`、
+`https://support.supercell.com/clash-royale/en/articles/badges-3.html` 与
+`https://support.supercell.com/brawl-stars/en/articles/records.html`。
+
+成就首屏以指挥官军衔条作为长期语境，下方使用两列或三列 64 px 栅格奖章卡。卡片只常驻
+名称、数值进度和领取状态；已完成、进行中与已领取同时通过描边、明度和文字区分。批量领取
+是唯一金色主行动，红色通知数不再承担成就状态本身。
+
 ### 科技蓝图
 
 蓝图屏参考 Wargaming 官方《World of Tanks Blitz》科技树的前置研究关系与已研究/未研究状态
@@ -218,7 +230,10 @@
   `ui-legion-844x390.png` 分别是独立双尺寸场景和主流程集成证据。
 - `run_goals_screen_tests.gd` 验证三节点战役路线、唯一主挑战、次级补给横条及其语义动作；
   `ui-goals-action-844x390.png`、`ui-goals-action-568x320.png` 与
-  `ui-goals-844x390.png` 是独立双尺寸和主流程集成证据。
+  `ui-goals-844x390.png` 是独立双尺寸和主流程集成证据；同一测试还验证成就奖章墙、
+  栅格徽章、批量领取和 568×320 边界，`ui-achievement-medals-844x390.png`、
+  `ui-achievement-medals-568x320.png` 与 `ui-achievements-844x390.png`
+  是专项及主流程成就证据。
 - `run_blueprint_screen_tests.gd` 验证分支图标、核心节点、路径连接、设计状态、语义动作与
   568×320 边界；`ui-blueprint-branch-844x390.png`、
   `ui-blueprint-branch-568x320.png` 与 `ui-blueprint-tree-844x390.png`

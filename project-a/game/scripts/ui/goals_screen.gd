@@ -22,6 +22,24 @@ const ICON_CHAPTER := preload("res://assets/ui/goals/chapter_stronghold.webp")
 const ICON_OPERATION := preload("res://assets/ui/goals/current_operation.webp")
 const ICON_HURDLE := preload("res://assets/ui/goals/wall_hurdle.webp")
 const ICON_SUPPLY := preload("res://assets/ui/goals/supply_crate.webp")
+const ICON_ACHIEVEMENT_FORTRESS := preload(
+	"res://assets/ui/achievements/captured_fortress.webp"
+)
+const ICON_ACHIEVEMENT_CAMPAIGN := preload(
+	"res://assets/ui/achievements/campaign_network.webp"
+)
+const ICON_ACHIEVEMENT_BATTLE := preload(
+	"res://assets/ui/achievements/battle_mastery.webp"
+)
+const ICON_ACHIEVEMENT_FACTORY := preload(
+	"res://assets/ui/achievements/factory_mastery.webp"
+)
+const ICON_COMMANDER_RANK := preload(
+	"res://assets/ui/achievements/commander_rank.webp"
+)
+const ICON_ACHIEVEMENT_LOCK := preload(
+	"res://assets/ui/achievements/classified_lock.webp"
+)
 const PANEL := Color("#12171c")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -502,17 +520,28 @@ func _build_achievements() -> void:
 		content.add_child(_lock_panel(_view.get("achievement_lock", {}) as Dictionary))
 		return
 	var panel := _panel("")
+	panel.name = "AchievementMedalWall"
 	var claimable := int(_view.get("achievement_claimable", 0))
 	var overview := HBoxContainer.new()
 	overview.add_theme_constant_override("separation", 12)
-	var title := _label("永久成就 · 不随赛季重置", 17, GOLD)
+	var collection_icon := TextureRect.new()
+	collection_icon.texture = ICON_ACHIEVEMENT_CAMPAIGN
+	collection_icon.custom_minimum_size = Vector2(44, 44)
+	collection_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	collection_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	overview.add_child(collection_icon)
+	var title := _label("战绩徽章", 17, TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.tooltip_text = "永久成就 · 不随赛季重置"
 	overview.add_child(title)
 	if claimable > 0:
-		var batch := _button("一键领取 %d 项成就" % claimable, true)
+		var batch := _button("领取 ×%d" % claimable, true)
 		batch.name = "AchievementBatchClaim"
-		batch.custom_minimum_size.x = 210
+		batch.icon = ICON_ACHIEVEMENT_FORTRESS
+		batch.expand_icon = true
+		batch.custom_minimum_size.x = 154
+		batch.tooltip_text = "一键领取 %d 项成就" % claimable
 		batch.pressed.connect(action_requested.emit.bind("claim_all_achievements", {}))
 		overview.add_child(batch)
 	else:
@@ -523,16 +552,19 @@ func _build_achievements() -> void:
 	grid.add_theme_constant_override("h_separation", 7)
 	grid.add_theme_constant_override("v_separation", 5)
 	panel.add_child(grid)
+	var compact := bool(_view.get("compact", false))
 	for value in _view.get("achievements", []):
 		var achievement := value as Dictionary
 		var claimed := bool(achievement.get("claimed", false))
 		var complete := bool(achievement.get("complete", false))
 		var status_copy := "已领取" if claimed else ("可领取" if complete else "进行中")
+		var progress := int(achievement.get("progress", 0))
+		var target := int(achievement.get("target", 1))
 		var card := _button(
-			"%s  ·  %d/%d\n%s" % [
+			"%s\n%d/%d · %s" % [
 				String(achievement.get("title", "")),
-				int(achievement.get("progress", 0)),
-				int(achievement.get("target", 1)),
+				progress,
+				target,
 				status_copy,
 			],
 			false
@@ -540,13 +572,48 @@ func _build_achievements() -> void:
 		card.name = "Achievement_%s" % String(
 			achievement.get("achievement_id", "")
 		).replace(".", "_")
-		card.custom_minimum_size = Vector2(360, 52)
+		card.icon = _achievement_icon(String(achievement.get("achievement_id", "")))
+		card.expand_icon = true
+		card.add_theme_constant_override("icon_max_width", 58)
+		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		card.custom_minimum_size = Vector2(255 if compact else 260, 82)
+		card.tooltip_text = "%s · %d/%d · %s" % [
+			String(achievement.get("title", "")),
+			progress,
+			target,
+			status_copy,
+		]
+		card.add_theme_font_size_override("font_size", 12)
+		if claimed:
+			card.modulate = Color(0.72, 0.82, 0.82, 0.78)
+		elif complete:
+			card.add_theme_stylebox_override(
+				"normal",
+				UiArtDirectionScript.button_style(true)
+			)
+			card.add_theme_color_override("font_color", Color("#14110c"))
 		card.disabled = claimed or not complete
 		card.pressed.connect(action_requested.emit.bind("claim_achievement", {
 			"achievement_id": String(achievement.get("achievement_id", "")),
 		}))
 		grid.add_child(card)
 	content.add_child(panel)
+
+
+func _achievement_icon(achievement_id: String) -> Texture2D:
+	if achievement_id.begins_with("meta.factory"):
+		return ICON_ACHIEVEMENT_FACTORY
+	if achievement_id.begins_with("meta.legion"):
+		return ICON_ACHIEVEMENT_BATTLE
+	if achievement_id.begins_with("meta.repair"):
+		return ICON_COMMANDER_RANK
+	if achievement_id.begins_with("meta.collection"):
+		return ICON_ACHIEVEMENT_CAMPAIGN
+	if achievement_id == "meta.campaign.first":
+		return ICON_ACHIEVEMENT_FORTRESS
+	if achievement_id.begins_with("meta.campaign"):
+		return ICON_ACHIEVEMENT_CAMPAIGN
+	return ICON_ACHIEVEMENT_LOCK
 
 
 func _commander_panel(view: Dictionary) -> Control:
@@ -556,9 +623,15 @@ func _commander_panel(view: Dictionary) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	panel.add_child(row)
+	var rank_icon := TextureRect.new()
+	rank_icon.texture = ICON_COMMANDER_RANK
+	rank_icon.custom_minimum_size = Vector2(48, 48)
+	rank_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rank_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(rank_icon)
 	var summary := VBoxContainer.new()
-	summary.custom_minimum_size.x = 138
-	summary.add_child(_label("指挥官 %d级" % int(view.get("level", 1)), 15, GOLD))
+	summary.custom_minimum_size.x = 116
+	summary.add_child(_label("LV.%d 指挥官" % int(view.get("level", 1)), 15, CYAN))
 	summary.add_child(_label(
 		"经验 %d / %d" % [int(view.get("xp", 0)), int(view.get("next_xp", 0))],
 		11,
@@ -576,7 +649,10 @@ func _commander_panel(view: Dictionary) -> Control:
 		claim.pressed.connect(action_requested.emit.bind("claim_all_commander", {}))
 		row.add_child(claim)
 	else:
-		row.add_child(_label("奖励已领取", 13, GREEN))
+		var settled := _label("奖励已领取", 13, GREEN)
+		settled.name = "CommanderRewardsSettledSemantics"
+		settled.visible = false
+		row.add_child(settled)
 	return panel
 
 
