@@ -195,6 +195,18 @@ WebP，只显示两位等级、状态符号和数量，完整奖励进入 toolti
 只保留一条短资格和一枚金色 CTA，安全返回是次级动作。完整复盘、经验与解锁事实仍保留在
 语义节点和 tooltip 中，不再作为持续占屏的报告段落。
 
+### 角色信号档案与轻量美术工作流
+
+角色图鉴以游戏实际 `ToiletUnitView` 作为唯一造型源，通过离屏 3D 视口统一相机、暖色主光和
+青色轮廓光，批量输出 192×192 有损 WebP。运行时只加载这些定格肖像，不携带大图集，也不
+引入与战场角色不同风格的外部立绘；24 张素材合计约 248KB。需要更新角色外观时运行
+`res://tools/render_codex_portraits.gd`，随后在标准与紧凑截图中复核朝向、裁切、亮度和锁定态。
+
+图鉴在 844 宽使用四列、568 宽使用三列肖像墙。卡片常驻内容仅为肖像、名称、评级星标与
+“入列 / 图纸 / 未知”短状态；职责、阵营、描述、碎片和完整解锁说明进入 tooltip。未发现角色
+同时降低肖像明度、使用锁图标和“未知”文字，不依赖颜色。这样既让收集对象成为首要视觉奖励，
+也避免长段说明挤占移动横屏。
+
 ## 组件状态
 
 | 组件 | Normal | Selected / Focus | Disabled | Reward / Warning |
@@ -249,7 +261,9 @@ WebP，只显示两位等级、状态符号和数量，完整奖励进入 toolti
   `ui-camp-568x320.png` 与 `ui-construction-placement-844x390.png` 是首屏和建造模式证据。
 - `run_legion_screen_tests.gd` 验证标准与 568 紧凑阵型的六个阵位、四个页签、信号和培养路径；
   `ui-legion-formation-844x390.png`、`ui-legion-formation-568x320.png` 与
-  `ui-legion-844x390.png` 分别是独立双尺寸场景和主流程集成证据。
+  `ui-legion-844x390.png` 分别是独立双尺寸场景和主流程集成证据；同一测试还验证图鉴的
+  肖像资源契约、标准四列/紧凑三列肖像墙、锁定态和渐进披露，
+  `ui-codex-portraits-844x390.png` 与 `ui-codex-portraits-568x320.png` 是双尺寸证据。
 - `run_goals_screen_tests.gd` 验证三节点战役路线、唯一主挑战、次级补给横条及其语义动作；
   `ui-goals-action-844x390.png`、`ui-goals-action-568x320.png` 与
   `ui-goals-844x390.png` 是独立双尺寸和主流程集成证据；同一测试还验证成就奖章墙、

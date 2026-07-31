@@ -19,6 +19,8 @@ const COMMANDER_BADGE := preload("res://assets/generated/vector/characters/comma
 const RECRUIT_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const RECRUIT_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const RECRUIT_SELECT_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const CODEX_LOCK_ICON := preload("res://assets/ui/icons/kenney_game_icons/locked.png")
+const CODEX_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
 const PANEL := Color("#12171c")
@@ -754,52 +756,103 @@ func _icon_copy(icon: Texture2D, copy: String, color: Color) -> Control:
 
 
 func _codex_panel() -> Control:
-	var panel := _panel("马桶角色图鉴")
+	var entries := _view.get("codex", []) as Array
+	var known_count := 0
+	for entry_value in entries:
+		if String((entry_value as Dictionary).get("status", "undiscovered")) != "undiscovered":
+			known_count += 1
+	var panel := _panel("角色信号档案  ·  %d/%d" % [known_count, entries.size()])
 	panel.name = "ToiletRoleCodex"
-	panel.add_child(_label(
-		"标准、精锐、传奇为当前三档角色评级；图纸来自信号招募，永久角色只在研究所完成研发。",
-		13,
-		CYAN
-	))
 	var grid := GridContainer.new()
 	grid.name = "ToiletRoleCodexGrid"
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
-	for entry_value in _view.get("codex", []):
-		var entry := entry_value as Dictionary
-		var rating := String(entry.get("rating", "B"))
-		var status := String(entry.get("status", "undiscovered"))
-		var rating_color := GOLD if rating == "S" else (CYAN if rating == "A" else GREEN)
-		var card := _panel("")
-		card.name = "Codex_%s" % String(entry.get("archetype_id", "unknown"))
-		card.custom_minimum_size = Vector2(330, 88)
-		card.add_child(_label(
-			"%s · %s · %s" % [
-				_rating_label(rating),
-				String(entry.get("display_name", "未知马桶人")),
-				String(entry.get("role_copy", "玩法职责待确认")),
-			],
-			16,
-			rating_color
-		))
-		card.add_child(_label(String(entry.get("description", "")), 11, TEXT))
-		card.add_child(_label(
-			"%s · 专属碎片 %d" % [
-				String(entry.get("faction", "独立战术")),
-				int(entry.get("fragments", 0)),
-			],
-			11,
-			GOLD
-		))
-		card.add_child(_label(
-			String(entry.get("status_copy", "尚未获得设计图纸")),
-			12,
-			GREEN if status == "researched" else (CYAN if status == "blueprint_owned" else MUTED)
-		))
-		grid.add_child(card)
+	grid.columns = 3 if bool(_view.get("compact", false)) else 4
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	for entry_value in entries:
+		grid.add_child(_codex_portrait_card(entry_value as Dictionary))
 	panel.add_child(grid)
 	return panel
+
+
+func _codex_portrait_card(entry: Dictionary) -> Control:
+	var archetype_id := String(entry.get("archetype_id", "unknown"))
+	var rating := String(entry.get("rating", "B"))
+	var status := String(entry.get("status", "undiscovered"))
+	var rating_color := GOLD if rating == "S" else (CYAN if rating == "A" else GREEN)
+	var status_color := (
+		GREEN if status == "researched"
+		else (CYAN if status == "blueprint_owned" else MUTED)
+	)
+	var compact := bool(_view.get("compact", false))
+	var card := PanelContainer.new()
+	card.name = "Codex_%s" % archetype_id
+	card.custom_minimum_size.y = 104 if compact else 122
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _box(
+		Color("#10171c"),
+		rating_color if status != "undiscovered" else Color("#303940")
+	))
+	card.tooltip_text = "%s · %s · %s\n%s\n%s · 专属碎片 %d\n%s" % [
+		_rating_label(rating),
+		String(entry.get("display_name", "未知马桶人")),
+		String(entry.get("role_copy", "玩法职责待确认")),
+		String(entry.get("description", "")),
+		String(entry.get("faction", "独立战术")),
+		int(entry.get("fragments", 0)),
+		String(entry.get("status_copy", "尚未获得设计图纸")),
+	]
+	var stack := VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 2)
+	card.add_child(stack)
+	var portrait_frame := Control.new()
+	portrait_frame.custom_minimum_size.y = 40 if compact else 76
+	portrait_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.add_child(portrait_frame)
+	var portrait := TextureRect.new()
+	portrait.name = "CodexPortrait_%s" % archetype_id
+	portrait.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	portrait.texture = load("res://assets/ui/codex/%s.webp" % archetype_id) as Texture2D
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.modulate = Color(0.24, 0.28, 0.30, 0.68) if status == "undiscovered" else Color.WHITE
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_frame.add_child(portrait)
+	if status == "undiscovered":
+		var lock_icon := TextureRect.new()
+		lock_icon.custom_minimum_size = Vector2(28, 28)
+		lock_icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		lock_icon.position -= Vector2(14, 14)
+		lock_icon.texture = CODEX_LOCK_ICON
+		lock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		lock_icon.modulate = Color(0.85, 0.87, 0.86, 0.9)
+		lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_frame.add_child(lock_icon)
+	var name_label := _label(String(entry.get("display_name", "未知型号")), 12, TEXT)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.max_lines_visible = 1
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	stack.add_child(name_label)
+	var footer := HBoxContainer.new()
+	footer.alignment = BoxContainer.ALIGNMENT_CENTER
+	footer.add_theme_constant_override("separation", 4)
+	stack.add_child(footer)
+	var star := TextureRect.new()
+	star.custom_minimum_size = Vector2(14, 14)
+	star.texture = CODEX_STAR_ICON
+	star.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	star.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	star.modulate = rating_color
+	footer.add_child(star)
+	footer.add_child(_label(
+		"%s  ·  %s" % [
+			_rating_label(rating),
+			"入列" if status == "researched" else ("图纸" if status == "blueprint_owned" else "未知"),
+		],
+		10,
+		status_color
+	))
+	return card
 
 
 func _roster_panel() -> Control:

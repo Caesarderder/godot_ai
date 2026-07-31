@@ -191,6 +191,29 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-legion-844x390.png"):
 		quit(1)
 		return
+	main.set("legion_tab", "codex")
+	main.call("_show_legion")
+	for _frame in 8:
+		await process_frame
+	if not _save_viewport("res://artifacts/ui-codex-portraits-844x390.png"):
+		quit(1)
+		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.content_scale_size = Vector2i(568, 320)
+	root.size = Vector2i(568, 320)
+	main.set("active_layout_profile", "compact_landscape")
+	main.call("_show_legion")
+	for _frame in 8:
+		await process_frame
+	if not _save_viewport("res://artifacts/ui-codex-portraits-568x320.png"):
+		quit(1)
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.content_scale_size = Vector2i(844, 390)
+	root.size = Vector2i(844, 390)
+	main.set("active_layout_profile", "standard_landscape")
+	for _frame in 6:
+		await process_frame
 	var goal_state := _install_fresh_state(main, "goals")
 	if goal_state == null:
 		quit(1)

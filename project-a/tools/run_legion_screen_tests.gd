@@ -339,9 +339,41 @@ func _run() -> void:
 	})
 	await process_frame
 	_check(legion.find_child("ToiletRoleCodex", true, false) != null, "legion exposes a dedicated toilet-role codex")
-	_check(_tree_has_text(legion, "标准 · 冲锋马桶人"), "codex displays the standard rating")
-	_check(_tree_has_text(legion, "传奇 · 寄生母体马桶人"), "codex displays the legendary rating")
-	_check(_tree_has_text(legion, "已获得图纸 · 等待研究所研发"), "codex distinguishes blueprint-owned from researched")
+	var codex_grid := legion.find_child("ToiletRoleCodexGrid", true, false) as GridContainer
+	var assault_codex := legion.find_child("Codex_assault", true, false) as Control
+	var parasite_codex := legion.find_child("Codex_parasite", true, false) as Control
+	_check(
+		codex_grid != null and codex_grid.columns == 4 and codex_grid.get_child_count() == 3,
+		"standard codex uses a four-column portrait wall without dropping entries"
+	)
+	_check(
+		assault_codex != null
+			and assault_codex.find_child("CodexPortrait_assault", true, false) != null
+			and _tree_has_text(assault_codex, "冲锋马桶人")
+			and _tree_has_text(assault_codex, "标准  ·  图纸"),
+		"codex presents the standard blueprint as a portrait card"
+	)
+	_check(
+		parasite_codex != null
+			and parasite_codex.find_child("CodexPortrait_parasite", true, false) != null
+			and _tree_has_text(parasite_codex, "寄生母体马桶人")
+			and _tree_has_text(parasite_codex, "传奇  ·  未知"),
+		"codex presents the locked legendary as a dimmed portrait card"
+	)
+	_check(
+		assault_codex.tooltip_text.contains("已获得图纸 · 等待研究所研发"),
+		"codex preserves complete blueprint status in progressive disclosure"
+	)
+	var compact_codex_view := (legion.get("_view") as Dictionary).duplicate(true)
+	compact_codex_view["compact"] = true
+	legion.size = Vector2(544, 168)
+	legion.configure(compact_codex_view)
+	await process_frame
+	codex_grid = legion.find_child("ToiletRoleCodexGrid", true, false) as GridContainer
+	_check(
+		codex_grid != null and codex_grid.columns == 3 and codex_grid.get_child_count() == 3,
+		"compact codex switches to three columns and keeps every portrait reachable"
+	)
 	# The App Shell leaves roughly 238 px for LegionScreen at the 844x390 target:
 	# 48 px task tabs plus about 190 px of page content above the persistent nav.
 	legion.size = Vector2(820, 238)
