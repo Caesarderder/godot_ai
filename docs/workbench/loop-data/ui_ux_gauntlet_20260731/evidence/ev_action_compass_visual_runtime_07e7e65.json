@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_action_compass_visual_runtime_07e7e65",
   "revision": "07e7e65",
-  "valid_through_revision": "ecb65b2",
+  "valid_through_revision": "7626daf",
   "gate_id": "gate_action_compass_visual",
   "claim": "The action screen reads as a mobile campaign compass rather than a generic task dashboard.",
   "scenario_id": "scenario_mobile_objective_action_compass",

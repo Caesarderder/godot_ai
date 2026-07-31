@@ -1,0 +1,78 @@
+{
+  "evidence_id": "ev_growth_duel_visual_runtime_7626daf",
+  "revision": "7626daf",
+  "valid_through_revision": "7626daf",
+  "gate_id": "gate_growth_duel_visual",
+  "claim": "The first growth choice reads as a dramatic duel between two character combat identities rather than a stat-card form.",
+  "scenario_id": "scenario_mobile_first_growth_duel",
+  "execution_id": "growth_duel_visual_runtime_7626daf",
+  "evidence_type": "capture",
+  "artifact_or_command": "cd project-a && godot --path . -s tools/capture_first_growth_duel_scenario.gd",
+  "case_results": [
+    {
+      "case_id": "route_duel",
+      "result": "pass",
+      "assertions": [
+        "matched raster hero portraits dominate the two routes"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_duel-844x390.png",
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_duel-568x320.png"
+      ]
+    },
+    {
+      "case_id": "resource_blocked",
+      "result": "pass",
+      "assertions": [
+        "dimmed portraits plus lock icons encode blocked state"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-first-growth-duel/resource_blocked-844x390.png",
+        "project-a/artifacts/scenario-mobile-first-growth-duel/resource_blocked-568x320.png"
+      ]
+    },
+    {
+      "case_id": "route_committed",
+      "result": "pass",
+      "assertions": [
+        "chosen assault hero dominates the single boss handoff"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_committed-844x390.png",
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_committed-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "ready captures",
+    "blocked captures",
+    "committed captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "deterministic growth duel capture audit",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "All three states render character-led raster compositions with icon-coded availability and no visible scroll.",
+  "inference": "Deterministic captures support independent visual review.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Runtime capture is not an independent aesthetic judgment."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

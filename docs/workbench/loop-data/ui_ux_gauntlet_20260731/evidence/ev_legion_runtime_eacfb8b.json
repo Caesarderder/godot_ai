@@ -3,7 +3,7 @@
   "evidence_id": "ev_legion_runtime_eacfb8b",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "eacfb8b",
-  "valid_through_revision": "ecb65b2",
+  "valid_through_revision": "7626daf",
   "gate_id": "gate_legion_runtime",
   "claim": "Formation selection and deployment preserve shipping tab and action signals across empty, selected and full squad states.",
   "scenario_id": "scenario_legion_formation_identity",

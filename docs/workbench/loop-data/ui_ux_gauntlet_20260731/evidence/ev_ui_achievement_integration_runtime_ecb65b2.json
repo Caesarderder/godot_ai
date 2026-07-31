@@ -43,7 +43,7 @@
   "inference": "The achievement cabinet integrates without breaking shipping UI navigation or action contracts.",
   "result": "pass",
   "confidence": 0.97,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Title, factory and war-zone screenshots were not regenerated in this focused run."
   ],

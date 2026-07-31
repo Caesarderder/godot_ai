@@ -1,0 +1,79 @@
+{
+  "evidence_id": "ev_growth_duel_visual_critic_7626daf",
+  "revision": "7626daf",
+  "valid_through_revision": "7626daf",
+  "gate_id": "gate_growth_duel_visual",
+  "claim": "The first growth choice reads as a dramatic duel between two character combat identities rather than a stat-card form.",
+  "scenario_id": "scenario_mobile_first_growth_duel",
+  "execution_id": "growth_duel_blind_critic_7626daf",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "independent randomized blind baseline/candidate six-image comparison plus matched-art re-review",
+  "case_results": [
+    {
+      "case_id": "route_duel",
+      "result": "pass",
+      "assertions": [
+        "final 9.0; matched high-detail assault and armored identities"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_duel-844x390.png",
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_duel-568x320.png"
+      ]
+    },
+    {
+      "case_id": "resource_blocked",
+      "result": "pass",
+      "assertions": [
+        "final 8.8; lock, dimming and copy do not rely on color"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-first-growth-duel/resource_blocked-844x390.png",
+        "project-a/artifacts/scenario-mobile-first-growth-duel/resource_blocked-568x320.png"
+      ]
+    },
+    {
+      "case_id": "route_committed",
+      "result": "pass",
+      "assertions": [
+        "final 8.7; chosen hero and sole boss action dominate"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_committed-844x390.png",
+        "project-a/artifacts/scenario-mobile-first-growth-duel/route_committed-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "ready captures",
+    "blocked captures",
+    "committed captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent growth duel blind visual critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Baseline scored 5.1 overall/4.8 minimum. First candidate scored 8.5/8.3 but exposed unequal portrait rendering; matched armored art re-review scored 8.8 overall with 8.7 minimum.",
+  "inference": "Candidate passes overall>=8 and every state>=7 after addressing the explicit style-unity concern.",
+  "result": "pass",
+  "confidence": 0.97,
+  "freshness": "current",
+  "limitations": [
+    "Static review cannot prove live feedback or long-term choice understanding."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

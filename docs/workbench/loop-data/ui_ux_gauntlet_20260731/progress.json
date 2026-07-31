@@ -1,10 +1,10 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
-  "state": "unit_looping",
-  "revision": "ecb65b2",
-  "iteration": 8,
-  "active_work_unit": "mobile first growth duel",
+  "state": "integrating",
+  "revision": "7626daf",
+  "iteration": 9,
+  "active_work_unit": null,
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -28,6 +28,9 @@
     "gate_achievement_cabinet_runtime",
     "gate_achievement_cabinet_responsive",
     "gate_achievement_cabinet_visual",
+    "gate_growth_duel_runtime",
+    "gate_growth_duel_responsive",
+    "gate_growth_duel_visual",
     "gate_ui_runtime",
     "gate_ui_responsive"
   ],
@@ -50,9 +53,9 @@
     "gate_factory_responsive": "pass",
     "gate_factory_runtime": "pass",
     "gate_factory_visual": "pass",
-    "gate_growth_duel_responsive": "pending",
-    "gate_growth_duel_runtime": "pending",
-    "gate_growth_duel_visual": "pending",
+    "gate_growth_duel_responsive": "pass",
+    "gate_growth_duel_runtime": "pass",
+    "gate_growth_duel_visual": "pass",
     "gate_legion_responsive": "pass",
     "gate_legion_runtime": "pass",
     "gate_legion_visual": "pass",
@@ -123,7 +126,13 @@
     "ev_achievement_cabinet_visual_critic_ecb65b2",
     "ev_achievement_cabinet_visual_runtime_ecb65b2",
     "ev_ui_achievement_integration_runtime_ecb65b2",
-    "ev_ui_achievement_integration_responsive_ecb65b2"
+    "ev_ui_achievement_integration_responsive_ecb65b2",
+    "ev_growth_duel_runtime_7626daf",
+    "ev_growth_duel_responsive_7626daf",
+    "ev_growth_duel_visual_runtime_7626daf",
+    "ev_growth_duel_visual_critic_7626daf",
+    "ev_ui_growth_integration_runtime_7626daf",
+    "ev_ui_growth_integration_responsive_7626daf"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -144,8 +153,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "mobile first growth duel",
-    "updated_at": "2026-07-31T13:54:20Z"
+    "next_action": "Accepted first growth duel enters the shared mobile UI integration checkpoint.",
+    "updated_at": "2026-07-31T14:08:49Z"
   },
   "decisions": [
     {
@@ -1178,6 +1187,127 @@
       "at": "2026-07-31T13:54:20Z",
       "decision": "Add the mobile first growth duel work unit before implementation.",
       "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T14:07:03Z",
+      "decision": "Native-resolution preview fix plus character-led first growth duel and matched armored hero art. Affected gates=['gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_achievement_cabinet_responsive_ecb65b2",
+        "ev_achievement_cabinet_runtime_ecb65b2",
+        "ev_achievement_cabinet_visual_critic_ecb65b2",
+        "ev_achievement_cabinet_visual_runtime_ecb65b2",
+        "ev_action_compass_responsive_07e7e65",
+        "ev_action_compass_runtime_07e7e65",
+        "ev_action_compass_visual_critic_07e7e65",
+        "ev_action_compass_visual_runtime_07e7e65",
+        "ev_blueprint_forge_responsive_4336f06",
+        "ev_blueprint_forge_runtime_4336f06",
+        "ev_blueprint_forge_visual_critic_4336f06",
+        "ev_blueprint_forge_visual_runtime_4336f06",
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_codex_responsive_e1da84a",
+        "ev_codex_runtime_e1da84a",
+        "ev_codex_visual_critic_e1da84a",
+        "ev_codex_visual_runtime_e1da84a",
+        "ev_faction_choice_model_critic_01bc769",
+        "ev_faction_choice_responsive_01bc769",
+        "ev_faction_choice_runtime_01bc769",
+        "ev_faction_choice_visual_critic_01bc769",
+        "ev_faction_choice_visual_diff_01bc769",
+        "ev_faction_choice_visual_runtime_01bc769",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_factory_responsive_2e23dd4",
+        "ev_factory_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4",
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_world_critic_fail_09516dd",
+        "ev_legion_baseline_responsive_2e23dd4",
+        "ev_legion_baseline_runtime_2e23dd4",
+        "ev_legion_baseline_visual_2e23dd4",
+        "ev_legion_responsive_eacfb8b",
+        "ev_legion_runtime_eacfb8b",
+        "ev_legion_visual_critic_eacfb8b",
+        "ev_legion_visual_runtime_eacfb8b",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_achievement_integration_responsive_ecb65b2",
+        "ev_ui_achievement_integration_runtime_ecb65b2",
+        "ev_ui_action_integration_responsive_07e7e65",
+        "ev_ui_action_integration_runtime_07e7e65",
+        "ev_ui_blueprint_integration_responsive_4336f06",
+        "ev_ui_blueprint_integration_runtime_4336f06",
+        "ev_ui_codex_integration_responsive_e1da84a",
+        "ev_ui_codex_integration_runtime_e1da84a",
+        "ev_ui_faction_integration_responsive_01bc769",
+        "ev_ui_faction_integration_runtime_01bc769",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb",
+        "ev_ui_integration_responsive_eacfb8b",
+        "ev_ui_integration_runtime_eacfb8b"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:08:15Z",
+      "decision": "Exact growth and boss identities pass focused and shipping flow tests.",
+      "evidence_ids": [
+        "ev_growth_duel_runtime_7626daf"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:08:15Z",
+      "decision": "Both routes and committed handoff fit at both mobile landscape sizes.",
+      "evidence_ids": [
+        "ev_growth_duel_responsive_7626daf"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:08:15Z",
+      "decision": "Deterministic captures and independent matched-art re-review score 8.8 overall.",
+      "evidence_ids": [
+        "ev_growth_duel_visual_runtime_7626daf",
+        "ev_growth_duel_visual_critic_7626daf"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:08:15Z",
+      "decision": "First growth duel passed runtime, responsive and independent visual gates with matched character art.",
+      "evidence_ids": [
+        "ev_growth_duel_runtime_7626daf",
+        "ev_growth_duel_responsive_7626daf",
+        "ev_growth_duel_visual_runtime_7626daf",
+        "ev_growth_duel_visual_critic_7626daf"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:08:49Z",
+      "decision": "Shared legion, growth, smoke and focus suites pass after display and duel changes.",
+      "evidence_ids": [
+        "ev_ui_growth_integration_runtime_7626daf"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:08:49Z",
+      "decision": "Accepted growth states and native-resolution display config preserve dual-size mobile constraints.",
+      "evidence_ids": [
+        "ev_ui_growth_integration_responsive_7626daf"
+      ]
+    },
+    {
+      "at": "2026-07-31T14:08:49Z",
+      "decision": "Accepted first growth duel enters the shared mobile UI integration checkpoint.",
+      "evidence_ids": [
+        "ev_ui_growth_integration_runtime_7626daf",
+        "ev_ui_growth_integration_responsive_7626daf"
+      ]
     }
   ]
 }

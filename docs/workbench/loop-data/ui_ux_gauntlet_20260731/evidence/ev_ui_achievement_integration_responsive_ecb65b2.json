@@ -46,7 +46,7 @@
   "inference": "The accepted cabinet maintains the shared mobile responsive contract.",
   "result": "pass",
   "confidence": 0.97,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Dynamic browser safe area not measured."
   ],
