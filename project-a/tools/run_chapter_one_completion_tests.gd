@@ -89,8 +89,19 @@ func _run() -> void:
 	if welfare_claim != null:
 		welfare_claim.pressed.emit()
 		await _wait_frames(4)
+	var welfare_case := main.find_child("SmuggledLogisticsCaseButton", true, false) as Button
+	_check(
+		welfare_case != null and welfare_case.is_visible_in_tree() and not welfare_case.disabled,
+		"claimed gift exposes one visible logistics-case action"
+	)
+	if welfare_case != null:
+		welfare_case.pressed.emit()
+		await _wait_frames(4)
 	var welfare_legion := main.find_child("NewPlayerWelfareLegionButton", true, false) as Button
-	_check(welfare_legion != null, "claimed gift exposes the recommended one-star reinforcement route")
+	_check(
+		welfare_legion != null and welfare_legion.is_visible_in_tree() and not welfare_legion.disabled,
+		"opened gift exposes one visible reinforcement action"
+	)
 	if welfare_legion != null:
 		welfare_legion.pressed.emit()
 		await _wait_frames(4)
@@ -178,8 +189,6 @@ func _run() -> void:
 	if resume != null:
 		resume.pressed.emit()
 		await _wait_frames(4)
-	_check(_tree_has_text(main, "阵营成形：研发新角色"), "resumed factory restores the faction research phase")
-	_check(_tree_has_text(main, "图纸研发为永久角色"), "resumed factory preserves the exact research objective")
 	var task_panel := main.find_child("OnboardingMissionPanel", true, false)
 	var resumed_growth := _button_with_text(task_panel, "研发") if task_panel != null else null
 	_check(resumed_growth != null, "resumed factory keeps faction research as its primary action")

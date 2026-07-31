@@ -405,8 +405,15 @@ func _action_reward_rail(
 	label.custom_minimum_size.x = 42
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(label)
+	var welfare_active := bool(welfare.get("unlocked", false)) and (
+		bool(welfare.get("claimable", false))
+		or bool(welfare.get("case_openable", false))
+		or int(welfare.get("star_core_count", 0)) > 0
+	)
 	var has_claimable := false
 	for gift_value in starter_view.get("gifts", []):
+		if welfare_active:
+			break
 		var gift := gift_value as Dictionary
 		var gift_id := String(gift.get("gift_id", ""))
 		var claimable := bool(gift.get("claimable", false))
@@ -448,11 +455,11 @@ func _action_reward_rail(
 		lock_copy.tooltip_text = "行动任务将在指挥官 2 级开放"
 		mission_lock.add_child(lock_copy)
 		row.add_child(mission_lock)
-	# Preserve the durable welfare action contract for navigation, tests and
-	# accessibility semantics without placing a second button beside the current
-	# action. The action becomes visible from its contextual reward detail.
+	# Keep exactly one visible welfare step in the reward rail. This turns the
+	# chapter handoff into a player-operable chain instead of hidden semantics.
 	var welfare_semantics := _welfare_compact_button(welfare)
-	welfare_semantics.visible = false
+	welfare_semantics.visible = welfare_active and not welfare_semantics.disabled
+	welfare_semantics.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(welfare_semantics)
 	return panel
 
@@ -472,17 +479,21 @@ func _welfare_compact_button(view: Dictionary) -> Button:
 		button = _button("开启后勤箱 · %d材料" % porcelain, false)
 		button.name = "SmuggledLogisticsCaseButton"
 		button.pressed.connect(action_requested.emit.bind("open_smuggled_logistics_case", {}))
+	elif int(view.get("star_core_count", 0)) > 0:
+		var recommended_name := String(view.get("recommended_hero_name", "首章援军"))
+		button = _button("核心强化 · %s" % recommended_name, true)
+		button.name = "NewPlayerWelfareLegionButton"
+		button.pressed.connect(action_requested.emit.bind("open_legion_for_welfare", {
+			"hero_id": String(view.get("recommended_hero_id", "")),
+		}))
 	elif bool(view.get("case_opened", false)):
 		button = _button("走私后勤箱已开启", false)
 		button.name = "NewPlayerWelfareClaimButton"
 		button.disabled = true
 	else:
-		var recommended_name := String(view.get("recommended_hero_name", "首章援军"))
-		button = _button("核心强化 · %s" % recommended_name, false)
-		button.name = "NewPlayerWelfareLegionButton"
-		button.pressed.connect(action_requested.emit.bind("open_legion_for_welfare", {
-			"hero_id": String(view.get("recommended_hero_id", "")),
-		}))
+		button = _button("庆典补给已结清", false)
+		button.name = "NewPlayerWelfareClaimButton"
+		button.disabled = true
 	return button
 
 

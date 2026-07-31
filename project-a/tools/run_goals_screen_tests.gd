@@ -111,7 +111,10 @@ func _run() -> void:
 	}
 	goals.call("configure", welfare_view)
 	await process_frame
-	_check(_tree_has_text(goals, "走私后勤箱已开启"), "welfare card renders the opened-case state")
+	_check(
+		goals.find_child("NewPlayerWelfareLegionButton", true, false) != null,
+		"opened welfare case advances to the reinforcement action"
+	)
 
 	var tab_request := {"id": ""}
 	goals.connect("tab_selected", func(tab_id: String) -> void: tab_request["id"] = tab_id)
