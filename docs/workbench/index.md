@@ -64,6 +64,13 @@ python3 .codex/skills/caesar-awesome/scripts/workbench_hq.py serve
 
 协议属于本 skill 的本地格式。渲染器只解析并转义文本，不执行 Markdown 中的 HTML 或脚本。
 
+## Tab 工作台
+
+HTML 按用途分为“验证、看板、Loop、动态、概览”五个 Tab；只展示当前 Markdown 实际包含的
+分区。存在真人验证时默认打开“验证”，否则优先打开“看板”。页面会在 URL hash 和
+`localStorage` 中记住最近分区，支持鼠标、触屏以及左右方向键/Home/End 切换。切换 Tab
+只改变可见分区，不销毁尚未提交的验证表单与计时状态。
+
 ## Caesar Loop 联动
 
 一个 run 使用仓库内目录保存 `run-spec.json`、`progress.json`、可选

@@ -107,6 +107,9 @@ state: building
         self.assertIn("function validationView", template)
         self.assertIn("/api/validation-session", template)
         self.assertIn('p.kind==="validation"?validationView(p)', template)
+        self.assertIn('role="tablist"', template)
+        self.assertIn("function switchTab", template)
+        self.assertIn('localStorage.getItem("caesar-workbench-tab")', template)
 
 
 if __name__ == "__main__":
