@@ -40,6 +40,18 @@ func _verify_layout(viewport_size: Vector2, compact: bool, unit_count: int) -> v
 	var mode := hud.get_node("%BattleSkillModeButton") as Button
 	var retreat := hud.get_node("%BattleRetreatButton") as Button
 	var status := hud.get_node("%BattleTacticalStatus") as Label
+	var portraits := hud.find_children("BattleUnitPortrait_*", "TextureRect", true, false)
+	var cards := hud.find_children("BattleUnitCard_*", "PanelContainer", true, false)
+	var name_labels := hud.find_children("BattleUnitNameLabel", "Label", true, false)
+	var portraits_valid := portraits.size() == unit_count
+	for value in portraits:
+		var portrait := value as TextureRect
+		portraits_valid = portraits_valid and portrait.texture != null
+		portraits_valid = portraits_valid and portrait.custom_minimum_size.x >= (30.0 if unit_count > 4 else 38.0)
+		portraits_valid = portraits_valid and portrait.size_flags_vertical == Control.SIZE_SHRINK_CENTER
+	var cards_touch_sized := cards.size() == unit_count
+	for value in cards:
+		cards_touch_sized = cards_touch_sized and (value as Control).size.y >= 44.0
 	_check(
 		tactical_style != null and tactical_style.bg_color.a <= 0.01,
 		"%s top controls float over the battlefield instead of drawing a full-width slab" % viewport_size
@@ -57,6 +69,24 @@ func _verify_layout(viewport_size: Vector2, compact: bool, unit_count: int) -> v
 		bottom.get_global_rect().position.x >= 0.0
 			and bottom.get_global_rect().end.x <= viewport_size.x,
 		"%s bottom HUD remains inside the touch canvas" % viewport_size
+	)
+	_check(
+		portraits_valid,
+		"%s renders one repository-owned raster portrait for each of %d deployed units" % [viewport_size, unit_count]
+	)
+	_check(
+		cards_touch_sized,
+		"%s keeps every portrait card as a whole touch-sized skill target" % viewport_size
+	)
+	_check(
+		hud.find_children("Battle生命Bar", "ProgressBar", true, false).size() == unit_count
+			and hud.find_children("Battle技能充能Bar", "ProgressBar", true, false).size() == unit_count,
+		"%s replaces visible HP/EN table rows with paired health and charge bars" % viewport_size
+	)
+	_check(
+		(not compact and name_labels.all(func(value: Node) -> bool: return (value as Control).visible))
+			or (compact and name_labels.all(func(value: Node) -> bool: return not (value as Control).visible)),
+		"%s keeps names on the standard HUD but uses portrait-only identity on compact phones" % viewport_size
 	)
 	_check(
 		pause.custom_minimum_size.y >= 48.0
@@ -93,6 +123,7 @@ func _snapshots(count: int) -> Array[Dictionary]:
 		result.append({
 			"hero_id": "hero_%d" % index,
 			"display_name": "主力%d · 编队呼号" % (index + 1),
+			"archetype_id": "gman" if index % 2 == 0 else "ordinary.assault",
 			"skill_display_name": "主动技能",
 			"skill_timing": "能量达到 100% 后释放",
 			"max_hp": 200,

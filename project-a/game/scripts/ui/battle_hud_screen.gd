@@ -92,7 +92,7 @@ func configure(
 	burst_button.tooltip_text = "下达全队爆发指令；接下来 2 秒内就绪的技能会立即释放"
 	skill_grid.columns = maxi(1, snapshots.size())
 	var card_width := (
-		minf(120.0, (size.x - 20.0) / float(maxi(1, snapshots.size())))
+		minf(88.0, (size.x - 20.0) / float(maxi(1, snapshots.size())))
 		if compact_layout
 		else 180.0
 	)
@@ -622,30 +622,50 @@ func _build_unit_card(
 	root.custom_minimum_size = Vector2(card_width - 8.0, 68)
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_stylebox_override("panel", _unit_card_style(false))
+	root.tooltip_text = String(snapshot.get("display_name", unit_id))
+	var content := HBoxContainer.new()
+	content.add_theme_constant_override("separation", 5 if not dense else 3)
+	root.add_child(content)
+	var portrait := TextureRect.new()
+	portrait.name = "BattleUnitPortrait_%s" % unit_id
+	portrait.texture = _battle_portrait(snapshot)
+	var portrait_size := 30.0 if dense else (38.0 if compact else 46.0)
+	portrait.custom_minimum_size = Vector2(portrait_size, portrait_size)
+	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait.tooltip_text = String(snapshot.get("display_name", unit_id))
+	content.add_child(portrait)
 	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 2)
-	root.add_child(stack)
-	var header := HBoxContainer.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.alignment = BoxContainer.ALIGNMENT_CENTER
+	stack.add_theme_constant_override("separation", 3)
+	content.add_child(stack)
 	var name_label := _label(
 		_battle_unit_short_name(String(snapshot.get("display_name", unit_id))),
 		11 if compact else 12,
 		TEXT
 	)
+	name_label.name = "BattleUnitNameLabel"
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.visible = not compact and not dense
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	header.add_child(name_label)
+	stack.add_child(name_label)
 	var state_label := _label("充能中", 10, MUTED)
 	state_label.name = "BattleUnitStateLabel"
-	state_label.custom_minimum_size.x = 0 if compact else 52
 	state_label.visible = not compact
-	state_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	header.add_child(state_label)
-	stack.add_child(header)
-	var hp := _meter_row("HP", GREEN, int(snapshot.get("max_hp", 1)), int(snapshot.get("max_hp", 1)))
-	(hp["value"] as Label).visible = not dense
+	state_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	stack.add_child(state_label)
+	var hp := _portrait_meter(
+		"生命",
+		GREEN,
+		int(snapshot.get("max_hp", 1)),
+		int(snapshot.get("max_hp", 1)),
+		8.0
+	)
 	stack.add_child(hp["root"])
-	var energy := _meter_row("EN", CYAN, 0, 100)
-	(energy["value"] as Label).visible = not dense
+	var energy := _portrait_meter("技能充能", CYAN, 0, 100, 6.0)
 	stack.add_child(energy["root"])
 	var skill := Button.new()
 	skill.name = "BattleSkillButton_%s" % unit_id
@@ -673,7 +693,44 @@ func _build_unit_card(
 		"hp_label": hp["value"],
 		"energy_label": energy["value"],
 		"state_label": state_label,
+		"portrait": portrait,
 	}
+
+
+func _battle_portrait(snapshot: Dictionary) -> Texture2D:
+	var archetype_id := String(snapshot.get("archetype_id", "gman"))
+	var portrait_id := archetype_id.get_slice(".", archetype_id.get_slice_count(".") - 1)
+	var path := "res://assets/ui/codex/%s.webp" % portrait_id
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return ICON_TARGET
+
+
+func _portrait_meter(
+	label_text: String,
+	color: Color,
+	value: int,
+	maximum: int,
+	height: float
+) -> Dictionary:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size.y = height
+	row.tooltip_text = label_text
+	var bar := ProgressBar.new()
+	bar.name = "Battle%sBar" % label_text
+	bar.show_percentage = false
+	bar.max_value = maxi(1, maximum)
+	bar.value = value
+	bar.custom_minimum_size.y = height
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.tooltip_text = label_text
+	_set_progress_fill(bar, color)
+	row.add_child(bar)
+	var hidden_value := _label("", 1, color)
+	hidden_value.visible = false
+	row.add_child(hidden_value)
+	return {"root": row, "bar": bar, "value": hidden_value}
 
 
 func _unit_display_name(unit_id: String) -> String:
