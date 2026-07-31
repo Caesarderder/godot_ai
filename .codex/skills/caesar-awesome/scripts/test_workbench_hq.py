@@ -112,6 +112,9 @@ state: building
         self.assertIn('localStorage.getItem("caesar-workbench-tab")', template)
         self.assertIn("function chooseFeedback", template)
         self.assertIn("👍 满意", template)
+        self.assertIn('last?"提交反馈":"下一个 →"', template)
+        self.assertIn("await submitValidation(id)", template)
+        self.assertNotIn("✓ 反馈完成", template)
 
     def test_accepts_simple_feedback_session(self) -> None:
         spec = workbench.validate_human_validation_spec(validation_spec())
