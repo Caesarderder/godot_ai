@@ -1819,7 +1819,10 @@ func _legion_view() -> Dictionary:
 	var foundational_claimed := ResearchBreakthroughService.is_faction_claimed(state)
 	var foundational_unlocked := bool(unlock_state["recruitment"])
 	return {
-		"compact": _layout_profile() == "compact_landscape",
+		"compact": (
+			_layout_profile() == "compact_landscape"
+			or get_viewport().get_visible_rect().size.y <= 390.0
+		),
 		"tab": legion_tab,
 		"selected_hero_id": legion_selected_hero_id,
 		"formation_edit_slot": formation_edit_slot,

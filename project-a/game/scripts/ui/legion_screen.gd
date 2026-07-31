@@ -114,6 +114,9 @@ func _rebuild() -> void:
 	_configure_tool_tab(recruit_tab, RECRUIT_TAB_ICON, "招募", "信号招募")
 	_configure_tool_tab(codex_tab, CODEX_TAB_ICON, "图鉴", "角色图鉴")
 	_configure_tool_tab(roster_tab, ROSTER_TAB_ICON, "培养", "成员培养")
+	if compact:
+		for tool_tab in [formation_tab, recruit_tab, codex_tab, roster_tab]:
+			tool_tab.custom_minimum_size.y = 60
 	scroll.vertical_scroll_mode = (
 		ScrollContainer.SCROLL_MODE_DISABLED
 		if active_tab == "roster"
@@ -834,7 +837,7 @@ func _faction_core_choice_card(choice: Dictionary, compact: bool) -> Control:
 	card.add_child(identity)
 	var portrait := TextureRect.new()
 	portrait.name = "FactionChoicePortrait_%s" % archetype_id
-	portrait.custom_minimum_size = Vector2(92 if compact else 118, 88 if compact else 108)
+	portrait.custom_minimum_size = Vector2(118 if compact else 118, 112 if compact else 108)
 	portrait.texture = _faction_choice_portrait(archetype_id)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -857,7 +860,7 @@ func _faction_core_choice_card(choice: Dictionary, compact: bool) -> Control:
 	))
 	var choose := _button("选定  ·  %s" % String(choice.get("playstyle", "")), true)
 	choose.name = "ChooseFactionCore_%s" % archetype_id
-	choose.custom_minimum_size.y = 48
+	choose.custom_minimum_size.y = 60 if compact else 52
 	# Equal long-term choices use the same clean material in every state. The
 	# global textured primary frame has corner marks and a bright focus fill
 	# that read as resize handles plus a recommended/default answer here.
@@ -902,7 +905,7 @@ func _faction_core_handoff_panel(focus: Dictionary) -> Control:
 	var portrait := TextureRect.new()
 	portrait.name = "RecruitFactionFocusPortrait"
 	portrait.custom_minimum_size = Vector2(86 if compact else 116, 82 if compact else 108)
-	portrait.texture = _hero_portrait(String(focus.get("archetype_id", "")))
+	portrait.texture = _faction_choice_portrait(String(focus.get("archetype_id", "")))
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(portrait)
@@ -918,7 +921,11 @@ func _faction_core_handoff_panel(focus: Dictionary) -> Control:
 	if not focus_action.is_empty():
 		var next_button := _button(String(focus.get("action_label", "前往研究")), true)
 		next_button.name = "RecruitFocusActionButton"
-		next_button.custom_minimum_size.y = 48
+		next_button.custom_minimum_size.y = 60 if compact else 52
+		next_button.add_theme_stylebox_override("normal", _choice_button_style(GOLD))
+		next_button.add_theme_stylebox_override("hover", _choice_button_style(Color("#f2bd5d")))
+		next_button.add_theme_stylebox_override("pressed", _choice_button_style(Color("#c98c30")))
+		next_button.add_theme_stylebox_override("focus", _choice_button_style(GOLD, Color.WHITE))
 		next_button.pressed.connect(action_requested.emit.bind(focus_action, {
 			"hero_id": String(focus.get("hero_id", "")),
 			"archetype_id": String(focus.get("archetype_id", "")),

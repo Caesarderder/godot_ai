@@ -32,6 +32,15 @@ func _init() -> void:
 			source.set_pixel(x, y, pixel)
 	var target_size := maxi(32, int(args[2]))
 	source.resize(target_size, target_size, Image.INTERPOLATE_LANCZOS)
+	# Lanczos filtering can spread a barely-visible keyed RGB value across the
+	# transparent field. Hard-clear that low-alpha haze so dark mobile panels do
+	# not reveal a magenta rectangle around the character.
+	for y in source.get_height():
+		for x in source.get_width():
+			var filtered := source.get_pixel(x, y)
+			if filtered.a < 0.16:
+				filtered = Color(0.0, 0.0, 0.0, 0.0)
+				source.set_pixel(x, y, filtered)
 	var save_error := source.save_webp(args[1], true, 0.86)
 	if save_error != OK:
 		push_error("cannot save UI WebP: %s" % error_string(save_error))
