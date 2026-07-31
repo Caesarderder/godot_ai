@@ -5167,7 +5167,7 @@ func _sync_factory_world_labels() -> void:
 		# Keep the resistance commander's face readable instead of pinning its
 		# interaction marker directly across the landmark silhouette.
 		if facility_id == "command_center":
-			desired += Vector2(72.0, 38.0)
+			desired += Vector2(104.0, 48.0)
 		var resource_hud := ui_root.find_child("FactoryResourceHUD", true, false) as Control
 		var factory_hud := ui_root.find_child("FactoryHudFrame", true, false) as Control
 		if (

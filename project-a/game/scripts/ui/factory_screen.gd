@@ -12,6 +12,7 @@ const NotificationBadgeScript := preload(
 const FACTORY_FACILITY_ICON := preload("res://assets/ui/icons/factory/factory-facility-v1.png")
 const FACTORY_BUILD_ICON := preload("res://assets/ui/icons/factory/factory-build-v1.png")
 const MISSION_TARGET_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const INDUSTRIAL_MATERIAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
@@ -159,13 +160,19 @@ func _resource_meter(resource: Dictionary, compact: bool) -> Control:
 	block.custom_minimum_size.x = 66 if compact else 104
 	block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var line := HBoxContainer.new()
-	var name_label := _label(
-		String(resource.get("name", "")).left(2) if compact else String(resource.get("name", "")),
-		11 if compact else 12,
-		TEXT
-	)
-	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	line.add_child(name_label)
+	if compact:
+		var resource_icon := TextureRect.new()
+		resource_icon.name = "CompactIndustrialMaterialIcon"
+		resource_icon.texture = INDUSTRIAL_MATERIAL_ICON
+		resource_icon.custom_minimum_size = Vector2(22, 22)
+		resource_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		resource_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		resource_icon.tooltip_text = String(resource.get("name", "工业材料"))
+		line.add_child(resource_icon)
+	else:
+		var name_label := _label(String(resource.get("name", "")), 12, TEXT)
+		name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		line.add_child(name_label)
 	var value := _label(
 		"%d/%d" % [int(resource.get("current", 0)), int(resource.get("capacity", 0))],
 		10 if compact else 12,

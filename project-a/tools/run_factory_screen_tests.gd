@@ -23,6 +23,19 @@ func _run() -> void:
 		resource_hud != null and resource_hud.anchor_right < 1.0 and resource_hud.offset_right <= 330.0,
 		"factory keeps logistics in a shrink-wrapped edge island"
 	)
+	var compact_view := _base_view()
+	compact_view["compact"] = true
+	factory.configure(compact_view)
+	await process_frame
+	var compact_resource_icon := factory.find_child("CompactIndustrialMaterialIcon", true, false) as TextureRect
+	_check(
+		compact_resource_icon != null
+		and compact_resource_icon.texture != null
+		and compact_resource_icon.tooltip_text == "陶瓷",
+		"compact logistics replaces the cramped material name with a raster icon and on-demand label"
+	)
+	factory.configure(_base_view())
+	await process_frame
 	var mission_action := factory.find_child("FactoryMissionPrimaryAction", true, false) as Button
 	_check(mission_action != null and mission_action.icon != null, "factory mission action uses a raster target icon instead of a Unicode arrow")
 	_check(
