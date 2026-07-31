@@ -3,7 +3,7 @@
   "evidence_id": "ev_high_dpi_runtime_caa9def",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "caa9def",
-  "valid_through_revision": "e43fe45",
+  "valid_through_revision": "3b797a9",
   "gate_id": "gate_high_dpi_runtime",
   "claim": "The shipping Web canvas allocates physical backing pixels for browser devicePixelRatio instead of upscaling an 844x390 bitmap.",
   "scenario_id": "scenario_high_dpi_web_clarity",

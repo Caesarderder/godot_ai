@@ -1,0 +1,80 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_battle_portrait_critic_fail_bc0852d",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "bc0852d",
+  "valid_through_revision": "bc0852d",
+  "gate_id": "gate_battle_portrait_visual",
+  "claim": "Battle unit state reads as a cohesive portrait-led mobile combat HUD instead of a text-heavy HP/EN debug table.",
+  "scenario_id": "scenario_battle_portrait_hud",
+  "execution_id": "battle_portrait_critic_bc0852d",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "Independent first-candidate review of dual-size live battle captures",
+  "case_results": [
+    {
+      "case_id": "two_unit_identity",
+      "result": "pass",
+      "assertions": [
+        "world-first hierarchy 8.8",
+        "844 portrait identity is readable"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-battle-844x390.png"
+      ]
+    },
+    {
+      "case_id": "readiness_feedback",
+      "result": "fail",
+      "assertions": [
+        "unlabelled second compact bar cannot be distinguished from shield, stamina or decoration",
+        "health-charge semantics score 6.7"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-battle-568x320.png"
+      ]
+    },
+    {
+      "case_id": "six_unit_density",
+      "result": "fail",
+      "assertions": [
+        "compact cards lack a skill affordance and second identity channel",
+        "overall 7.7 and compact viewport 7.4"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-battle-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "layout assertions",
+    "behavior assertions",
+    "844 capture",
+    "568 capture",
+    "six-unit geometry",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "visual evidence review",
+    "platform": "independent agent",
+    "device": "artifact inspection",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260801,
+    "build_mode": "review"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent battle HUD visual critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Independent critic returned FAIL: overall 7.7, 844 score 8.3, 568 score 7.4 and health-charge semantics 6.7.",
+  "inference": "Portraits improve the baseline, but compact charge and skill interaction semantics are not yet self-evident.",
+  "result": "fail",
+  "confidence": 0.97,
+  "freshness": "stale",
+  "limitations": [
+    "Static critique does not press the cards; runtime tests cover exact skill signals."
+  ],
+  "created_at": "2026-08-01T01:08:00Z"
+}

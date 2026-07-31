@@ -1,0 +1,30 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 19,
+  "work_unit": "battle portrait status HUD",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/battle_hud_screen.gd",
+    "project-a/tools/run_battle_hud_layout_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_battle_portrait_runtime_3b797a9",
+    "ev_battle_portrait_responsive_3b797a9",
+    "ev_battle_portrait_visual_runtime_3b797a9",
+    "ev_battle_portrait_visual_critic_3b797a9"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [
+    "The first independent review at bc0852d failed because charge meaning, compact identity and click affordance were ambiguous."
+  ],
+  "rejected_approaches": [
+    "Keep the text HP/EN table.",
+    "Hide names without replacing role and charge semantics.",
+    "Accept tiny or cropped portraits.",
+    "Expand HUD coverage instead of reducing it."
+  ],
+  "next_action": "Close the portrait HUD unit and start the global phone drag plus desktop wheel acceptance unit.",
+  "blocker": null
+}

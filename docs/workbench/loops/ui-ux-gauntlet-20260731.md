@@ -30,14 +30,14 @@ revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
 state: integrating
 phase: integrating
-iteration: 18/8
-revision: e43fe45
+iteration: 20/8
+revision: 3b797a9
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T16:16:26Z
+updated_at: 2026-07-31T16:33:46Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -62,6 +62,8 @@ terminal: no
 - [ready] scenario_high_dpi_web_clarity :: Does the factory world and HUD remain crisp on a Retina/high-DPI browser while touch coordinates and mobile layout stay correct? :: fast=GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node tools/run_web_browser_smoke.mjs :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node project-a/tools/run_web_browser_smoke.mjs
 - [ready] scenario_factory_depth_icon_semantics :: Can the player read the toilet command landmark, surrounding industrial structures and three bottom destinations at a glance without more text or larger HUD panels? :: fast=godot --path project-a -s tools/capture_ui_review.gd :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node project-a/tools/run_web_browser_smoke.mjs
 - [ready] scenario_war_zone_gesture_icons :: Can a phone player explore secured, frontline and unknown city landmarks directly on the world without decoding Unicode glyphs or opening a stage matrix? :: fast=godot --path project-a --script tools/capture_war_zone_exploration.gd :: strict=godot --headless --path project-a --script tools/run_war_zone_screen_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd
+- [ready] scenario_battle_portrait_hud :: Can a phone player identify deployed toilet characters, health, charge readiness and the whole-card skill target at a glance without reading an HP/EN table? :: fast=godot --headless --path project-a --script tools/run_battle_hud_layout_tests.gd && godot --path project-a --script tools/capture_ui_review.gd :: strict=godot --headless --path project-a --script tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd
+- [ready] scenario_global_mobile_scroll :: Can I drag lists naturally on a phone and use the wheel on desktop without accidentally activating a card? :: fast=godot --headless --path project-a --script tools/run_mobile_scroll_input_tests.gd :: strict=godot --headless --path project-a --script tools/run_mobile_scroll_input_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd
 ## Quality Gates
 - [pass] gate_ui_visual :: visual :: The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports. :: evidence=2
 - [stale] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=0
@@ -98,7 +100,7 @@ terminal: no
 - [pass] gate_breakthrough_reveal_runtime :: correctness :: Breakthrough result preserves all reward identities and emits the exact open_legion handoff without exposing a repeat claim. :: evidence=1
 - [pass] gate_breakthrough_reveal_responsive :: correctness :: Both permanent heroes, secondary loot and the legion handoff remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
 - [pass] gate_pass_runway_visual :: visual :: Battle pass reads as a touch-draggable supply runway with a clear current frontier rather than a four-column inventory dashboard. :: evidence=2
-- [pass] gate_pass_runway_runtime :: correctness :: All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim. :: evidence=1
+- [stale] gate_pass_runway_runtime :: correctness :: All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim. :: evidence=0
 - [pass] gate_pass_runway_responsive :: correctness :: Current tier, next rewards and sole batch action remain visible and touch-operable at 844x390 and 568x320. :: evidence=1
 - [pass] gate_chapter_victory_visual :: visual :: Chapter victory reads as an awesome two-hero resistance climax rather than a generic result dashboard. :: evidence=2
 - [pass] gate_chapter_victory_runtime :: correctness :: Fresh and replayed chapter victories preserve exact reward visibility and forward action payloads without reopening spent rewards. :: evidence=1
@@ -115,6 +117,10 @@ terminal: no
 - [pass] gate_war_zone_gesture_visual :: visual :: The campaign map reads as an explorable occupied city route with cohesive raster landmark states and world-first hierarchy. :: evidence=2
 - [pass] gate_war_zone_gesture_runtime :: correctness :: Touch drag and desktop wheel traverse only adjacent reachable campaign landmarks while preserving canonical stage and attack signals. :: evidence=1
 - [pass] gate_war_zone_gesture_responsive :: correctness :: Five campaign landmarks, raster states and the primary action remain visible and touch-ready at 844x390 and 568x320. :: evidence=1
+- [pass] gate_battle_portrait_visual :: visual :: Battle unit state reads as a cohesive portrait-led mobile combat HUD instead of a text-heavy HP/EN debug table. :: evidence=2
+- [pass] gate_battle_portrait_runtime :: correctness :: Portrait battle cards preserve exact health, charge, ready-state and whole-card skill interaction behavior. :: evidence=1
+- [pass] gate_battle_portrait_responsive :: correctness :: Two-unit and six-unit portrait HUD states remain inside 844x390 and 568x320 while preserving touch-sized card targets. :: evidence=1
+- [pass] gate_global_mobile_scroll_runtime :: correctness :: Phone users can finger-drag vertical and horizontal UI lists while desktop users can wheel-scroll the hovered list without accidental child-button activation. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
@@ -148,13 +154,13 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T16:10:17Z :: The new gesture-and-icon scenario is validated and ready for baseline and implementation.
-- 2026-07-31T16:14:33Z :: First war-zone gesture and PNG-node candidate replaces the Unicode/click-only baseline. Affected gates=['gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime', 'gate_war_zone_gesture_responsive', 'gate_war_zone_gesture_runtime', 'gate_war_zone_gesture_visual']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_boss_briefing_responsive', 'gate_boss_briefing_runtime', 'gate_boss_briefing_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_chapter_victory_responsive', 'gate_chapter_victory_runtime', 'gate_chapter_victory_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_depth_responsive', 'gate_factory_depth_runtime', 'gate_factory_depth_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_high_dpi_responsive', 'gate_high_dpi_runtime', 'gate_high_dpi_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_ui_visual'].
-- 2026-07-31T16:14:58Z :: Second candidate caps raster action icon width so the 844 CTA retains its label; rerun all war-zone gesture gates. Affected gates=['gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime', 'gate_war_zone_gesture_responsive', 'gate_war_zone_gesture_runtime', 'gate_war_zone_gesture_visual']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_boss_briefing_responsive', 'gate_boss_briefing_runtime', 'gate_boss_briefing_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_chapter_victory_responsive', 'gate_chapter_victory_runtime', 'gate_chapter_victory_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_depth_responsive', 'gate_factory_depth_runtime', 'gate_factory_depth_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_high_dpi_responsive', 'gate_high_dpi_runtime', 'gate_high_dpi_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_ui_visual'].
-- 2026-07-31T16:16:18Z :: Touch drag, desktop wheel, canonical IDs and lock protection pass.
-- 2026-07-31T16:16:18Z :: Both target phone viewports retain five nodes and the complete touch-sized CTA.
-- 2026-07-31T16:16:18Z :: Real-render evidence and independent critic pass at 8.4 overall with 8.2 lowest dimension.
-- 2026-07-31T16:16:26Z :: Final map candidate passes runtime, responsive and mixed visual gates after resolving the 844 CTA regression.
-- 2026-07-31T16:16:26Z :: War-zone gesture and raster icon work unit is accepted with final-revision evidence.
-summary: scenarios=18 gates=52 evidence=116 current=68 findings=0 iterations=18
+- 2026-07-31T16:31:24Z :: Runtime captures and an independent critic both accept the portrait-led HUD.
+- 2026-07-31T16:31:24Z :: Portrait HUD has current runtime, responsive and independent visual evidence.
+- 2026-07-31T16:31:24Z :: Battle portrait HUD unit accepted; global gesture input is the next user-raised gap.
+- 2026-07-31T16:32:53Z :: User reported that the Web-mobile UI does not reliably support finger drag and requires desktop wheel behavior.
+- 2026-07-31T16:32:53Z :: Start a focused acceptance unit for the user-reported gesture gap.
+- 2026-07-31T16:33:26Z :: Both phone drag axes, both desktop wheel paths and accidental child activation are covered by current shipping-adapter assertions.
+- 2026-07-31T16:33:26Z :: The user-reported gesture gap has deterministic runtime evidence at the pushed revision.
+- 2026-07-31T16:33:26Z :: Global gesture unit accepted; keep the challenge loop active for browser feedback and the stale runway contract.
+summary: scenarios=20 gates=56 evidence=123 current=72 findings=0 iterations=20
 ```

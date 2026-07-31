@@ -59,7 +59,8 @@
         "gate_chapter_victory_visual",
         "gate_boss_briefing_visual",
         "gate_factory_depth_visual",
-        "gate_war_zone_gesture_visual"
+        "gate_war_zone_gesture_visual",
+        "gate_battle_portrait_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -126,7 +127,9 @@
         "gate_factory_depth_visual",
         "gate_factory_depth_responsive",
         "gate_war_zone_gesture_visual",
-        "gate_war_zone_gesture_responsive"
+        "gate_war_zone_gesture_responsive",
+        "gate_battle_portrait_visual",
+        "gate_battle_portrait_responsive"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -143,7 +146,9 @@
         "gate_high_dpi_responsive",
         "gate_factory_depth_responsive",
         "gate_war_zone_gesture_runtime",
-        "gate_war_zone_gesture_responsive"
+        "gate_war_zone_gesture_responsive",
+        "gate_battle_portrait_runtime",
+        "gate_battle_portrait_responsive"
       ],
       "rationale": "The player must manipulate the real shipping screen without blocked map targets."
     },
@@ -231,7 +236,9 @@
         "gate_pass_runway_responsive",
         "gate_chapter_victory_responsive",
         "gate_war_zone_gesture_visual",
-        "gate_war_zone_gesture_responsive"
+        "gate_war_zone_gesture_responsive",
+        "gate_battle_portrait_visual",
+        "gate_battle_portrait_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -271,7 +278,9 @@
         "gate_boss_briefing_responsive",
         "gate_high_dpi_runtime",
         "gate_factory_depth_runtime",
-        "gate_war_zone_gesture_runtime"
+        "gate_war_zone_gesture_runtime",
+        "gate_battle_portrait_runtime",
+        "gate_global_mobile_scroll_runtime"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -3461,6 +3470,338 @@
       "limitations": [
         "Focused automation does not measure physical finger friction."
       ]
+    },
+    {
+      "scenario_id": "scenario_battle_portrait_hud",
+      "scenario_kind": "whole_path_integration",
+      "purpose": "Exercise the shipping battle HUD with portrait-led unit state cards across compact two-unit and dense six-unit formations.",
+      "player_question": "Can a phone player identify deployed toilet characters, health, charge readiness and the whole-card skill target at a glance without reading an HP/EN table?",
+      "gate_ids": [
+        "gate_battle_portrait_visual",
+        "gate_battle_portrait_runtime",
+        "gate_battle_portrait_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/run_battle_hud_layout_tests.gd and capture_ui_review.gd",
+        "shipping_surface": "project-a/game/scripts/ui/battle_hud_screen.gd",
+        "public_adapter": "BattleHudScreen configure, apply_snapshot and skill_requested"
+      },
+      "fixture": {
+        "subject_parameter": "battle unit count and readiness",
+        "reuse_scope": "two-unit standard/compact and six-unit dense compact formations",
+        "extension_contract": "preserve whole-card skill target, health/energy updates and battle signals"
+      },
+      "setup": {
+        "execution_surface": "main_scene",
+        "entry": "enter shipping battle HUD over live 3D combat",
+        "state": "deployed units with partial health and charge",
+        "camera_or_view": "canonical battle camera",
+        "viewport": "844x390 and 568x320",
+        "target_device": "mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_two_units",
+          "at": "case start",
+          "action": "render two deployed characters"
+        },
+        {
+          "stimulus_id": "update_status",
+          "at": "after render",
+          "action": "apply health, energy and ready-state snapshot"
+        },
+        {
+          "stimulus_id": "show_six_units",
+          "at": "dense case",
+          "action": "render maximum six-unit compact formation"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "battle_captures",
+          "source": "shipping battle real-render capture",
+          "window": "stable live combat",
+          "artifact": "project-a/artifacts/ui-battle-*"
+        },
+        {
+          "observation_id": "hud_assertions",
+          "source": "battle HUD layout and behavior tests",
+          "window": "two and six unit matrix",
+          "artifact": "test output"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "two_unit_identity",
+          "state": "two deployed units in live battle",
+          "stimulus_ids": [
+            "show_two_units"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "each card shows repository-owned raster portrait",
+            "character identity precedes numbers",
+            "battle world remains dominant"
+          ],
+          "observation_ids": [
+            "battle_captures",
+            "hud_assertions"
+          ]
+        },
+        {
+          "case_id": "readiness_feedback",
+          "state": "partial health and charged skill states",
+          "stimulus_ids": [
+            "update_status"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "health and charge use two stable visual bars",
+            "ready state gains gold emphasis",
+            "whole card remains the skill target"
+          ],
+          "observation_ids": [
+            "battle_captures",
+            "hud_assertions"
+          ]
+        },
+        {
+          "case_id": "six_unit_density",
+          "state": "maximum compact formation",
+          "stimulus_ids": [
+            "show_six_units",
+            "update_status"
+          ],
+          "viewpoints": [
+            "568x320"
+          ],
+          "assertions": [
+            "six portrait cards remain inside canvas",
+            "no HP/EN table labels are required",
+            "all cards retain usable touch targets"
+          ],
+          "observation_ids": [
+            "battle_captures",
+            "hud_assertions"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh HUD per matrix case",
+        "artifact_manifest": [
+          "layout assertions",
+          "behavior assertions",
+          "844 capture",
+          "568 capture",
+          "six-unit geometry",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "portrait load failure",
+          "dense overlap"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260801,
+        "clock": "fixed snapshot",
+        "warmup": "stable render frames",
+        "temporal_isolation": "fresh HUD"
+      },
+      "fast_review_route": {
+        "command": "godot --headless --path project-a --script tools/run_battle_hud_layout_tests.gd && godot --path project-a --script tools/capture_ui_review.gd",
+        "expected_seconds": 30,
+        "outputs": [
+          "matrix assertions",
+          "dual-size battle captures"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a --script tools/run_battle_hud_screen_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd",
+        "isolation": "fresh Godot processes",
+        "outputs": [
+          "battle behavior assertions",
+          "shared UI assertions",
+          "exit code"
+        ]
+      },
+      "reset": "free HUD and battle scene",
+      "failure_conditions": [
+        "portrait missing",
+        "world coverage decreases",
+        "six cards overflow",
+        "skill target shrinks below touch size",
+        "health or charge becomes unreadable"
+      ],
+      "limitations": [
+        "Static capture cannot prove thumb accuracy under motion."
+      ]
+    },
+    {
+      "scenario_id": "scenario_global_mobile_scroll",
+      "scenario_kind": "whole_path_integration",
+      "purpose": "Verify one shipping input adapter gives every phone list direct finger drag and every desktop list mouse-wheel traversal.",
+      "player_question": "Can I drag lists naturally on a phone and use the wheel on desktop without accidentally activating a card?",
+      "gate_ids": [
+        "gate_global_mobile_scroll_runtime"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/run_mobile_scroll_input_tests.gd",
+        "shipping_surface": "project-a/game/scripts/autoloads/mobile_scroll_input.gd",
+        "public_adapter": "MobileScrollInput autoload"
+      },
+      "fixture": {
+        "subject_parameter": "scroll axis and input device",
+        "reuse_scope": "vertical lists and horizontal card runways",
+        "extension_contract": "all ScrollContainer instances register automatically"
+      },
+      "setup": {
+        "execution_surface": "main_scene",
+        "entry": "create shipping ScrollContainer surfaces under the project root",
+        "state": "overflowing button lists",
+        "camera_or_view": "mobile UI canvas",
+        "viewport": "568x320",
+        "target_device": "mobile landscape Web and desktop browser"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "drag_vertical",
+          "at": "case start",
+          "action": "drag upward from a child button with a slightly diagonal phone gesture"
+        },
+        {
+          "stimulus_id": "drag_horizontal",
+          "at": "runway case",
+          "action": "drag left across a horizontal card runway"
+        },
+        {
+          "stimulus_id": "wheel_hovered",
+          "at": "desktop cases",
+          "action": "turn the wheel over vertical and horizontal overflow surfaces"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "scroll_assertions",
+          "source": "shipping MobileScrollInput test",
+          "window": "after each gesture",
+          "artifact": "headless assertion output"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "vertical_phone_drag",
+          "state": "overflowing vertical button list",
+          "stimulus_ids": [
+            "drag_vertical"
+          ],
+          "viewpoints": [
+            "568x320"
+          ],
+          "assertions": [
+            "vertical offset changes",
+            "diagonal intent is recovered",
+            "child button is not activated"
+          ],
+          "observation_ids": [
+            "scroll_assertions"
+          ]
+        },
+        {
+          "case_id": "horizontal_phone_drag",
+          "state": "overflowing horizontal card runway",
+          "stimulus_ids": [
+            "drag_horizontal"
+          ],
+          "viewpoints": [
+            "568x320"
+          ],
+          "assertions": [
+            "horizontal offset changes",
+            "diagonal intent is recovered",
+            "runway stays inside its clip"
+          ],
+          "observation_ids": [
+            "scroll_assertions"
+          ]
+        },
+        {
+          "case_id": "desktop_wheel",
+          "state": "hovered vertical list then horizontal runway",
+          "stimulus_ids": [
+            "wheel_hovered"
+          ],
+          "viewpoints": [
+            "568x320"
+          ],
+          "assertions": [
+            "wheel changes vertical offset",
+            "wheel falls back to horizontal offset when vertical overflow is absent"
+          ],
+          "observation_ids": [
+            "scroll_assertions"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh probe controls",
+        "artifact_manifest": [
+          "vertical drag assertions",
+          "horizontal drag assertions",
+          "wheel assertions",
+          "accidental-click assertion",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "input event not claimed"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260801,
+        "clock": "frame stepped",
+        "warmup": "two layout frames",
+        "temporal_isolation": "reset offsets between inputs"
+      },
+      "fast_review_route": {
+        "command": "godot --headless --path project-a --script tools/run_mobile_scroll_input_tests.gd",
+        "expected_seconds": 5,
+        "outputs": [
+          "gesture assertions",
+          "exit code"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a --script tools/run_mobile_scroll_input_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd",
+        "isolation": "fresh Godot processes",
+        "outputs": [
+          "gesture assertions",
+          "UI smoke assertions",
+          "exit code"
+        ]
+      },
+      "reset": "free the probe controls and quit",
+      "failure_conditions": [
+        "phone drag does not move the intended axis",
+        "slightly diagonal gesture is discarded",
+        "wheel does not move hovered overflow",
+        "drag activates a child card"
+      ],
+      "limitations": [
+        "Automated events model browser input but do not measure finger friction on physical hardware."
+      ]
     }
   ],
   "integration_policy": {
@@ -4392,6 +4733,79 @@
         "both target viewports pass"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_battle_portrait_visual",
+      "profile": "visual",
+      "claim": "Battle unit state reads as a cohesive portrait-led mobile combat HUD instead of a text-heavy HP/EN debug table.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_battle_portrait_hud"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "portraits establish character identity",
+        "bars communicate health and charge",
+        "world remains primary",
+        "style matches existing toilet art"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_battle_portrait_runtime",
+      "profile": "correctness",
+      "claim": "Portrait battle cards preserve exact health, charge, ready-state and whole-card skill interaction behavior.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_battle_portrait_hud"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "portrait mapping is deterministic",
+        "snapshot bars update",
+        "ready emphasis updates",
+        "skill_requested ID remains exact"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_battle_portrait_responsive",
+      "profile": "correctness",
+      "claim": "Two-unit and six-unit portrait HUD states remain inside 844x390 and 568x320 while preserving touch-sized card targets.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_battle_portrait_hud"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "two-unit HUD shrink-wraps",
+        "six-unit HUD fits",
+        "cards remain at least 44px high",
+        "no portrait or bar clipping"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_global_mobile_scroll_runtime",
+      "profile": "correctness",
+      "claim": "Phone users can finger-drag vertical and horizontal UI lists while desktop users can wheel-scroll the hovered list without accidental child-button activation.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_global_mobile_scroll"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "vertical phone drag works",
+        "horizontal phone drag works",
+        "diagonal intent falls back to the available axis",
+        "desktop wheel works on both axes",
+        "drag does not press a child button"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -4495,6 +4909,18 @@
       "owner": "war-zone gesture and icon semantics work-unit owner",
       "surface": "WarZoneScreen world nodes and input traversal",
       "public_contract": "existing stage_selected, chapter_selected, attack_requested and preparation_requested signals",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "battle portrait HUD work-unit owner",
+      "surface": "BattleHudScreen unit cards and dedicated layout tests",
+      "public_contract": "existing configure/apply_snapshot and battle signals",
+      "coupling": "coupled"
+    },
+    {
+      "surface": "global mobile scroll input",
+      "owner": "project-a/game/scripts/autoloads/mobile_scroll_input.gd",
+      "public_contract": "all visible overflowing ScrollContainer instances accept phone drag and desktop wheel input",
       "coupling": "coupled"
     }
   ],

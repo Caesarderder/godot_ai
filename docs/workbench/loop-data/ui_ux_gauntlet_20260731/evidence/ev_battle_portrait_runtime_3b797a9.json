@@ -1,0 +1,79 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_battle_portrait_runtime_3b797a9",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "3b797a9",
+  "valid_through_revision": "3b797a9",
+  "gate_id": "gate_battle_portrait_runtime",
+  "claim": "Portrait battle cards preserve exact health, charge, ready-state and whole-card skill interaction behavior.",
+  "scenario_id": "scenario_battle_portrait_hud",
+  "execution_id": "battle_portrait_runtime_3b797a9",
+  "evidence_type": "runtime_state",
+  "artifact_or_command": "godot --headless --path project-a --script tools/run_battle_hud_layout_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd",
+  "case_results": [
+    {
+      "case_id": "two_unit_identity",
+      "result": "pass",
+      "assertions": [
+        "Two raster portrait cards retain exact unit IDs and whole-card skill targets."
+      ],
+      "artifacts": [
+        "layout assertions",
+        "behavior assertions"
+      ]
+    },
+    {
+      "case_id": "readiness_feedback",
+      "result": "pass",
+      "assertions": [
+        "Health, charge and ready styling update from the shipping battle snapshot."
+      ],
+      "artifacts": [
+        "behavior assertions",
+        "844 capture"
+      ]
+    },
+    {
+      "case_id": "six_unit_density",
+      "result": "pass",
+      "assertions": [
+        "Six cards keep independent skill targets without changing battle commands."
+      ],
+      "artifacts": [
+        "six-unit geometry",
+        "exit code"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "layout assertions",
+    "behavior assertions",
+    "844 capture",
+    "568 capture",
+    "six-unit geometry",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS headless",
+    "device": "desktop test host",
+    "viewport": "844x390 and 568x320",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "battle HUD automated assertions",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "Battle HUD layout and UI smoke suites pass with portrait cards, paired bars and touch-sized skill targets.",
+  "inference": "The portrait redesign preserves the shipping battle interaction contract.",
+  "result": "pass",
+  "confidence": 0.97,
+  "freshness": "current",
+  "limitations": [
+    "Headless assertions do not measure human reaction speed."
+  ],
+  "created_at": "2026-08-01T00:00:00+08:00"
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 20,
+  "work_unit": "global phone drag and desktop wheel input",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/autoloads/mobile_scroll_input.gd",
+    "project-a/tools/run_mobile_scroll_input_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_global_mobile_scroll_runtime_3b797a9"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [
+    "The previous adapter discarded gestures when the initial dominant axis did not match the only scrollable axis and explicitly remapped wheel input only for horizontal-only lists."
+  ],
+  "rejected_approaches": [
+    "Rely on browser-dependent native vertical wheel handling.",
+    "Require perfectly straight phone swipes.",
+    "Add separate drag code to every screen."
+  ],
+  "next_action": "Expose the three gesture questions in the synced Workbench and continue the mobile UX challenge loop.",
+  "blocker": null
+}
