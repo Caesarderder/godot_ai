@@ -56,7 +56,8 @@
         "gate_doctrine_deck_visual",
         "gate_breakthrough_reveal_visual",
         "gate_pass_runway_visual",
-        "gate_chapter_victory_visual"
+        "gate_chapter_victory_visual",
+        "gate_boss_briefing_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -112,7 +113,9 @@
         "gate_pass_runway_visual",
         "gate_pass_runway_runtime",
         "gate_chapter_victory_visual",
-        "gate_chapter_victory_runtime"
+        "gate_chapter_victory_runtime",
+        "gate_boss_briefing_visual",
+        "gate_boss_briefing_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -124,7 +127,8 @@
         "stage selection, chapter navigation and contextual panel actions"
       ],
       "gate_ids": [
-        "gate_ui_runtime"
+        "gate_ui_runtime",
+        "gate_boss_briefing_responsive"
       ],
       "rationale": "The player must manipulate the real shipping screen without blocked map targets."
     },
@@ -136,7 +140,8 @@
         "campaign stage availability and attack/preparation routing"
       ],
       "gate_ids": [
-        "gate_ui_runtime"
+        "gate_ui_runtime",
+        "gate_boss_briefing_visual"
       ],
       "rationale": "Map presentation must remain bound to real campaign state."
     },
@@ -244,7 +249,9 @@
         "gate_pass_runway_runtime",
         "gate_pass_runway_responsive",
         "gate_chapter_victory_runtime",
-        "gate_chapter_victory_responsive"
+        "gate_chapter_victory_responsive",
+        "gate_boss_briefing_runtime",
+        "gate_boss_briefing_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -2756,6 +2763,180 @@
       "limitations": [
         "Static victory art cannot prove long-term emotional attachment."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_boss_siege_briefing",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping WarZoneScreen chapter-boss selection as a map-first mobile siege decision.",
+      "player_question": "Can the player feel the final fortress ahead, understand readiness and choose prepare or attack without the briefing covering the route?",
+      "gate_ids": [
+        "gate_boss_briefing_visual",
+        "gate_boss_briefing_runtime",
+        "gate_boss_briefing_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_boss_siege_briefing_scenario.gd",
+        "shipping_surface": "WarZoneScreen and StageDetailPanel boss composition",
+        "public_adapter": "configure plus stage_selected, preparation_requested and attack_requested"
+      },
+      "fixture": {
+        "subject_parameter": "boss_readiness_state",
+        "reuse_scope": "underpowered, ready and cleared boss states",
+        "extension_contract": "reuse StageDetailPanel readiness projection and exact stage_1_5 actions"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate war_zone_screen.tscn with deterministic chapter-one rows",
+        "state": "chapter-one route focused on stage_1_5",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "underpowered",
+          "at": "case start",
+          "action": "show preparation and optional probe"
+        },
+        {
+          "stimulus_id": "ready",
+          "at": "after underpowered",
+          "action": "show boss-ready attack"
+        },
+        {
+          "stimulus_id": "cleared",
+          "at": "after ready",
+          "action": "show settled replay"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "boss_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-boss-siege-briefing/manifest.json"
+        },
+        {
+          "observation_id": "boss_captures",
+          "source": "dual-size captures",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-boss-siege-briefing"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "underpowered_boss",
+          "state": "boss unlocked with preparation recommended",
+          "stimulus_ids": [
+            "underpowered"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "fortress route dominates",
+            "prepare and probe are distinct",
+            "briefing does not cover selected node"
+          ],
+          "observation_ids": [
+            "boss_manifest",
+            "boss_captures"
+          ]
+        },
+        {
+          "case_id": "boss_ready",
+          "state": "boss-ready formation",
+          "stimulus_ids": [
+            "ready"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "one attack action dominates",
+            "readiness is non-color encoded",
+            "stage identity remains visible"
+          ],
+          "observation_ids": [
+            "boss_manifest",
+            "boss_captures"
+          ]
+        },
+        {
+          "case_id": "boss_cleared",
+          "state": "boss already conquered",
+          "stimulus_ids": [
+            "cleared"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "settled state is clear",
+            "replay action exact",
+            "route remains explorable"
+          ],
+          "observation_ids": [
+            "boss_manifest",
+            "boss_captures"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh WarZoneScreen per state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "underpowered captures",
+          "ready captures",
+          "cleared captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "capture failure",
+          "route/detail overlap"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed readiness state",
+        "warmup": "ten process frames",
+        "temporal_isolation": "fresh screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_boss_siege_briefing_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd && godot --path project-a -s tools/capture_boss_siege_briefing_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each screen after capture",
+      "failure_conditions": [
+        "detail covers selected stage",
+        "map becomes a dashboard",
+        "actions clip",
+        "locked or cleared state lies"
+      ],
+      "limitations": [
+        "Static map capture cannot prove long-term exploration desire."
+      ]
     }
   ],
   "integration_policy": {
@@ -3477,6 +3658,58 @@
         "hero art never intercepts touch"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_boss_briefing_visual",
+      "profile": "visual",
+      "claim": "Chapter-boss briefing reads as a fortress siege on an explorable route rather than overlapping map widgets.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_boss_siege_briefing"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "map and fortress dominate",
+        "HUD is compact",
+        "primary decision is immediate",
+        "industrial resistance style remains cohesive"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_boss_briefing_runtime",
+      "profile": "correctness",
+      "claim": "Underpowered, ready and cleared boss states emit exact preparation, attack and replay actions for stage_1_5.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_boss_siege_briefing"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "preparation action exact",
+        "attack stage exact",
+        "cleared replay exact"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_boss_briefing_responsive",
+      "profile": "correctness",
+      "claim": "Boss node, readiness HUD and required touch actions fit without overlap at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_boss_siege_briefing"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "touch actions at least 48px",
+        "selected node unobscured",
+        "no essential clipping"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -3556,6 +3789,12 @@
       "owner": "chapter-victory tableau work-unit owner",
       "surface": "BattleResultScreen chapter composition plus focused fixture",
       "public_contract": "configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "boss siege briefing work-unit owner",
+      "surface": "WarZoneScreen and StageDetailPanel boss composition plus fixture",
+      "public_contract": "configure and map signals",
       "coupling": "coupled"
     }
   ],

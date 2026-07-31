@@ -1,10 +1,10 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
-  "state": "integrating",
+  "state": "unit_looping",
   "revision": "e8d6596",
   "iteration": 14,
-  "active_work_unit": null,
+  "active_work_unit": "mobile boss siege briefing",
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -56,6 +56,9 @@
     "gate_blueprint_forge_responsive": "pass",
     "gate_blueprint_forge_runtime": "pass",
     "gate_blueprint_forge_visual": "pass",
+    "gate_boss_briefing_responsive": "pending",
+    "gate_boss_briefing_runtime": "pending",
+    "gate_boss_briefing_visual": "pending",
     "gate_breakthrough_reveal_responsive": "pass",
     "gate_breakthrough_reveal_runtime": "pass",
     "gate_breakthrough_reveal_visual": "pass",
@@ -203,8 +206,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "Focused chapter-victory hero-tableau unit accepted; enter shared mobile UI integration.",
-    "updated_at": "2026-07-31T15:16:30Z"
+    "next_action": "mobile boss siege briefing",
+    "updated_at": "2026-07-31T15:19:12Z"
   },
   "decisions": [
     {
@@ -2297,6 +2300,16 @@
       "evidence_ids": [
         "ev_ui_chapter_integration_responsive_e8d6596"
       ]
+    },
+    {
+      "at": "2026-07-31T15:19:12Z",
+      "decision": "Add the evidence-selected mobile boss siege briefing challenge.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T15:19:12Z",
+      "decision": "Begin a bounded challenge against overlapping boss-map widgets.",
+      "evidence_ids": []
     }
   ]
 }
