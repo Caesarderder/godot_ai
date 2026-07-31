@@ -33,12 +33,15 @@ func _run() -> void:
 	var background := title.get_node("Background") as TextureRect
 	_check(
 		background.texture != null and background.texture.get_size() == Vector2(844, 390),
-		"title screen uses the lightweight canonical landscape background"
+		"title screen uses the lightweight anime toilet-resistance landscape background"
 	)
 	_check(primary_button.text.contains("进入 E07"), "new-save primary action is canon-anchored")
 	_check(progress_summary.text.contains("1 名战士"), "durable roster summary is projected")
 	_check(next_objective.text.contains("摧毁联盟前哨 1-1"), "next objective is projected")
-	_check(storage_warning.visible and storage_warning.text.contains("刷新后会丢失"), "blocked browser storage is explicit before play")
+	_check(storage_warning.visible and storage_warning.text.contains("未允许保存"), "blocked browser storage is explicit before play")
+	_check(not progress_summary.is_visible_in_tree(), "title keeps progress prose out of the hero composition")
+	_check(not next_objective.is_visible_in_tree(), "title keeps objective prose out of the hero composition")
+	_check(settings_button.text == "⚙" and help_button.text == "?", "secondary title actions are icon-led")
 	_check(primary_button.has_focus(), "primary action receives initial focus")
 	for control in [primary_button, settings_button, help_button]:
 		var rect := (control as Control).get_global_rect()

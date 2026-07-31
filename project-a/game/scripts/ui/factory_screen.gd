@@ -61,6 +61,13 @@ func _rebuild() -> void:
 		and not String(construction.get("active_id", "")).is_empty()
 	)
 	tab_row.visible = not placement_active
+	mission_tab.visible = active_panel != "mission"
+	mission_tab.text = "←"
+	mission_tab.tooltip_text = "关闭面板"
+	facility_tab.text = "▣"
+	facility_tab.tooltip_text = "设施"
+	build_tab.text = "+"
+	build_tab.tooltip_text = "建设"
 	_apply_responsive_layout(compact, active_panel)
 	_apply_shell_style()
 	_build_resources(compact)
@@ -78,13 +85,35 @@ func _rebuild() -> void:
 
 
 func _apply_responsive_layout(compact: bool, active_panel: String) -> void:
-	resource_hud.offset_right = 280.0 if compact else 330.0
-	hud_frame.custom_minimum_size.x = 258.0 if compact else 286.0
-	hud_frame.offset_left = -266.0 if compact else -294.0
-	hud_frame.offset_top = 4.0 if compact else 54.0
-	hud_frame.offset_bottom = hud_frame.offset_top
+	resource_hud.offset_right = 222.0 if compact else 250.0
+	var mission_mode := active_panel == "mission"
+	var build_mode := active_panel == "build"
+	if build_mode:
+		hud_frame.anchor_left = 0.5
+		hud_frame.anchor_top = 1.0
+		hud_frame.anchor_right = 0.5
+		hud_frame.anchor_bottom = 1.0
+		hud_frame.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		hud_frame.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		hud_frame.custom_minimum_size.x = 520.0 if compact else 680.0
+		hud_frame.offset_left = -260.0 if compact else -340.0
+		hud_frame.offset_right = 260.0 if compact else 340.0
+		hud_frame.offset_top = -154.0
+		hud_frame.offset_bottom = -8.0
+	else:
+		hud_frame.anchor_left = 0.0 if mission_mode else 1.0
+		hud_frame.anchor_top = 0.0
+		hud_frame.anchor_right = 0.0 if mission_mode else 1.0
+		hud_frame.anchor_bottom = 0.0
+		hud_frame.grow_horizontal = Control.GROW_DIRECTION_END if mission_mode else Control.GROW_DIRECTION_BEGIN
+		hud_frame.grow_vertical = Control.GROW_DIRECTION_END
+		hud_frame.custom_minimum_size.x = (210.0 if compact else 230.0) if mission_mode else (300.0 if compact else 340.0)
+		hud_frame.offset_left = 8.0 if mission_mode else (-308.0 if compact else -348.0)
+		hud_frame.offset_right = (218.0 if compact else 238.0) if mission_mode else -8.0
+		hud_frame.offset_top = 76.0 if mission_mode else 54.0
+		hud_frame.offset_bottom = hud_frame.offset_top
 	if active_panel == "mission":
-		hud_frame.custom_minimum_size.y = 142.0
+		hud_frame.custom_minimum_size.y = 116.0
 	elif active_panel == "facility":
 		hud_frame.custom_minimum_size.y = 190.0
 	else:
@@ -155,8 +184,8 @@ func _mission_panel() -> Control:
 	var panel := _panel("")
 	panel.name = "OnboardingMissionPanel"
 	var title := _label(
-		"前线来电 · %s" % String(task.get("title", "战线暂时平静")),
-		14,
+		"行动 · %s" % String(task.get("title", "战线暂时平静")),
+		12,
 		GOLD
 	)
 	title.max_lines_visible = 1
@@ -179,11 +208,6 @@ func _mission_panel() -> Control:
 			"archetype_id": String(task.get("archetype_id", "")),
 		}))
 	actions.add_child(primary)
-	var intelligence := _button("前线", false)
-	intelligence.name = "OpenWarIntelligenceButton"
-	intelligence.custom_minimum_size.x = 72
-	intelligence.pressed.connect(action_requested.emit.bind("intelligence", {}))
-	actions.add_child(intelligence)
 	panel.add_child(actions)
 	return panel
 
@@ -220,9 +244,15 @@ func _construction_panel() -> Control:
 			))
 			panel.add_child(claim_gift)
 			return panel
-		var choices := GridContainer.new()
+		var scroll := ScrollContainer.new()
+		scroll.name = "ConstructionCatalogScroll"
+		scroll.custom_minimum_size.y = 72
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		var choices := HBoxContainer.new()
 		choices.name = "ConstructionButtonGrid"
-		choices.columns = 2
+		choices.add_theme_constant_override("separation", 8)
+		scroll.add_child(choices)
 		for option_value in construction.get("options", []):
 			var option := option_value as Dictionary
 			var choose := _button(
@@ -235,6 +265,7 @@ func _construction_panel() -> Control:
 				false
 			)
 			choose.name = "ChooseFacility_%s" % String(option.get("facility_id", ""))
+			choose.custom_minimum_size = Vector2(156, 60)
 			choose.disabled = bool(option.get("disabled", false))
 			choose.tooltip_text = String(option.get("copy", ""))
 			if focused_growth:
@@ -246,7 +277,7 @@ func _construction_panel() -> Control:
 		if choices.get_child_count() == 0:
 			panel.add_child(_label("所有设施均已建成", 13, GREEN))
 		else:
-			panel.add_child(choices)
+			panel.add_child(scroll)
 		return panel
 	panel.add_child(_label(
 		"放置 %s · %s · %d秒" % [

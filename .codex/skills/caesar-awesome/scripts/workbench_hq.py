@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import mimetypes
 import re
 import secrets
 import subprocess
@@ -245,7 +246,7 @@ def validate_human_validation_session(payload: dict, spec: dict) -> dict:
     require_fields(
         payload,
         "Human Validation session",
-        ("validation_id", "participant_id", "device", "browser", "task_results"),
+        ("validation_id", "participant_id", "device", "browser"),
     )
     if payload["validation_id"] != spec["validation_id"]:
         raise RuntimeError("session.validation_id 与验证流程不一致")
@@ -255,8 +256,24 @@ def validate_human_validation_session(payload: dict, spec: dict) -> dict:
     for field in ("device", "browser"):
         if not isinstance(payload[field], str) or not payload[field].strip():
             raise RuntimeError(f"session.{field} 必须是非空字符串")
-    results = payload["task_results"]
     expected_ids = [task["task_id"] for task in spec["tasks"]]
+    feedback_results = payload.get("feedback_results")
+    if feedback_results is not None:
+        if (
+            not isinstance(feedback_results, list)
+            or [item.get("task_id") for item in feedback_results] != expected_ids
+        ):
+            raise RuntimeError("feedback_results 必须按 spec.tasks 顺序完整提交")
+        for result in feedback_results:
+            if result.get("verdict") not in ("approve", "revise"):
+                raise RuntimeError("feedback verdict 只能是 approve 或 revise")
+            if not isinstance(result.get("note", ""), str):
+                raise RuntimeError("feedback note 必须是字符串")
+        normalized = json.loads(json.dumps(payload, ensure_ascii=False))
+        normalized["schema_version"] = "caesar-human-feedback-session/v1"
+        normalized["recorded_at"] = now()
+        return normalized
+    results = payload.get("task_results")
     if not isinstance(results, list) or [item.get("task_id") for item in results] != expected_ids:
         raise RuntimeError("task_results 必须按 spec.tasks 顺序完整提交")
     for result, task in zip(results, spec["tasks"]):
@@ -307,6 +324,7 @@ def human_validation_session_summaries(validation_id: str) -> list[dict]:
     summaries: list[dict] = []
     for path in sorted(directory.glob("*.json")) if directory.is_dir() else []:
         value = load_json_object(path, "Human Validation session")
+        feedback_results = value.get("feedback_results", [])
         timings = [
             float(timing)
             for result in value.get("task_results", [])
@@ -324,7 +342,14 @@ def human_validation_session_summaries(validation_id: str) -> list[dict]:
                 "recorded_at": value.get("recorded_at", ""),
                 "device": value.get("device", ""),
                 "browser": value.get("browser", ""),
-                "passed_two_second": bool(timings) and all(timing <= 2.0 for timing in timings),
+                "passed_two_second": (
+                    bool(feedback_results)
+                    and all(
+                        isinstance(result, dict)
+                        and result.get("verdict") == "approve"
+                        for result in feedback_results
+                    )
+                ) or (bool(timings) and all(timing <= 2.0 for timing in timings)),
                 "path": relative_repo_path(path),
             }
         )
@@ -811,6 +836,18 @@ def serve(port: int, open_browser: bool) -> None:
                     200, OUTPUT.read_bytes(), "text/html; charset=utf-8")
             elif parsed.path == "/api/hq" and self.allowed():
                 self.send_json(200, {"content": SOURCE.read_text(encoding="utf-8")})
+            elif parsed.path.startswith("/repo/") and self.allowed():
+                try:
+                    asset = (ROOT / parsed.path.removeprefix("/repo/")).resolve()
+                    asset.relative_to(ROOT)
+                    if not asset.is_file() or asset.stat().st_size > 10_000_000:
+                        raise RuntimeError("验收图片不存在或过大")
+                    content_type = mimetypes.guess_type(asset.name)[0] or "application/octet-stream"
+                    if not content_type.startswith("image/"):
+                        raise RuntimeError("只允许读取验收图片")
+                    self.send_bytes(200, asset.read_bytes(), content_type)
+                except (RuntimeError, OSError, ValueError) as exc:
+                    self.send_json(400, {"error": str(exc)})
             elif parsed.path == "/api/validation-sessions" and self.allowed():
                 try:
                     validation_id = parse_qs(parsed.query).get("validation_id", [""])[0]

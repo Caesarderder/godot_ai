@@ -1070,6 +1070,10 @@ func _set_factory_hud_panel(panel_id: String) -> void:
 	if panel_id not in ["mission", "facility", "build"]:
 		return
 	if factory_hud_panel == panel_id:
+		if panel_id == "mission":
+			return
+		factory_hud_panel = "mission"
+		_show_base()
 		return
 	factory_hud_panel = panel_id
 	_show_base()
@@ -4656,7 +4660,7 @@ func _shell(title_text: String, subtitle: String, reveal_world: bool = false) ->
 	header_panel.name = "AppShellHeader"
 	header_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_panel.custom_minimum_size.y = 42
-	header_panel.visible = screen != Screen.BATTLE
+	header_panel.visible = screen not in [Screen.TITLE, Screen.BATTLE]
 	header_panel.add_theme_stylebox_override(
 		"panel",
 		UiArtDirectionScript.panel_style(0.72 if reveal_world else 0.9)

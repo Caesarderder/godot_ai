@@ -15,6 +15,8 @@ const CYAN := Color("#58c9c2")
 const GOLD := Color("#e5a84b")
 
 @onready var panel: PanelContainer = %TitleSignalPanel
+@onready var game_title: Label = $TitleMark/GameTitle
+@onready var game_subtitle: Label = $TitleMark/GameSubtitle
 @onready var heading: Label = %TitleSignalHeading
 @onready var transmission: Label = %TitleTransmission
 @onready var progress_summary: Label = %TitleProgressSummary
@@ -64,10 +66,12 @@ func _apply_view() -> void:
 func _apply_theme() -> void:
 	var panel_style := UiArtDirectionScript.panel_style(true)
 	panel.add_theme_stylebox_override("panel", panel_style)
+	game_title.add_theme_font_override("font", CJK_FONT)
+	game_subtitle.add_theme_font_override("font", CJK_FONT)
 
 	for label: Label in [heading, transmission, progress_summary, next_objective, storage_warning]:
 		label.add_theme_font_override("font", CJK_FONT)
-	heading.add_theme_font_size_override("font_size", 17)
+	heading.add_theme_font_size_override("font_size", 12)
 	heading.add_theme_color_override("font_color", GOLD)
 	transmission.add_theme_font_size_override("font_size", 16)
 	transmission.add_theme_color_override("font_color", TEXT)
@@ -75,7 +79,7 @@ func _apply_theme() -> void:
 	progress_summary.add_theme_color_override("font_color", CYAN)
 	next_objective.add_theme_font_size_override("font_size", 12)
 	next_objective.add_theme_color_override("font_color", GOLD)
-	storage_warning.add_theme_font_size_override("font_size", 12)
+	storage_warning.add_theme_font_size_override("font_size", 11)
 	storage_warning.add_theme_color_override("font_color", Color("#ff806f"))
 
 	_style_button(primary_button, true)

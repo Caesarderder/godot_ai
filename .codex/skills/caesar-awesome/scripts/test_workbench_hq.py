@@ -110,6 +110,22 @@ state: building
         self.assertIn('role="tablist"', template)
         self.assertIn("function switchTab", template)
         self.assertIn('localStorage.getItem("caesar-workbench-tab")', template)
+        self.assertIn("function chooseFeedback", template)
+        self.assertIn("👍 满意", template)
+
+    def test_accepts_simple_feedback_session(self) -> None:
+        spec = workbench.validate_human_validation_spec(validation_spec())
+        session = {
+            "validation_id": "ui-learning-v1",
+            "participant_id": "feedback-1",
+            "device": "browser",
+            "browser": "test",
+            "feedback_results": [
+                {"task_id": "battle", "verdict": "revise", "note": "Too busy"}
+            ],
+        }
+        normalized = workbench.validate_human_validation_session(session, spec)
+        self.assertEqual(normalized["schema_version"], "caesar-human-feedback-session/v1")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://game/scripts/ui/title_screen.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/ui/backgrounds/underground-counterattack-title.webp" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/ui/backgrounds/toilet-resistance-anime-title-v2.webp" id="2_background"]
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
@@ -34,95 +34,118 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.015, 0.027, 0.035, 0.42)
+color = Color(0.006, 0.014, 0.024, 0.12)
 
-[node name="Content" type="VBoxContainer" parent="."]
+[node name="TitleMark" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 0
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 340.0
+offset_bottom = 80.0
+mouse_filter = 2
+theme_override_constants/separation = -2
+
+[node name="GameTitle" type="Label" parent="TitleMark"]
+layout_mode = 2
+text = "马桶人进化"
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.03, 0.05, 0.92)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 30
+
+[node name="GameSubtitle" type="Label" parent="TitleMark"]
+layout_mode = 2
+text = "维度爆裂"
+theme_override_colors/font_color = Color(0.31, 0.91, 1, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.03, 0.05, 0.92)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 15
+
+[node name="TitleSignalPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(310, 0)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_left = -326.0
+offset_top = -88.0
+offset_right = -16.0
+offset_bottom = -14.0
+grow_horizontal = 0
+grow_vertical = 0
 
-[node name="UpperSpacer" type="Control" parent="Content"]
+[node name="PanelMargin" type="MarginContainer" parent="TitleSignalPanel"]
 layout_mode = 2
-size_flags_vertical = 3
-
-[node name="PanelCenter" type="CenterContainer" parent="Content"]
-layout_mode = 2
-
-[node name="TitleSignalPanel" type="PanelContainer" parent="Content/PanelCenter"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(440, 0)
-layout_mode = 2
-
-[node name="PanelMargin" type="MarginContainer" parent="Content/PanelCenter/TitleSignalPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 12
+theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 12
+theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="Content" type="VBoxContainer" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin"]
+[node name="Actions" type="HBoxContainer" parent="TitleSignalPanel/PanelMargin"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 7
 
-[node name="TitleSignalHeading" type="Label" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content"]
+[node name="TitlePrimaryButton" type="Button" parent="TitleSignalPanel/PanelMargin/Actions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 28)
-layout_mode = 2
-text = "  E07 · 监控人开始反击"
-
-[node name="TitleTransmission" type="Label" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "本作从原作 E07 时间线开始。\n地下工厂、角色养成与关卡结构均为玩法改编。"
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="TitleProgressSummary" type="Label" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="TitleNextObjective" type="Label" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="TitleStorageWarning" type="Label" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "⚠ 站点存储被阻止：本次进度刷新后会丢失，请允许存储或先导出备份"
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="TitlePrimaryButton" type="Button" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-text = "继续战役"
-
-[node name="QuietActions" type="HBoxContainer" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="TitleSettingsButton" type="Button" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content/QuietActions"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(210, 52)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "设置"
+text = "进入战场"
 
-[node name="TitleHelpButton" type="Button" parent="Content/PanelCenter/TitleSignalPanel/PanelMargin/Content/QuietActions"]
+[node name="TitleSettingsButton" type="Button" parent="TitleSignalPanel/PanelMargin/Actions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(40, 52)
 layout_mode = 2
-size_flags_horizontal = 3
-text = "档案"
+text = "⚙"
+tooltip_text = "设置"
 
-[node name="LowerSpacer" type="Control" parent="Content"]
+[node name="TitleHelpButton" type="Button" parent="TitleSignalPanel/PanelMargin/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 52)
 layout_mode = 2
-size_flags_vertical = 3
+text = "?"
+tooltip_text = "档案"
+
+[node name="HiddenState" type="VBoxContainer" parent="."]
+visible = false
+layout_mode = 1
+offset_right = 1.0
+offset_bottom = 1.0
+
+[node name="TitleSignalHeading" type="Label" parent="HiddenState"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "E07"
+
+[node name="TitleTransmission" type="Label" parent="HiddenState"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TitleProgressSummary" type="Label" parent="HiddenState"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TitleNextObjective" type="Label" parent="HiddenState"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TitleStorageWarning" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -116.0
+offset_right = 260.0
+offset_bottom = -92.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "⚠ 当前浏览器未允许保存"
+horizontal_alignment = 1

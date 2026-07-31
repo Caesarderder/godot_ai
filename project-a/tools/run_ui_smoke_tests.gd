@@ -925,7 +925,8 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		await _wait_frames(3)
 	var choose_porcelain := instance.find_child("ChooseFacility_porcelain_plant", true, false) as Button
 	_ok(choose_porcelain != null and not choose_porcelain.disabled, "construction catalog exposes an affordable building type")
-	_ok(instance.find_child("ConstructionButtonGrid", true, false) != null, "construction catalog uses a compact button grid")
+	_ok(instance.find_child("ConstructionButtonGrid", true, false) != null, "construction catalog uses a horizontal button strip")
+	_ok(instance.find_child("ConstructionCatalogScroll", true, false) != null, "construction catalog scrolls horizontally along the lower HUD")
 	_ok(instance.find_child("OnboardingMissionPanel", true, false) == null, "construction button opens one focused panel instead of stacking every factory system")
 	var construction_steps := instance.find_child("ConstructionStepGuide", true, false) as Label
 	_ok(construction_steps != null and construction_steps.text.contains("选建筑") and construction_steps.text.contains("点地图格子") and construction_steps.text.contains("确认"), "construction panel explains the complete three-step placement flow")
@@ -1070,7 +1071,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	if restored_mission_tab != null:
 		restored_mission_tab.pressed.emit()
 		await _wait_frames(3)
-	_ok(_tree_has_text(instance, "前线来电"), "fresh save presents onboarding as an in-world transmission")
+	_ok(_tree_has_text(instance, "行动 ·"), "fresh save presents onboarding as a compact action HUD")
 	_ok(_tree_has_text(instance, "建设研究所"), "fresh-save mission starts with research-lab construction")
 	_ok(not _tree_has_text(instance, "收取一次工厂产出"), "fresh-save mission does not start with factory chores")
 	_ok(not _tree_has_text(instance, "选择并升级一名主力"), "fresh-save mission does not require growth before combat")
@@ -1078,17 +1079,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		_tree_has_button(instance, "先建设研究所") or _tree_has_button(instance, "立即进攻 1-1"),
 		"operation CTA routes to construction first, or to 1-1 when the lab is already built"
 	)
-	var intel_button := instance.find_child("OpenWarIntelligenceButton", true, false) as Button
-	_ok(intel_button != null and intel_button.text == "前线", "factory mission panel exposes one direct frontline route")
-	if intel_button != null:
-		intel_button.pressed.emit()
-		await _wait_frames(3)
-		_ok(instance.find_child("WarZoneScreen", true, false) != null, "frontline route opens the world map without a briefing detour")
-		_ok(instance.find_child("WarIntelligenceScreen", true, false) == null, "frontline route does not cover the world with a duplicate intelligence screen")
-		_ok(_tree_has_text(instance, "我方") and _tree_has_text(instance, "推荐"), "frontline detail uses the canonical formation power")
-		_ok(not _tree_has_text(instance, "满编战力") and not _tree_has_text(instance, "出征战力"), "frontline detail does not expose obsolete readiness power variants")
-		_ok(_tree_has_text(instance, "能力 "), "frontline detail explains stage-relative capability")
-		_ok(_tree_has_button(instance, "立即出击") or _tree_has_button(instance, "先培养军团"), "frontline detail exposes one state-correct primary recommendation")
+	_ok(instance.find_child("OpenWarIntelligenceButton", true, false) == null, "factory action HUD avoids a redundant secondary frontline button")
 	instance.call("_show_map")
 	await _wait_frames(3)
 	_ok(instance.find_child("StageNodeStrip", true, false) != null, "war zone separates stage selection from stage detail")
