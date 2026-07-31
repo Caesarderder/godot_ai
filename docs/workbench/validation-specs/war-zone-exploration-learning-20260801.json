@@ -1,0 +1,28 @@
+{
+  "validation_id": "war-zone-exploration-learning-20260801",
+  "title": "战区探索感 · 一问验收",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "gate_id": "gate_player_learning",
+  "participant_target": 3,
+  "pass_threshold": 2,
+  "ai_readiness": {
+    "implementation_complete": true,
+    "automated_checks_passed": true,
+    "self_review_complete": true,
+    "known_improvements": [],
+    "human_judgment_required": "只有未接受界面讲解的玩家能判断这张地图是否自然产生继续向右探索敌占城市的欲望。"
+  },
+  "instructions": [
+    "直接看图，不阅读项目说明，也不要由主持人解释图标。",
+    "只做当前这一题；不满意时可选填一句最想修改的地方。"
+  ],
+  "tasks": [
+    {
+      "task_id": "war-zone-next-move",
+      "title": "战区地图",
+      "prompt": "不看说明，你是否一眼知道下一步该攻哪里，并且想继续向右探索下一个敌占地标？",
+      "image": "project-a/artifacts/scenario-war-zone-exploration/war-zone-844x390.png",
+      "dimensions": ["goal", "action"]
+    }
+  ]
+}

@@ -30,14 +30,14 @@ revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
 state: integrating
 phase: integrating
-iteration: 21/8
+iteration: 22/8
 revision: ee79abe
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T16:43:41Z
+updated_at: 2026-07-31T16:48:57Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -71,7 +71,7 @@ terminal: no
 - [pass] gate_factory_visual :: visual :: The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard. :: evidence=2
 - [pass] gate_factory_runtime :: correctness :: Factory HUD controls preserve shipping panel and semantic action signals across mission, facility, build and placement states. :: evidence=1
 - [pass] gate_factory_responsive :: correctness :: Factory world targets and contextual controls remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
-- [stale] gate_player_learning :: player_learning :: A fresh target player understands territorial progression and wants to inspect the next hostile landmark without coaching. :: evidence=0
+- [human_required] gate_player_learning :: player_learning :: A fresh target player understands territorial progression and wants to inspect the next hostile landmark without coaching. :: evidence=1
 - [pass] gate_legion_visual :: visual :: The formation screen reads as a six-character toilet resistance squad rather than a generic roster table. :: evidence=2
 - [pass] gate_legion_runtime :: correctness :: Formation selection and deployment preserve shipping tab and action signals across empty, selected and full squad states. :: evidence=1
 - [pass] gate_legion_responsive :: correctness :: Formation portraits, six slots and the primary action remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
@@ -154,13 +154,13 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T16:42:02Z :: Begin iteration 21 acceptance using the existing parameterized runway scenario.
-- 2026-07-31T16:43:40Z :: All thirty tier identities and exact claim commands pass the current focused scenario.
-- 2026-07-31T16:43:40Z :: Dual-size captures and a clean Web touch smoke prove the current mobile interaction surface.
-- 2026-07-31T16:43:40Z :: Shipping captures and an independent critic accept the corrected non-overlapping gesture runway.
 - 2026-07-31T16:43:41Z :: Shared UI smoke and clean Web touch boot pass at the integrated revision.
 - 2026-07-31T16:43:41Z :: Affected shared UI actions fit both accepted phone sizes and accept browser touch input.
 - 2026-07-31T16:43:41Z :: Iteration 21 has current runtime, responsive, browser-touch and independent visual evidence.
 - 2026-07-31T16:43:41Z :: Battle-pass gesture runway accepted; only the target-player learning gate remains stale.
-summary: scenarios=20 gates=56 evidence=129 current=75 findings=0 iterations=21
+- 2026-07-31T16:48:06Z :: All automated UI gates pass; publish the minimal one-question target-player observation required by the remaining human gate.
+- 2026-07-31T16:48:57Z :: No fresh target-player session exists; the remaining comprehension and exploration-desire claim requires human observation.
+- 2026-07-31T16:48:57Z :: The minimal one-question browser validation is published, automated readiness is proven, and the human-required limitation is recorded honestly.
+- 2026-07-31T16:48:57Z :: Player-learning handoff prepared; await repository sessions while keeping the challenge loop active.
+summary: scenarios=20 gates=56 evidence=130 current=76 findings=0 iterations=22
 ```

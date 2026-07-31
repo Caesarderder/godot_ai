@@ -1,0 +1,56 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_player_learning_human_required_ee79abe",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "ee79abe",
+  "valid_through_revision": "ee79abe",
+  "gate_id": "gate_player_learning",
+  "claim": "A fresh target player understands territorial progression and wants to inspect the next hostile landmark without coaching.",
+  "scenario_id": "scenario_ui_path_integration",
+  "execution_id": "player_learning_handoff_ee79abe",
+  "evidence_type": "player_observation",
+  "artifact_or_command": "Workbench validation war-zone-exploration-learning-20260801; validation-inbox currently reports zero sessions",
+  "case_results": [
+    {
+      "case_id": "cross_screen_cohesion",
+      "result": "not_run",
+      "assertions": [
+        "A fresh uncoached player must identify the next attack and express interest in exploring the next occupied landmark."
+      ],
+      "artifacts": [
+        "UI smoke assertions",
+        "canonical captures",
+        "exit code"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "UI smoke assertions",
+    "canonical captures",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "target mobile landscape Web",
+    "device": "unavailable fresh-player device",
+    "viewport": "844x390",
+    "seed": 20260731,
+    "build_mode": "release candidate"
+  },
+  "grader": {
+    "kind": "human",
+    "name": "fresh uncoached target-player observation",
+    "version": "one-question-v1",
+    "independence": "independent"
+  },
+  "observation": "All automated and independent visual checks pass, but no fresh-player session has yet been submitted. A one-question image-adjacent Workbench validation is available at the local service.",
+  "inference": "The learning gate requires human observation and cannot be passed from automated or maker evidence.",
+  "result": "human_required",
+  "confidence": 1.0,
+  "freshness": "current",
+  "limitations": [
+    "The project owner is not necessarily a fresh target player.",
+    "Zero repository sessions exist at publication time."
+  ],
+  "created_at": "2026-08-01T00:00:00+08:00"
+}
