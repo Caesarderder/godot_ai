@@ -28,8 +28,7 @@ AppBootstrap="*res://game/scripts/autoloads/app_bootstrap.gd"
 
 window/size/viewport_width=844
 window/size/viewport_height=390
-window/size/window_width_override=844
-window/size/window_height_override=390
+window/size/mode=2
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=6
