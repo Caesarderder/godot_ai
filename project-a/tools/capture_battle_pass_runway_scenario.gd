@@ -99,6 +99,8 @@ func _verify_structure(goals: GoalsScreen, case_id: String) -> bool:
 		return _fail("directional drag edge hints are missing")
 	if not right_hint.visible:
 		return _fail("runway does not expose a forward drag hint")
+	if left_hint.get_global_rect().intersects(runway.get_global_rect()) or right_hint.get_global_rect().intersects(runway.get_global_rect()):
+		return _fail("drag edge hints overlap reward-card content")
 	var batch := goals.find_child("MetaPassBatchClaim", true, false) as Button
 	if case_id == "claimable_runway" and (batch == null or batch.disabled or batch.size.y < 48.0):
 		return _fail("claimable batch action is not touch-ready")

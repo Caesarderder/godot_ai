@@ -599,6 +599,8 @@ func _build_pass() -> void:
 	runway_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	runway_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	runway_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	runway_scroll.offset_left = 34.0
+	runway_scroll.offset_right = -34.0
 	runway_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var runway_shell := Control.new()
 	runway_shell.name = "BattlePassRunwayShell"
@@ -693,17 +695,15 @@ func _runway_edge_hint(node_name: String, left: bool) -> Label:
 	hint.add_theme_constant_override("shadow_offset_x", 2 if left else -2)
 	hint.add_theme_constant_override("shadow_offset_y", 1)
 	var hint_style := StyleBoxFlat.new()
-	hint_style.bg_color = Color("#071013d9")
-	hint_style.border_color = Color("#58c9c266")
-	hint_style.set_border_width_all(1)
-	hint_style.set_corner_radius_all(8)
+	hint_style.bg_color = Color("#07101399")
+	hint_style.set_corner_radius_all(6)
 	hint.add_theme_stylebox_override("normal", hint_style)
 	hint.anchor_left = 0.0 if left else 1.0
 	hint.anchor_right = 0.0 if left else 1.0
 	hint.anchor_top = 0.5
 	hint.anchor_bottom = 0.5
-	hint.offset_left = 3.0 if left else -31.0
-	hint.offset_right = 31.0 if left else -3.0
+	hint.offset_left = 4.0 if left else -30.0
+	hint.offset_right = 30.0 if left else -4.0
 	hint.offset_top = -22.0
 	hint.offset_bottom = 22.0
 	return hint
