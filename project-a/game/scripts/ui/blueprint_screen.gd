@@ -16,6 +16,7 @@ const ICON_STATUS_LOCKED := preload("res://assets/ui/icons/kenney_game_icons/loc
 const ICON_STATUS_READY := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const ICON_STATUS_RESEARCH := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
 const ASSAULT_FORGE_ART := preload("res://assets/ui/recruit/faction-assault-v2.webp")
+const ARMORED_FORGE_ART := preload("res://assets/ui/recruit/faction-armored-v2.webp")
 const BG := Color("#090d10")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
@@ -43,7 +44,7 @@ const BRANCHES := [
 @onready var results_summary: Label = %BlueprintResultsSummary
 @onready var results_grid: GridContainer = %BlueprintResultsGrid
 @onready var tech_preview: PanelContainer = %FactionTechPreview
-@onready var doctrine_emblem: TextureRect = %DoctrineEmblem
+@onready var doctrine_hero: TextureRect = %DoctrineHero
 @onready var tech_identity: Label = %Identity
 @onready var tech_effect: Label = %Effect
 @onready var doctrine_deck: HBoxContainer = %DoctrineDeck
@@ -135,12 +136,11 @@ func _apply_view() -> void:
 	var choices := _view.get("faction_tech_choices", []) as Array
 	var choosing_doctrine := choices.size() == 2
 	var faction_name := String(preview.get("faction", "阵营"))
-	var faction_icon := ICON_BRANCH_HEAVY if faction_name.contains("铁甲") else ICON_BRANCH_ASSAULT
-	doctrine_emblem.texture = faction_icon
+	doctrine_hero.texture = ARMORED_FORGE_ART if faction_name.contains("铁甲") else ASSAULT_FORGE_ART
 	results_panel.visible = showing_results
 	tech_preview.visible = not showing_results and not preview.is_empty()
 	if choosing_doctrine:
-		tech_identity.text = "选择二阶指令\n%s" % faction_name
+		tech_identity.text = "二阶作战指令\n%s" % faction_name
 		var coordination := choices[0] as Dictionary
 		var specialization := choices[1] as Dictionary
 		tech_effect.text = "◆ 永久锁定"
@@ -155,7 +155,7 @@ func _apply_view() -> void:
 			specialization_choice,
 			"核心过载",
 			String(specialization.get("choice_summary", "阵营核心强化")),
-			faction_icon,
+			ICON_ABILITY_CHARGE,
 			GOLD
 		)
 	else:
@@ -215,11 +215,12 @@ func _configure_doctrine_choice(
 	compact_effect = compact_effect.replace("全队协同 · ", "")
 	compact_effect = compact_effect.replace("阵营专精 · ", "")
 	compact_effect = compact_effect.replace("\n", " · ")
-	button.text = "%s\n%s" % [title, compact_effect]
+	var action_copy := "确认联动 ›" if title == "全军联动" else "确认过载 ›"
+	button.text = "%s\n%s\n%s" % [title, compact_effect, action_copy]
 	button.tooltip_text = summary.replace("\n", " · ") + " · 选择后不可更改"
 	button.icon = icon
 	button.expand_icon = true
-	button.add_theme_constant_override("icon_max_width", 44)
+	button.add_theme_constant_override("icon_max_width", 52)
 	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.add_theme_font_size_override("font_size", 13)
 	button.add_theme_color_override("font_color", accent)
