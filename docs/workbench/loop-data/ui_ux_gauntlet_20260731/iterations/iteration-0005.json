@@ -1,0 +1,38 @@
+{
+  "iteration": 5,
+  "work_unit": "mobile portrait-led faction core choice",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/legion_screen.gd",
+    "project-a/scripts/slg_main.gd",
+    "project-a/assets/ui/recruit/faction-assault-v2.webp",
+    "project-a/tools/process_chroma_ui_asset.gd",
+    "project-a/tools/run_legion_screen_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_faction_choice_runtime_01bc769",
+    "ev_faction_choice_responsive_01bc769",
+    "ev_faction_choice_visual_diff_01bc769",
+    "ev_faction_choice_model_critic_01bc769",
+    "ev_ui_faction_integration_runtime_01bc769",
+    "ev_ui_faction_integration_responsive_01bc769"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [
+    "The broad post-30m journey suite still reports unrelated downstream chapter expectation failures.",
+    "The broad faction capture reaches the target screen but later stops on an existing chapter-three 568 battle-control clipping assertion."
+  ],
+  "rejected_approaches": [
+    "generic target icons and long receipt copy",
+    "fixed-width desktop cards that clip at 568",
+    "auto-focusing the first equal candidate and implying a default",
+    "textured primary buttons whose corner marks resembled editor handles",
+    "shipping the first 6.8 or second 7.8 critic candidate",
+    "retaining low-alpha magenta chroma haze around generated art"
+  ],
+  "next_action": "Expose the accepted faction-choice result through the repaired one-click Workbench feedback route, then continue the active UI/UX Loop with the next highest-value mobile screen gap.",
+  "blocker": null,
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

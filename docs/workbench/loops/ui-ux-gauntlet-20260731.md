@@ -30,14 +30,14 @@ revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
 state: integrating
 phase: integrating
-iteration: 4/8
-revision: e1da84a
+iteration: 5/8
+revision: 01bc769
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T12:26:30Z
+updated_at: 2026-07-31T13:00:40Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -64,14 +64,12 @@ terminal: no
 - [pass] gate_codex_visual :: visual :: The codex reads as a collectible toilet-character gallery rather than a generic card table. :: evidence=2
 - [pass] gate_codex_runtime :: correctness :: Codex selection and research routing preserve stable archetype and recipe identities. :: evidence=1
 - [pass] gate_codex_responsive :: correctness :: Focused portrait, gallery choices and the primary action remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
-- [pending] gate_faction_choice_visual :: visual :: The faction-core choice reads as a consequential duel between two distinct toilet characters rather than two generic signal cards. :: evidence=0
-- [pending] gate_faction_choice_runtime :: correctness :: Faction choice and selected-core research handoff preserve stable archetype identities and durable commands. :: evidence=0
-- [pending] gate_faction_choice_responsive :: correctness :: Both candidate portraits and choice actions remain visible and touch-sized at 844x390 and 568x320. :: evidence=0
+- [pass] gate_faction_choice_visual :: visual :: The faction-core choice reads as a consequential duel between two distinct toilet characters rather than two generic signal cards. :: evidence=4
+- [pass] gate_faction_choice_runtime :: correctness :: Faction choice and selected-core research handoff preserve stable archetype identities and durable commands. :: evidence=1
+- [pass] gate_faction_choice_responsive :: correctness :: Both candidate portraits and choice actions remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
-- [pass] ev_factory_runtime_2e23dd4 :: runtime_state :: gate=gate_factory_runtime :: freshness=current :: run_factory_screen_tests.gd; run_ui_smoke_tests.gd; capture_ui_review.gd
-- [pass] ev_factory_visual_critic_2e23dd4 :: model_critique :: gate=gate_factory_visual :: freshness=current :: blind A/B real-screen review by /root/factory_toilet_final_critic
 - [pass] ev_factory_visual_runtime_2e23dd4 :: visual_diff :: gate=gate_factory_visual :: freshness=current :: deterministic focused bundle plus canonical real-world captures
 - [fail] ev_factory_world_critic_fail_09516dd :: model_critique :: gate=gate_factory_visual :: freshness=stale :: blind review by /root/factory_hud_repair_critic
 - [fail] ev_legion_baseline_responsive_2e23dd4 :: runtime_state :: gate=gate_legion_responsive :: freshness=stale :: dual viewport LegionScreen focused bundle
@@ -82,8 +80,10 @@ terminal: no
 - [pass] ev_legion_visual_critic_eacfb8b :: model_critique :: gate=gate_legion_visual :: freshness=current :: randomized blind A/B review by /root/legion_formation_critic
 - [pass] ev_legion_visual_runtime_eacfb8b :: visual_diff :: gate=gate_legion_visual :: freshness=current :: baseline and candidate deterministic dual-size three-state bundles
 - [human_required] ev_player_learning_human_required_b13a0a1 :: player_observation :: gate=gate_player_learning :: freshness=stale :: No eligible fresh target-player session was available in this execution environment.
-- [pass] ev_ui_codex_integration_responsive_e1da84a :: runtime_state :: gate=gate_ui_responsive :: freshness=current :: dual-size main-scene capture plus UI smoke geometry assertions
-- [pass] ev_ui_codex_integration_runtime_e1da84a :: runtime_state :: gate=gate_ui_runtime :: freshness=current :: run_ui_smoke_tests.gd and capture_ui_review.gd
+- [pass] ev_ui_codex_integration_responsive_e1da84a :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: dual-size main-scene capture plus UI smoke geometry assertions
+- [pass] ev_ui_codex_integration_runtime_e1da84a :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
+- [pass] ev_ui_faction_integration_responsive_01bc769 :: capture :: gate=gate_ui_responsive :: freshness=current :: App Shell dual viewport captures plus compact layout and focus assertions
+- [pass] ev_ui_faction_integration_runtime_01bc769 :: test :: gate=gate_ui_runtime :: freshness=current :: run_ui_smoke_tests.gd, run_ui_focus_tests.gd, focused LegionScreen tests and App Shell capture
 - [human_required] ev_ui_gauntlet_human_required_16b05bb :: player_observation :: gate=gate_player_learning :: freshness=stale :: Workbench feedback session required
 - [pass] ev_ui_gauntlet_responsive_baseline_16b05bb :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a -s tools/capture_war_zone_exploration.gd
 - [pass] ev_ui_gauntlet_runtime_baseline_16b05bb :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd
@@ -100,13 +100,13 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T12:19:17Z :: Focused runtime suite and deterministic capture preserve stable codex IDs and actions.
-- 2026-07-31T12:19:17Z :: Dual-size focused and integrated captures preserve touch targets and gallery context.
-- 2026-07-31T12:21:01Z :: Deterministic comparison and independent blind critic pass the character-gallery claim.
-- 2026-07-31T12:21:01Z :: Canonical UI smoke and capture pass after codex shell integration.
-- 2026-07-31T12:21:02Z :: Canonical dual-size captures preserve codex and existing navigation geometry.
-- 2026-07-31T12:22:08Z :: Focused codex gates and declared integration checkpoint pass with independent visual evidence.
-- 2026-07-31T12:22:08Z :: Codex gallery work unit is accepted and integrated.
-- 2026-07-31T12:25:03Z :: Add the bounded faction-core character-choice work unit.
-summary: scenarios=6 gates=16 evidence=35 current=16 findings=0 iterations=4
+- 2026-07-31T12:55:38Z :: Mobile faction choice now uses portrait-led equal actions, generated assault art, compact Web touch sizing, and unified handoff material. Affected gates=['gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].
+- 2026-07-31T12:59:15Z :: Focused runtime and deterministic scenario evidence pass.
+- 2026-07-31T12:59:15Z :: Dual-size choice and handoff remain touch-sized and visible.
+- 2026-07-31T12:59:15Z :: Shipping UI smoke, focus and integrated capture pass.
+- 2026-07-31T12:59:15Z :: Shipping dual-size integration fits above navigation.
+- 2026-07-31T12:59:56Z :: Deterministic visual diff and independent model critic both pass; final critic score is 8.0 with 7.5 floor.
+- 2026-07-31T13:00:18Z :: Faction core choice passes runtime, responsive, mixed visual and shared integration gates at 01bc769.
+- 2026-07-31T13:00:18Z :: The bounded faction choice unit is accepted and ready for Workbench projection.
+summary: scenarios=6 gates=16 evidence=43 current=22 findings=0 iterations=5
 ```

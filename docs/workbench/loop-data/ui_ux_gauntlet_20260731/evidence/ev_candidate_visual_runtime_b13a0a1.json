@@ -3,7 +3,7 @@
   "evidence_id": "ev_candidate_visual_runtime_b13a0a1",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "b13a0a1",
-  "valid_through_revision": "e1da84a",
+  "valid_through_revision": "01bc769",
   "gate_id": "gate_ui_visual",
   "claim": "The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports.",
   "scenario_id": "scenario_war_zone_exploration",

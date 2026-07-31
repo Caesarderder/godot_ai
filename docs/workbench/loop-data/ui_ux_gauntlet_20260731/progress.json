@@ -2,8 +2,8 @@
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
   "state": "integrating",
-  "revision": "e1da84a",
-  "iteration": 4,
+  "revision": "01bc769",
+  "iteration": 5,
   "active_work_unit": null,
   "frozen_gates": [
     "gate_ui_visual",
@@ -16,16 +16,19 @@
     "gate_codex_runtime",
     "gate_codex_responsive",
     "gate_codex_visual",
+    "gate_faction_choice_runtime",
+    "gate_faction_choice_responsive",
     "gate_ui_runtime",
-    "gate_ui_responsive"
+    "gate_ui_responsive",
+    "gate_faction_choice_visual"
   ],
   "gate_status": {
     "gate_codex_responsive": "pass",
     "gate_codex_runtime": "pass",
     "gate_codex_visual": "pass",
-    "gate_faction_choice_responsive": "pending",
-    "gate_faction_choice_runtime": "pending",
-    "gate_faction_choice_visual": "pending",
+    "gate_faction_choice_responsive": "pass",
+    "gate_faction_choice_runtime": "pass",
+    "gate_faction_choice_visual": "pass",
     "gate_factory_responsive": "pass",
     "gate_factory_runtime": "pass",
     "gate_factory_visual": "pass",
@@ -73,7 +76,15 @@
     "ev_codex_visual_runtime_e1da84a",
     "ev_codex_visual_critic_e1da84a",
     "ev_ui_codex_integration_runtime_e1da84a",
-    "ev_ui_codex_integration_responsive_e1da84a"
+    "ev_ui_codex_integration_responsive_e1da84a",
+    "ev_faction_choice_runtime_01bc769",
+    "ev_faction_choice_responsive_01bc769",
+    "ev_faction_choice_visual_runtime_01bc769",
+    "ev_faction_choice_visual_critic_01bc769",
+    "ev_ui_faction_integration_runtime_01bc769",
+    "ev_ui_faction_integration_responsive_01bc769",
+    "ev_faction_choice_visual_diff_01bc769",
+    "ev_faction_choice_model_critic_01bc769"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -94,8 +105,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "Codex gallery work unit is accepted and integrated.",
-    "updated_at": "2026-07-31T12:25:03Z"
+    "next_action": "The bounded faction choice unit is accepted and ready for Workbench projection.",
+    "updated_at": "2026-07-31T13:00:18Z"
   },
   "decisions": [
     {
@@ -560,6 +571,148 @@
       "at": "2026-07-31T12:25:03Z",
       "decision": "Add the bounded faction-core character-choice work unit.",
       "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T12:26:41Z",
+      "decision": "Qualified mobile faction-choice scenario and preserved deterministic baseline. Affected gates=['gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_codex_responsive_e1da84a",
+        "ev_codex_runtime_e1da84a",
+        "ev_codex_visual_critic_e1da84a",
+        "ev_codex_visual_runtime_e1da84a",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_factory_responsive_2e23dd4",
+        "ev_factory_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4",
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_world_critic_fail_09516dd",
+        "ev_legion_baseline_responsive_2e23dd4",
+        "ev_legion_baseline_runtime_2e23dd4",
+        "ev_legion_baseline_visual_2e23dd4",
+        "ev_legion_responsive_eacfb8b",
+        "ev_legion_runtime_eacfb8b",
+        "ev_legion_visual_critic_eacfb8b",
+        "ev_legion_visual_runtime_eacfb8b",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_codex_integration_responsive_e1da84a",
+        "ev_ui_codex_integration_runtime_e1da84a",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb",
+        "ev_ui_integration_responsive_eacfb8b",
+        "ev_ui_integration_runtime_eacfb8b"
+      ]
+    },
+    {
+      "at": "2026-07-31T12:26:41Z",
+      "decision": "Focused mobile fixture is qualified; begin bounded choice reconstruction.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T12:55:38Z",
+      "decision": "Mobile faction choice now uses portrait-led equal actions, generated assault art, compact Web touch sizing, and unified handoff material. Affected gates=['gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_codex_responsive_e1da84a",
+        "ev_codex_runtime_e1da84a",
+        "ev_codex_visual_critic_e1da84a",
+        "ev_codex_visual_runtime_e1da84a",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_factory_responsive_2e23dd4",
+        "ev_factory_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4",
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_world_critic_fail_09516dd",
+        "ev_legion_baseline_responsive_2e23dd4",
+        "ev_legion_baseline_runtime_2e23dd4",
+        "ev_legion_baseline_visual_2e23dd4",
+        "ev_legion_responsive_eacfb8b",
+        "ev_legion_runtime_eacfb8b",
+        "ev_legion_visual_critic_eacfb8b",
+        "ev_legion_visual_runtime_eacfb8b",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_codex_integration_responsive_e1da84a",
+        "ev_ui_codex_integration_runtime_e1da84a",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb",
+        "ev_ui_integration_responsive_eacfb8b",
+        "ev_ui_integration_runtime_eacfb8b"
+      ]
+    },
+    {
+      "at": "2026-07-31T12:59:15Z",
+      "decision": "Focused runtime and deterministic scenario evidence pass.",
+      "evidence_ids": [
+        "ev_faction_choice_runtime_01bc769"
+      ]
+    },
+    {
+      "at": "2026-07-31T12:59:15Z",
+      "decision": "Dual-size choice and handoff remain touch-sized and visible.",
+      "evidence_ids": [
+        "ev_faction_choice_responsive_01bc769"
+      ]
+    },
+    {
+      "at": "2026-07-31T12:59:15Z",
+      "decision": "Shipping UI smoke, focus and integrated capture pass.",
+      "evidence_ids": [
+        "ev_ui_faction_integration_runtime_01bc769"
+      ]
+    },
+    {
+      "at": "2026-07-31T12:59:15Z",
+      "decision": "Shipping dual-size integration fits above navigation.",
+      "evidence_ids": [
+        "ev_ui_faction_integration_responsive_01bc769"
+      ]
+    },
+    {
+      "at": "2026-07-31T12:59:56Z",
+      "decision": "Deterministic visual diff and independent model critic both pass; final critic score is 8.0 with 7.5 floor.",
+      "evidence_ids": [
+        "ev_faction_choice_visual_diff_01bc769",
+        "ev_faction_choice_model_critic_01bc769"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:00:18Z",
+      "decision": "Faction core choice passes runtime, responsive, mixed visual and shared integration gates at 01bc769.",
+      "evidence_ids": [
+        "ev_faction_choice_runtime_01bc769",
+        "ev_faction_choice_responsive_01bc769",
+        "ev_faction_choice_visual_diff_01bc769",
+        "ev_faction_choice_model_critic_01bc769",
+        "ev_ui_faction_integration_runtime_01bc769",
+        "ev_ui_faction_integration_responsive_01bc769"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:00:18Z",
+      "decision": "The bounded faction choice unit is accepted and ready for Workbench projection.",
+      "evidence_ids": [
+        "ev_faction_choice_model_critic_01bc769"
+      ]
     }
   ]
 }

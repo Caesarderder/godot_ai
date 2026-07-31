@@ -46,7 +46,7 @@
   "inference": "Cross-screen responsive integration gate passes.",
   "result": "pass",
   "confidence": 0.97,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Physical device browser chrome remains human validation."
   ],

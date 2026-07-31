@@ -45,7 +45,7 @@
   "inference": "Cross-screen runtime integration gate passes.",
   "result": "pass",
   "confidence": 0.99,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Does not replace target-player validation."
   ],

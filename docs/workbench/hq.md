@@ -50,6 +50,9 @@ related:
 
 
 
+
+
+- [>] 实现 AI 全知视角 Workbench V2 #workbench #agent-gateway #event-store #sse
 - [>] Caesar挑战循环：持续优化UI/UX #p0 #ui #ux #caesar-loop
   loop: ui_ux_gauntlet_20260731
   loop-state: integrating
@@ -61,6 +64,10 @@ related:
 - [ ] 收敛 Web-first 3D 轻量 SLG 发布候选 #p0
   owner: project team
 ## 已完成
+- [x] 审查 AI 全知视角 Workbench 工作环境 #review #workbench #agent-dashboard
+  审查结论不通过：现有系统是 Markdown/Loop 投影查看器，缺统一事件存储、人机双向收件箱、消费确认、实时推送、Agent 心跳与宿主桥接；已形成分层重构建议，本轮按 review 范围未修改实现
+- [x] 完善 Workbench 真人反馈落盘与 AI 发现闭环 #workbench #human-validation #knowledge-map
+  移除静态 HTML 假提交语义，新增 session 导入和统一反馈收件箱，知识地图与回归测试同步完成
 - [x] 按用户反馈重做标题、基地 HUD 与验收链路 #ui #art #workbench
   动漫马桶人主视觉、极简标题主页、世界优先基地 HUD、底部横向建设列表及一问一答验收链路已实现并验证
 - [x] 将 Workbench 重做为直观 Tab 工作台 #ui #workbench
@@ -270,7 +277,7 @@ summary: scenarios=9 gates=20 evidence=41 current=28 findings=0 iterations=12
 {
   "gate_id": "gate_player_learning",
   "instructions": [
-    "依次看图鉴、基地、战区三张画面。",
+    "依次看阵营选择、基地、战区三张画面。",
     "每张只选满意或要修改；想补充时写一句话即可。"
   ],
   "participant_target": 5,
@@ -283,10 +290,10 @@ summary: scenarios=9 gates=20 evidence=41 current=28 findings=0 iterations=12
         "goal",
         "action"
       ],
-      "image": "project-a/artifacts/ui-codex-portraits-844x390.png",
-      "prompt": "是否一眼看出已入列、待研发和未知角色，并想继续收集？",
-      "task_id": "codex",
-      "title": "角色图鉴"
+      "image": "project-a/artifacts/scenario-faction-core-choice/candidate_choice-844x390.png",
+      "prompt": "是否一眼看出两名候选是不同马桶人，并愿意选择自己的阵营核心？",
+      "task_id": "faction-choice",
+      "title": "阵营核心选择"
     },
     {
       "dimensions": [
@@ -319,14 +326,14 @@ summary: scenarios=9 gates=20 evidence=41 current=28 findings=0 iterations=12
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
 state: integrating
 phase: integrating
-iteration: 4/8
-revision: e1da84a
+iteration: 5/8
+revision: 01bc769
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T12:26:30Z
+updated_at: 2026-07-31T13:00:40Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -353,14 +360,12 @@ terminal: no
 - [pass] gate_codex_visual :: visual :: The codex reads as a collectible toilet-character gallery rather than a generic card table. :: evidence=2
 - [pass] gate_codex_runtime :: correctness :: Codex selection and research routing preserve stable archetype and recipe identities. :: evidence=1
 - [pass] gate_codex_responsive :: correctness :: Focused portrait, gallery choices and the primary action remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
-- [pending] gate_faction_choice_visual :: visual :: The faction-core choice reads as a consequential duel between two distinct toilet characters rather than two generic signal cards. :: evidence=0
-- [pending] gate_faction_choice_runtime :: correctness :: Faction choice and selected-core research handoff preserve stable archetype identities and durable commands. :: evidence=0
-- [pending] gate_faction_choice_responsive :: correctness :: Both candidate portraits and choice actions remain visible and touch-sized at 844x390 and 568x320. :: evidence=0
+- [pass] gate_faction_choice_visual :: visual :: The faction-core choice reads as a consequential duel between two distinct toilet characters rather than two generic signal cards. :: evidence=4
+- [pass] gate_faction_choice_runtime :: correctness :: Faction choice and selected-core research handoff preserve stable archetype identities and durable commands. :: evidence=1
+- [pass] gate_faction_choice_responsive :: correctness :: Both candidate portraits and choice actions remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
-- [pass] ev_factory_runtime_2e23dd4 :: runtime_state :: gate=gate_factory_runtime :: freshness=current :: run_factory_screen_tests.gd; run_ui_smoke_tests.gd; capture_ui_review.gd
-- [pass] ev_factory_visual_critic_2e23dd4 :: model_critique :: gate=gate_factory_visual :: freshness=current :: blind A/B real-screen review by /root/factory_toilet_final_critic
 - [pass] ev_factory_visual_runtime_2e23dd4 :: visual_diff :: gate=gate_factory_visual :: freshness=current :: deterministic focused bundle plus canonical real-world captures
 - [fail] ev_factory_world_critic_fail_09516dd :: model_critique :: gate=gate_factory_visual :: freshness=stale :: blind review by /root/factory_hud_repair_critic
 - [fail] ev_legion_baseline_responsive_2e23dd4 :: runtime_state :: gate=gate_legion_responsive :: freshness=stale :: dual viewport LegionScreen focused bundle
@@ -371,8 +376,10 @@ terminal: no
 - [pass] ev_legion_visual_critic_eacfb8b :: model_critique :: gate=gate_legion_visual :: freshness=current :: randomized blind A/B review by /root/legion_formation_critic
 - [pass] ev_legion_visual_runtime_eacfb8b :: visual_diff :: gate=gate_legion_visual :: freshness=current :: baseline and candidate deterministic dual-size three-state bundles
 - [human_required] ev_player_learning_human_required_b13a0a1 :: player_observation :: gate=gate_player_learning :: freshness=stale :: No eligible fresh target-player session was available in this execution environment.
-- [pass] ev_ui_codex_integration_responsive_e1da84a :: runtime_state :: gate=gate_ui_responsive :: freshness=current :: dual-size main-scene capture plus UI smoke geometry assertions
-- [pass] ev_ui_codex_integration_runtime_e1da84a :: runtime_state :: gate=gate_ui_runtime :: freshness=current :: run_ui_smoke_tests.gd and capture_ui_review.gd
+- [pass] ev_ui_codex_integration_responsive_e1da84a :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: dual-size main-scene capture plus UI smoke geometry assertions
+- [pass] ev_ui_codex_integration_runtime_e1da84a :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
+- [pass] ev_ui_faction_integration_responsive_01bc769 :: capture :: gate=gate_ui_responsive :: freshness=current :: App Shell dual viewport captures plus compact layout and focus assertions
+- [pass] ev_ui_faction_integration_runtime_01bc769 :: test :: gate=gate_ui_runtime :: freshness=current :: run_ui_smoke_tests.gd, run_ui_focus_tests.gd, focused LegionScreen tests and App Shell capture
 - [human_required] ev_ui_gauntlet_human_required_16b05bb :: player_observation :: gate=gate_player_learning :: freshness=stale :: Workbench feedback session required
 - [pass] ev_ui_gauntlet_responsive_baseline_16b05bb :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a -s tools/capture_war_zone_exploration.gd
 - [pass] ev_ui_gauntlet_runtime_baseline_16b05bb :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd
@@ -389,15 +396,15 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T12:19:17Z :: Focused runtime suite and deterministic capture preserve stable codex IDs and actions.
-- 2026-07-31T12:19:17Z :: Dual-size focused and integrated captures preserve touch targets and gallery context.
-- 2026-07-31T12:21:01Z :: Deterministic comparison and independent blind critic pass the character-gallery claim.
-- 2026-07-31T12:21:01Z :: Canonical UI smoke and capture pass after codex shell integration.
-- 2026-07-31T12:21:02Z :: Canonical dual-size captures preserve codex and existing navigation geometry.
-- 2026-07-31T12:22:08Z :: Focused codex gates and declared integration checkpoint pass with independent visual evidence.
-- 2026-07-31T12:22:08Z :: Codex gallery work unit is accepted and integrated.
-- 2026-07-31T12:25:03Z :: Add the bounded faction-core character-choice work unit.
-summary: scenarios=6 gates=16 evidence=35 current=16 findings=0 iterations=4
+- 2026-07-31T12:55:38Z :: Mobile faction choice now uses portrait-led equal actions, generated assault art, compact Web touch sizing, and unified handoff material. Affected gates=['gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].
+- 2026-07-31T12:59:15Z :: Focused runtime and deterministic scenario evidence pass.
+- 2026-07-31T12:59:15Z :: Dual-size choice and handoff remain touch-sized and visible.
+- 2026-07-31T12:59:15Z :: Shipping UI smoke, focus and integrated capture pass.
+- 2026-07-31T12:59:15Z :: Shipping dual-size integration fits above navigation.
+- 2026-07-31T12:59:56Z :: Deterministic visual diff and independent model critic both pass; final critic score is 8.0 with 7.5 floor.
+- 2026-07-31T13:00:18Z :: Faction core choice passes runtime, responsive, mixed visual and shared integration gates at 01bc769.
+- 2026-07-31T13:00:18Z :: The bounded faction choice unit is accepted and ready for Workbench projection.
+summary: scenarios=6 gates=16 evidence=43 current=22 findings=0 iterations=5
 ```
 
 ```status #hq
@@ -507,6 +514,14 @@ state: building
 - 2026-07-31T12:22:09Z 同步 Caesar Loop：ui_ux_gauntlet_20260731 · integrating
 - 2026-07-31T12:24:07Z Caesar UI/UX Loop：图鉴通过后审计剩余高频界面；免费阵营十连的核心二选一仍以通用靶心和长句卡片代替真实候选角色，选为下一 bounded work unit。
 - 2026-07-31T12:26:30Z 同步 Caesar Loop：ui_ux_gauntlet_20260731 · integrating
+- 2026-07-31T12:41:27Z 开始：完善 Workbench 真人反馈落盘与 AI 发现闭环
+- 2026-07-31T12:44:49Z 真人反馈闭环已改为服务模式原子落盘、静态模式显式未入库；新增 validation-import 与 validation-inbox，AI 发现合同已进入知识地图。
+- 2026-07-31T12:44:49Z 完成：完善 Workbench 真人反馈落盘与 AI 发现闭环 — 移除静态 HTML 假提交语义，新增 session 导入和统一反馈收件箱，知识地图与回归测试同步完成
+- 2026-07-31T12:56:16Z 开始：审查 AI 全知视角 Workbench 工作环境
+- 2026-07-31T12:56:39Z 完成：审查 AI 全知视角 Workbench 工作环境 — 审查结论不通过：现有系统是 Markdown/Loop 投影查看器，缺统一事件存储、人机双向收件箱、消费确认、实时推送、Agent 心跳与宿主桥接；已形成分层重构建议，本轮按 review 范围未修改实现
+- 2026-07-31T12:59:30Z 开始：实现 AI 全知视角 Workbench V2
+- 2026-07-31T13:00:40Z 同步 Human Validation：mobile-ui-player-learning-20260731
+- 2026-07-31T13:00:40Z 同步 Caesar Loop：ui_ux_gauntlet_20260731 · integrating
 ## Checklist
 - [x] 初始化项目看板
 - [x] 初始化项目状态
@@ -582,6 +597,12 @@ state: building
 - 2026-07-31T11:49:23Z @caesar-awesome (agent): Caesar UI/UX Loop：工厂切片通过后完成全屏审计；军团整备区仍以表格、加号和文字为主，角色题材存在感最低，选为下一 bounded work unit。
 - 2026-07-31T12:08:23Z @caesar-awesome (agent): Caesar UI/UX Loop：军团切片发布后继续全屏审计；军团图鉴仍以通用卡片网格和顶部工具条为主，角色肖像过小、收藏探索感不足，选为下一 bounded work unit。
 - 2026-07-31T12:24:07Z @caesar-awesome (agent): Caesar UI/UX Loop：图鉴通过后审计剩余高频界面；免费阵营十连的核心二选一仍以通用靶心和长句卡片代替真实候选角色，选为下一 bounded work unit。
+- 2026-07-31T12:41:27Z @caesar-awesome (agent): 开始任务：**完善 Workbench 真人反馈落盘与 AI 发现闭环**。
+- 2026-07-31T12:44:49Z @caesar-awesome (agent): 真人反馈闭环已改为服务模式原子落盘、静态模式显式未入库；新增 validation-import 与 validation-inbox，AI 发现合同已进入知识地图。
+- 2026-07-31T12:44:49Z @caesar-awesome (agent): 完成任务：**完善 Workbench 真人反馈落盘与 AI 发现闭环** — 移除静态 HTML 假提交语义，新增 session 导入和统一反馈收件箱，知识地图与回归测试同步完成
+- 2026-07-31T12:56:16Z @caesar-awesome (agent): 开始任务：**审查 AI 全知视角 Workbench 工作环境**。
+- 2026-07-31T12:56:39Z @caesar-awesome (agent): 完成任务：**审查 AI 全知视角 Workbench 工作环境** — 审查结论不通过：现有系统是 Markdown/Loop 投影查看器，缺统一事件存储、人机双向收件箱、消费确认、实时推送、Agent 心跳与宿主桥接；已形成分层重构建议，本轮按 review 范围未修改实现
+- 2026-07-31T12:59:30Z @caesar-awesome (agent): 开始任务：**实现 AI 全知视角 Workbench V2**。
 ```
 
 ## 事实入口
