@@ -251,18 +251,20 @@ func _run() -> void:
 		"the candidate reveal settles at a fully readable stable layout"
 	)
 	_check(
-		_tree_has_text(legion, "十连战果已锁定 · 新角色图纸 2 · 专属碎片 +60"),
+		_tree_has_text(legion, "信号锁定  ·  新图纸 2  ·  碎片 +60"),
 		"faction choice first names the concrete ten-pull haul"
 	)
 	_check(
-		_tree_has_text(legion, "研发 → 入队")
-			and _tree_has_text(legion, "3场磨合")
-			and _tree_has_text(legion, "挑战强敌"),
-		"faction choice previews the concrete research, deployment, and battle loop"
+		reveal_card != null
+			and reveal_card.tooltip_text.contains("研发 → 入队")
+			and reveal_card.tooltip_text.contains("3场磨合")
+			and reveal_card.tooltip_text.contains("挑战强敌"),
+		"faction choice keeps the concrete journey in progressive disclosure"
 	)
 	_check(
-		_tree_has_text(legion, "新角色设计 · 标准 · 冲锋马桶人"),
-		"faction choice frames each candidate as a newly unlocked character design"
+		_tree_has_text(legion, "标准  冲锋马桶人")
+			and reveal_card.find_children("*", "TextureRect", true, false).size() >= 3,
+		"faction choice frames each candidate as an icon-led blueprint card"
 	)
 	var reduced_view := (legion.get("_view") as Dictionary).duplicate(true)
 	reduced_view["reduced_motion"] = true

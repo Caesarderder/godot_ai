@@ -16,6 +16,10 @@ signal hero_selected(hero_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const COMMANDER_BADGE := preload("res://assets/generated/vector/characters/commander_badge.svg")
+const RECRUIT_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
+const RECRUIT_ROLE_ICON := preload("res://assets/ui/icons/kenney_game_icons/multiplayer.png")
+const RECRUIT_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
+const RECRUIT_SELECT_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const ResourceContextHudScript := preload("res://game/scripts/ui/resource_context_hud.gd")
 const PANEL := Color("#12171c")
@@ -577,14 +581,14 @@ func _recruit_panel() -> Control:
 		if not core_choices.is_empty():
 			var reward_summary := _view.get("recruit_reward_summary", {}) as Dictionary
 			var choice_panel := _panel(
-				"十连战果已锁定 · 新角色图纸 %d · 专属碎片 +%d" % [
+				"信号锁定  ·  新图纸 %d  ·  碎片 +%d" % [
 					int(reward_summary.get("new_blueprints", 0)),
 					int(reward_summary.get("fragment_total", 0)),
 				]
 			)
 			choice_panel.name = "RecruitFactionCoreChoice"
 			var journey := _label(
-				"两套2★路线均已就绪 · 选定后：研发 → 入队 → 3场磨合 → 挑战强敌",
+				"选择一份核心蓝图",
 				12,
 				CYAN
 			)
@@ -605,28 +609,66 @@ func _recruit_panel() -> Control:
 					Color("#181d22"),
 					_faction_accent(String(choice.get("faction", "")))
 				)
-				card.add_child(_label(
-					"新角色设计 · %s · %s · %s\n%s · 2★%s（碎片已齐）" % [
+				card.tooltip_text = "%s · %s\n%s\n2★ %s\n选定后：研发 → 入队 → 3场磨合 → 挑战强敌" % [
+					String(choice.get("display_name", "")),
+					String(choice.get("faction", "")),
+					String(choice.get("synergy_summary", "")),
+					String(choice.get("next_star_effect", "")),
+				]
+				var identity := HBoxContainer.new()
+				identity.add_theme_constant_override("separation", 8)
+				card.add_child(identity)
+				var signal_badge := PanelContainer.new()
+				signal_badge.custom_minimum_size = Vector2(54, 54)
+				var badge_style := _box(
+					Color("#10232a"),
+					_faction_accent(String(choice.get("faction", "")))
+				)
+				badge_style.set_corner_radius_all(10)
+				signal_badge.add_theme_stylebox_override("panel", badge_style)
+				identity.add_child(signal_badge)
+				var signal_icon := TextureRect.new()
+				signal_icon.texture = RECRUIT_SIGNAL_ICON
+				signal_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				signal_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				signal_icon.modulate = _faction_accent(String(choice.get("faction", "")))
+				signal_badge.add_child(signal_icon)
+				var identity_copy := VBoxContainer.new()
+				identity_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				identity_copy.add_theme_constant_override("separation", 1)
+				identity.add_child(identity_copy)
+				identity_copy.add_child(_label(
+					"%s  %s" % [
 						_rating_label(String(choice.get("rating", "B"))),
 						String(choice.get("display_name", "")),
-						String(choice.get("faction", "")),
-						String(choice.get("synergy_summary", "")),
-						String(choice.get("next_star_effect", "")),
 					],
-					12,
+					16,
 					GOLD
 				))
+				identity_copy.add_child(_icon_copy(
+					RECRUIT_ROLE_ICON,
+					String(choice.get("faction", "")),
+					_faction_accent(String(choice.get("faction", "")))
+				))
+				identity_copy.add_child(_icon_copy(
+					RECRUIT_STAR_ICON,
+					"2★  %s" % String(choice.get("next_star_effect", "")),
+					CYAN
+				))
 				var choose := _button(
-					"选择%s · %s" % [
-						String(choice.get("display_name", "")),
-						String(choice.get("playstyle", "")),
-					],
+					"选定  ·  %s" % String(choice.get("playstyle", "")),
 					true
 				)
 				choose.name = "ChooseFactionCore_%s" % String(
 					choice.get("archetype_id", "")
 				)
 				choose.custom_minimum_size.y = 48
+				choose.icon = RECRUIT_SELECT_ICON
+				choose.expand_icon = true
+				choose.tooltip_text = "选择%s作为阵营核心 · %s" % [
+					String(choice.get("display_name", "")),
+					String(choice.get("synergy_summary", "")),
+				]
 				choose.pressed.connect(action_requested.emit.bind(
 					"choose_faction_core",
 					{"archetype_id": String(choice.get("archetype_id", ""))}
@@ -701,6 +743,24 @@ func _recruit_panel() -> Control:
 		result_panel.add_child(grid)
 		panel.add_child(result_panel)
 	return panel
+
+
+func _icon_copy(icon: Texture2D, copy: String, color: Color) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 5)
+	var image := TextureRect.new()
+	image.custom_minimum_size = Vector2(18, 18)
+	image.texture = icon
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image.modulate = color
+	row.add_child(image)
+	var copy_label := _label(copy, 11, color)
+	copy_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy_label.max_lines_visible = 1
+	copy_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(copy_label)
+	return row
 
 
 func _codex_panel() -> Control:
