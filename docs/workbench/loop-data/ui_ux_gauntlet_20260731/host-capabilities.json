@@ -1,0 +1,58 @@
+{
+  "observed_at": "2026-07-31T19:00:00+08:00",
+  "capabilities": {
+    "fresh_agent_context": {
+      "status": "supported",
+      "evidence": "The host exposes isolated child-agent critic threads when required by an active Caesar Loop.",
+      "limits": [
+        "Critics share the repository filesystem but receive a blind evidence brief."
+      ]
+    },
+    "parallel_agents": {
+      "status": "unsupported",
+      "evidence": "No parallel maker execution is authorized for this work unit.",
+      "limits": []
+    },
+    "isolated_workspaces": {
+      "status": "unsupported",
+      "evidence": "All work uses one dirty shared worktree.",
+      "limits": [
+        "All staging and commits must remain path-specific."
+      ]
+    },
+    "runtime_control": {
+      "status": "supported",
+      "evidence": "Godot 4.6.3 headless tests and Compatibility renderer executions succeed locally.",
+      "limits": [
+        "Physical mobile browsers are unavailable."
+      ]
+    },
+    "capture": {
+      "status": "supported",
+      "evidence": "Non-headless Godot capture scripts emit repository-local PNG evidence.",
+      "limits": [
+        "Desktop captures are representative, not physical-device proof."
+      ]
+    },
+    "profiling": {
+      "status": "unknown",
+      "evidence": "No target-device profiler has been observed.",
+      "limits": [
+        "No target-device frame pacing claim can close."
+      ]
+    },
+    "persistent_run_state": {
+      "status": "supported",
+      "evidence": "Managed Caesar JSON ledgers and Workbench projection are writable.",
+      "limits": []
+    },
+    "target_player_access": {
+      "status": "unsupported",
+      "evidence": "No uncoached target player is available to the host.",
+      "limits": [
+        "The player-learning gate must remain human_required until user-run sessions exist."
+      ]
+    }
+  },
+  "schema_version": "caesar-loop/v2"
+}

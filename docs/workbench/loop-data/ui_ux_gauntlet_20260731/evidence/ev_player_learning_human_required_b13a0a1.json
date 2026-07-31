@@ -1,0 +1,55 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_player_learning_human_required_b13a0a1",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "b13a0a1",
+  "valid_through_revision": "b13a0a1",
+  "gate_id": "gate_player_learning",
+  "claim": "A fresh target player understands territorial progression and wants to inspect the next hostile landmark without coaching.",
+  "scenario_id": "scenario_ui_path_integration",
+  "execution_id": "player_session_unavailable_b13a0a1",
+  "evidence_type": "player_observation",
+  "artifact_or_command": "No eligible fresh target-player session was available in this execution environment.",
+  "case_results": [
+    {
+      "case_id": "cross_screen_cohesion",
+      "result": "not_run",
+      "assertions": [
+        "states goal and next action",
+        "selects frontier without search",
+        "expresses desire to reveal occupied location"
+      ],
+      "artifacts": [
+        "Workbench simple question-plus-feedback flow"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "UI smoke assertions",
+    "canonical captures",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "human",
+    "name": "fresh target player",
+    "version": "1",
+    "independence": "independent"
+  },
+  "observation": "No qualified human session occurred; automation and model critique are intentionally not substituted.",
+  "inference": "The player-learning gate remains human_required.",
+  "result": "human_required",
+  "confidence": 1.0,
+  "freshness": "current",
+  "limitations": [
+    "Requires one fresh player using the browser Workbench flow."
+  ],
+  "created_at": "2026-07-31T18:05:00+08:00"
+}

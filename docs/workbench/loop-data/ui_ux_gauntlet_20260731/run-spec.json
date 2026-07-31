@@ -1,0 +1,597 @@
+{
+  "contract_variant": "caesar-awesome",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
+  "player_outcome": {
+    "target_player": "first-time mobile landscape light-SLG player familiar with anime city-war imagery",
+    "platform": "Godot 4.6.3 Web, 844x390 and 568x320 landscape",
+    "play_window_seconds": [
+      20,
+      60
+    ],
+    "control": "selects a campaign landmark, changes chapter, opens contextual detail, and chooses the primary action",
+    "threat": "locked frontier, hostile occupied city, and uncertain stage capability",
+    "choice": "explore the next landmark, prepare the legion, or attack the selected stage",
+    "feedback": "world-first map, route state, landmark silhouette, selected detail, and one contextual primary action",
+    "outcome": "understands territorial progression and wants to reveal the next occupied location without searching through UI panels"
+  },
+  "constraints": {
+    "engine": "Godot 4.6.3 GDScript Compatibility renderer",
+    "target_runtime": "single-threaded Web and mobile landscape",
+    "asset_policy": "original generated or repository-owned raster assets only; no unlicensed copied franchise art",
+    "scope": [
+      "title, factory, war-zone and cross-screen UI/UX challenged by the user's feedback",
+      "focused war-zone exploration slice",
+      "one conditional whole-path integration checkpoint"
+    ],
+    "out_of_scope": [
+      "combat balance",
+      "new campaign rules",
+      "commercial release certification"
+    ],
+    "accessibility": [
+      "state is encoded by silhouette, icon and position in addition to colour",
+      "44px-or-larger touch targets",
+      "critical action remains visible at both target viewports"
+    ]
+  },
+  "quality_dimensions": [
+    {
+      "dimension_id": "assets_modeling",
+      "label": "Assets and modeling",
+      "applicability": "in_scope",
+      "scope": [
+        "title hero art and map landmark silhouettes"
+      ],
+      "gate_ids": [
+        "gate_ui_visual"
+      ],
+      "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
+    },
+    {
+      "dimension_id": "materials_shaders_lighting",
+      "label": "Materials, shaders, and lighting",
+      "applicability": "in_scope",
+      "scope": [
+        "map depth, occupied-city atmosphere and readable value hierarchy"
+      ],
+      "gate_ids": [
+        "gate_ui_visual"
+      ],
+      "rationale": "Exploration desire depends on depth and atmosphere rather than flat panels."
+    },
+    {
+      "dimension_id": "motion_vfx",
+      "label": "Motion and VFX",
+      "applicability": "not_applicable",
+      "scope": [],
+      "gate_ids": [],
+      "rationale": "This first bounded wave changes static map composition and HUD hierarchy, not temporal VFX."
+    },
+    {
+      "dimension_id": "ui_ux",
+      "label": "UI and UX",
+      "applicability": "in_scope",
+      "scope": [
+        "title simplicity, factory contextual HUD, war-zone hierarchy and feedback flow"
+      ],
+      "gate_ids": [
+        "gate_ui_visual",
+        "gate_ui_runtime",
+        "gate_player_learning"
+      ],
+      "rationale": "UI/UX is the explicit objective."
+    },
+    {
+      "dimension_id": "interaction_camera_physics",
+      "label": "Interaction, camera, and physics",
+      "applicability": "in_scope",
+      "scope": [
+        "stage selection, chapter navigation and contextual panel actions"
+      ],
+      "gate_ids": [
+        "gate_ui_runtime"
+      ],
+      "rationale": "The player must manipulate the real shipping screen without blocked map targets."
+    },
+    {
+      "dimension_id": "gameplay_levels_ai",
+      "label": "Gameplay, levels, and AI",
+      "applicability": "in_scope",
+      "scope": [
+        "campaign stage availability and attack/preparation routing"
+      ],
+      "gate_ids": [
+        "gate_ui_runtime"
+      ],
+      "rationale": "Map presentation must remain bound to real campaign state."
+    },
+    {
+      "dimension_id": "balance_economy_progression",
+      "label": "Balance, economy, and progression",
+      "applicability": "not_applicable",
+      "scope": [],
+      "gate_ids": [],
+      "rationale": "No values, costs, rewards or unlock rules are changed."
+    },
+    {
+      "dimension_id": "narrative_content",
+      "label": "Narrative and content",
+      "applicability": "in_scope",
+      "scope": [
+        "original-inspired occupied-city counterattack atmosphere without copied art"
+      ],
+      "gate_ids": [
+        "gate_ui_visual"
+      ],
+      "rationale": "The user explicitly requires a stronger original-world feeling and exploration fantasy."
+    },
+    {
+      "dimension_id": "audio",
+      "label": "Audio",
+      "applicability": "not_applicable",
+      "scope": [],
+      "gate_ids": [],
+      "rationale": "This wave makes no audio claim."
+    },
+    {
+      "dimension_id": "learning_replay",
+      "label": "Learning and replay",
+      "applicability": "in_scope",
+      "scope": [
+        "two-second territorial progression and desire to inspect the next landmark"
+      ],
+      "gate_ids": [
+        "gate_player_learning"
+      ],
+      "rationale": "Only target-player observation can close the exploration and comprehension claim."
+    },
+    {
+      "dimension_id": "accessibility_localization",
+      "label": "Accessibility and localization",
+      "applicability": "in_scope",
+      "scope": [
+        "dual-coded stage state, Chinese text fit and mobile touch size"
+      ],
+      "gate_ids": [
+        "gate_ui_responsive"
+      ],
+      "rationale": "The target viewports and non-colour state encoding are explicit constraints."
+    },
+    {
+      "dimension_id": "correctness_data_lifecycle",
+      "label": "Correctness, data, and lifecycle",
+      "applicability": "in_scope",
+      "scope": [
+        "screen rebuild, selection signals, disabled states and repeat navigation"
+      ],
+      "gate_ids": [
+        "gate_ui_runtime",
+        "gate_ui_responsive"
+      ],
+      "rationale": "Visual changes must not break the shipping campaign flow."
+    },
+    {
+      "dimension_id": "performance_stability",
+      "label": "Performance and stability",
+      "applicability": "in_scope",
+      "scope": [
+        "Web-safe map drawing and lightweight raster budget"
+      ],
+      "gate_ids": [
+        "gate_ui_runtime"
+      ],
+      "rationale": "The accepted candidate must import and run without destabilizing the Web target."
+    }
+  ],
+  "quality_bar": {
+    "comparison": "At 844x390 and 568x320, a blind reviewer can identify recovered territory, the current selectable landmark, and the locked hostile frontier before reading the detail panel.",
+    "inspect_route": "scenario_war_zone_exploration focused dual-size bundle, followed by scenario_ui_path_integration after the accepted candidate",
+    "limits": [
+      "Static captures and automated routes cannot prove target-player exploration desire, touch feel, or physical-phone safe areas."
+    ]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "scenario_war_zone_exploration",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the parameterized war-zone screen without manually traversing the production main scene.",
+      "player_question": "Does the map communicate territorial progress, current opportunity and an intriguing hostile frontier before its detail panel?",
+      "gate_ids": [
+        "gate_ui_visual",
+        "gate_ui_runtime",
+        "gate_ui_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/run_war_zone_screen_tests.gd and focused capture fixture",
+        "shipping_surface": "war_zone_screen.gd, war_zone_screen.tscn and stage_detail_panel",
+        "public_adapter": "WarZoneScreen.configure plus shipping selection and action signals"
+      },
+      "fixture": {
+        "subject_parameter": "chapter_state",
+        "reuse_scope": "all campaign chapters and locked/unlocked stage mixtures",
+        "extension_contract": "add chapter_state data to the matrix; never duplicate campaign or selection logic"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate war_zone_screen.tscn directly with deterministic stage rows",
+        "state": "known cleared, selected, unlocked and locked landmarks across chapter states",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "select_opening",
+          "at": "case start",
+          "action": "select the first unlocked stage through the shipping button signal"
+        },
+        {
+          "stimulus_id": "select_frontier",
+          "at": "after opening capture",
+          "action": "select the highest unlocked frontier landmark"
+        },
+        {
+          "stimulus_id": "inspect_locked",
+          "at": "frontier capture",
+          "action": "observe disabled hostile landmarks and chapter boundary"
+        },
+        {
+          "stimulus_id": "switch_viewport",
+          "at": "between matrix cases",
+          "action": "reconfigure the same fixture for compact landscape"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "war_zone_assertions",
+          "source": "focused runtime assertions",
+          "window": "all matrix cases",
+          "artifact": "project-a/artifacts/scenario-war-zone-exploration/manifest.json"
+        },
+        {
+          "observation_id": "war_zone_standard",
+          "source": "fixed 844x390 capture",
+          "window": "selected frontier state",
+          "artifact": "project-a/artifacts/scenario-war-zone-exploration/war-zone-844x390.png"
+        },
+        {
+          "observation_id": "war_zone_compact",
+          "source": "fixed 568x320 capture",
+          "window": "selected frontier state",
+          "artifact": "project-a/artifacts/scenario-war-zone-exploration/war-zone-568x320.png"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "territorial_progress",
+          "state": "two cleared landmarks, one selected frontier and two locked hostile landmarks",
+          "stimulus_ids": [
+            "select_opening",
+            "select_frontier",
+            "inspect_locked"
+          ],
+          "viewpoints": [
+            "844x390 establishing",
+            "route close read"
+          ],
+          "assertions": [
+            "all five stable stage IDs exist",
+            "locked nodes are disabled",
+            "selected state and CTA remain visible",
+            "map dominates before detail"
+          ],
+          "observation_ids": [
+            "war_zone_assertions",
+            "war_zone_standard"
+          ]
+        },
+        {
+          "case_id": "compact_frontier",
+          "state": "same chapter state in compact landscape",
+          "stimulus_ids": [
+            "switch_viewport",
+            "select_frontier",
+            "inspect_locked"
+          ],
+          "viewpoints": [
+            "568x320 establishing",
+            "thumb-reach action view"
+          ],
+          "assertions": [
+            "route and hostile frontier remain visible",
+            "touch targets stay inside viewport",
+            "detail does not cover selected landmark"
+          ],
+          "observation_ids": [
+            "war_zone_assertions",
+            "war_zone_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "rebuild the focused Control tree and stage data between viewport cases",
+        "artifact_manifest": [
+          "runtime assertions",
+          "844 capture",
+          "568 capture",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "capture manifest is incomplete",
+          "renderer capture fails",
+          "one case contaminates the next"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "no gameplay clock; fixed process-frame settle budget",
+        "warmup": "three frames after configure and resize",
+        "temporal_isolation": "fresh scene tree plus explicit rebuild for each viewport"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_war_zone_exploration.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd",
+        "isolation": "fresh process, fixed stage rows, exact viewports and stable node IDs",
+        "outputs": [
+          "assertion log",
+          "exit code"
+        ]
+      },
+      "reset": "free the focused scene and rebuild from deterministic chapter_state input",
+      "failure_conditions": [
+        "fixture launches the main scene",
+        "a declared viewport or state is missing",
+        "map targets overlap the detail panel",
+        "capture bundle is incomplete"
+      ],
+      "limitations": [
+        "Blind critique can judge hierarchy and atmosphere but not prove voluntary exploration."
+      ]
+    },
+    {
+      "scenario_id": "scenario_ui_path_integration",
+      "scenario_kind": "whole_path_integration",
+      "purpose": "Check the accepted title, factory and war-zone UI once in the real player path.",
+      "player_question": "Does the accepted map remain coherent with the simplified title and world-first factory without breaking navigation?",
+      "gate_ids": [
+        "gate_ui_runtime",
+        "gate_ui_responsive",
+        "gate_player_learning"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/run_ui_smoke_tests.gd and capture_ui_review.gd",
+        "shipping_surface": "main UI composition and screen routes",
+        "public_adapter": "normal title, base, map, selection and navigation actions"
+      },
+      "fixture": {
+        "subject_parameter": "campaign_fixture",
+        "reuse_scope": "accepted cross-screen UI candidates",
+        "extension_contract": "reuse the existing fresh campaign fixture and add only declared checkpoints"
+      },
+      "setup": {
+        "execution_surface": "main_scene",
+        "entry": "launch the production main scene at a declared integration checkpoint",
+        "state": "fresh deterministic campaign with title, factory and first war-zone frontier",
+        "camera_or_view": "normal shipping cameras and Controls",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "ui_path",
+          "at": "one bounded integration pass",
+          "action": "enter from title, inspect factory action/build HUD, open war zone, select frontier and exercise contextual CTA"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "ui_integration_bundle",
+          "source": "shipping runtime assertions and canonical captures",
+          "window": "one title-to-war-zone path",
+          "artifact": "project-a/artifacts plus UI smoke output"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "cross_screen_cohesion",
+          "state": "fresh campaign through accepted UI screens",
+          "stimulus_ids": [
+            "ui_path"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "navigation works",
+            "world remains dominant",
+            "primary actions fit",
+            "affected frozen behavior does not regress"
+          ],
+          "observation_ids": [
+            "ui_integration_bundle"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 1,
+        "case_isolation": "fresh deterministic campaign state",
+        "artifact_manifest": [
+          "UI smoke assertions",
+          "canonical captures",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "integration run invalid due to capture or environment failure"
+        ]
+      },
+      "determinism": {
+        "level": "bounded",
+        "seed": 20260731,
+        "clock": "fixture-controlled campaign state with bounded frame settling",
+        "warmup": "load main scene before path actions",
+        "temporal_isolation": "fresh process and fresh campaign fixture"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_ui_review.gd",
+        "expected_seconds": 60,
+        "outputs": [
+          "canonical UI captures"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd",
+        "isolation": "fresh process and deterministic fixture",
+        "outputs": [
+          "UI smoke assertions",
+          "exit code"
+        ]
+      },
+      "reset": "discard fixture state and relaunch only at a declared integration trigger",
+      "failure_conditions": [
+        "title, factory or map route cannot be reached",
+        "primary action clips",
+        "shared screen contract regresses"
+      ],
+      "limitations": [
+        "Automated integration cannot close target-player comprehension or desire."
+      ]
+    }
+  ],
+  "integration_policy": {
+    "strategy": "conditional_checkpoint",
+    "scenario_ids": [
+      "scenario_ui_path_integration"
+    ],
+    "run_after": [
+      "focused gates pass for an accepted candidate",
+      "shared composition root changes",
+      "before completion review"
+    ],
+    "max_main_scene_launches_per_wave": 1,
+    "rerun_unchanged_revision": false
+  },
+  "quality_gates": [
+    {
+      "gate_id": "gate_ui_visual",
+      "profile": "visual",
+      "claim": "The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_war_zone_exploration"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "map reads before panels",
+        "recovered/current/hostile states are visually distinct beyond colour",
+        "atmosphere resembles an original anime occupied-city counterattack rather than a generic dashboard"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_ui_runtime",
+      "profile": "correctness",
+      "claim": "Title, factory and war-zone actions use shipping state and navigation without regressions.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_war_zone_exploration",
+        "scenario_ui_path_integration"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "focused and integration assertions pass",
+        "stable stage IDs and disabled states remain correct",
+        "Web asset imports succeed"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_ui_responsive",
+      "profile": "correctness",
+      "claim": "All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_war_zone_exploration",
+        "scenario_ui_path_integration"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "no declared target overlaps detail",
+        "touch targets fit",
+        "critical state is not colour-only"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_player_learning",
+      "profile": "player_learning",
+      "claim": "A fresh target player understands territorial progression and wants to inspect the next hostile landmark without coaching.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_ui_path_integration"
+      ],
+      "grader": "human",
+      "independent_critic": false,
+      "assertions": [
+        "states goal and next action",
+        "selects a frontier landmark without search",
+        "expresses interest in revealing the next occupied location"
+      ],
+      "freeze_on_pass": true
+    }
+  ],
+  "ownership": [
+    {
+      "owner": "war-zone work-unit owner",
+      "surface": "war-zone shipping UI plus dedicated focused fixture",
+      "public_contract": "WarZoneScreen.configure and existing selection/action signals",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "integration owner",
+      "surface": "title/base/map composition and main UI route",
+      "public_contract": "existing main-scene navigation and UI smoke fixture",
+      "coupling": "integration_only"
+    }
+  ],
+  "budgets": {
+    "max_iterations": 8,
+    "max_same_finding_retries": 2,
+    "no_progress_window": 2,
+    "max_wall_time_minutes": 180,
+    "max_regressions": 1
+  },
+  "stop_policy": {
+    "minimum_material_improvement": 0.03,
+    "terminal_results": [
+      "completed",
+      "budget_exhausted",
+      "no_material_progress",
+      "blocked",
+      "human_required",
+      "capability_unavailable",
+      "regression_limit",
+      "user_stopped",
+      "failed"
+    ]
+  },
+  "schema_version": "caesar-loop/v2"
+}

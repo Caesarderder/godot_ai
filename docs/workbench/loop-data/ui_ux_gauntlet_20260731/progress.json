@@ -1,0 +1,132 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "state": "unit_looping",
+  "revision": "b13a0a1",
+  "iteration": 1,
+  "active_work_unit": "war-zone exploration hierarchy and atmosphere",
+  "frozen_gates": [
+    "gate_ui_visual",
+    "gate_ui_runtime",
+    "gate_ui_responsive"
+  ],
+  "gate_status": {
+    "gate_ui_visual": "pass",
+    "gate_ui_runtime": "pass",
+    "gate_ui_responsive": "pass",
+    "gate_player_learning": "human_required"
+  },
+  "open_findings": [],
+  "evidence_ledger": [
+    "ev_ui_gauntlet_runtime_baseline_16b05bb",
+    "ev_ui_gauntlet_responsive_baseline_16b05bb",
+    "ev_ui_gauntlet_visual_baseline_16b05bb",
+    "ev_ui_gauntlet_human_required_16b05bb",
+    "ev_candidate_focused_runtime_b13a0a1",
+    "ev_candidate_responsive_b13a0a1",
+    "ev_candidate_visual_runtime_b13a0a1",
+    "ev_candidate_visual_critic_b13a0a1",
+    "ev_candidate_integration_runtime_b13a0a1",
+    "ev_candidate_integration_responsive_b13a0a1",
+    "ev_player_learning_human_required_b13a0a1"
+  ],
+  "continuation_anchor": {
+    "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
+    "scope": [
+      "title, factory, war-zone and cross-screen UI/UX challenged by the user's feedback",
+      "focused war-zone exploration slice",
+      "one conditional whole-path integration checkpoint"
+    ],
+    "in_scope_dimensions": [
+      "accessibility_localization",
+      "assets_modeling",
+      "correctness_data_lifecycle",
+      "gameplay_levels_ai",
+      "interaction_camera_physics",
+      "learning_replay",
+      "materials_shaders_lighting",
+      "narrative_content",
+      "performance_stability",
+      "ui_ux"
+    ],
+    "next_action": "war-zone exploration hierarchy and atmosphere",
+    "updated_at": "2026-07-31T11:13:17Z"
+  },
+  "decisions": [
+    {
+      "at": "2026-07-31T11:01:48Z",
+      "decision": "Run initialized through caesar-awesome managed artifact tool.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T11:01:54Z",
+      "decision": "Audit current local Godot, capture, critic, persistence and target-player capabilities before scenario authoring",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T11:04:00Z",
+      "decision": "RunSpec and host capability audit are valid; author and qualify focused scenario before baseline",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T11:05:05Z",
+      "decision": "Focused fixture qualified with identical dual-run hashes and strict runtime assertions",
+      "evidence_ids": [
+        "ev_ui_gauntlet_runtime_baseline_16b05bb"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:05:05Z",
+      "decision": "Baseline recorded for every required gate; visual baseline fails while runtime/responsive pass and player-learning is human_required",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T11:09:32Z",
+      "decision": "战区地图视觉语言、专用场景与窄屏标注均已更新 Affected gates=['gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime', 'gate_ui_visual']; carried gates=[].",
+      "evidence_ids": [
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:13:17Z",
+      "decision": "Focused dual-size candidate is deterministic and ready for gate decision.",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:13:54Z",
+      "decision": "Deterministic dual-size bundle plus fresh blind independent critic PASS (8.1/10).",
+      "evidence_ids": [
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:13:54Z",
+      "decision": "Focused assertions, import, smoke suite and canonical integration capture passed.",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:13:54Z",
+      "decision": "Both declared landscape sizes retain targets, state and primary action across focused and canonical routes.",
+      "evidence_ids": [
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:14:30Z",
+      "decision": "Only a fresh target player can prove comprehension and voluntary exploration desire; model critique is not substituted.",
+      "evidence_ids": [
+        "ev_player_learning_human_required_b13a0a1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 1,
+  "work_unit": "war-zone exploration hierarchy and atmosphere",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/war_zone_screen.gd",
+    "project-a/tools/capture_war_zone_exploration.gd"
+  ],
+  "evidence_ids": [
+    "ev_candidate_focused_runtime_b13a0a1",
+    "ev_candidate_responsive_b13a0a1",
+    "ev_candidate_visual_runtime_b13a0a1",
+    "ev_candidate_visual_critic_b13a0a1"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [],
+  "next_action": "Run the declared canonical title-factory-map integration checkpoint.",
+  "blocker": null
+}
