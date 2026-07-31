@@ -155,13 +155,17 @@ func _run() -> void:
 		goals.find_child("AchievementMedalWall", true, false) != null,
 		"achievement tab renders a dedicated medal wall"
 	)
-	var first_achievement := _find_text_control(goals, "第一座城")
+	var first_achievement := goals.find_child(
+		"Achievement_meta_campaign_first",
+		true,
+		false
+	) as Button
 	_check(
 		first_achievement != null
 			and first_achievement.is_visible_in_tree()
-			and first_achievement.size.x >= 250.0
-			and first_achievement.size.y >= 82.0,
-		"achievement medal cards keep an icon-led touch target"
+			and first_achievement.size.x >= 64.0
+			and first_achievement.size.y >= 64.0,
+		"achievement cabinet keeps icon-led medal touch targets"
 	)
 	var first_medal := goals.find_child(
 		"Achievement_meta_campaign_first",
@@ -171,6 +175,10 @@ func _run() -> void:
 	_check(
 		first_medal != null and first_medal.icon != null,
 		"achievement medal exposes a raster emblem"
+	)
+	_check(
+		goals.find_child("AchievementSelectedDetail", true, false) != null,
+		"achievement cabinet exposes one contextual detail strip"
 	)
 	_check(
 		_fits_compact_screen(first_medal),

@@ -1218,8 +1218,8 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	instance.call("_set_goals_tab", "achievements")
 	await _wait_frames(3)
 	_ok(
-		_tree_has_button(instance, "第一座城"),
-		"goals screen exposes permanent achievement progress as an interactive card"
+		instance.find_child("Achievement_meta_campaign_first", true, false) is Button,
+		"goals screen exposes permanent achievement progress as an interactive medal"
 	)
 	_ok(_tree_has_button(instance, "领取"), "completed permanent achievement exposes a claim action")
 	instance.call("_set_goals_tab", "pass")

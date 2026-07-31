@@ -659,68 +659,98 @@ func _build_achievements() -> void:
 	var panel := _panel("")
 	panel.name = "AchievementMedalWall"
 	var claimable := int(_view.get("achievement_claimable", 0))
+	var compact := bool(_view.get("compact", false))
 	var overview := HBoxContainer.new()
-	overview.add_theme_constant_override("separation", 12)
+	overview.add_theme_constant_override("separation", 8)
+	overview.custom_minimum_size.y = 48
+	overview.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var collection_icon := TextureRect.new()
 	collection_icon.texture = ICON_ACHIEVEMENT_CAMPAIGN
-	collection_icon.custom_minimum_size = Vector2(44, 44)
+	collection_icon.custom_minimum_size = Vector2(40, 40)
 	collection_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	collection_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	overview.add_child(collection_icon)
-	var title := _label("战绩徽章", 17, TEXT)
+	var title := _label("荣誉柜", 15, TEXT)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.custom_minimum_size.x = 72
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title.tooltip_text = "永久成就 · 不随赛季重置"
 	overview.add_child(title)
+	var overview_state := _label("", 11, CYAN)
+	overview_state.custom_minimum_size.x = 88
+	overview_state.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	overview_state.autowrap_mode = TextServer.AUTOWRAP_OFF
+	overview.add_child(overview_state)
 	if claimable > 0:
 		var batch := _button("领取 ×%d" % claimable, true)
 		batch.name = "AchievementBatchClaim"
 		batch.icon = ICON_ACHIEVEMENT_FORTRESS
 		batch.expand_icon = true
-		batch.custom_minimum_size.x = 154
+		batch.custom_minimum_size = Vector2(126 if compact else 154, 48)
+		batch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		batch.tooltip_text = "一键领取 %d 项成就" % claimable
 		batch.pressed.connect(action_requested.emit.bind("claim_all_achievements", {}))
 		overview.add_child(batch)
 	else:
-		overview.add_child(_label("继续攻城解锁进度", 12, MUTED))
+		var count := (_view.get("achievements", []) as Array).size()
+		var settled := _label("%d 枚" % count, 12, GREEN)
+		settled.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		overview.add_child(settled)
 	panel.add_child(overview)
-	var grid := HFlowContainer.new()
-	grid.name = "AchievementCardGrid"
-	grid.add_theme_constant_override("h_separation", 7)
-	grid.add_theme_constant_override("v_separation", 5)
-	panel.add_child(grid)
-	var compact := bool(_view.get("compact", false))
+	var cabinet := HBoxContainer.new()
+	cabinet.name = "AchievementMedalCabinet"
+	cabinet.add_theme_constant_override("separation", 5 if compact else 8)
+	cabinet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cabinet.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	panel.add_child(cabinet)
+	var detail_semantics := Control.new()
+	detail_semantics.name = "AchievementSelectedDetail"
+	detail_semantics.visible = false
+	panel.add_child(detail_semantics)
+	var selected_achievement: Dictionary = {}
+	for value in _view.get("achievements", []):
+		var candidate := value as Dictionary
+		if selected_achievement.is_empty():
+			selected_achievement = candidate
+		if bool(candidate.get("complete", false)) and not bool(candidate.get("claimed", false)):
+			selected_achievement = candidate
+			break
+	if not selected_achievement.is_empty():
+		_select_achievement_detail(collection_icon, title, overview_state, selected_achievement)
 	for value in _view.get("achievements", []):
 		var achievement := value as Dictionary
 		var claimed := bool(achievement.get("claimed", false))
 		var complete := bool(achievement.get("complete", false))
 		var status_copy := "已领取" if claimed else ("可领取" if complete else "进行中")
+		var status_mark := "✓" if claimed else ("!" if complete else "%d/%d" % [
+			int(achievement.get("progress", 0)), int(achievement.get("target", 1))
+		])
 		var progress := int(achievement.get("progress", 0))
 		var target := int(achievement.get("target", 1))
-		var card := _button(
-			"%s\n%d/%d · %s" % [
-				String(achievement.get("title", "")),
-				progress,
-				target,
-				status_copy,
-			],
-			false
-		)
+		var medal_slot := VBoxContainer.new()
+		medal_slot.custom_minimum_size.x = 76 if compact else 98
+		medal_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		medal_slot.add_theme_constant_override("separation", 0)
+		cabinet.add_child(medal_slot)
+		var card := _button(status_mark, false)
 		card.name = "Achievement_%s" % String(
 			achievement.get("achievement_id", "")
 		).replace(".", "_")
 		card.icon = _achievement_icon(String(achievement.get("achievement_id", "")))
 		card.expand_icon = true
-		card.add_theme_constant_override("icon_max_width", 58)
-		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		card.custom_minimum_size = Vector2(255 if compact else 260, 82)
+		card.add_theme_constant_override("icon_max_width", 50 if compact else 62)
+		card.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		card.custom_minimum_size = Vector2(64, 64 if compact else 74)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.tooltip_text = "%s · %d/%d · %s" % [
 			String(achievement.get("title", "")),
 			progress,
 			target,
 			status_copy,
 		]
-		card.add_theme_font_size_override("font_size", 12)
+		card.add_theme_font_size_override("font_size", 11)
 		if claimed:
 			card.modulate = Color(0.72, 0.82, 0.82, 0.78)
 		elif complete:
@@ -729,12 +759,37 @@ func _build_achievements() -> void:
 				UiArtDirectionScript.button_style(true)
 			)
 			card.add_theme_color_override("font_color", Color("#14110c"))
-		card.disabled = claimed or not complete
-		card.pressed.connect(action_requested.emit.bind("claim_achievement", {
-			"achievement_id": String(achievement.get("achievement_id", "")),
-		}))
-		grid.add_child(card)
+		if complete and not claimed:
+			card.pressed.connect(action_requested.emit.bind("claim_achievement", {
+				"achievement_id": String(achievement.get("achievement_id", "")),
+			}))
+		else:
+			card.pressed.connect(_select_achievement_detail.bind(
+				collection_icon,
+				title,
+				overview_state,
+				achievement
+			))
+		medal_slot.add_child(card)
 	content.add_child(panel)
+
+
+func _select_achievement_detail(
+	icon: TextureRect,
+	title: Label,
+	state: Label,
+	achievement: Dictionary
+) -> void:
+	var claimed := bool(achievement.get("claimed", false))
+	var complete := bool(achievement.get("complete", false))
+	icon.texture = _achievement_icon(String(achievement.get("achievement_id", "")))
+	title.text = String(achievement.get("title", ""))
+	state.text = "%d/%d · %s" % [
+		int(achievement.get("progress", 0)),
+		int(achievement.get("target", 1)),
+		"已领取" if claimed else ("可领取" if complete else "进行中"),
+	]
+	state.add_theme_color_override("font_color", GREEN if claimed else (GOLD if complete else CYAN))
 
 
 func _achievement_icon(achievement_id: String) -> Texture2D:
