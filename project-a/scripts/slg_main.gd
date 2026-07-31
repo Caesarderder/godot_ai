@@ -3317,6 +3317,8 @@ func _show_result() -> void:
 			)
 		),
 		"outcome_color": "green" if won else ("gold" if outcome == "retreat" else "red"),
+		"chapter_complete": chapter_one_complete,
+		"chapter_hero_ids": ["assault", "armored"] if chapter_one_complete else [],
 		"reward_headline": _battle_reward_headline(reward, legion_data_gain),
 		"hero_experience": _hero_experience_copy(event, last_battle_runtime_result),
 		"materials": "",

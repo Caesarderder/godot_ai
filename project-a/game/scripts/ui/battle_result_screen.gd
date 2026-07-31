@@ -11,6 +11,8 @@ const ICON_GOLD := preload("res://assets/ui/battle_result/loot_coin.webp")
 const ICON_DATA := preload("res://assets/ui/battle_result/legion_data.webp")
 const ICON_TIME := preload("res://assets/ui/battle_result/battle_time.webp")
 const ICON_TARGET := preload("res://assets/ui/battle_result/destroyed_target.webp")
+const HERO_ASSAULT := preload("res://assets/ui/recruit/faction-assault-v2.webp")
+const HERO_ARMORED := preload("res://assets/ui/recruit/faction-armored-v2.webp")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
@@ -199,6 +201,9 @@ func _style_button(button: Button, primary: bool) -> void:
 
 func _build_visual_report() -> void:
 	_clear_children(result_visuals)
+	var chapter_complete := bool(_view.get("chapter_complete", false))
+	if chapter_complete:
+		result_visuals.add_child(_chapter_victory_tableau(bool(_view.get("compact", false))))
 	var rewards := HBoxContainer.new()
 	rewards.name = "ResultRewardChips"
 	rewards.add_theme_constant_override("separation", 7)
@@ -225,7 +230,7 @@ func _build_visual_report() -> void:
 	var highlight_source := String(_view.get("debrief", ""))
 	if highlight_source.is_empty():
 		highlight_source = String(_view.get("hurdle_proof", ""))
-	if not highlight_source.is_empty():
+	if not highlight_source.is_empty() and not chapter_complete:
 		var highlight := HBoxContainer.new()
 		highlight.name = "ResultHighlight"
 		highlight.add_theme_constant_override("separation", 7)
@@ -251,6 +256,57 @@ func _build_visual_report() -> void:
 		copy.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		highlight.add_child(copy)
 		result_visuals.add_child(highlight)
+
+
+func _chapter_victory_tableau(compact: bool) -> Control:
+	var panel := PanelContainer.new()
+	panel.name = "ChapterVictoryHeroTableau"
+	panel.custom_minimum_size.y = 92 if compact else 112
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#07141a")
+	style.border_color = Color(CYAN, 0.72)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	panel.add_theme_stylebox_override("panel", style)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 2 if compact else 8)
+	panel.add_child(row)
+	row.add_child(_chapter_hero(HERO_ASSAULT, compact, "ChapterVictoryAssault", "突击先锋"))
+	var crest := VBoxContainer.new()
+	crest.alignment = BoxContainer.ALIGNMENT_CENTER
+	crest.custom_minimum_size.x = 46 if compact else 64
+	row.add_child(crest)
+	var medal := TextureRect.new()
+	medal.name = "ChapterVictoryCrest"
+	medal.texture = ICON_VICTORY
+	medal.custom_minimum_size = Vector2(42, 42) if compact else Vector2(54, 54)
+	medal.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	medal.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	medal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	crest.add_child(medal)
+	var cleared := Label.new()
+	cleared.text = "破墙" if compact else "高墙已破"
+	cleared.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cleared.add_theme_font_override("font", CJK_FONT)
+	cleared.add_theme_font_size_override("font_size", 10 if compact else 12)
+	cleared.add_theme_color_override("font_color", GOLD)
+	crest.add_child(cleared)
+	row.add_child(_chapter_hero(HERO_ARMORED, compact, "ChapterVictoryArmored", "装甲铁卫"))
+	return panel
+
+
+func _chapter_hero(texture: Texture2D, compact: bool, node_name: String, tooltip: String) -> TextureRect:
+	var hero := TextureRect.new()
+	hero.name = node_name
+	hero.texture = texture
+	hero.custom_minimum_size = Vector2(92, 86) if compact else Vector2(116, 106)
+	hero.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hero.tooltip_text = tooltip
+	return hero
 
 
 func _metric_chip(

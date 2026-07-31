@@ -47,6 +47,7 @@ func _capture_case(case_id: String, viewport_size: Vector2i, path: String) -> bo
 	DisplayServer.window_set_size(viewport_size)
 	root.content_scale_size = viewport_size
 	root.size = viewport_size
+	Input.warp_mouse(Vector2(2, 2))
 	for child in root.get_children():
 		child.queue_free()
 	await process_frame
@@ -82,9 +83,13 @@ func _verify(result: BattleResultScreen, case_id: String, requested: Dictionary)
 	var primary := result.find_child("PrimaryAction", true, false) as Button
 	if primary == null or primary.size.y < 48.0:
 		return _fail("primary action is not touch-ready")
-	for node_name in ["ResultRewardChips", "ResultBattleFacts", "ResultHighlight"]:
+	for node_name in ["ChapterVictoryHeroTableau", "ResultRewardChips", "ResultBattleFacts"]:
 		if result.find_child(node_name, true, false) == null:
 			return _fail("missing visual result node %s" % node_name)
+	for hero_name in ["ChapterVictoryAssault", "ChapterVictoryArmored"]:
+		var hero := result.find_child(hero_name, true, false) as TextureRect
+		if hero == null or hero.texture == null or hero.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			return _fail("chapter hero art is missing or intercepts touch: %s" % hero_name)
 	primary.pressed.emit()
 	if case_id == "fresh_chapter_clear":
 		if requested["id"] != "welfare":
