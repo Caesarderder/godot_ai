@@ -52,7 +52,8 @@
         "gate_blueprint_forge_visual",
         "gate_action_compass_visual",
         "gate_achievement_cabinet_visual",
-        "gate_growth_duel_visual"
+        "gate_growth_duel_visual",
+        "gate_doctrine_deck_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -100,7 +101,9 @@
         "gate_achievement_cabinet_visual",
         "gate_achievement_cabinet_runtime",
         "gate_growth_duel_visual",
-        "gate_growth_duel_runtime"
+        "gate_growth_duel_runtime",
+        "gate_doctrine_deck_visual",
+        "gate_doctrine_deck_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -169,7 +172,8 @@
         "gate_blueprint_forge_visual",
         "gate_action_compass_visual",
         "gate_achievement_cabinet_visual",
-        "gate_growth_duel_visual"
+        "gate_growth_duel_visual",
+        "gate_doctrine_deck_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -189,7 +193,8 @@
         "gate_blueprint_forge_responsive",
         "gate_action_compass_responsive",
         "gate_achievement_cabinet_responsive",
-        "gate_growth_duel_responsive"
+        "gate_growth_duel_responsive",
+        "gate_doctrine_deck_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -216,7 +221,9 @@
         "gate_achievement_cabinet_runtime",
         "gate_achievement_cabinet_responsive",
         "gate_growth_duel_runtime",
-        "gate_growth_duel_responsive"
+        "gate_growth_duel_responsive",
+        "gate_doctrine_deck_runtime",
+        "gate_doctrine_deck_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -2025,6 +2032,191 @@
       "limitations": [
         "Static captures cannot prove that a target player predicts the long-term tactical consequence."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_faction_doctrine_command_deck",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping BlueprintScreen irreversible Tier-2 faction doctrine choice and activated result.",
+      "player_question": "Can the player compare army-wide coordination against faction specialization as two visual command doctrines and understand the permanent consequence without reading dense cards?",
+      "gate_ids": [
+        "gate_doctrine_deck_visual",
+        "gate_doctrine_deck_runtime",
+        "gate_doctrine_deck_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_faction_doctrine_deck_scenario.gd and blueprint screen tests",
+        "shipping_surface": "blueprint_screen.gd faction_tech_preview and doctrine choice",
+        "public_adapter": "BlueprintScreen.configure plus action_requested choose_faction_doctrine"
+      },
+      "fixture": {
+        "subject_parameter": "faction_doctrine_state",
+        "reuse_scope": "assault choice, armored choice and activated doctrine",
+        "extension_contract": "add deterministic BlueprintScreen views; never duplicate faction catalog or durable doctrine exclusivity rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate blueprint_screen.tscn with deterministic shipping view dictionaries",
+        "state": "Tier-2 doctrine unlocked after chapter three",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_assault_choice",
+          "at": "case start",
+          "action": "show coordination versus specialization for assault faction"
+        },
+        {
+          "stimulus_id": "show_armored_choice",
+          "at": "after assault",
+          "action": "show the same permanent choice for armored faction"
+        },
+        {
+          "stimulus_id": "show_activated",
+          "at": "after choice cases",
+          "action": "show selected coordination doctrine activated"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "doctrine_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-faction-doctrine-deck/manifest.json"
+        },
+        {
+          "observation_id": "doctrine_standard",
+          "source": "fixed 844x390 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-faction-doctrine-deck"
+        },
+        {
+          "observation_id": "doctrine_compact",
+          "source": "fixed 568x320 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-faction-doctrine-deck"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "assault_choice",
+          "state": "assault Tier-2 doctrine awaiting irreversible choice",
+          "stimulus_ids": [
+            "show_assault_choice"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "two doctrines are icon-led and immediately distinct",
+            "permanent consequence is concise",
+            "both actions preserve equal visual weight"
+          ],
+          "observation_ids": [
+            "doctrine_manifest",
+            "doctrine_standard",
+            "doctrine_compact"
+          ]
+        },
+        {
+          "case_id": "armored_choice",
+          "state": "armored Tier-2 doctrine awaiting irreversible choice",
+          "stimulus_ids": [
+            "show_armored_choice"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "faction identity remains visible",
+            "coordination and specialization retain stable icons",
+            "both actions fit without scrolling"
+          ],
+          "observation_ids": [
+            "doctrine_manifest",
+            "doctrine_standard",
+            "doctrine_compact"
+          ]
+        },
+        {
+          "case_id": "doctrine_activated",
+          "state": "coordination doctrine already selected and active",
+          "stimulus_ids": [
+            "show_activated"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "activated state does not expose another choice",
+            "chosen doctrine reads as a reward",
+            "no empty branch dashboard competes"
+          ],
+          "observation_ids": [
+            "doctrine_manifest",
+            "doctrine_standard",
+            "doctrine_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh BlueprintScreen per state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "assault captures",
+          "armored captures",
+          "activated captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed doctrine state",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_faction_doctrine_deck_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_blueprint_screen_tests.gd && godot --path project-a -s tools/capture_faction_doctrine_deck_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and BlueprintScreen after capture",
+      "failure_conditions": [
+        "doctrines are dense text cards",
+        "choices differ only by copy",
+        "permanent warning overwhelms identity",
+        "actions clip or require scroll",
+        "activated state still looks editable"
+      ],
+      "limitations": [
+        "Static captures cannot prove target-player prediction of formation-wide combat effects."
+      ]
     }
   ],
   "integration_policy": {
@@ -2534,6 +2726,59 @@
         "no interaction depends on hover"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_doctrine_deck_visual",
+      "profile": "visual",
+      "claim": "Tier-2 doctrine selection reads as a visual command-deck choice rather than a dense settings form.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_faction_doctrine_command_deck"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "doctrine icons dominate",
+        "army-wide versus faction-only scope is immediate",
+        "permanence is concise",
+        "activated state feels rewarding"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_doctrine_deck_runtime",
+      "profile": "correctness",
+      "claim": "Doctrine actions preserve exact coordination and specialization identities while activated state exposes no replacement action.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_faction_doctrine_command_deck"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "coordination action emits exact doctrine_id",
+        "specialization action emits exact doctrine_id",
+        "activated state hides both choices"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_doctrine_deck_responsive",
+      "profile": "correctness",
+      "claim": "Both doctrine choices and the activated command card remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_faction_doctrine_command_deck"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "choice targets remain at least 48 px",
+        "both choices stay above the fold",
+        "no horizontal scroll",
+        "no interaction depends on hover"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -2589,6 +2834,12 @@
       "owner": "first growth duel work-unit owner",
       "surface": "LegionScreen growth choice and boss-ready UI plus focused fixture",
       "public_contract": "LegionScreen.configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "faction doctrine command-deck work-unit owner",
+      "surface": "BlueprintScreen faction doctrine UI plus focused fixture",
+      "public_contract": "BlueprintScreen.configure and action_requested",
       "coupling": "coupled"
     }
   ],

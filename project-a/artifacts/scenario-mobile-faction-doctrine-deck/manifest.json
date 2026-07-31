@@ -1,0 +1,27 @@
+{
+  "artifacts": [
+    "assault_choice-844x390.png",
+    "assault_choice-568x320.png",
+    "armored_choice-844x390.png",
+    "armored_choice-568x320.png",
+    "doctrine_activated-844x390.png",
+    "doctrine_activated-568x320.png"
+  ],
+  "assertions": [
+    "choice states emit exact coordination and specialization ids",
+    "activated state exposes no doctrine replacement action",
+    "choice targets remain at least 48 logical pixels"
+  ],
+  "cases": [
+    "assault_choice",
+    "armored_choice",
+    "doctrine_activated"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping BlueprintScreen through configure and action_requested",
+  "scenario_id": "scenario_mobile_faction_doctrine_command_deck",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
