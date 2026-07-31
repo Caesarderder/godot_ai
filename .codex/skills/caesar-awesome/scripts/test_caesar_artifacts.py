@@ -161,6 +161,72 @@ class ManagedArtifactTests(unittest.TestCase):
         self.assertEqual("draft", progress["state"])
         self.assertEqual("Keep the managed run anchored.", progress["continuation_anchor"]["goal"])
 
+    def test_work_unit_close_clears_only_matching_completion_candidate(self) -> None:
+        parent = artifacts.ROOT / "docs" / "workbench"
+        with tempfile.TemporaryDirectory(dir=parent) as directory:
+            run_dir = self.init_run(Path(directory))
+            progress_path = run_dir / "progress.json"
+            progress = json.loads(progress_path.read_text(encoding="utf-8"))
+            progress.update(
+                state="unit_looping",
+                iteration=1,
+                active_work_unit="factory HUD hierarchy",
+            )
+            progress_path.write_text(json.dumps(progress), encoding="utf-8")
+            iteration = {
+                "schema_version": artifacts.SCHEMA_VERSION,
+                "run_id": "example_weapon_fixture",
+                "iteration": 1,
+                "work_unit": "factory HUD hierarchy",
+                "status": "completion_candidate",
+                "changed_files": ["project-a/game/scripts/ui/factory_screen.gd"],
+                "evidence_ids": [],
+                "resolved_findings": [],
+                "new_findings": [],
+                "failed_checks": [],
+                "rejected_approaches": [],
+                "next_action": "Run integration.",
+                "blocker": None,
+            }
+            iteration_path = run_dir / "iterations" / "iteration-0001.json"
+            iteration_path.write_text(json.dumps(iteration), encoding="utf-8")
+
+            artifacts.work_unit_close(
+                Namespace(
+                    run_dir=str(run_dir),
+                    reason="Focused candidate accepted.",
+                    next_action="Run integration.",
+                )
+            )
+
+            closed = json.loads(progress_path.read_text(encoding="utf-8"))
+            self.assertIsNone(closed["active_work_unit"])
+            self.assertEqual("Run integration.", closed["continuation_anchor"]["next_action"])
+
+    def test_work_unit_close_rejects_unverified_iteration(self) -> None:
+        progress = {
+            "state": "unit_looping",
+            "active_work_unit": "factory HUD hierarchy",
+            "iteration": 1,
+        }
+        with patch.object(artifacts, "run_files", return_value=(Path("run"), {}, progress)):
+            with patch.object(
+                artifacts,
+                "load_json",
+                return_value={
+                    "work_unit": "factory HUD hierarchy",
+                    "status": "verification_requested",
+                },
+            ):
+                with self.assertRaisesRegex(artifacts.ArtifactError, "completion_candidate"):
+                    artifacts.work_unit_close(
+                        Namespace(
+                            run_dir="run",
+                            reason="Not verified.",
+                            next_action=None,
+                        )
+                    )
+
     def test_completion_rejects_uncovered_in_scope_dimension(self) -> None:
         run_spec = {
             "quality_dimensions": [
@@ -671,12 +737,34 @@ class ManagedArtifactTests(unittest.TestCase):
             artifacts.artifact_add(
                 Namespace(run_dir=str(run_dir), kind="evidence", input=str(carried_path))
             )
+            deterministic_path = self.evidence_input(
+                temp_dir,
+                evidence_id="ev_presentation_runtime_001",
+                gate_id="gate_weapon_presentation",
+                revision="rev-1",
+            )
+            deterministic = json.loads(deterministic_path.read_text(encoding="utf-8"))
+            deterministic["evidence_type"] = "runtime_state"
+            deterministic["grader"] = {
+                "kind": "runtime",
+                "name": "deterministic-test-fixture",
+                "version": "1",
+                "independence": "not_applicable",
+            }
+            deterministic_path.write_text(json.dumps(deterministic), encoding="utf-8")
+            artifacts.artifact_add(
+                Namespace(
+                    run_dir=str(run_dir),
+                    kind="evidence",
+                    input=str(deterministic_path),
+                )
+            )
             artifacts.gate_set(
                 Namespace(
                     run_dir=str(run_dir),
                     gate_id="gate_weapon_presentation",
                     status="pass",
-                    evidence_id="ev_presentation_001",
+                    evidence_id=["ev_presentation_runtime_001", "ev_presentation_001"],
                     reason="Unrelated presentation evidence passed.",
                 )
             )

@@ -930,6 +930,50 @@ def loop_transition(args: argparse.Namespace) -> None:
     print(f"loop transitioned: {current} -> {target} ({rel(run_dir)})")
 
 
+def work_unit_close(args: argparse.Namespace) -> None:
+    """Close the current bounded work unit after its completion candidate is recorded."""
+    run_dir, run_spec, progress = run_files(args.run_dir)
+    require_active(progress, "work-unit-close")
+    if progress["state"] != "unit_looping":
+        raise ArtifactError("work-unit-close requires state=unit_looping")
+    active_unit = str(progress.get("active_work_unit") or "").strip()
+    if not active_unit:
+        raise ArtifactError("work-unit-close requires a current active_work_unit")
+    if progress["iteration"] < 1:
+        raise ArtifactError("work-unit-close requires a recorded IterationResult")
+    iteration_path = run_dir / "iterations" / f"iteration-{progress['iteration']:04d}.json"
+    iteration = load_json(iteration_path, "IterationResult")
+    if iteration.get("work_unit") != active_unit:
+        raise ArtifactError(
+            "latest IterationResult must belong to the current active_work_unit"
+        )
+    if iteration.get("status") != "completion_candidate":
+        raise ArtifactError(
+            "work-unit-close requires latest IterationResult status=completion_candidate"
+        )
+    if progress["open_findings"]:
+        raise ArtifactError("work-unit-close requires no open Findings")
+    progress["active_work_unit"] = None
+    progress["continuation_anchor"] = continuation_anchor(
+        run_spec,
+        single_line(args.next_action or args.reason, "next action"),
+    )
+    progress["decisions"].append(
+        {
+            "at": now(),
+            "decision": single_line(args.reason, "reason"),
+            "evidence_ids": list(iteration.get("evidence_ids", [])),
+        }
+    )
+    validate_value(progress, "progress.schema.json")
+    paths = snapshot(run_dir / "progress.json")
+    rollback_write(
+        paths,
+        lambda: (atomic_json(run_dir / "progress.json", progress), validate_run(run_dir)),
+    )
+    print(f"work unit closed: {active_unit} ({rel(run_dir)})")
+
+
 def artifact_config(kind: str) -> tuple[str, str, str | None]:
     return {
         "evidence": ("evidence", "evidence.schema.json", "evidence_id"),
@@ -1282,6 +1326,15 @@ def build_parser() -> argparse.ArgumentParser:
     transition.add_argument("--reason", required=True)
     transition.add_argument("--evidence-id", action="append", default=[])
     transition.set_defaults(handler=loop_transition)
+
+    close_unit = sub.add_parser(
+        "work-unit-close",
+        help="Close the active work unit after a completion-candidate IterationResult.",
+    )
+    close_unit.add_argument("--run-dir", required=True)
+    close_unit.add_argument("--reason", required=True)
+    close_unit.add_argument("--next-action")
+    close_unit.set_defaults(handler=work_unit_close)
 
     artifact = sub.add_parser("artifact-add", help="Append Evidence, Finding, or IterationResult.")
     artifact.add_argument("--run-dir", required=True)

@@ -130,6 +130,10 @@ For a new artifact, follow this fixed sequence:
 
 `template → fill semantic values → managed mutation → validate → sync`
 
+When a bounded Loop unit has a recorded `completion_candidate`, use the managed
+`work-unit-close` command before transitioning to integration; never clear the
+Progress field by hand.
+
 Use the CLI `template` command instead of inventing keys or copying a stale
 example from chat.
 

@@ -153,6 +153,19 @@ python3 .codex/skills/caesar-awesome/scripts/caesar_artifacts.py loop-transition
   --reason "RunSpec and capability audit are ready."
 ```
 
+After recording a `completion_candidate` IterationResult for the active bounded
+work unit, close that unit before entering integration:
+
+```bash
+python3 .codex/skills/caesar-awesome/scripts/caesar_artifacts.py work-unit-close \
+  --run-dir <run-dir> --reason "Focused work unit accepted." \
+  --next-action "Run the declared integration checkpoint."
+```
+
+The command refuses to clear ownership unless the latest IterationResult belongs
+to the active unit, has `completion_candidate` status, and no Finding remains
+open. Do not edit `Progress.active_work_unit` directly.
+
 Forward transitions follow the Caesar Loop state machine. Any active state may
 enter a precise terminal result. `completed` additionally requires every
 required gate to pass, a non-empty evidence ledger, and no open findings.
