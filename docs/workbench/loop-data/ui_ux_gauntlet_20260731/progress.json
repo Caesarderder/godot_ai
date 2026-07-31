@@ -1,25 +1,26 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
-  "state": "unit_looping",
-  "revision": "30244a8",
-  "iteration": 1,
-  "active_work_unit": "factory world-first HUD and contextual construction flow",
+  "state": "integrating",
+  "revision": "2e23dd4",
+  "iteration": 2,
+  "active_work_unit": null,
   "frozen_gates": [
-    "gate_ui_visual"
+    "gate_ui_visual",
+    "gate_factory_runtime",
+    "gate_factory_responsive",
+    "gate_factory_visual"
   ],
   "gate_status": {
-    "gate_factory_responsive": "stale",
-    "gate_factory_runtime": "stale",
-    "gate_factory_visual": "stale",
+    "gate_factory_responsive": "pass",
+    "gate_factory_runtime": "pass",
+    "gate_factory_visual": "pass",
     "gate_player_learning": "stale",
     "gate_ui_responsive": "stale",
     "gate_ui_runtime": "stale",
     "gate_ui_visual": "pass"
   },
-  "open_findings": [
-    "finding_factory_hud_identity_001"
-  ],
+  "open_findings": [],
   "evidence_ledger": [
     "ev_ui_gauntlet_runtime_baseline_16b05bb",
     "ev_ui_gauntlet_responsive_baseline_16b05bb",
@@ -35,7 +36,12 @@
     "ev_factory_baseline_runtime_c4fd219",
     "ev_factory_baseline_visual_c4fd219",
     "ev_factory_baseline_responsive_c4fd219",
-    "ev_factory_critic_fail_30244a8"
+    "ev_factory_critic_fail_30244a8",
+    "ev_factory_world_critic_fail_09516dd",
+    "ev_factory_runtime_2e23dd4",
+    "ev_factory_responsive_2e23dd4",
+    "ev_factory_visual_critic_2e23dd4",
+    "ev_factory_visual_runtime_2e23dd4"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -56,8 +62,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "factory world-first HUD and contextual construction flow",
-    "updated_at": "2026-07-31T11:20:39Z"
+    "next_action": "Expose the accepted factory result and simple human feedback route in Workbench.",
+    "updated_at": "2026-07-31T11:46:19Z"
   },
   "decisions": [
     {
@@ -199,6 +205,96 @@
         "ev_ui_gauntlet_responsive_baseline_16b05bb",
         "ev_ui_gauntlet_runtime_baseline_16b05bb",
         "ev_ui_gauntlet_visual_baseline_16b05bb"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:33:09Z",
+      "decision": "Critic repair adds topic-specific raster icons, compact base navigation and a smaller placement dock. Affected gates=['gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:45:17Z",
+      "decision": "Real 3D factory gained a readable toilet-resistance commander landmark and updated projection semantics. Affected gates=['gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_factory_world_critic_fail_09516dd",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:45:17Z",
+      "decision": "Focused factory and full UI smoke suites pass.",
+      "evidence_ids": [
+        "ev_factory_runtime_2e23dd4"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:45:17Z",
+      "decision": "Both declared landscape viewports preserve world and controls.",
+      "evidence_ids": [
+        "ev_factory_responsive_2e23dd4"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:45:39Z",
+      "decision": "Deterministic real/focused visual bundle plus fresh independent blind critic pass at 8.1.",
+      "evidence_ids": [
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:45:53Z",
+      "decision": "Raster tool icons, compact contextual HUD, corner placement dock and readable toilet-commander landmark pass fresh blind review.",
+      "evidence_ids": [
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:46:15Z",
+      "decision": "Factory focused work unit passed runtime, responsive and mixed visual gates with its finding resolved.",
+      "evidence_ids": [
+        "ev_factory_runtime_2e23dd4",
+        "ev_factory_responsive_2e23dd4",
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:46:19Z",
+      "decision": "Expose the accepted factory result and simple human feedback route in Workbench.",
+      "evidence_ids": [
+        "ev_factory_visual_critic_2e23dd4"
       ]
     }
   ]

@@ -1,0 +1,91 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_factory_visual_critic_2e23dd4",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "2e23dd4",
+  "valid_through_revision": "2e23dd4",
+  "gate_id": "gate_factory_visual",
+  "claim": "The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard.",
+  "scenario_id": "scenario_factory_world_hud",
+  "execution_id": "factory_final_blind_2e23dd4",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "blind A/B real-screen review by /root/factory_toilet_final_critic",
+  "case_results": [
+    {
+      "case_id": "mission_world_first",
+      "result": "pass",
+      "assertions": [
+        "world dominance 8.4",
+        "topic identity 7.7",
+        "current action 8.5"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-camp-844x390.png",
+        "project-a/artifacts/ui-camp-568x320.png"
+      ]
+    },
+    {
+      "case_id": "contextual_facility",
+      "result": "pass",
+      "assertions": [
+        "topic-specific icon entrance 8.1"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/contextual_facility-844x390.png"
+      ]
+    },
+    {
+      "case_id": "construction_carousel",
+      "result": "pass",
+      "assertions": [
+        "icon entrance and contextual construction direction clear"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/construction_carousel-568x320.png"
+      ]
+    },
+    {
+      "case_id": "placement_decision",
+      "result": "pass",
+      "assertions": [
+        "compact decision dock 8.2"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-construction-placement-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "mission captures",
+    "facility captures",
+    "build captures",
+    "placement captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "fresh blind real factory critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/factory_toilet_final_critic"
+  },
+  "observation": "Blind A/B score improved from 4.9 to 8.1; both viewports show a brown head emerging from a white oval toilet ring on an underground industrial platform.",
+  "inference": "The sole topic-identity blocker is resolved; label overlap is a non-blocking polish item.",
+  "result": "pass",
+  "confidence": 0.94,
+  "freshness": "current",
+  "limitations": [
+    "Static images cannot judge direct touch feel."
+  ],
+  "created_at": "2026-07-31T20:10:00+08:00"
+}

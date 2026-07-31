@@ -80,7 +80,7 @@
   "inference": "The first candidate improves hierarchy but does not pass the factory visual gate.",
   "result": "fail",
   "confidence": 0.94,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Static captures cannot judge direct touch feel."
   ],

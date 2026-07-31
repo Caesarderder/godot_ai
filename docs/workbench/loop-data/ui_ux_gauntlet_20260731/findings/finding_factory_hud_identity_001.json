@@ -3,14 +3,16 @@
   "finding_id": "finding_factory_hud_identity_001",
   "run_id": "ui_ux_gauntlet_20260731",
   "gate_id": "gate_factory_visual",
-  "status": "open",
+  "status": "resolved",
   "severity": "high",
   "player_impact": "The player sees a generic management overlay, cannot reliably identify facility/build tools, and loses the placement world under a wide confirmation strip.",
   "observation": "Blind critic preferred the candidate but scored it 6.8/10 and failed it on topic identity, icon semantics and placement occlusion.",
   "evidence_ids": [
-    "ev_factory_critic_fail_30244a8"
+    "ev_factory_critic_fail_30244a8",
+    "ev_factory_visual_runtime_2e23dd4",
+    "ev_factory_visual_critic_2e23dd4"
   ],
-  "next_change": "Add two readable raster factory-tool icons, externalize notification badges, reduce generic framing, and collapse placement actions into a short corner dock.",
+  "next_change": "Retain label-offset polish as a later non-blocking improvement.",
   "acceptance_check": "A fresh blind critic scores the repaired candidate at least 7/10 with no blocking issue in all four factory cases.",
   "owner": "factory HUD work-unit owner",
   "retry_count": 0,

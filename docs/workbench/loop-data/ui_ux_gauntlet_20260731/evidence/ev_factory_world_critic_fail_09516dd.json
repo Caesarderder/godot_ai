@@ -1,0 +1,88 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_factory_world_critic_fail_09516dd",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "09516dd",
+  "valid_through_revision": "09516dd",
+  "gate_id": "gate_factory_visual",
+  "claim": "The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard.",
+  "scenario_id": "scenario_factory_world_hud",
+  "execution_id": "factory_world_blind_09516dd",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "blind review by /root/factory_hud_repair_critic",
+  "case_results": [
+    {
+      "case_id": "mission_world_first",
+      "result": "fail",
+      "assertions": [
+        "HUD hierarchy passes but neutral center lacks toilet-person identity"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/mission_world_first-844x390.png"
+      ]
+    },
+    {
+      "case_id": "contextual_facility",
+      "result": "pass",
+      "assertions": [
+        "facility context remains compact"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/contextual_facility-844x390.png"
+      ]
+    },
+    {
+      "case_id": "construction_carousel",
+      "result": "pass",
+      "assertions": [
+        "construction strip remains contextual"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/construction_carousel-568x320.png"
+      ]
+    },
+    {
+      "case_id": "placement_decision",
+      "result": "pass",
+      "assertions": [
+        "placement dock is compact"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/placement_decision-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "mission captures",
+    "facility captures",
+    "build captures",
+    "placement captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "fresh blind factory repair critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/factory_hud_repair_critic"
+  },
+  "observation": "Candidate improved from 6.5 to 7.9, but the focused center still read as generic geometry instead of a toilet-resistance landmark.",
+  "inference": "HUD repair is accepted as directionally correct; world identity remains the sole blocker.",
+  "result": "fail",
+  "confidence": 0.95,
+  "freshness": "stale",
+  "limitations": [
+    "Focused neutral field cannot prove the real 3D landmark."
+  ],
+  "created_at": "2026-07-31T19:50:00+08:00"
+}
