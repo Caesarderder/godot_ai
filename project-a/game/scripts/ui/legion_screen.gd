@@ -23,6 +23,7 @@ const RECRUIT_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/ta
 const RECRUIT_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const RECRUIT_SELECT_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const FACTION_ASSAULT_CHOICE_ART := preload("res://assets/ui/recruit/faction-assault-v2.webp")
+const FACTION_ARMORED_CHOICE_ART := preload("res://assets/ui/recruit/faction-armored-v2.webp")
 const CODEX_LOCK_ICON := preload("res://assets/ui/icons/kenney_game_icons/locked.png")
 const CODEX_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
@@ -480,6 +481,8 @@ func _hero_portrait(archetype_id: String) -> Texture2D:
 func _faction_choice_portrait(archetype_id: String) -> Texture2D:
 	if archetype_id == "assault":
 		return FACTION_ASSAULT_CHOICE_ART
+	if archetype_id == "armored":
+		return FACTION_ARMORED_CHOICE_ART
 	return _hero_portrait(archetype_id)
 
 
