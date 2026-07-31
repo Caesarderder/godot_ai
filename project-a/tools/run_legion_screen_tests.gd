@@ -263,7 +263,7 @@ func _run() -> void:
 	)
 	_check(
 		_tree_has_text(legion, "标准  冲锋马桶人")
-			and reveal_card.find_children("*", "TextureRect", true, false).size() >= 3,
+			and reveal_card.find_children("*", "TextureRect", true, false).size() >= 2,
 		"faction choice frames each candidate as an icon-led blueprint card"
 	)
 	var reduced_view := (legion.get("_view") as Dictionary).duplicate(true)

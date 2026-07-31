@@ -16,8 +16,7 @@ signal hero_selected(hero_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const COMMANDER_BADGE := preload("res://assets/generated/vector/characters/commander_badge.svg")
-const RECRUIT_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
-const RECRUIT_ROLE_ICON := preload("res://assets/ui/icons/kenney_game_icons/multiplayer.png")
+const RECRUIT_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const RECRUIT_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const RECRUIT_SELECT_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
@@ -587,13 +586,6 @@ func _recruit_panel() -> Control:
 				]
 			)
 			choice_panel.name = "RecruitFactionCoreChoice"
-			var journey := _label(
-				"选择一份核心蓝图",
-				12,
-				CYAN
-			)
-			journey.name = "RecruitFactionJourneyPromise"
-			choice_panel.add_child(journey)
 			var choice_grid := GridContainer.new()
 			choice_grid.columns = 2
 			choice_grid.add_theme_constant_override("h_separation", 8)
@@ -619,7 +611,7 @@ func _recruit_panel() -> Control:
 				identity.add_theme_constant_override("separation", 8)
 				card.add_child(identity)
 				var signal_badge := PanelContainer.new()
-				signal_badge.custom_minimum_size = Vector2(54, 54)
+				signal_badge.custom_minimum_size = Vector2(48, 48)
 				var badge_style := _box(
 					Color("#10232a"),
 					_faction_accent(String(choice.get("faction", "")))
@@ -638,17 +630,13 @@ func _recruit_panel() -> Control:
 				identity_copy.add_theme_constant_override("separation", 1)
 				identity.add_child(identity_copy)
 				identity_copy.add_child(_label(
-					"%s  %s" % [
+					"%s  %s  ·  %s" % [
 						_rating_label(String(choice.get("rating", "B"))),
 						String(choice.get("display_name", "")),
+						String(choice.get("faction", "")),
 					],
-					16,
+					14,
 					GOLD
-				))
-				identity_copy.add_child(_icon_copy(
-					RECRUIT_ROLE_ICON,
-					String(choice.get("faction", "")),
-					_faction_accent(String(choice.get("faction", "")))
 				))
 				identity_copy.add_child(_icon_copy(
 					RECRUIT_STAR_ICON,
@@ -662,7 +650,9 @@ func _recruit_panel() -> Control:
 				choose.name = "ChooseFactionCore_%s" % String(
 					choice.get("archetype_id", "")
 				)
-				choose.custom_minimum_size.y = 48
+				# 76 logical px remains at least 48 physical px after the
+				# compact App Shell's viewport scaling.
+				choose.custom_minimum_size.y = 76
 				choose.icon = RECRUIT_SELECT_ICON
 				choose.expand_icon = true
 				choose.tooltip_text = "选择%s作为阵营核心 · %s" % [
