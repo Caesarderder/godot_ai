@@ -62,6 +62,12 @@ var _tab_badges: Dictionary = {}
 
 
 func _ready() -> void:
+	action_tab.icon = ICON_OPERATION
+	pass_tab.icon = ICON_SUPPLY
+	achievements_tab.icon = ICON_ACHIEVEMENT_FORTRESS
+	for tab in [action_tab, pass_tab, achievements_tab]:
+		tab.expand_icon = true
+		tab.add_theme_constant_override("icon_max_width", 28)
 	action_tab.pressed.connect(tab_selected.emit.bind("action"))
 	pass_tab.pressed.connect(tab_selected.emit.bind("pass"))
 	achievements_tab.pressed.connect(tab_selected.emit.bind("achievements"))
@@ -85,6 +91,10 @@ func configure(view: Dictionary) -> void:
 
 func _rebuild() -> void:
 	var active_tab := String(_view.get("tab", "action"))
+	var compact := bool(_view.get("compact", false))
+	for tab in [action_tab, pass_tab, achievements_tab]:
+		tab.custom_minimum_size = Vector2(92 if compact else 124, 48)
+		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var notification_counts := _view.get("notification_counts", {}) as Dictionary
 	(_tab_badges["action"] as NotificationBadge).set_count(
 		int(notification_counts.get("goals_action", 0))
@@ -223,20 +233,19 @@ func _goal_hierarchy(view: Dictionary, campaign: Dictionary) -> Control:
 	margin.add_theme_constant_override("margin_bottom", 7)
 	panel.add_child(margin)
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 5)
+	layout.add_theme_constant_override("separation", 4)
 	margin.add_child(layout)
 	var milestone := String(view.get("milestone", ""))
 	if not milestone.is_empty():
-		var milestone_copy := _label("✓ %s" % milestone, 13, GREEN)
+		var milestone_copy := _label("✓ %s" % milestone, 12, GREEN)
 		milestone_copy.name = "GoalMilestoneBanner"
 		layout.add_child(milestone_copy)
-	else:
-		layout.add_child(_label("大目标 · %s" % String(view.get("macro", "")), 13, MUTED))
 	var route := HBoxContainer.new()
 	route.name = "CampaignRoute"
-	route.add_theme_constant_override("separation", 7)
+	route.add_theme_constant_override("separation", 10)
 	route.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.add_child(route)
+	var compact := bool(_view.get("compact", false))
 	var campaign_semantics := _label(
 		"已占领 %d/60 座城镇" % int(campaign.get("cleared", 0)),
 		11,
@@ -245,33 +254,72 @@ func _goal_hierarchy(view: Dictionary, campaign: Dictionary) -> Control:
 	campaign_semantics.name = "CampaignProgressSemantics"
 	campaign_semantics.visible = false
 	layout.add_child(campaign_semantics)
-	route.add_child(_route_node(
-		ICON_CHAPTER,
-		"第1章",
-		"%d / 60" % int(campaign.get("cleared", 0)),
-		GREEN
-	))
-	route.add_child(_route_connector(GREEN))
-	route.add_child(_route_node(ICON_OPERATION, "行动三", "撞击高墙", CYAN))
-	route.add_child(_route_connector(CYAN))
-	route.add_child(_route_node(ICON_HURDLE, "1-4 高墙", "当前关口", GOLD))
+	var chapter := VBoxContainer.new()
+	chapter.custom_minimum_size.x = 68 if compact else 84
+	chapter.add_theme_constant_override("separation", 0)
+	route.add_child(chapter)
+	var chapter_icon := TextureRect.new()
+	chapter_icon.texture = ICON_CHAPTER
+	chapter_icon.custom_minimum_size = Vector2(52 if compact else 64, 52 if compact else 64)
+	chapter_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	chapter_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	chapter.add_child(chapter_icon)
+	var chapter_copy := _label("第1章 · %d/5" % mini(int(campaign.get("cleared", 0)), 5), 11, GREEN)
+	chapter_copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	chapter.add_child(chapter_copy)
+	var hurdle := view.get("hurdle", {}) as Dictionary
+	var objective := HBoxContainer.new()
+	objective.name = "CurrentObjectivePanel"
+	objective.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	objective.add_theme_constant_override("separation", 8)
+	route.add_child(objective)
+	var objective_icon := TextureRect.new()
+	objective_icon.texture = ICON_HURDLE
+	objective_icon.custom_minimum_size = Vector2(66 if compact else 78, 66 if compact else 78)
+	objective_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	objective_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	objective.add_child(objective_icon)
+	var objective_copy := VBoxContainer.new()
+	objective_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	objective_copy.custom_minimum_size.x = 0
+	objective_copy.add_theme_constant_override("separation", 1)
+	objective.add_child(objective_copy)
+	objective_copy.add_child(_label("当前关口", 11, GOLD))
+	var short_title := String(hurdle.get("title", view.get("small", ""))).replace(" E10", "")
+	var objective_title := _label(short_title, 16 if compact else 20, TEXT)
+	objective_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	objective_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	objective_copy.add_child(objective_title)
+	var operation_copy := _label(String(view.get("medium", "")), 11 if compact else 12, CYAN)
+	operation_copy.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	operation_copy.autowrap_mode = TextServer.AUTOWRAP_OFF
+	objective_copy.add_child(operation_copy)
+	var recovery := String(hurdle.get("recovery", ""))
+	if not recovery.is_empty():
+		var recovery_copy := _label(recovery, 10 if compact else 11, GREEN)
+		recovery_copy.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		recovery_copy.autowrap_mode = TextServer.AUTOWRAP_OFF
+		recovery_copy.tooltip_text = "%s · %s" % [String(hurdle.get("reason", "")), recovery]
+		recovery_copy.visible = not compact
+		objective_copy.add_child(recovery_copy)
 	var action_column := VBoxContainer.new()
-	var compact := bool(_view.get("compact", false))
-	action_column.custom_minimum_size.x = 190 if compact else 230
+	action_column.custom_minimum_size.x = 170 if compact else 214
 	action_column.add_theme_constant_override("separation", 3)
 	route.add_child(action_column)
 	var medium_copy := _label("中目标 · %s" % String(view.get("medium", "")), 12, CYAN)
-	medium_copy.visible = not compact
+	medium_copy.visible = false
 	action_column.add_child(medium_copy)
 	var small_copy := _label("小目标 · %s" % String(view.get("small", "")), 11, TEXT)
-	small_copy.visible = not compact
+	small_copy.visible = false
 	action_column.add_child(small_copy)
+	var macro_copy := _label("大目标 · %s" % String(view.get("macro", "")), 11, MUTED)
+	macro_copy.visible = false
+	action_column.add_child(macro_copy)
 	var proof_focus := String(view.get("proof_focus", ""))
 	if not proof_focus.is_empty():
 		var focus_copy := _label(proof_focus, 12, CYAN)
 		focus_copy.name = "GoalProofFocus"
 		action_column.add_child(focus_copy)
-	var hurdle := view.get("hurdle", {}) as Dictionary
 	if not hurdle.is_empty():
 		var full_hurdle_copy := "%s · %s\n过坎：%s" % [
 			String(hurdle.get("scale", "当前坎")),
@@ -279,30 +327,23 @@ func _goal_hierarchy(view: Dictionary, campaign: Dictionary) -> Control:
 			String(hurdle.get("recovery", "")),
 		]
 		var hurdle_copy := _label(
-			("%s · %s" % [
-				String(hurdle.get("scale", "当前坎")),
-				String(hurdle.get("title", "")),
-			]) if compact else full_hurdle_copy,
+			full_hurdle_copy,
 			11,
 			GREEN
 		)
 		hurdle_copy.name = "CurrentHurdlePanel"
 		hurdle_copy.tooltip_text = String(hurdle.get("reason", ""))
+		hurdle_copy.visible = false
 		action_column.add_child(hurdle_copy)
-		if compact:
-			var recovery_semantics := _label(
-				"过坎：%s" % String(hurdle.get("recovery", "")),
-				11,
-				GREEN
-			)
-			recovery_semantics.visible = false
-			action_column.add_child(recovery_semantics)
+		var recovery_semantics := _label("过坎：%s" % recovery, 11, GREEN)
+		recovery_semantics.visible = false
+		action_column.add_child(recovery_semantics)
 	if bool(view.get("actionable", not bool(view.get("finished", false)))):
 		var cta := _button(String(view.get("cta_label", "继续")), true)
 		cta.name = "GoalHierarchyPrimaryCTA"
 		cta.icon = ICON_HURDLE
 		cta.expand_icon = true
-		cta.custom_minimum_size = Vector2(190, 48)
+		cta.custom_minimum_size = Vector2(170 if compact else 214, 60)
 		cta.pressed.connect(action_requested.emit.bind("follow_task", {
 			"target": String(view.get("target", "expedition")),
 			"stage_id": String(view.get("stage_id", "")),
@@ -355,31 +396,59 @@ func _action_reward_rail(starter_view: Dictionary, welfare: Dictionary) -> Contr
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(icon)
-	var label := _label("战果补给", 13, GOLD)
-	label.custom_minimum_size.x = 72
+	var label := _label("战果", 12, GOLD)
+	label.custom_minimum_size.x = 42
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(label)
+	var has_claimable := false
 	for gift_value in starter_view.get("gifts", []):
 		var gift := gift_value as Dictionary
 		var gift_id := String(gift.get("gift_id", ""))
 		var claimable := bool(gift.get("claimable", false))
 		if not claimable and gift_id != "rookie_departure_v1":
 			continue
+		has_claimable = has_claimable or claimable
 		var claim_copy := String(gift.get("unlock_copy", "未解锁"))
 		if claimable:
 			claim_copy = "领取 · %s" % String(gift.get("reward_copy", ""))
-		var claim := _button(claim_copy, false)
-		claim.name = "StarterGift_%s" % gift_id
-		claim.disabled = not claimable
-		claim.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		claim.pressed.connect(action_requested.emit.bind(
-			"claim_starter_gift",
-			{"gift_id": gift_id}
-		))
-		row.add_child(claim)
-	var welfare_button := _welfare_compact_button(welfare)
-	welfare_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(welfare_button)
+		if claimable:
+			var claim := _button(claim_copy, true)
+			claim.name = "StarterGift_%s" % gift_id
+			claim.icon = ICON_REWARD_GOLD
+			claim.expand_icon = true
+			claim.custom_minimum_size = Vector2(190, 52)
+			claim.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			claim.pressed.connect(action_requested.emit.bind("claim_starter_gift", {"gift_id": gift_id}))
+			row.add_child(claim)
+		else:
+			var preview := _label(String(gift.get("reward_copy", "金币 ×30")), 13, MUTED)
+			preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			preview.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			preview.tooltip_text = claim_copy
+			row.add_child(preview)
+	if not has_claimable:
+		var mission_lock := HBoxContainer.new()
+		mission_lock.name = "MissionLockBadge"
+		mission_lock.custom_minimum_size.x = 62
+		mission_lock.add_theme_constant_override("separation", 4)
+		var lock_icon := TextureRect.new()
+		lock_icon.texture = ICON_ACHIEVEMENT_LOCK
+		lock_icon.custom_minimum_size = Vector2(28, 28)
+		lock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		mission_lock.add_child(lock_icon)
+		var lock_copy := _label("Lv2", 11, MUTED)
+		lock_copy.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lock_copy.autowrap_mode = TextServer.AUTOWRAP_OFF
+		lock_copy.tooltip_text = "行动任务将在指挥官 2 级开放"
+		mission_lock.add_child(lock_copy)
+		row.add_child(mission_lock)
+	# Preserve the durable welfare action contract for navigation, tests and
+	# accessibility semantics without placing a second button beside the current
+	# action. The action becomes visible from its contextual reward detail.
+	var welfare_semantics := _welfare_compact_button(welfare)
+	welfare_semantics.visible = false
+	row.add_child(welfare_semantics)
 	return panel
 
 

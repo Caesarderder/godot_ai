@@ -20,7 +20,7 @@ theme_override_constants/separation = 8
 
 [node name="MetaGoalsActionTab" type="Button" parent="MetaGoalsTabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 48)
+custom_minimum_size = Vector2(124, 48)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_goal_tabs")
@@ -28,7 +28,7 @@ text = "行动"
 
 [node name="MetaGoalsPassTab" type="Button" parent="MetaGoalsTabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 48)
+custom_minimum_size = Vector2(124, 48)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_goal_tabs")
@@ -36,7 +36,7 @@ text = "战令"
 
 [node name="MetaGoalsAchievementsTab" type="Button" parent="MetaGoalsTabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(156, 48)
+custom_minimum_size = Vector2(124, 48)
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_goal_tabs")
