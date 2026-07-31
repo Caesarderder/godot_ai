@@ -175,6 +175,28 @@ async function touch(cdp, x, y) {
 	await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 }
 
+async function touchDrag(cdp, fromX, fromY, toX, toY) {
+	await cdp.send("Input.dispatchTouchEvent", {
+		type: "touchStart",
+		touchPoints: [{ x: fromX, y: fromY, radiusX: 3, radiusY: 3, force: 1 }],
+	});
+	for (let step = 1; step <= 5; step += 1) {
+		const progress = step / 5;
+		await cdp.send("Input.dispatchTouchEvent", {
+			type: "touchMove",
+			touchPoints: [{
+				x: fromX + ((toX - fromX) * progress),
+				y: fromY + ((toY - fromY) * progress),
+				radiusX: 3,
+				radiusY: 3,
+				force: 1,
+			}],
+		});
+		await new Promise((accept) => setTimeout(accept, 35));
+	}
+	await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+}
+
 async function pressKey(cdp, key, code, windowsVirtualKeyCode) {
 	for (const type of ["keyDown", "keyUp"]) {
 		await cdp.send("Input.dispatchKeyEvent", {
@@ -368,6 +390,23 @@ async function main() {
 		// before exercising the two-column storage and local playtest controls.
 		await touch(cdp, 797, 38);
 		await new Promise((accept) => setTimeout(accept, 600));
+		if (process.env.GODOT_WEB_TOUCH_DRAG_ONLY === "1") {
+			const beforeTouchDrag = (await cdp.send("Page.captureScreenshot", {
+				format: "png",
+				captureBeyondViewport: false,
+			})).data;
+			await touchDrag(cdp, 300, 300, 300, 120);
+			await new Promise((accept) => setTimeout(accept, 500));
+			const afterTouchDrag = (await cdp.send("Page.captureScreenshot", {
+				format: "png",
+				captureBeyondViewport: false,
+			})).data;
+			if (beforeTouchDrag === afterTouchDrag) {
+				throw new Error("mobile settings list did not respond to a real touch drag");
+			}
+			console.log("WEB_TOUCH_DRAG_SMOKE_OK");
+			return;
+		}
 		await scrollDown(cdp);
 		await new Promise((accept) => setTimeout(accept, 500));
 		await screenshot(cdp, "browser-settings-storage-844x390.png");
@@ -595,6 +634,7 @@ async function main() {
 				serviceWorkers: registrations,
 					keyboardPrimaryAction: true,
 					touchInput: true,
+					touchDragScrolling: true,
 					saveBackupDownload: true,
 					saveImportPreview: true,
 					saveImportRestore: true,
