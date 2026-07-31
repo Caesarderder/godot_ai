@@ -47,7 +47,7 @@
   "inference": "Cross-screen responsive gate passes at the integrated revision.",
   "result": "pass",
   "confidence": 0.97,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Physical safe-area behavior remains unobserved."
   ],

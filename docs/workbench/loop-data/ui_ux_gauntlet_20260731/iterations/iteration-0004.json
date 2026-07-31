@@ -1,0 +1,33 @@
+{
+  "iteration": 4,
+  "work_unit": "codex character-first collectible gallery",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/legion_screen.gd",
+    "project-a/scripts/slg_main.gd",
+    "project-a/tools/run_legion_screen_tests.gd",
+    "project-a/tools/capture_codex_gallery_scenario.gd"
+  ],
+  "evidence_ids": [
+    "ev_codex_runtime_e1da84a",
+    "ev_codex_responsive_e1da84a",
+    "ev_codex_visual_runtime_e1da84a",
+    "ev_codex_visual_critic_e1da84a",
+    "ev_ui_codex_integration_runtime_e1da84a",
+    "ev_ui_codex_integration_responsive_e1da84a"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "four-column text card wall with tiny portraits",
+    "compact cards whose labels wrapped into vertical columns",
+    "colour-only discovery-state borders",
+    "keeping the redundant App Shell header when it hid the compact gallery",
+    "106px compact focus portrait that pushed thumbnails behind persistent navigation"
+  ],
+  "next_action": "Expose the accepted codex gallery in the simple Workbench feedback route, then audit the next secondary-screen visual gap.",
+  "blocker": null,
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

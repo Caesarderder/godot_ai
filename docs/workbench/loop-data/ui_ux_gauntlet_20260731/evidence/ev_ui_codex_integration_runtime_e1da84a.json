@@ -1,13 +1,11 @@
 {
-  "schema_version": "caesar-loop/v2",
-  "evidence_id": "ev_ui_integration_runtime_eacfb8b",
-  "run_id": "ui_ux_gauntlet_20260731",
-  "revision": "eacfb8b",
-  "valid_through_revision": "eacfb8b",
+  "evidence_id": "ev_ui_codex_integration_runtime_e1da84a",
+  "revision": "e1da84a",
+  "valid_through_revision": "e1da84a",
   "gate_id": "gate_ui_runtime",
   "claim": "Title, factory and war-zone actions use shipping state and navigation without regressions.",
   "scenario_id": "scenario_ui_path_integration",
-  "execution_id": "ui_integration_eacfb8b",
+  "execution_id": "ui_codex_integration_e1da84a",
   "evidence_type": "runtime_state",
   "artifact_or_command": "run_ui_smoke_tests.gd and capture_ui_review.gd",
   "case_results": [
@@ -15,14 +13,12 @@
       "case_id": "cross_screen_cohesion",
       "result": "pass",
       "assertions": [
-        "title factory map and legion routes boot",
-        "shared navigation and primary actions remain wired"
+        "title, factory, war-zone and Legion navigation remain operational; codex-specific header suppression does not alter other tabs"
       ],
       "artifacts": [
         "project-a/artifacts/ui-title-844x390.png",
-        "project-a/artifacts/ui-camp-844x390.png",
-        "project-a/artifacts/ui-war-intelligence-844x390.png",
-        "project-a/artifacts/ui-legion-844x390.png"
+        "project-a/artifacts/ui-expedition-844x390.png",
+        "project-a/artifacts/ui-codex-portraits-844x390.png"
       ]
     }
   ],
@@ -41,17 +37,18 @@
   },
   "grader": {
     "kind": "runtime",
-    "name": "full UI smoke integration",
+    "name": "canonical UI smoke integration",
     "version": "1",
     "independence": "not_applicable"
   },
-  "observation": "The declared shipping path passes after the legion projection and UI changes.",
-  "inference": "Cross-screen runtime gate passes at the integrated revision.",
+  "observation": "The canonical UI smoke suite and main-scene capture pass after the codex-specific shell change.",
+  "inference": "Cross-screen runtime integration gate passes.",
   "result": "pass",
   "confidence": 0.99,
-  "freshness": "stale",
+  "freshness": "current",
   "limitations": [
-    "Does not prove player comprehension."
+    "Does not replace target-player validation."
   ],
-  "created_at": "2026-07-31T20:55:00+08:00"
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
 }

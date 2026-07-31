@@ -1,0 +1,77 @@
+{
+  "evidence_id": "ev_codex_visual_critic_e1da84a",
+  "revision": "e1da84a",
+  "valid_through_revision": "e1da84a",
+  "gate_id": "gate_codex_visual",
+  "claim": "The codex reads as a collectible toilet-character gallery rather than a generic card table.",
+  "scenario_id": "scenario_codex_gallery_identity",
+  "execution_id": "codex_blind_critic_e1da84a",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "randomized blind baseline/candidate review by /root/codex_gallery_critic",
+  "case_results": [
+    {
+      "case_id": "early_collection",
+      "result": "pass",
+      "assertions": [
+        "large selected portrait and continuous silhouette strip read as an exploratory collection"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-codex-gallery/early_collection-844x390.png"
+      ]
+    },
+    {
+      "case_id": "blueprint_focus",
+      "result": "pass",
+      "assertions": [
+        "wrench plus explicit blueprint copy and one gold research CTA create a single hierarchy"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-codex-gallery/blueprint_focus-844x390.png"
+      ]
+    },
+    {
+      "case_id": "mixed_collection",
+      "result": "pass",
+      "assertions": [
+        "star, wrench and lock shapes distinguish states and compact layout avoids navigation overlap"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-codex-gallery/mixed_collection-568x320.png",
+        "project-a/artifacts/ui-codex-portraits-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "early collection captures",
+    "blueprint focus captures",
+    "mixed collection captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "codex gallery independent blind critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/codex_gallery_critic"
+  },
+  "observation": "Randomized blind review scored baseline 6.1 and candidate 8.4 (+2.3); all candidate dimensions were at least 8.0 and no blocking repair remained.",
+  "inference": "Independent visual gate passes with strong character-collection hierarchy and coherent compact integration.",
+  "result": "pass",
+  "confidence": 0.91,
+  "freshness": "current",
+  "limitations": [
+    "Static captures cannot prove drag, focus navigation, read order or player desire."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

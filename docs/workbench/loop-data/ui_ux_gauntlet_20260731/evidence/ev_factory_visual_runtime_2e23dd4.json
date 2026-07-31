@@ -3,7 +3,7 @@
   "evidence_id": "ev_factory_visual_runtime_2e23dd4",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "2e23dd4",
-  "valid_through_revision": "eacfb8b",
+  "valid_through_revision": "e1da84a",
   "gate_id": "gate_factory_visual",
   "claim": "The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard.",
   "scenario_id": "scenario_factory_world_hud",
