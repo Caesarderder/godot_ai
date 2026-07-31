@@ -1,0 +1,79 @@
+{
+  "evidence_id": "ev_doctrine_visual_critic_c48c224",
+  "revision": "c48c224",
+  "valid_through_revision": "c48c224",
+  "gate_id": "gate_doctrine_deck_visual",
+  "claim": "Tier-2 doctrine selection reads as a visual command-deck choice rather than a dense settings form.",
+  "scenario_id": "scenario_mobile_faction_doctrine_command_deck",
+  "execution_id": "doctrine_blind_critic_c48c224",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "independent blind baseline/current three-state dual-size comparison with two corrective re-reviews",
+  "case_results": [
+    {
+      "case_id": "assault_choice",
+      "result": "pass",
+      "assertions": [
+        "8.4; full top bar, permanent status and equal command cards fit 568"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/assault_choice-844x390.png",
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/assault_choice-568x320.png"
+      ]
+    },
+    {
+      "case_id": "armored_choice",
+      "result": "pass",
+      "assertions": [
+        "8.4; hero identity and both complete choices retain equal visual weight"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/armored_choice-844x390.png",
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/armored_choice-568x320.png"
+      ]
+    },
+    {
+      "case_id": "doctrine_activated",
+      "result": "pass",
+      "assertions": [
+        "8.6; hero, chosen doctrine and active status read within two seconds"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/doctrine_activated-844x390.png",
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/doctrine_activated-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "assault captures",
+    "armored captures",
+    "activated captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent doctrine command-deck blind visual critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Baseline scored 3.9 overall/3.4 minimum. First hero-led candidate still clipped at 568. After compact wrapping correction, final candidate scored 8.5 overall with 8.4 minimum and no clipped state.",
+  "inference": "Candidate clears overall>=8 and every state>=7 after resolving both dashboard hierarchy and compact-width failures.",
+  "result": "pass",
+  "confidence": 0.96,
+  "freshness": "current",
+  "limitations": [
+    "Dark flat command panels still rely partly on confirm copy for click affordance; 568 benefit text is near the comfort limit."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

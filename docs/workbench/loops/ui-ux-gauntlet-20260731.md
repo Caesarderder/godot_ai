@@ -21,23 +21,23 @@ related:
 
 # Caesar Loop Run：ui_ux_gauntlet_20260731
 
-本节点由 `loop-sync` 从运行 JSON 与 ledger 生成，记录当前 `unit_looping` 状态。原始
+本节点由 `loop-sync` 从运行 JSON 与 ledger 生成，记录当前 `integrating` 状态。原始
 `RunSpec`、`Progress`、`EvidenceRecord`、`Finding` 与 `IterationResult` 是事实源；
 不要手工修改本页来关闭质量门。评审应先进入子任务绑定的 Test Scenario，再检查当前
 revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 
 ```loop #ui_ux_gauntlet_20260731
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
-state: unit_looping
-phase: unit_looping
-iteration: 7/8
-revision: 07e7e65
+state: integrating
+phase: integrating
+iteration: 10/8
+revision: c48c224
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T13:31:18Z
+updated_at: 2026-07-31T14:34:35Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -52,6 +52,9 @@ terminal: no
 - [ready] scenario_faction_core_choice_identity :: Can the player compare two real toilet-character candidates by playstyle and deliberately choose a long-term faction core? :: fast=godot --path project-a -s tools/capture_faction_core_choice_scenario.gd :: strict=godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --path project-a -s tools/capture_faction_core_choice_scenario.gd
 - [ready] scenario_blueprint_character_forge :: Can the player see which permanent toilet character a blueprint creates, understand its current research state, and take the one correct next action? :: fast=godot --path project-a -s tools/capture_blueprint_forge_scenario.gd :: strict=godot --headless --path project-a -s tools/run_blueprint_screen_tests.gd && godot --path project-a -s tools/capture_blueprint_forge_scenario.gd
 - [ready] scenario_mobile_objective_action_compass :: Can the player identify the one action that advances the campaign now, its obstacle, and the immediate reward without reading a dashboard? :: fast=godot --path project-a -s tools/capture_action_compass_scenario.gd :: strict=godot --headless --path project-a -s tools/run_goals_screen_tests.gd && godot --path project-a -s tools/capture_action_compass_scenario.gd
+- [ready] scenario_mobile_achievement_medal_cabinet :: Can the player see which permanent honors are earned, which can be claimed now, and inspect progress without reading a card dashboard? :: fast=godot --path project-a -s tools/capture_achievement_medal_cabinet_scenario.gd :: strict=godot --headless --path project-a -s tools/run_goals_screen_tests.gd && godot --path project-a -s tools/capture_achievement_medal_cabinet_scenario.gd
+- [ready] scenario_mobile_first_growth_duel :: Can the player compare two character-led combat identities, understand availability, and commit one route without reading dense stat cards? :: fast=godot --path project-a -s tools/capture_first_growth_duel_scenario.gd :: strict=godot --headless --path project-a -s tools/run_first_growth_flow_tests.gd && godot --path project-a -s tools/capture_first_growth_duel_scenario.gd
+- [ready] scenario_mobile_faction_doctrine_command_deck :: Can the player compare army-wide coordination against faction specialization as two visual command doctrines and understand the permanent consequence without reading dense cards? :: fast=godot --path project-a -s tools/capture_faction_doctrine_deck_scenario.gd :: strict=godot --headless --path project-a -s tools/run_blueprint_screen_tests.gd && godot --path project-a -s tools/capture_faction_doctrine_deck_scenario.gd
 ## Quality Gates
 - [pass] gate_ui_visual :: visual :: The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports. :: evidence=2
 - [pass] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=1
@@ -75,17 +78,22 @@ terminal: no
 - [pass] gate_action_compass_visual :: visual :: The action screen reads as a mobile campaign compass rather than a generic task dashboard. :: evidence=2
 - [pass] gate_action_compass_runtime :: correctness :: Current action, reward claim and mission lock preserve durable target and reward command identities. :: evidence=1
 - [pass] gate_action_compass_responsive :: correctness :: Current target, reward preview and sole primary action remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
+- [pass] gate_achievement_cabinet_visual :: visual :: Achievements read as a permanent medal cabinet rather than a scrolling card-management dashboard. :: evidence=2
+- [pass] gate_achievement_cabinet_runtime :: correctness :: Batch and individual achievement claims preserve durable achievement identities while locked and settled states expose no fake action. :: evidence=1
+- [pass] gate_achievement_cabinet_responsive :: correctness :: Medal identity, state and the sole primary action remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
+- [pass] gate_growth_duel_visual :: visual :: The first growth choice reads as a dramatic duel between two character combat identities rather than a stat-card form. :: evidence=2
+- [pass] gate_growth_duel_runtime :: correctness :: Growth and boss actions preserve exact hero and stage identities while blocked routes expose no executable star action. :: evidence=1
+- [pass] gate_growth_duel_responsive :: correctness :: Both growth identities and their decisive actions remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
+- [pass] gate_doctrine_deck_visual :: visual :: Tier-2 doctrine selection reads as a visual command-deck choice rather than a dense settings form. :: evidence=2
+- [pass] gate_doctrine_deck_runtime :: correctness :: Doctrine actions preserve exact coordination and specialization identities while activated state exposes no replacement action. :: evidence=1
+- [pass] gate_doctrine_deck_responsive :: correctness :: Both doctrine choices and the activated command card remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
-- [fail] ev_legion_baseline_visual_2e23dd4 :: capture :: gate=gate_legion_visual :: freshness=stale :: project-a/artifacts/scenario-legion-formation/baseline bundle
-- [pass] ev_legion_responsive_eacfb8b :: runtime_state :: gate=gate_legion_responsive :: freshness=current :: dual viewport focused bundle plus canonical App Shell capture
-- [pass] ev_legion_runtime_eacfb8b :: runtime_state :: gate=gate_legion_runtime :: freshness=current :: run_legion_screen_tests.gd and capture_legion_formation_scenario.gd twice
-- [pass] ev_legion_visual_critic_eacfb8b :: model_critique :: gate=gate_legion_visual :: freshness=current :: randomized blind A/B review by /root/legion_formation_critic
-- [pass] ev_legion_visual_runtime_eacfb8b :: visual_diff :: gate=gate_legion_visual :: freshness=current :: baseline and candidate deterministic dual-size three-state bundles
-- [human_required] ev_player_learning_human_required_b13a0a1 :: player_observation :: gate=gate_player_learning :: freshness=stale :: No eligible fresh target-player session was available in this execution environment.
-- [pass] ev_ui_action_integration_responsive_07e7e65 :: capture :: gate=gate_ui_responsive :: freshness=current :: project-a/artifacts/scenario-mobile-action-compass dual-size shipping screen captures
-- [pass] ev_ui_action_integration_runtime_07e7e65 :: test :: gate=gate_ui_runtime :: freshness=current :: cd project-a && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
+- [pass] ev_ui_achievement_integration_responsive_ecb65b2 :: capture :: gate=gate_ui_responsive :: freshness=stale :: cd project-a && godot --path . -s tools/capture_achievement_medal_cabinet_scenario.gd
+- [pass] ev_ui_achievement_integration_runtime_ecb65b2 :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_goals_screen_tests.gd && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
+- [pass] ev_ui_action_integration_responsive_07e7e65 :: capture :: gate=gate_ui_responsive :: freshness=stale :: project-a/artifacts/scenario-mobile-action-compass dual-size shipping screen captures
+- [pass] ev_ui_action_integration_runtime_07e7e65 :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
 - [pass] ev_ui_blueprint_integration_responsive_4336f06 :: capture :: gate=gate_ui_responsive :: freshness=stale :: project-a/artifacts/ui-blueprint-tree-844x390.png
 - [pass] ev_ui_blueprint_integration_runtime_4336f06 :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
 - [pass] ev_ui_codex_integration_responsive_e1da84a :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: dual-size main-scene capture plus UI smoke geometry assertions
@@ -96,8 +104,12 @@ terminal: no
 - [pass] ev_ui_gauntlet_responsive_baseline_16b05bb :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a -s tools/capture_war_zone_exploration.gd
 - [pass] ev_ui_gauntlet_runtime_baseline_16b05bb :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd
 - [fail] ev_ui_gauntlet_visual_baseline_16b05bb :: capture :: gate=gate_ui_visual :: freshness=stale :: project-a/artifacts/scenario-war-zone-exploration
+- [pass] ev_ui_growth_integration_responsive_7626daf :: capture :: gate=gate_ui_responsive :: freshness=stale :: cd project-a && godot --path . -s tools/capture_first_growth_duel_scenario.gd
+- [pass] ev_ui_growth_integration_runtime_7626daf :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_legion_screen_tests.gd && godot --headless --path . -s tools/run_first_growth_flow_tests.gd && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
 - [pass] ev_ui_integration_responsive_eacfb8b :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: canonical dual-size capture plus UI smoke geometry assertions
 - [pass] ev_ui_integration_runtime_eacfb8b :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
+- [pass] ev_ui_touch_integration_responsive_c48c224 :: capture :: gate=gate_ui_responsive :: freshness=current :: godot --path project-a --script res://tools/capture_faction_doctrine_deck_scenario.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd
+- [pass] ev_ui_touch_integration_runtime_c48c224 :: test :: gate=gate_ui_runtime :: freshness=current :: godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd && GODOT_WEB_TOUCH_DRAG_ONLY=1 node project-a/tools/run_web_browser_smoke.mjs
 ## Host Capabilities
 - [supported] fresh_agent_context :: The host exposes isolated child-agent critic threads when required by an active Caesar Loop.
 - [unsupported] parallel_agents :: No parallel maker execution is authorized for this work unit.
@@ -108,13 +120,13 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T13:21:26Z :: Add the mobile objective action compass work unit before implementation.
-- 2026-07-31T13:30:57Z :: Mobile objective action compass candidate and focused fixture changed. Affected gates=['gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].
-- 2026-07-31T13:31:11Z :: Focused durable action assertions pass.
-- 2026-07-31T13:31:11Z :: Dual-size action states retain one touch-ready action.
-- 2026-07-31T13:31:11Z :: Rendered evidence and fresh independent blind critic pass every threshold.
-- 2026-07-31T13:31:11Z :: Shared smoke and focus routes pass.
-- 2026-07-31T13:31:11Z :: Affected action screen fits both target landscape sizes.
-- 2026-07-31T13:31:11Z :: Mobile objective action compass passed focused runtime, responsive and independent mixed visual gates.
-summary: scenarios=8 gates=22 evidence=55 current=30 findings=0 iterations=7
+- 2026-07-31T14:32:06Z :: Compact doctrine command cards now wrap benefits and reduce hero/icon width so both choices remain fully inside 568x320. Affected gates=['gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].
+- 2026-07-31T14:32:49Z :: Exact doctrine identities and activated exclusivity pass after compact layout correction.
+- 2026-07-31T14:32:49Z :: Both hero-led choices and activated state fit 844x390 and 568x320 without clipping.
+- 2026-07-31T14:32:49Z :: Shared UI smoke plus vertical, horizontal and real exported-Web touch drag pass while desktop wheel remains supported.
+- 2026-07-31T14:32:49Z :: Shared mobile contract now proves operable touch dragging and dual-size decisive controls.
+- 2026-07-31T14:33:46Z :: Hero-led command deck clears independent 8.5 overall/8.4 minimum after two failed corrective reviews.
+- 2026-07-31T14:34:09Z :: Doctrine command deck passes runtime, responsive and independent mixed visual gates; shared touch-drag interaction evidence also passes.
+- 2026-07-31T14:34:20Z :: Accepted doctrine command deck and real mobile touch drag enter the shared integration checkpoint.
+summary: scenarios=11 gates=31 evidence=75 current=42 findings=0 iterations=10
 ```

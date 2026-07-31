@@ -46,7 +46,7 @@
   "inference": "The accepted growth duel and display fix preserve the shared responsive contract.",
   "result": "pass",
   "confidence": 0.97,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "User should restart the already-running editor game instance to observe the new native-resolution window mode."
   ],

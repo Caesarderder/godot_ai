@@ -43,7 +43,7 @@
   "inference": "Native-resolution preview and growth duel integrate without shipping navigation regressions.",
   "result": "pass",
   "confidence": 0.97,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Full browser journey not rerun."
   ],

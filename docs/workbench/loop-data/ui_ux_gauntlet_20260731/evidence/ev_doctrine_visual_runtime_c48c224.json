@@ -1,0 +1,78 @@
+{
+  "evidence_id": "ev_doctrine_visual_runtime_c48c224",
+  "revision": "c48c224",
+  "valid_through_revision": "c48c224",
+  "gate_id": "gate_doctrine_deck_visual",
+  "claim": "Tier-2 doctrine selection reads as a visual command-deck choice rather than a dense settings form.",
+  "scenario_id": "scenario_mobile_faction_doctrine_command_deck",
+  "execution_id": "doctrine_visual_runtime_c48c224",
+  "evidence_type": "capture",
+  "artifact_or_command": "godot --path project-a --script res://tools/capture_faction_doctrine_deck_scenario.gd",
+  "case_results": [
+    {
+      "case_id": "assault_choice",
+      "result": "pass",
+      "assertions": [
+        "assault hero anchors two equal icon-led command cards"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/assault_choice-844x390.png",
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/assault_choice-568x320.png"
+      ]
+    },
+    {
+      "case_id": "armored_choice",
+      "result": "pass",
+      "assertions": [
+        "armored hero, permanent status and both command cards remain complete"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/armored_choice-844x390.png",
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/armored_choice-568x320.png"
+      ]
+    },
+    {
+      "case_id": "doctrine_activated",
+      "result": "pass",
+      "assertions": [
+        "hero-led activated result replaces editable dashboard controls"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/doctrine_activated-844x390.png",
+        "project-a/artifacts/scenario-mobile-faction-doctrine-deck/doctrine_activated-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "assault captures",
+    "armored captures",
+    "activated captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "deterministic doctrine command-deck capture audit",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "All three states render hero-led raster compositions, distinct command icons, explicit confirm actions and non-color permanent/active status.",
+  "inference": "Deterministic captures are complete for independent aesthetic review.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Runtime capture is not an independent aesthetic judgment."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

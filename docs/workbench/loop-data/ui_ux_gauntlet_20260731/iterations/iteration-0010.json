@@ -1,0 +1,35 @@
+{
+  "iteration": 10,
+  "work_unit": "mobile faction doctrine command deck",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scenes/screens/blueprint_screen.tscn",
+    "project-a/game/scripts/ui/blueprint_screen.gd",
+    "project-a/game/scripts/autoloads/mobile_scroll_input.gd",
+    "project-a/project.godot",
+    "project-a/tools/capture_faction_doctrine_deck_scenario.gd",
+    "project-a/tools/run_mobile_scroll_input_tests.gd",
+    "project-a/tools/run_web_browser_smoke.mjs"
+  ],
+  "evidence_ids": [
+    "ev_doctrine_runtime_c48c224",
+    "ev_doctrine_responsive_c48c224",
+    "ev_doctrine_visual_runtime_c48c224",
+    "ev_doctrine_visual_critic_c48c224",
+    "ev_ui_touch_integration_runtime_c48c224",
+    "ev_ui_touch_integration_responsive_c48c224"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "dense single-row doctrine summaries that collapse into vertical text on 568",
+    "two icon cards without a faction hero, which the independent critic scored 7.7 as dashboard-like",
+    "hero-led cards whose unwrapped benefit lines force the 568 layout beyond the right edge",
+    "using desktop wheel events as evidence for mobile touch dragging"
+  ],
+  "next_action": "Integrate the accepted command deck and select the next weak mobile UI state from current evidence.",
+  "blocker": null,
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

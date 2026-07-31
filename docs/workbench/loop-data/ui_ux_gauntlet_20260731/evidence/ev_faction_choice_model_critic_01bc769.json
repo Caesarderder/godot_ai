@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_faction_choice_model_critic_01bc769",
   "revision": "01bc769",
-  "valid_through_revision": "7626daf",
+  "valid_through_revision": "c48c224",
   "gate_id": "gate_faction_choice_visual",
   "claim": "The faction-core choice reads as a consequential duel between two distinct toilet characters rather than two generic signal cards.",
   "scenario_id": "scenario_faction_core_choice_identity",
