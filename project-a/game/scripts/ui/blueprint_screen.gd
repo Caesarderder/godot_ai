@@ -187,7 +187,7 @@ func _apply_view() -> void:
 	)
 	branch_row.visible = not showing_results and preview.is_empty()
 	results_summary.text = (
-		"2名精锐入列 · 高墙反攻条件已经凑齐"
+		"2名精锐永久入列 · 高墙反攻条件已经凑齐"
 		if showing_results
 		else String(_view.get("results_summary", "两名永久援军响应召唤"))
 	)
