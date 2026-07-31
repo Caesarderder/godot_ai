@@ -6,6 +6,10 @@ var _touch_origins: Dictionary = {}
 var _touch_distance: Dictionary = {}
 var _touch_owners: Dictionary = {}
 var _scroll_targets: Array[ScrollContainer] = []
+var _mouse_origin := Vector2.ZERO
+var _mouse_distance := Vector2.ZERO
+var _mouse_owner: ScrollContainer
+var _mouse_pressed := false
 
 
 func _ready() -> void:
@@ -45,7 +49,41 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventScreenDrag:
 		_handle_drag(event as InputEventScreenDrag)
 	elif event is InputEventMouseButton:
-		_handle_mouse_wheel(event as InputEventMouseButton)
+		_handle_mouse_button(event as InputEventMouseButton)
+	elif event is InputEventMouseMotion:
+		_handle_mouse_drag(event as InputEventMouseMotion)
+
+
+func _handle_mouse_button(event: InputEventMouseButton) -> void:
+	if event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_mouse_pressed = true
+			_mouse_origin = event.position
+			_mouse_distance = Vector2.ZERO
+			_mouse_owner = null
+		elif _mouse_pressed:
+			_mouse_pressed = false
+			var claimed := _mouse_owner != null
+			_mouse_owner = null
+			if claimed:
+				get_viewport().set_input_as_handled()
+		return
+	_handle_mouse_wheel(event)
+
+
+func _handle_mouse_drag(event: InputEventMouseMotion) -> void:
+	if not _mouse_pressed or not (event.button_mask & MOUSE_BUTTON_MASK_LEFT):
+		return
+	_mouse_distance += event.relative
+	if _mouse_owner == null and _mouse_distance.length() >= DRAG_DEADZONE:
+		_mouse_owner = _best_target(
+			_mouse_origin,
+			absf(_mouse_distance.x) > absf(_mouse_distance.y)
+		)
+	if _mouse_owner == null:
+		return
+	_scroll_by_drag(_mouse_owner, event.relative, _mouse_distance)
+	get_viewport().set_input_as_handled()
 
 
 func _handle_mouse_wheel(event: InputEventMouseButton) -> void:
@@ -86,13 +124,17 @@ func _handle_drag(event: InputEventScreenDrag) -> void:
 			_touch_owners[event.index] = owner
 	if owner == null:
 		return
+	_scroll_by_drag(owner, event.relative, distance)
+	get_viewport().set_input_as_handled()
+
+
+func _scroll_by_drag(owner: ScrollContainer, relative: Vector2, distance: Vector2) -> void:
 	if _can_scroll_horizontally(owner) and (
 		absf(distance.x) > absf(distance.y) or not _can_scroll_vertically(owner)
 	):
-		owner.scroll_horizontal -= roundi(event.relative.x)
+		owner.scroll_horizontal -= roundi(relative.x)
 	elif _can_scroll_vertically(owner):
-		owner.scroll_vertical -= roundi(event.relative.y)
-	get_viewport().set_input_as_handled()
+		owner.scroll_vertical -= roundi(relative.y)
 
 
 func _best_target(position: Vector2, horizontal: bool) -> ScrollContainer:

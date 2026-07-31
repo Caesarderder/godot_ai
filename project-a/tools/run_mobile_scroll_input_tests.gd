@@ -80,6 +80,14 @@ func _run() -> void:
 	(root.get_node("MobileScrollInput") as Node).call("_input", horizontal_wheel)
 	await process_frame
 	_check(strip.scroll_horizontal > before_horizontal_wheel, "desktop wheel scrolls a hovered horizontal runway")
+	strip.scroll_horizontal = 0
+	_dispatch_mouse_button(Vector2(500, 75), true)
+	await process_frame
+	_dispatch_mouse_drag(Vector2(410, 75), Vector2(-90, 0))
+	await process_frame
+	_dispatch_mouse_button(Vector2(410, 75), false)
+	await process_frame
+	_check(strip.scroll_horizontal >= 80, "desktop left-button drag mirrors a phone swipe")
 
 	if failures.is_empty():
 		print("MOBILE_SCROLL_INPUT_TESTS_OK")
@@ -103,6 +111,22 @@ func _dispatch_drag(index: int, position: Vector2, relative: Vector2) -> void:
 	event.index = index
 	event.position = position
 	event.relative = relative
+	(root.get_node("MobileScrollInput") as Node).call("_input", event)
+
+
+func _dispatch_mouse_button(position: Vector2, pressed: bool) -> void:
+	var event := InputEventMouseButton.new()
+	event.position = position
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.pressed = pressed
+	(root.get_node("MobileScrollInput") as Node).call("_input", event)
+
+
+func _dispatch_mouse_drag(position: Vector2, relative: Vector2) -> void:
+	var event := InputEventMouseMotion.new()
+	event.position = position
+	event.relative = relative
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT
 	(root.get_node("MobileScrollInput") as Node).call("_input", event)
 
 
