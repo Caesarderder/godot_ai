@@ -2138,6 +2138,7 @@ func _blueprint_view() -> Dictionary:
 		)
 		var node := {
 			"recipe_id": recipe_id,
+			"archetype_id": archetype_id,
 			"display_name": String(recipe.get("display_name", recipe_id)),
 			"rating": String(recipe.get("rating", "B")),
 			"faction": FactionCatalog.faction_for(archetype_id),

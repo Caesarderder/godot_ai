@@ -12,6 +12,10 @@ const ICON_BRANCH_FLYING := preload("res://assets/ui/blueprints/branch_flying.we
 const ICON_BRANCH_SUPPORT := preload("res://assets/ui/blueprints/branch_support.webp")
 const ICON_ABILITY_CHARGE := preload("res://assets/ui/blueprints/ability_charge.webp")
 const ICON_ABILITY_SONIC := preload("res://assets/ui/blueprints/ability_sonic.webp")
+const ICON_STATUS_LOCKED := preload("res://assets/ui/icons/kenney_game_icons/locked.png")
+const ICON_STATUS_READY := preload("res://assets/ui/icons/kenney_game_icons/star.png")
+const ICON_STATUS_RESEARCH := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
+const ASSAULT_FORGE_ART := preload("res://assets/ui/recruit/faction-assault-v2.webp")
 const BG := Color("#090d10")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
@@ -99,12 +103,15 @@ func _apply_view() -> void:
 	tech_identity.add_theme_font_size_override("font_size", key_font_size)
 	tech_effect.add_theme_font_size_override("font_size", key_font_size)
 	back_button.add_theme_font_size_override("font_size", 16 if compact else 14)
-	back_button.visible = not compact
+	# The shipping App Shell already owns back/navigation. Keeping a second
+	# bottom return button consumes the character forge's mobile height.
+	back_button.visible = false
 	for entry in BRANCHES:
 		var responsive_tab := tabs.get_node(
 			"Blueprint%sTab" % String(entry[0]).capitalize()
 		) as Button
 		responsive_tab.add_theme_font_size_override("font_size", 16 if compact else 14)
+		responsive_tab.custom_minimum_size.y = 60 if compact else 52
 	var selected := String(_view.get("branch", "ordinary"))
 	for entry in BRANCHES:
 		var id := String(entry[0])
@@ -177,13 +184,13 @@ func _apply_view() -> void:
 	if showing_results:
 		call_deferred("_animate_results")
 	branch_row.name = "BlueprintBranchRow_%s" % selected
-	branch_heading.text = "%s  /  %s" % [
-		String(_view.get("branch_title", "研究分支")),
-		String(_view.get("branch_summary", "比较职责与星级能力")),
-	]
 	_node_views.clear()
 	for node_value in _view.get("nodes", []):
 		_node_views.append((node_value as Dictionary).duplicate(true))
+	branch_heading.text = "%s  ·  %s" % [
+		String(_view.get("branch_title", "研究分支")),
+		_branch_progress_copy(),
+	]
 	_selected_recipe_id = _resolve_selected_recipe()
 	_rebuild_node_path()
 	_show_node_detail(_selected_recipe_id)
@@ -275,33 +282,26 @@ func _build_node_selector(view: Dictionary) -> Button:
 	var selected := recipe_id == _selected_recipe_id
 	var selector := Button.new()
 	selector.name = "BlueprintNode_%s" % recipe_id.replace(".", "_")
-	var dense_path := _node_views.size() > 3
-	selector.custom_minimum_size = Vector2(58 if dense_path else 118, 54)
-	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	selector.custom_minimum_size = Vector2(68, 64)
+	selector.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	selector.clip_text = true
 	selector.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	selector.icon = _recipe_icon(recipe_id)
+	selector.icon = _character_portrait(view)
 	selector.expand_icon = true
-	selector.text = "" if dense_path else "%s%s\n%s" % [
-		"◆ " if journey_focus else "",
-		_compact_selector_name(String(view.get("display_name", "未知蓝图"))),
-		_status_short(String(view.get("status_id", "locked"))),
-	]
+	selector.add_theme_constant_override("icon_max_width", 54)
+	selector.text = ""
 	selector.add_theme_font_override("font", CJK_FONT)
 	selector.add_theme_font_size_override("font_size", 11)
-	selector.add_theme_stylebox_override(
-		"normal",
-		UiArtDirectionScript.button_style(false, "focus" if selected else "normal")
-	)
-	selector.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(false, "hover"))
-	selector.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(false, "pressed"))
-	selector.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(false, "focus"))
+	selector.add_theme_stylebox_override("normal", _forge_selector_style(selected, false))
+	selector.add_theme_stylebox_override("hover", _forge_selector_style(true, false))
+	selector.add_theme_stylebox_override("pressed", _forge_selector_style(true, false))
+	selector.add_theme_stylebox_override("focus", _forge_selector_style(true, true))
 	selector.add_theme_color_override(
 		"font_color",
 		_status_color(String(view.get("status_id", "locked")))
 	)
 	if String(view.get("status_id", "locked")) == "locked":
-		selector.modulate = Color(0.72, 0.74, 0.76, 0.78)
+		selector.modulate = Color(0.48, 0.52, 0.56, 0.72)
 	selector.focus_mode = Control.FOCUS_ALL
 	selector.tooltip_text = "%s · %s" % [
 		String(view.get("display_name", "未知蓝图")),
@@ -313,21 +313,9 @@ func _build_node_selector(view: Dictionary) -> Button:
 
 func _rebuild_node_path() -> void:
 	_clear_children(node_row)
-	node_row.name = "BlueprintResearchPath"
-	var core := TextureRect.new()
-	core.name = "BlueprintBranchCore"
-	core.texture = _branch_icon(String(_view.get("branch", "ordinary")))
-	core.custom_minimum_size = Vector2(54, 54)
-	core.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	core.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	core.tooltip_text = "%s核心" % String(_view.get("branch_title", "研究分支"))
-	node_row.add_child(core)
-	for index in _node_views.size():
-		node_row.add_child(_path_connector(
-			index,
-			_status_color(String(_node_views[index].get("status_id", "locked")))
-		))
-		node_row.add_child(_build_node_selector(_node_views[index]))
+	node_row.name = "BlueprintCharacterStrip"
+	for node_view in _node_views:
+		node_row.add_child(_build_node_selector(node_view))
 
 
 func _path_connector(index: int, color: Color) -> Control:
@@ -391,39 +379,42 @@ func _show_node_detail(recipe_id: String) -> void:
 	if view.is_empty():
 		focus_panel.visible = false
 		return
-	var ability_icon := TextureRect.new()
-	ability_icon.name = "BlueprintFocusedAbilityIcon"
-	ability_icon.texture = _recipe_icon(recipe_id)
-	ability_icon.custom_minimum_size = Vector2(54, 54)
-	ability_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	ability_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	focus_content.add_child(ability_icon)
+	focus_panel.add_theme_stylebox_override(
+		"panel",
+		_forge_focus_style(String(view.get("status_id", "locked")))
+	)
+	var compact := bool(_view.get("compact", false))
+	var portrait := TextureRect.new()
+	portrait.name = "BlueprintFocusedCharacterPortrait"
+	portrait.texture = _character_portrait(view)
+	portrait.custom_minimum_size = Vector2(116 if compact else 154, 112 if compact else 132)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if String(view.get("status_id", "locked")) == "locked":
+		portrait.modulate = Color(0.5, 0.54, 0.58, 0.68)
+	focus_content.add_child(portrait)
 	var copy := VBoxContainer.new()
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy.add_theme_constant_override("separation", 2)
 	focus_content.add_child(copy)
 	var identity := Label.new()
 	identity.name = "BlueprintFocusedIdentity"
-	identity.text = "%s  ·  %s" % [
-		String(view.get("display_name", "未知蓝图")),
-		String(view.get("faction", "独立战术")),
-	]
+	identity.text = String(view.get("display_name", "未知蓝图"))
 	identity.add_theme_font_override("font", CJK_FONT)
-	identity.add_theme_font_size_override("font_size", 14)
-	identity.add_theme_color_override("font_color", CYAN)
+	identity.add_theme_font_size_override("font_size", 18 if compact else 20)
+	identity.add_theme_color_override("font_color", TEXT)
 	identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	identity.clip_text = true
 	identity.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	copy.add_child(identity)
 	var role := Label.new()
 	role.name = "BlueprintAbilityTags"
-	role.text = "%s  ◆  %s  ◆  %s" % [
-		_rating_label(String(view.get("rating", "B"))),
+	role.text = "%s  ·  %s" % [
+		String(view.get("faction", "独立战术")),
 		String(view.get("role_copy", "职责待确认")),
-		String(view.get("skill_name", "主动战法")),
 	]
 	role.add_theme_font_override("font", CJK_FONT)
-	role.add_theme_font_size_override("font_size", 11)
+	role.add_theme_font_size_override("font_size", 13 if compact else 14)
 	role.add_theme_color_override("font_color", GOLD)
 	role.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	role.clip_text = true
@@ -431,10 +422,9 @@ func _show_node_detail(recipe_id: String) -> void:
 	copy.add_child(role)
 	var growth := Label.new()
 	growth.name = "BlueprintGrowthPips"
-	growth.text = "★ %s   ◆2 %s   ◆3 %s" % [
+	growth.text = "★ %s   →   2★ %s" % [
 		_compact_effect(String(view.get("one_star_value", "完整主动技能"))),
 		_compact_effect(String(view.get("two_star_effect", "职责强化"))),
-		_compact_effect(String(view.get("three_star_effect", "技能强化"))),
 	]
 	growth.tooltip_text = "1★ %s\n2★ %s\n3★ %s" % [
 		String(view.get("one_star_value", "完整主动技能")),
@@ -442,7 +432,7 @@ func _show_node_detail(recipe_id: String) -> void:
 		String(view.get("three_star_effect", "技能强化")),
 	]
 	growth.add_theme_font_override("font", CJK_FONT)
-	growth.add_theme_font_size_override("font_size", 10)
+	growth.add_theme_font_size_override("font_size", 12 if compact else 13)
 	growth.add_theme_color_override("font_color", TEXT)
 	growth.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	growth.clip_text = true
@@ -450,13 +440,9 @@ func _show_node_detail(recipe_id: String) -> void:
 	copy.add_child(growth)
 	var status := Label.new()
 	status.name = "BlueprintNodeStatus"
-	status.text = "%s  ·  %s" % [
-		_status_short(String(view.get("status_id", "locked"))),
-		"免费 · 5秒" if String(view.get("status_id", "")) == "available"
-		else String(view.get("unlock_source", "信号招募")),
-	]
+	status.text = _forge_status_copy(view)
 	status.add_theme_font_override("font", CJK_FONT)
-	status.add_theme_font_size_override("font_size", 10)
+	status.add_theme_font_size_override("font_size", 12 if compact else 13)
 	status.add_theme_color_override("font_color", _status_color(String(view.get("status_id", "locked"))))
 	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	status.clip_text = true
@@ -477,10 +463,10 @@ func _show_node_detail(recipe_id: String) -> void:
 	copy.add_child(semantic_copy)
 	var action_id := String(view.get("action_id", ""))
 	if not action_id.is_empty():
-		var button := _button(_compact_action_label(String(view.get("action_label", "继续"))), true)
-		button.icon = _recipe_icon(recipe_id)
+		var button := _button(_forge_action_label(view, compact), true)
+		button.icon = _status_icon(String(view.get("status_id", "locked")))
 		button.expand_icon = true
-		button.custom_minimum_size = Vector2(205, 52)
+		button.custom_minimum_size = Vector2(166 if compact else 220, 60 if compact else 54)
 		button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		button.clip_text = true
 		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -488,10 +474,100 @@ func _show_node_detail(recipe_id: String) -> void:
 		button.set_meta("primary_blueprint_action", true)
 		button.set_meta("recipe_id", String(view.get("recipe_id", "")))
 		button.disabled = bool(view.get("disabled", false))
+		_style_forge_primary(button)
 		button.pressed.connect(action_requested.emit.bind(action_id, {
 			"recipe_id": recipe_id,
 		}))
 		focus_content.add_child(button)
+
+
+func _character_portrait(view: Dictionary) -> Texture2D:
+	var archetype_id := String(view.get("archetype_id", ""))
+	if archetype_id.is_empty():
+		archetype_id = String(view.get("recipe_id", "")).get_slice(".", 1)
+	if archetype_id == "assault":
+		return ASSAULT_FORGE_ART
+	return load("res://assets/ui/codex/%s.webp" % archetype_id) as Texture2D
+
+
+func _branch_progress_copy() -> String:
+	var known := 0
+	for view in _node_views:
+		if String(view.get("status_id", "locked")) != "locked":
+			known += 1
+	return "%d/%d 型号" % [known, _node_views.size()]
+
+
+func _forge_status_copy(view: Dictionary) -> String:
+	var status_id := String(view.get("status_id", "locked"))
+	match status_id:
+		"available":
+			return "可研发  ·  免费  ·  5秒"
+		"researching":
+			return "研发完成  ·  等待领取" if not bool(view.get("disabled", false)) else "研发中"
+		"unlocked":
+			return "已入列  ·  永久角色"
+		_:
+			return "待获取  ·  %s" % String(view.get("unlock_source", "信号招募"))
+
+
+func _forge_action_label(view: Dictionary, compact: bool) -> String:
+	if compact:
+		return (
+			"研发 · 5秒"
+			if String(view.get("status_id", "")) == "available"
+			else "领取角色"
+		)
+	return _compact_action_label(String(view.get("action_label", "继续")))
+
+
+func _status_icon(status_id: String) -> Texture2D:
+	if status_id == "locked":
+		return ICON_STATUS_LOCKED
+	if status_id == "researching":
+		return ICON_STATUS_READY
+	return ICON_STATUS_RESEARCH
+
+
+func _forge_selector_style(selected: bool, focused: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#122029") if selected else Color("#0d151b")
+	style.border_color = Color.WHITE if focused else (GOLD if selected else Color("#2b3b44"))
+	style.set_border_width_all(2 if selected or focused else 1)
+	style.set_corner_radius_all(9)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	return style
+
+
+func _forge_focus_style(status_id: String) -> StyleBoxFlat:
+	var accent := _status_color(status_id)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#0b141a")
+	style.border_color = Color(accent, 0.82)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 7
+	style.content_margin_bottom = 7
+	return style
+
+
+func _style_forge_primary(button: Button) -> void:
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("#e9ad46") if state != "pressed" else Color("#c88d2f")
+		style.border_color = Color.WHITE if state == "focus" else Color("#f6d27a")
+		style.set_border_width_all(2)
+		style.set_corner_radius_all(8)
+		style.content_margin_left = 12
+		style.content_margin_right = 12
+		style.content_margin_top = 7
+		style.content_margin_bottom = 7
+		button.add_theme_stylebox_override(state, style)
 
 
 func _status_short(status_id: String) -> String:

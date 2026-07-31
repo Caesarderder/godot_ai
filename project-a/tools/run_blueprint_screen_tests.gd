@@ -71,18 +71,18 @@ func _run() -> void:
 	_check((screen.get_node("%ClaimResearchBreakthroughTen") as Button).visible, "free breakthrough CTA is visible")
 	_check((screen.get_node("%ClaimResearchBreakthroughTen") as Button).has_focus(), "breakthrough CTA receives initial focus")
 	_check(screen.find_children("BlueprintNode_*", "Control", true, false).size() == 2, "selected branch shows exactly two nodes")
-	_check(screen.find_child("BlueprintBranchCore", true, false) != null, "selected branch begins at a visual core node")
 	_check(
-		_count_prefix(screen, "BlueprintPathConnector") == 2,
-		"research designs are joined to the branch core by explicit path connectors"
+		screen.find_child("BlueprintCharacterStrip", true, false) != null
+			and _count_prefix(screen, "BlueprintPathConnector") == 0,
+		"independent character designs use a portrait strip instead of a false prerequisite chain"
 	)
 	_check(
 		(screen.get_node("BlueprintTabs/BlueprintOrdinaryTab") as Button).icon != null,
 		"branch tabs use authored iconography instead of text alone"
 	)
 	_check(
-		screen.find_child("BlueprintFocusedAbilityIcon", true, false) != null,
-		"selected design presents its ability icon beside compact details"
+		screen.find_child("BlueprintFocusedCharacterPortrait", true, false) != null,
+		"selected design presents its real character portrait beside compact details"
 	)
 	_check(_collect_text(screen).contains("不推进长期保底"), "breakthrough scope is explicit")
 	var research_hud := screen.get_node("%BlueprintResourceContext") as Control
@@ -91,7 +91,7 @@ func _run() -> void:
 		"research screen leaves the four persistent balances to the App Shell top bar"
 	)
 	_check(_collect_text(screen).contains("长期资源保持不变"), "available blueprint node repeats the zero-cost boundary beside its CTA")
-	_check(_collect_text(screen).contains("两条独立研发路线"), "branch copy does not imply a false prerequisite chain")
+	_check(_collect_text(screen).contains("1/2 型号"), "branch heading summarizes known independent character models")
 	_check(_collect_text(screen).contains("1★ 重击最近守军 · 前线突破"), "node explains the complete one-star role and battle promise")
 	_check(_collect_text(screen).contains("升星：2★ 突进顺劈多个目标"), "node separates qualitative star growth from the base role")
 	_check(_collect_text(screen).contains("来源：1-2 首通或信号招募"), "node exposes its acquisition route")
@@ -100,7 +100,7 @@ func _run() -> void:
 	await process_frame
 	_check(
 		_collect_text(screen).contains("故障闪电马桶人")
-			and _collect_text(screen).contains("音波干扰")
+			and _collect_text(screen).contains("群体控制")
 			and screen.find_child("UnlockFoundationalBlueprint_ordinary_assault", true, false) == null,
 		"selecting a locked blueprint replaces the detail and removes the unrelated research action"
 	)
@@ -113,11 +113,9 @@ func _run() -> void:
 		requested["recipe_id"] = String(payload.get("recipe_id", ""))
 	)
 	var unlock := screen.find_child("UnlockFoundationalBlueprint_ordinary_assault", true, false) as Button
-	var back := screen.get_node("%BlueprintBackButton") as Button
 	for control_value in [
 		screen.get_node("%ClaimResearchBreakthroughTen"),
 		unlock,
-		back,
 	]:
 		var control := control_value as Control
 		_check(
@@ -289,8 +287,8 @@ func _run() -> void:
 		"compact branch keeps its one primary research action inside 568x320"
 	)
 	_check(
-		_within_568x320(screen.find_child("BlueprintBranchCore", true, false) as Control),
-		"compact branch core remains visible inside 568x320"
+		screen.find_child("BlueprintFocusedCharacterPortrait", true, false) != null,
+		"compact branch keeps the selected character portrait visible"
 	)
 	for compact_node in screen.find_children("BlueprintNode_*", "Control", true, false):
 		_check(
