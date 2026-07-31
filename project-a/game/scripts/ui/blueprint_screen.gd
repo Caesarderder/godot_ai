@@ -43,8 +43,10 @@ const BRANCHES := [
 @onready var results_summary: Label = %BlueprintResultsSummary
 @onready var results_grid: GridContainer = %BlueprintResultsGrid
 @onready var tech_preview: PanelContainer = %FactionTechPreview
+@onready var doctrine_emblem: TextureRect = %DoctrineEmblem
 @onready var tech_identity: Label = %Identity
 @onready var tech_effect: Label = %Effect
+@onready var doctrine_deck: HBoxContainer = %DoctrineDeck
 @onready var coordination_choice: Button = %CoordinationChoice
 @onready var specialization_choice: Button = %SpecializationChoice
 @onready var branch_row: HBoxContainer = %BlueprintBranchRow
@@ -132,36 +134,41 @@ func _apply_view() -> void:
 	var preview := _view.get("faction_tech_preview", {}) as Dictionary
 	var choices := _view.get("faction_tech_choices", []) as Array
 	var choosing_doctrine := choices.size() == 2
+	var faction_name := String(preview.get("faction", "阵营"))
+	var faction_icon := ICON_BRANCH_HEAVY if faction_name.contains("铁甲") else ICON_BRANCH_ASSAULT
+	doctrine_emblem.texture = faction_icon
 	results_panel.visible = showing_results
 	tech_preview.visible = not showing_results and not preview.is_empty()
 	if choosing_doctrine:
-		tech_identity.text = "二阶科技待定 · %s\n选择后从第4章生效" % String(
-			preview.get("faction", "阵营")
-		)
+		tech_identity.text = "选择二阶指令\n%s" % faction_name
 		var coordination := choices[0] as Dictionary
 		var specialization := choices[1] as Dictionary
-		tech_effect.text = "永久选择 · 不可更改\n广覆盖 vs 高强度"
-		coordination_choice.text = String(
-			coordination.get("choice_summary", coordination.get("action_label", "选择全队协同"))
+		tech_effect.text = "◆ 永久锁定"
+		_configure_doctrine_choice(
+			coordination_choice,
+			"全军联动",
+			String(coordination.get("choice_summary", "全队共享增益")),
+			ICON_BRANCH_SUPPORT,
+			CYAN
 		)
-		specialization_choice.text = String(
-			specialization.get(
-				"choice_summary",
-				specialization.get("action_label", "选择阵营专精")
-			)
+		_configure_doctrine_choice(
+			specialization_choice,
+			"核心过载",
+			String(specialization.get("choice_summary", "阵营核心强化")),
+			faction_icon,
+			GOLD
 		)
 	else:
-		tech_identity.text = "%d阶阵营科技已激活 · %s\n%s" % [
+		tech_identity.text = "%d阶指令已激活 · %s\n%s\n%s" % [
 			int(preview.get("tier", 1)),
-			String(preview.get("faction", "阵营待形成")),
+			faction_name,
 			String(preview.get("title", "阵营科技")),
-		]
-		tech_effect.text = "%s\n第%d章起自动生效 · 编入同阵营角色可扩大收益" % [
 			String(preview.get("effect", "")),
-			int(preview.get("activation_chapter", 3)),
 		]
+		tech_effect.text = "◆ 生效中"
 	coordination_choice.visible = choosing_doctrine
 	specialization_choice.visible = choosing_doctrine
+	doctrine_deck.visible = choosing_doctrine
 	tabs.visible = not showing_results and not breakthrough_button.visible
 	core_panel.visible = (
 		not showing_results
@@ -172,7 +179,7 @@ func _apply_view() -> void:
 			or resource_context_slot.visible
 		)
 	)
-	branch_row.visible = not showing_results
+	branch_row.visible = not showing_results and preview.is_empty()
 	results_summary.text = String(_view.get(
 		"results_summary",
 		"两名永久援军响应召唤 · 现在把他们编入反攻队"
@@ -195,6 +202,29 @@ func _apply_view() -> void:
 	_rebuild_node_path()
 	_show_node_detail(_selected_recipe_id)
 	_schedule_research_refresh(int(_view.get("refresh_at_unix", 0)))
+
+
+func _configure_doctrine_choice(
+	button: Button,
+	title: String,
+	summary: String,
+	icon: Texture2D,
+	accent: Color
+) -> void:
+	var compact_effect := summary
+	compact_effect = compact_effect.replace("全队协同 · ", "")
+	compact_effect = compact_effect.replace("阵营专精 · ", "")
+	compact_effect = compact_effect.replace("\n", " · ")
+	button.text = "%s\n%s" % [title, compact_effect]
+	button.tooltip_text = summary.replace("\n", " · ") + " · 选择后不可更改"
+	button.icon = icon
+	button.expand_icon = true
+	button.add_theme_constant_override("icon_max_width", 44)
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_color_override("font_color", accent)
+	button.add_theme_color_override("font_hover_color", accent.lightened(0.14))
+	button.add_theme_color_override("font_pressed_color", accent)
 
 
 func _build_result_card(view: Dictionary) -> PanelContainer:
