@@ -134,6 +134,20 @@
 次级补给横条。页签保持冷青选中态，避免与主行动争夺金色强调。生成源经过 Godot 工具脚本
 键色、裁切、缩放和有损 WebP 导出，单枚约 2KB，避免把生成大图带进运行时。
 
+### 科技蓝图
+
+蓝图屏参考 Wargaming 官方《World of Tanks Blitz》科技树的前置研究关系与已研究/未研究状态
+区分，以及 Supercell 官方《Clash of Clans》Hero Equipment 用能力图标直接连接战斗打法的
+原则。项目只采用“路径可见、状态不只靠文字、选中能力聚焦”的信息结构，不复制车辆、装备、
+图标或具体构图。参考入口：
+`https://www.wargaming.net/support/en/products/wotb/article/15406/` 与
+`https://supercell.com/en/games/clashofclans/blog/news/introducing-hero-equipment/`。
+
+四个分支使用 64×64 WebP 工业徽章和两字短名；选中分支保持冷青描边。主区固定为“分支核心
+→ 可研发设计 → 后续设计”的连接路径，节点用图标、边框和短状态共同表达。选中设计只持续显示
+职责、主动能力与三阶成长短标签，完整说明进入提示语义；金色只给予当前研发动作。568×320
+隐藏与 App Shell 主导航重复的返回按钮，并保证两个设计节点和研发动作同时留在首屏。
+
 ## 组件状态
 
 | 组件 | Normal | Selected / Focus | Disabled | Reward / Warning |
@@ -191,3 +205,7 @@
 - `run_goals_screen_tests.gd` 验证三节点战役路线、唯一主挑战、次级补给横条及其语义动作；
   `ui-goals-action-844x390.png`、`ui-goals-action-568x320.png` 与
   `ui-goals-844x390.png` 是独立双尺寸和主流程集成证据。
+- `run_blueprint_screen_tests.gd` 验证分支图标、核心节点、路径连接、设计状态、语义动作与
+  568×320 边界；`ui-blueprint-branch-844x390.png`、
+  `ui-blueprint-branch-568x320.png` 与 `ui-blueprint-tree-844x390.png`
+  是独立双尺寸和主流程集成证据。

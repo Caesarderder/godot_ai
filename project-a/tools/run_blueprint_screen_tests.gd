@@ -71,6 +71,19 @@ func _run() -> void:
 	_check((screen.get_node("%ClaimResearchBreakthroughTen") as Button).visible, "free breakthrough CTA is visible")
 	_check((screen.get_node("%ClaimResearchBreakthroughTen") as Button).has_focus(), "breakthrough CTA receives initial focus")
 	_check(screen.find_children("BlueprintNode_*", "Control", true, false).size() == 2, "selected branch shows exactly two nodes")
+	_check(screen.find_child("BlueprintBranchCore", true, false) != null, "selected branch begins at a visual core node")
+	_check(
+		_count_prefix(screen, "BlueprintPathConnector") == 2,
+		"research designs are joined to the branch core by explicit path connectors"
+	)
+	_check(
+		(screen.get_node("BlueprintTabs/BlueprintOrdinaryTab") as Button).icon != null,
+		"branch tabs use authored iconography instead of text alone"
+	)
+	_check(
+		screen.find_child("BlueprintFocusedAbilityIcon", true, false) != null,
+		"selected design presents its ability icon beside compact details"
+	)
 	_check(_collect_text(screen).contains("不推进长期保底"), "breakthrough scope is explicit")
 	var research_hud := screen.get_node("%BlueprintResourceContext") as Control
 	_check(
@@ -228,6 +241,66 @@ func _run() -> void:
 		(screen.get_node("%BlueprintBackButton") as Button).get_theme_font_size("font_size") >= 16,
 		"compact protocol preview keeps its return action label readable"
 	)
+	host.position = Vector2.ZERO
+	host.size = Vector2(568, 320)
+	root.size = Vector2i(568, 320)
+	screen.call("configure", {
+		"compact": true,
+		"branch": "ordinary",
+		"branch_title": "突击枝",
+		"branch_summary": "突破 · 控场",
+		"breakthrough": {},
+		"results": [],
+		"nodes": [
+			{
+				"recipe_id": "ordinary.assault",
+				"display_name": "普通马桶人",
+				"rating": "B",
+				"faction": "快攻破城",
+				"skill_name": "皮搋冲锋",
+				"role_copy": "前线突破",
+				"one_star_value": "重击最近守军",
+				"two_star_effect": "突进顺劈多个目标",
+				"three_star_effect": "高倍率冲击并震慑",
+				"unlock_source": "1-2 首通或信号招募",
+				"status_id": "available",
+				"status_copy": "免费研发 · 仅耗时5秒 · 长期资源保持不变",
+				"action_id": "start_research",
+				"action_label": "免费研发冲锋蓝图 · 5秒",
+				"action_name": "CompactBlueprintPrimaryAction",
+				"disabled": false,
+			},
+			{
+				"recipe_id": "ordinary.sonic",
+				"display_name": "故障闪电马桶人",
+				"status_id": "locked",
+				"status_copy": "尚未获得该型号图纸",
+				"action_id": "",
+			},
+		],
+	})
+	await process_frame
+	await process_frame
+	var compact_action := screen.find_child("CompactBlueprintPrimaryAction", true, false) as Button
+	_check(
+		compact_action != null
+			and compact_action.get_global_rect().size.y >= 48.0
+			and _within_568x320(compact_action),
+		"compact branch keeps its one primary research action inside 568x320"
+	)
+	_check(
+		_within_568x320(screen.find_child("BlueprintBranchCore", true, false) as Control),
+		"compact branch core remains visible inside 568x320"
+	)
+	for compact_node in screen.find_children("BlueprintNode_*", "Control", true, false):
+		_check(
+			_within_568x320(compact_node as Control),
+			"%s remains inside the compact research path" % compact_node.name
+		)
+	_check(
+		not (screen.get_node("%BlueprintBackButton") as Button).visible,
+		"compact embedded screen removes the redundant return control"
+	)
 
 	screen.queue_free()
 	host.queue_free()
@@ -261,6 +334,25 @@ func _within_844x390(control: Control) -> bool:
 		and rect.end.x <= 844.5
 		and rect.end.y <= 390.5
 	)
+
+
+func _within_568x320(control: Control) -> bool:
+	if control == null or not control.is_visible_in_tree():
+		return false
+	var rect := control.get_global_rect()
+	return (
+		rect.position.x >= -0.5
+		and rect.position.y >= -0.5
+		and rect.end.x <= 568.5
+		and rect.end.y <= 320.5
+	)
+
+
+func _count_prefix(node: Node, prefix: String) -> int:
+	var count := 1 if String(node.name).begins_with(prefix) else 0
+	for child in node.get_children():
+		count += _count_prefix(child, prefix)
+	return count
 
 
 func _check(condition: bool, message: String) -> void:
