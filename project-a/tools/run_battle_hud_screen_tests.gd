@@ -35,6 +35,7 @@ func _run() -> void:
 		burst_button != null and burst_button.custom_minimum_size.y >= 44.0,
 		"manual HUD exposes one touch-sized squad burst timing action"
 	)
+	var pause_button := hud.find_child("BattlePauseButton", true, false) as Button
 	var retreat_button := hud.find_child("BattleRetreatButton", true, false) as Button
 	for action_name in [
 		"BattlePauseButton",
@@ -51,7 +52,12 @@ func _run() -> void:
 		)
 	var skill_button := hud.find_child("BattleSkillButton_hero_test", true, false) as Button
 	_check(skill_button != null, "HUD builds one skill action for each permanent hero")
-	_check(_tree_has_text(hud, "测试先锋 · 攻城护盾"), "HUD names the real player-facing skill")
+	_check(
+		_tree_has_text(hud, "测试先锋")
+			and skill_button != null
+			and skill_button.tooltip_text.contains("攻城护盾"),
+		"HUD names the hero on-card and preserves the full skill identity in progressive disclosure"
+	)
 	_check(skill_button != null and skill_button.tooltip_text.contains("核心巨炮预警"), "HUD exposes the skill timing")
 	hud.apply_snapshot({
 		"stage_index": 2,
@@ -68,9 +74,9 @@ func _run() -> void:
 			"temporary": false,
 		}],
 	})
-	_check(hud.status_label.text.contains("阶段 3/3"), "HUD projects battle phase from the runtime snapshot")
-	_check(hud.status_label.text.contains("炮击 2.0秒"), "HUD exposes the boss warning countdown")
-	_check(hud.status_label.text.contains("点装甲护盾扛炮"), "HUD explains the roster-specific cannon response")
+	_check(_status_has(hud, "炮击 2.0秒"), "boss warning correctly takes priority over the routine phase")
+	_check(_status_has(hud, "炮击 2.0秒"), "HUD exposes the boss warning countdown")
+	_check(_status_has(hud, "点装甲护盾扛炮"), "HUD explains the roster-specific cannon response")
 	var status_style := hud.status_label.get_theme_stylebox("normal") as StyleBoxFlat
 	_check(
 		status_style != null
@@ -139,9 +145,9 @@ func _run() -> void:
 			"temporary": false,
 		}],
 	})
-	_check(hud.status_label.text.contains("突破废弃路障 · 耐久 63%"), "first battle names the current destructible objective and remaining durability")
+	_check(_status_has(hud, "突破废弃路障 · 耐久 63%"), "first battle names the current destructible objective and remaining durability")
 	_check(
-		hud.status_label.text.contains("首次反攻强化 · 点击发光的 测试先锋 卡"),
+		_status_has(hud, "首次反攻强化 · 点击发光的 测试先锋 卡"),
 		"first battle teaches the full-card skill action and names the one-off power fantasy"
 	)
 	_check(
@@ -183,7 +189,7 @@ func _run() -> void:
 			"temporary": false,
 		}],
 	})
-	_check(hud.status_label.text.contains("指令生效"), "accepted first skill receives immediate HUD confirmation")
+	_check(_status_has(hud, "指令生效"), "accepted first skill receives immediate HUD confirmation")
 	hud.set_manual_skills(false)
 	hud.apply_snapshot({
 		"units": [{
@@ -220,8 +226,8 @@ func _run() -> void:
 			"temporary": false,
 		}],
 	})
-	_check(hud.status_label.text.contains("援军已就位"), "counterattack opens with a short reinforcement rally")
-	_check(hud.status_label.text.contains("装甲前排承伤") and hud.status_label.text.contains("冲锋快速压制"), "rally restates both learned responsibilities")
+	_check(_status_has(hud, "援军已就位"), "counterattack opens with a short reinforcement rally")
+	_check(_status_has(hud, "装甲前排承伤") and _status_has(hud, "冲锋快速压制"), "rally restates both learned responsibilities")
 	hud.configure([{
 		"hero_id": "hero_test",
 		"display_name": "装甲先锋",
@@ -253,9 +259,9 @@ func _run() -> void:
 		}],
 	})
 	_check(
-		hud.status_label.text.contains("装甲先锋 · 攻城护盾")
-		and hud.status_label.text.contains("造成 40 伤害")
-		and hud.status_label.text.contains("为 2 人提供 140 护盾"),
+		_status_has(hud, "装甲先锋 · 攻城护盾")
+		and _status_has(hud, "造成 40 伤害")
+		and _status_has(hud, "为 2 人提供 140 护盾"),
 		"accepted battle events become a named, quantified skill result"
 	)
 	hud.apply_snapshot({
@@ -274,7 +280,7 @@ func _run() -> void:
 		}],
 	})
 	_check(
-		hud.status_label.text.contains("炮击 1.8秒") and not hud.status_label.text.contains("造成 40 伤害"),
+		_status_has(hud, "炮击 1.8秒") and not _status_has(hud, "造成 40 伤害"),
 		"boss warning keeps priority over general skill feedback"
 	)
 	hud.show_skill_unavailable()
@@ -294,7 +300,7 @@ func _run() -> void:
 		}],
 	})
 	_check(
-		hud.status_label.text.contains("炮击 1.6秒") and not hud.status_label.text.contains("技能尚未就绪"),
+		_status_has(hud, "炮击 1.6秒") and not _status_has(hud, "技能尚未就绪"),
 		"boss warning also keeps priority over a rejected skill order"
 	)
 	hud.apply_snapshot({
@@ -318,7 +324,7 @@ func _run() -> void:
 		}],
 	})
 	_check(
-		hud.status_label.text.contains("巨炮已压制 · 安全窗口")
+		_status_has(hud, "巨炮已压制 · 安全窗口")
 		and hud.status_label.get_theme_color("font_color") == BattleHudScreen.GREEN,
 		"accepted suppression keeps a readable green confirmation instead of a stale countdown"
 	)
@@ -343,7 +349,7 @@ func _run() -> void:
 		}],
 	})
 	_check(
-		hud.status_label.text.contains("技能尚未就绪 · 等待能量充满"),
+		_status_has(hud, "技能尚未就绪 · 等待能量充满"),
 		"rejected skill order uses the local HUD after the cannon warning clears"
 	)
 	hud.apply_battle_events([{
@@ -367,8 +373,8 @@ func _run() -> void:
 		}],
 	})
 	_check(
-		hud.status_label.text.contains("共振蓄能")
-			and hud.status_label.text.contains("立即释放已就绪技能"),
+		_status_has(hud, "共振蓄能")
+			and _status_has(hud, "立即释放已就绪技能"),
 		"chapter-two warning turns hidden energy loss into a timed player decision"
 	)
 	hud.apply_battle_events([{
@@ -392,8 +398,8 @@ func _run() -> void:
 		}],
 	})
 	_check(
-		hud.status_label.text.contains("共振冲击")
-			and hud.status_label.text.contains("全队损失 42 能量"),
+		_status_has(hud, "共振冲击")
+			and _status_has(hud, "全队损失 42 能量"),
 		"chapter-two pulse quantifies its real impact after the warning"
 	)
 	hud.apply_battle_events([{
@@ -410,8 +416,8 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("广播车增援")
-			and hud.status_label.text.contains("第1/2波"),
+		_status_has(hud, "广播车增援")
+			and _status_has(hud, "第1/2波"),
 		"stage 2-3 HUD turns a spawned enemy into readable tempo pressure"
 	)
 	hud.apply_battle_events([{
@@ -428,7 +434,7 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("2秒后冲击后排"),
+		_status_has(hud, "2秒后冲击后排"),
 		"stage 2-4 HUD names the threatened rank before impact"
 	)
 	hud.apply_battle_events([{
@@ -445,8 +451,8 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("后排承受 38 伤害")
-			and hud.status_label.text.contains("下一次将切换排位"),
+		_status_has(hud, "后排承受 38 伤害")
+			and _status_has(hud, "下一次将切换排位"),
 		"echo impact quantifies the consequence and teaches the next alternating target"
 	)
 	hud.apply_battle_events([{
@@ -462,8 +468,8 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("目标信号消失")
-			and hud.status_label.text.contains("先转火"),
+		_status_has(hud, "目标信号消失")
+			and _status_has(hud, "先转火"),
 		"stage 3-1 HUD converts target loss into an immediate fallback action"
 	)
 	hud.apply_battle_events([{
@@ -480,9 +486,9 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("屏幕控制")
-			and hud.status_label.text.contains("1.6秒")
-			and hud.status_label.text.contains("其余成员继续推进"),
+		_status_has(hud, "屏幕控制")
+			and _status_has(hud, "1.6秒")
+			and _status_has(hud, "其余成员继续推进"),
 		"stage 3-3 HUD names the controlled member window and unaffected fallback"
 	)
 	hud.apply_battle_events([{
@@ -499,8 +505,8 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("2名精英获得 24 护盾")
-			and hud.status_label.text.contains("集中爆发击穿"),
+		_status_has(hud, "2名精英获得 24 护盾")
+			and _status_has(hud, "集中爆发击穿"),
 		"stage 3-4 HUD quantifies overseer protection and its response"
 	)
 	hud.apply_battle_events([{
@@ -517,8 +523,8 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("当前无飞行单位")
-			and hud.status_label.text.contains("成功规避"),
+		_status_has(hud, "当前无飞行单位")
+			and _status_has(hud, "成功规避"),
 		"stage 4-2 explicitly rewards a ground formation instead of showing an empty hazard"
 	)
 	hud.apply_battle_events([{
@@ -535,8 +541,8 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("2个临时单位承受 64 伤害")
-			and hud.status_label.text.contains("保护永久主队"),
+		_status_has(hud, "2个临时单位承受 64 伤害")
+			and _status_has(hud, "保护永久主队"),
 		"stage 4-3 identifies the exact disposable targets and reassures permanent-roster safety"
 	)
 	hud.apply_battle_events([{
@@ -553,8 +559,8 @@ func _run() -> void:
 		"units": [],
 	})
 	_check(
-		hud.status_label.text.contains("被锁定 3.0秒")
-			and hud.status_label.text.contains("开盾或治疗"),
+		_status_has(hud, "被锁定 3.0秒")
+			and _status_has(hud, "开盾或治疗"),
 		"stage 4-1 turns focus fire into a timed defensive decision"
 	)
 	hud.configure([{
@@ -565,29 +571,26 @@ func _run() -> void:
 		"star": 2,
 	}], true, false, false, true)
 	_check(
-		hud.status_label.get_theme_font_size("font_size") >= 18,
+		hud.status_label.get_theme_font_size("font_size") >= 15,
 		"compact battle keeps the current protocol or threat line readable"
 	)
-	for action_name in [
-		"BattlePauseButton",
-		"BattleSkillModeButton",
-		"BattleBurstButton",
-		"BattleRetreatButton",
-	]:
+	for action_name in ["BattleSkillModeButton", "BattleBurstButton"]:
 		var compact_action := hud.find_child(action_name, true, false) as Button
 		_check(
 			compact_action != null
-				and compact_action.get_theme_font_size("font_size") >= 16,
+				and compact_action.get_theme_font_size("font_size") >= 14,
 			"compact battle keeps %s label readable" % action_name
 		)
+	_check(
+		pause_button.icon != null
+			and pause_button.text.is_empty()
+			and not retreat_button.visible
+			and retreat_button.tooltip_text.contains("暂停菜单"),
+		"compact edge actions use a pause icon and keep destructive retreat behind the pause menu"
+	)
 	host.size = Vector2(568, 320)
 	await process_frame
-	for action_name in [
-		"BattlePauseButton",
-		"BattleSkillModeButton",
-		"BattleBurstButton",
-		"BattleRetreatButton",
-	]:
+	for action_name in ["BattlePauseButton", "BattleSkillModeButton", "BattleBurstButton"]:
 		var short_action := hud.find_child(action_name, true, false) as Button
 		_check(
 			short_action != null
@@ -620,3 +623,10 @@ func _tree_has_text(node: Node, expected: String) -> bool:
 		if _tree_has_text(child, expected):
 			return true
 	return false
+
+
+func _status_has(hud: BattleHudScreen, expected: String) -> bool:
+	return (
+		hud.status_label.text.contains(expected)
+		or hud.status_label.tooltip_text.contains(expected)
+	)

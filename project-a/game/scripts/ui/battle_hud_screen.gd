@@ -385,6 +385,7 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 		GREEN if warning_suppressed else (RED if not warnings.is_empty() else GOLD)
 	)
 	if not warnings.is_empty():
+		status_label.tooltip_text = status_label.text
 		status_label.text = _fit_status_copy(status_label.text)
 		return
 	if _chapter_feedback_updates > 0:
@@ -427,6 +428,7 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 			ready_unit_name,
 		]
 		status_label.add_theme_color_override("font_color", GOLD)
+	status_label.tooltip_text = status_label.text
 	status_label.text = _fit_status_copy(status_label.text)
 
 
