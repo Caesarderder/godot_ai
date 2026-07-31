@@ -1,0 +1,15 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "example_weapon_fixture",
+  "iteration": 1,
+  "work_unit": "close finding_example_001",
+  "status": "verification_requested",
+  "changed_files": [],
+  "evidence_ids": [],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [],
+  "next_action": "Run the fast review route, then the strict route if the candidate is accepted.",
+  "blocker": null
+}

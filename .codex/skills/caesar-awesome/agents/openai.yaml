@@ -1,0 +1,4 @@
+interface:
+  display_name: "Caesar Awesome"
+  short_description: "一体化知识地图、Workbench 与游戏证据循环"
+  default_prompt: "使用唯一的 $caesar-awesome，从知识发现开始并维护 Workbench。只有我显式输入 caesar-awesome:loop、$caesar-awesome loop 或明确说“开启 Caesar Loop”时才开启 Loop；用 caesar-awesome:docs-init 初始化知识地图。"

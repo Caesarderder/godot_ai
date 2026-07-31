@@ -1,0 +1,14 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "observed_at": "replace-with-current-time",
+  "capabilities": {
+    "fresh_agent_context": { "status": "unknown", "evidence": "", "limits": [] },
+    "parallel_agents": { "status": "unknown", "evidence": "", "limits": [] },
+    "isolated_workspaces": { "status": "unknown", "evidence": "", "limits": [] },
+    "runtime_control": { "status": "unknown", "evidence": "", "limits": [] },
+    "capture": { "status": "unknown", "evidence": "", "limits": [] },
+    "profiling": { "status": "unknown", "evidence": "", "limits": [] },
+    "persistent_run_state": { "status": "unknown", "evidence": "", "limits": [] },
+    "target_player_access": { "status": "unknown", "evidence": "", "limits": [] }
+  }
+}

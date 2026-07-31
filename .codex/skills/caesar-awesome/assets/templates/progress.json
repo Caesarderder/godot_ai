@@ -1,0 +1,40 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "example_weapon_fixture",
+  "state": "scenario_authoring",
+  "revision": "working-tree-or-build-id",
+  "iteration": 0,
+  "active_work_unit": "author scenario_weapon_fixture",
+  "frozen_gates": [],
+  "gate_status": {
+    "gate_weapon_function": "pending",
+    "gate_weapon_presentation": "pending",
+    "gate_weapon_integration": "pending"
+  },
+  "open_findings": [],
+  "evidence_ledger": [],
+  "continuation_anchor": {
+    "goal": "Improve one weapon through a reusable focused fixture, then integrate once at a declared checkpoint.",
+    "scope": ["one reusable weapon fixture and one whole-path integration checkpoint"],
+    "in_scope_dimensions": [
+      "accessibility_localization",
+      "audio",
+      "correctness_data_lifecycle",
+      "gameplay_levels_ai",
+      "interaction_camera_physics",
+      "learning_replay",
+      "materials_shaders_lighting",
+      "motion_vfx",
+      "performance_stability"
+    ],
+    "next_action": "Author and validate scenario_weapon_fixture before collecting a baseline.",
+    "updated_at": "run-start"
+  },
+  "decisions": [
+    {
+      "at": "run-start",
+      "decision": "Author and validate the reusable scenario before collecting a baseline.",
+      "evidence_ids": []
+    }
+  ]
+}

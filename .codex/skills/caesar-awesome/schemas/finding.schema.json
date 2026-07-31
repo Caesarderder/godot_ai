@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caesar.local/schemas/caesar-awesome/finding.schema.json",
+  "title": "Caesar Loop Finding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "finding_id",
+    "run_id",
+    "gate_id",
+    "status",
+    "severity",
+    "player_impact",
+    "observation",
+    "evidence_ids",
+    "next_change",
+    "acceptance_check"
+  ],
+  "properties": {
+    "schema_version": { "const": "caesar-loop/v2" },
+    "finding_id": { "type": "string", "pattern": "^finding_[a-zA-Z0-9._-]+$" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "gate_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["open", "in_progress", "resolved", "accepted_risk", "blocked", "rejected"] },
+    "severity": { "enum": ["critical", "high", "medium", "low"] },
+    "player_impact": { "type": "string", "minLength": 1 },
+    "observation": { "type": "string", "minLength": 1 },
+    "evidence_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^ev_[a-zA-Z0-9._-]+$" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "next_change": { "type": "string", "minLength": 1 },
+    "acceptance_check": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string" },
+    "retry_count": { "type": "integer", "minimum": 0 },
+    "blocked_by": { "type": "string" }
+  }
+}

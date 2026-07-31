@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caesar.local/schemas/caesar-awesome/run-spec.schema.json",
+  "title": "Caesar Loop RunSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "goal",
+    "player_outcome",
+    "constraints",
+    "scenarios",
+    "integration_policy",
+    "quality_gates",
+    "budgets",
+    "stop_policy"
+  ],
+  "properties": {
+    "schema_version": { "const": "caesar-loop/v2" },
+    "contract_variant": { "const": "caesar-awesome" },
+    "run_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$" },
+    "goal": { "type": "string", "minLength": 1 },
+    "player_outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_player",
+        "platform",
+        "play_window_seconds",
+        "control",
+        "threat",
+        "choice",
+        "feedback",
+        "outcome"
+      ],
+      "properties": {
+        "target_player": { "type": "string", "minLength": 1 },
+        "platform": { "type": "string", "minLength": 1 },
+        "play_window_seconds": {
+          "type": "array",
+          "prefixItems": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "integer", "minimum": 1 }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "control": { "type": "string", "minLength": 1 },
+        "threat": { "type": "string", "minLength": 1 },
+        "choice": { "type": "string", "minLength": 1 },
+        "feedback": { "type": "string", "minLength": 1 },
+        "outcome": { "type": "string", "minLength": 1 }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "asset_policy", "scope"],
+      "properties": {
+        "engine": { "type": "string", "minLength": 1 },
+        "target_runtime": { "type": "string" },
+        "asset_policy": { "type": "string", "minLength": 1 },
+        "scope": { "type": "array", "items": { "type": "string" } },
+        "out_of_scope": { "type": "array", "items": { "type": "string" } },
+        "accessibility": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "quality_bar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparison", "inspect_route", "limits"],
+      "properties": {
+        "comparison": { "type": "string", "minLength": 1 },
+        "inspect_route": { "type": "string", "minLength": 1 },
+        "limits": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      }
+    },
+    "quality_dimensions": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dimension_id",
+          "label",
+          "applicability",
+          "scope",
+          "gate_ids",
+          "rationale"
+        ],
+        "properties": {
+          "dimension_id": {
+            "enum": [
+              "assets_modeling",
+              "materials_shaders_lighting",
+              "motion_vfx",
+              "ui_ux",
+              "interaction_camera_physics",
+              "gameplay_levels_ai",
+              "balance_economy_progression",
+              "narrative_content",
+              "audio",
+              "learning_replay",
+              "accessibility_localization",
+              "correctness_data_lifecycle",
+              "performance_stability"
+            ]
+          },
+          "label": { "type": "string", "minLength": 1 },
+          "applicability": { "enum": ["in_scope", "not_applicable"] },
+          "scope": { "type": "array", "items": { "type": "string" } },
+          "gate_ids": { "type": "array", "items": { "type": "string" } },
+          "rationale": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "scenario.schema.json" }
+    },
+    "integration_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strategy",
+        "scenario_ids",
+        "run_after",
+        "max_main_scene_launches_per_wave",
+        "rerun_unchanged_revision"
+      ],
+      "properties": {
+        "strategy": { "const": "conditional_checkpoint" },
+        "scenario_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "run_after": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "max_main_scene_launches_per_wave": { "const": 1 },
+        "rerun_unchanged_revision": { "const": false }
+      }
+    },
+    "quality_gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "gate.schema.json" }
+    },
+    "ownership": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "surface", "public_contract", "coupling"],
+        "properties": {
+          "owner": { "type": "string", "minLength": 1 },
+          "surface": { "type": "string", "minLength": 1 },
+          "public_contract": { "type": "string", "minLength": 1 },
+          "coupling": { "enum": ["independent", "coupled", "integration_only"] }
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_iterations", "max_same_finding_retries", "no_progress_window"],
+      "properties": {
+        "max_iterations": { "type": "integer", "minimum": 1 },
+        "max_same_finding_retries": { "type": "integer", "minimum": 1 },
+        "no_progress_window": { "type": "integer", "minimum": 1 },
+        "max_wall_time_minutes": { "type": "integer", "minimum": 1 },
+        "max_cost": { "type": "number", "minimum": 0 },
+        "max_regressions": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "stop_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["terminal_results"],
+      "properties": {
+        "minimum_material_improvement": { "type": "number", "minimum": 0 },
+        "terminal_results": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "completed",
+              "budget_exhausted",
+              "no_material_progress",
+              "blocked",
+              "human_required",
+              "capability_unavailable",
+              "regression_limit",
+              "user_stopped",
+              "failed"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

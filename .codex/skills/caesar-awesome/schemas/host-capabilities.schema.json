@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caesar.local/schemas/caesar-awesome/host-capabilities.schema.json",
+  "title": "Caesar Loop HostCapabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "observed_at", "capabilities"],
+  "properties": {
+    "schema_version": { "const": "caesar-loop/v2" },
+    "observed_at": { "type": "string", "minLength": 1 },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fresh_agent_context",
+        "parallel_agents",
+        "isolated_workspaces",
+        "runtime_control",
+        "capture",
+        "profiling",
+        "persistent_run_state",
+        "target_player_access"
+      ],
+      "properties": {
+        "fresh_agent_context": { "$ref": "#/$defs/capability" },
+        "parallel_agents": { "$ref": "#/$defs/capability" },
+        "isolated_workspaces": { "$ref": "#/$defs/capability" },
+        "runtime_control": { "$ref": "#/$defs/capability" },
+        "capture": { "$ref": "#/$defs/capability" },
+        "profiling": { "$ref": "#/$defs/capability" },
+        "persistent_run_state": { "$ref": "#/$defs/capability" },
+        "target_player_access": { "$ref": "#/$defs/capability" }
+      }
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence"],
+      "properties": {
+        "status": { "enum": ["supported", "partial", "unsupported", "unknown"] },
+        "evidence": { "type": "string" },
+        "limits": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

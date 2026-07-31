@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caesar.local/schemas/caesar-awesome/scenario.schema.json",
+  "title": "Caesar Loop Test Scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "scenario_kind": { "const": "focused_feature" } },
+        "required": ["scenario_kind"]
+      },
+      "then": {
+        "properties": {
+          "setup": {
+            "properties": {
+              "execution_surface": { "const": "dedicated_test_scene" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "scenario_kind": { "const": "whole_path_integration" } },
+        "required": ["scenario_kind"]
+      },
+      "then": {
+        "properties": {
+          "setup": {
+            "properties": {
+              "execution_surface": { "const": "main_scene" }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "required": [
+    "scenario_id",
+    "scenario_kind",
+    "purpose",
+    "player_question",
+    "gate_ids",
+    "ownership",
+    "fixture",
+    "setup",
+    "stimulus",
+    "observations",
+    "coverage_matrix",
+    "execution_policy",
+    "determinism",
+    "fast_review_route",
+    "strict_regression_route",
+    "reset",
+    "failure_conditions"
+  ],
+  "properties": {
+    "scenario_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$" },
+    "scenario_kind": { "enum": ["focused_feature", "whole_path_integration"] },
+    "purpose": { "type": "string", "minLength": 1 },
+    "player_question": { "type": "string", "minLength": 1 },
+    "gate_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario_surface", "shipping_surface", "public_adapter"],
+      "properties": {
+        "scenario_surface": { "type": "string", "minLength": 1 },
+        "shipping_surface": { "type": "string", "minLength": 1 },
+        "public_adapter": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_parameter", "reuse_scope", "extension_contract"],
+      "properties": {
+        "subject_parameter": { "type": "string", "minLength": 1 },
+        "reuse_scope": { "type": "string", "minLength": 1 },
+        "extension_contract": { "type": "string", "minLength": 1 }
+      }
+    },
+    "setup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execution_surface", "entry", "state", "camera_or_view"],
+      "properties": {
+        "execution_surface": { "enum": ["dedicated_test_scene", "main_scene"] },
+        "entry": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "minLength": 1 },
+        "camera_or_view": { "type": "string", "minLength": 1 },
+        "viewport": { "type": ["string", "null"] },
+        "target_device": { "type": ["string", "null"] }
+      }
+    },
+    "stimulus": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stimulus_id", "at", "action"],
+        "properties": {
+          "stimulus_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$" },
+          "at": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["observation_id", "source", "window"],
+        "properties": {
+          "observation_id": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "window": { "type": "string", "minLength": 1 },
+          "artifact": { "type": "string" }
+        }
+      }
+    },
+    "coverage_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case_id",
+          "state",
+          "stimulus_ids",
+          "viewpoints",
+          "assertions",
+          "observation_ids"
+        ],
+        "properties": {
+          "case_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$" },
+          "state": { "type": "string", "minLength": 1 },
+          "stimulus_ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "viewpoints": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "assertions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "observation_ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "execution_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferred_mode",
+        "preferred_launches_per_candidate",
+        "max_launches_per_candidate",
+        "case_isolation",
+        "artifact_manifest",
+        "extra_launch_triggers"
+      ],
+      "properties": {
+        "preferred_mode": { "enum": ["single_run_matrix", "isolated_cases"] },
+        "preferred_launches_per_candidate": { "const": 1 },
+        "max_launches_per_candidate": { "type": "integer", "minimum": 1 },
+        "case_isolation": { "type": "string", "minLength": 1 },
+        "artifact_manifest": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "extra_launch_triggers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    },
+    "determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "seed", "clock", "warmup", "temporal_isolation"],
+      "properties": {
+        "level": { "enum": ["strict", "bounded", "directional"] },
+        "seed": { "type": ["integer", "string", "null"] },
+        "clock": { "type": "string", "minLength": 1 },
+        "warmup": { "type": "string", "minLength": 1 },
+        "temporal_isolation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fast_review_route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "expected_seconds", "outputs"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "expected_seconds": { "type": "integer", "minimum": 1 },
+        "outputs": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      }
+    },
+    "strict_regression_route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "isolation", "outputs"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "isolation": { "type": "string", "minLength": 1 },
+        "outputs": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      }
+    },
+    "reset": { "type": "string", "minLength": 1 },
+    "failure_conditions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  }
+}

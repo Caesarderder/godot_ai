@@ -1,0 +1,395 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "contract_variant": "caesar-awesome",
+  "run_id": "example_weapon_fixture",
+  "goal": "Improve one weapon through a reusable focused fixture, then integrate once at a declared checkpoint.",
+  "player_outcome": {
+    "target_player": "action-game player",
+    "platform": "project target runtime",
+    "play_window_seconds": [20, 60],
+    "control": "fires, reloads, aims, and changes viewing angle",
+    "threat": "a representative close and mid-range target",
+    "choice": "continue firing, reload, or reposition",
+    "feedback": "sees and hears weapon state, shot direction, impact, and reload completion",
+    "outcome": "can predict the weapon state and understand every shot and reload result"
+  },
+  "constraints": {
+    "engine": "project-defined engine and version",
+    "target_runtime": "project target runtime",
+    "asset_policy": "original or licensed shipped assets only",
+    "scope": ["one reusable weapon fixture and one whole-path integration checkpoint"],
+    "out_of_scope": ["unrelated level traversal and campaign content"],
+    "accessibility": ["critical weapon state is not encoded by colour alone"]
+  },
+  "quality_dimensions": [
+    {
+      "dimension_id": "assets_modeling",
+      "label": "Assets and modeling",
+      "applicability": "not_applicable",
+      "scope": [],
+      "gate_ids": [],
+      "rationale": "This bounded run changes weapon behavior and presentation, not model topology or authored asset scope."
+    },
+    {
+      "dimension_id": "materials_shaders_lighting",
+      "label": "Materials, shaders, and lighting",
+      "applicability": "in_scope",
+      "scope": ["weapon presentation in canonical fixture views"],
+      "gate_ids": ["gate_weapon_presentation"],
+      "rationale": "Weapon presentation can be weakened by material or lighting changes and must remain reviewable."
+    },
+    {
+      "dimension_id": "motion_vfx",
+      "label": "Motion and VFX",
+      "applicability": "in_scope",
+      "scope": ["fire, recoil, reload, muzzle, and impact feedback"],
+      "gate_ids": ["gate_weapon_presentation"],
+      "rationale": "The player outcome depends on temporal and visual action feedback."
+    },
+    {
+      "dimension_id": "ui_ux",
+      "label": "UI and UX",
+      "applicability": "not_applicable",
+      "scope": [],
+      "gate_ids": [],
+      "rationale": "This example makes no HUD layout or interaction-flow claim."
+    },
+    {
+      "dimension_id": "interaction_camera_physics",
+      "label": "Interaction, camera, and physics",
+      "applicability": "in_scope",
+      "scope": ["shipping fire and reload input, canonical views, hit response"],
+      "gate_ids": ["gate_weapon_function", "gate_weapon_presentation"],
+      "rationale": "The scenario exercises the real input and hit paths from decisive views."
+    },
+    {
+      "dimension_id": "gameplay_levels_ai",
+      "label": "Gameplay, levels, and AI",
+      "applicability": "in_scope",
+      "scope": ["weapon state behavior and representative encounter integration"],
+      "gate_ids": ["gate_weapon_function", "gate_weapon_integration"],
+      "rationale": "The weapon must remain usable inside the representative player path."
+    },
+    {
+      "dimension_id": "balance_economy_progression",
+      "label": "Balance, economy, and progression",
+      "applicability": "not_applicable",
+      "scope": [],
+      "gate_ids": [],
+      "rationale": "The run makes no comparative damage, economy, or progression claim."
+    },
+    {
+      "dimension_id": "narrative_content",
+      "label": "Narrative and content",
+      "applicability": "not_applicable",
+      "scope": [],
+      "gate_ids": [],
+      "rationale": "No narrative beat or content-cohesion claim is part of this run."
+    },
+    {
+      "dimension_id": "audio",
+      "label": "Audio",
+      "applicability": "in_scope",
+      "scope": ["fire, empty, reload, and impact cues"],
+      "gate_ids": ["gate_weapon_presentation"],
+      "rationale": "The player outcome explicitly depends on hearing weapon state and consequence."
+    },
+    {
+      "dimension_id": "learning_replay",
+      "label": "Learning and replay",
+      "applicability": "in_scope",
+      "scope": ["predictable weapon state and understandable action result"],
+      "gate_ids": ["gate_weapon_presentation"],
+      "rationale": "The declared outcome requires the player to predict state and understand every result."
+    },
+    {
+      "dimension_id": "accessibility_localization",
+      "label": "Accessibility and localization",
+      "applicability": "in_scope",
+      "scope": ["weapon state feedback that does not depend on colour alone"],
+      "gate_ids": ["gate_weapon_presentation"],
+      "rationale": "The run contract includes an explicit non-colour accessibility constraint."
+    },
+    {
+      "dimension_id": "correctness_data_lifecycle",
+      "label": "Correctness, data, and lifecycle",
+      "applicability": "in_scope",
+      "scope": ["ammo accounting, reset, reload, hit state, and integration lifecycle"],
+      "gate_ids": ["gate_weapon_function", "gate_weapon_integration"],
+      "rationale": "Deterministic state and reset behavior are required for valid evidence."
+    },
+    {
+      "dimension_id": "performance_stability",
+      "label": "Performance and stability",
+      "applicability": "in_scope",
+      "scope": ["representative integration path"],
+      "gate_ids": ["gate_weapon_integration"],
+      "rationale": "The accepted candidate must not destabilize the representative player path."
+    }
+  ],
+  "quality_bar": {
+    "comparison": "One focused run exposes fire, reload, empty-magazine, multi-angle, and multi-direction behavior for independent review.",
+    "inspect_route": "scenario_weapon_fixture artifact bundle, followed by scenario_weapon_integration only at an integration checkpoint",
+    "limits": ["The focused fixture does not prove whole-game cohesion or target-player fun."]
+  },
+  "scenarios": [
+    {
+      "scenario_id": "scenario_weapon_fixture",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise one parameterized weapon without loading or manually traversing the main scene.",
+      "player_question": "Are firing, reload, state transitions, direction, and presentation correct from all decisive views?",
+      "gate_ids": ["gate_weapon_function", "gate_weapon_presentation"],
+      "ownership": {
+        "scenario_surface": "dev/scenarios/weapon_fixture",
+        "shipping_surface": "weapon runtime, animation, VFX, audio, camera feedback, and hit reporting",
+        "public_adapter": "weapon_id parameter plus normal equip, fire, reload, aim, and camera APIs"
+      },
+      "fixture": {
+        "subject_parameter": "weapon_id",
+        "reuse_scope": "all weapons implementing the public weapon contract",
+        "extension_contract": "register a new weapon_id and expected data; do not fork the fixture or duplicate weapon logic"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "launch the weapon fixture directly with weapon_id",
+        "state": "known magazine, reserve ammo, targets, lighting, camera anchors, and clean temporal state",
+        "camera_or_view": "scripted first-person, side, rear, muzzle, and target views",
+        "viewport": "project canonical review viewport",
+        "target_device": "representative target runtime"
+      },
+      "stimulus": [
+        { "stimulus_id": "fire_single", "at": "checkpoint 1", "action": "fire one normal shot through the shipping input path" },
+        { "stimulus_id": "fire_burst", "at": "checkpoint 2", "action": "fire a controlled sequence from multiple aim directions" },
+        { "stimulus_id": "reload_partial", "at": "checkpoint 3", "action": "reload from a partially used magazine" },
+        { "stimulus_id": "reload_empty", "at": "checkpoint 4", "action": "empty the magazine, attempt fire, then reload" },
+        { "stimulus_id": "view_sweep", "at": "throughout checkpoints", "action": "move through canonical camera anchors without restarting the scene" }
+      ],
+      "observations": [
+        {
+          "observation_id": "weapon_state_trace",
+          "source": "authoritative runtime state log",
+          "window": "all checkpoints",
+          "artifact": "artifacts/scenario_weapon_fixture/state.json"
+        },
+        {
+          "observation_id": "weapon_contact_sheet",
+          "source": "scripted checkpoint captures",
+          "window": "canonical views at fire and reload phases",
+          "artifact": "artifacts/scenario_weapon_fixture/contact-sheet.png"
+        },
+        {
+          "observation_id": "weapon_timeline",
+          "source": "timestamped animation, audio, VFX, recoil, and hit events",
+          "window": "all stimuli",
+          "artifact": "artifacts/scenario_weapon_fixture/timeline.json"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "fire_and_direction",
+          "state": "loaded weapon and deterministic targets",
+          "stimulus_ids": ["fire_single", "fire_burst", "view_sweep"],
+          "viewpoints": ["first-person", "side", "rear", "muzzle", "target"],
+          "assertions": ["each input consumes ammo once", "shot direction and impact agree", "recoil and feedback remain legible"],
+          "observation_ids": ["weapon_state_trace", "weapon_contact_sheet", "weapon_timeline"]
+        },
+        {
+          "case_id": "reload_and_empty",
+          "state": "partial magazine followed by empty magazine",
+          "stimulus_ids": ["reload_partial", "reload_empty", "view_sweep"],
+          "viewpoints": ["first-person", "side", "muzzle"],
+          "assertions": ["reload timing is coherent", "empty fire is handled", "ammo state and presentation agree"],
+          "observation_ids": ["weapon_state_trace", "weapon_contact_sheet", "weapon_timeline"]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reset weapon, target, camera, decals, particles, audio, and clocks between in-scene cases",
+        "artifact_manifest": ["state trace", "timeline", "contact sheet", "runtime assertions", "exit code"],
+        "extra_launch_triggers": ["the artifact manifest is incomplete", "a failure corrupts later in-scene cases", "strict temporal isolation cannot be guaranteed"]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 1042,
+        "clock": "fixed simulation tick",
+        "warmup": "load resources without advancing weapon state",
+        "temporal_isolation": "clean fixture process plus explicit in-scene case reset"
+      },
+      "fast_review_route": {
+        "command": "project-specific direct weapon fixture command with weapon_id",
+        "expected_seconds": 30,
+        "outputs": ["artifact manifest", "contact sheet", "state trace", "timeline"]
+      },
+      "strict_regression_route": {
+        "command": "project-specific isolated weapon fixture command with assertions",
+        "isolation": "fresh process, fixed viewport, seed, tick, subject parameter, and artifact directory",
+        "outputs": ["artifact manifest", "checkpoint captures", "state assertions", "timeline", "exit code"]
+      },
+      "reset": "discard fixture-local state and start from the declared weapon_id and seed",
+      "failure_conditions": [
+        "fixture bypasses the shipping weapon path",
+        "a coverage case or declared viewpoint is absent",
+        "artifact manifest is incomplete",
+        "an extra launch occurs without a declared trigger"
+      ],
+      "limitations": ["Whole-game cohesion is evaluated only by the integration scenario."]
+    },
+    {
+      "scenario_id": "scenario_weapon_integration",
+      "scenario_kind": "whole_path_integration",
+      "purpose": "Check the accepted weapon candidate once in the representative player path.",
+      "player_question": "Does the accepted weapon still work and cohere inside the real player path?",
+      "gate_ids": ["gate_weapon_integration"],
+      "ownership": {
+        "scenario_surface": "dev/scenarios/weapon_integration_driver",
+        "shipping_surface": "main player path and shared runtime contracts",
+        "public_adapter": "normal main-scene entry plus scripted representative player actions"
+      },
+      "fixture": {
+        "subject_parameter": "weapon_id",
+        "reuse_scope": "accepted weapon candidates at declared integration checkpoints",
+        "extension_contract": "reuse the player-path driver; vary only weapon_id and declared encounter seed"
+      },
+      "setup": {
+        "execution_surface": "main_scene",
+        "entry": "launch the representative player path at a declared integration checkpoint",
+        "state": "known encounter state with the accepted weapon equipped",
+        "camera_or_view": "normal player camera",
+        "viewport": "project canonical review viewport",
+        "target_device": "representative target runtime"
+      },
+      "stimulus": [
+        { "stimulus_id": "representative_path", "at": "one bounded integration pass", "action": "perform the normal player path including fire, reload, movement, hit, and recovery" }
+      ],
+      "observations": [
+        {
+          "observation_id": "integration_bundle",
+          "source": "runtime assertions, bounded capture, and performance trace",
+          "window": "one representative player path",
+          "artifact": "artifacts/scenario_weapon_integration"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "whole_path_cohesion",
+          "state": "accepted weapon candidate in representative encounter",
+          "stimulus_ids": ["representative_path"],
+          "viewpoints": ["normal player camera"],
+          "assertions": ["shared contracts remain valid", "weapon feedback coheres with player path", "no required frozen gate regresses"],
+          "observation_ids": ["integration_bundle"]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 1,
+        "case_isolation": "fresh process and clean integration seed",
+        "artifact_manifest": ["runtime assertions", "bounded capture", "performance trace", "exit code"],
+        "extra_launch_triggers": ["the integration run is invalid because the environment or capture rig failed"]
+      },
+      "determinism": {
+        "level": "bounded",
+        "seed": 1042,
+        "clock": "project representative simulation clock",
+        "warmup": "load the representative path before starting the observation window",
+        "temporal_isolation": "fresh process and clean integration state"
+      },
+      "fast_review_route": {
+        "command": "project-specific bounded integration scenario command",
+        "expected_seconds": 60,
+        "outputs": ["integration artifact manifest"]
+      },
+      "strict_regression_route": {
+        "command": "project-specific isolated integration scenario command",
+        "isolation": "fresh process, fixed subject, seed, viewport, and artifact directory",
+        "outputs": ["runtime assertions", "bounded capture", "performance trace", "exit code"]
+      },
+      "reset": "discard integration state and relaunch only after a declared trigger",
+      "failure_conditions": [
+        "integration route cannot reach the representative path",
+        "shared contract or frozen gate regresses",
+        "main scene is relaunched without a declared checkpoint or invalid-run trigger"
+      ],
+      "limitations": ["One bounded integration path does not prove target-player fun."]
+    }
+  ],
+  "integration_policy": {
+    "strategy": "conditional_checkpoint",
+    "scenario_ids": ["scenario_weapon_integration"],
+    "run_after": ["focused gates pass for an accepted candidate", "shared contracts or composition root change", "before completion review"],
+    "max_main_scene_launches_per_wave": 1,
+    "rerun_unchanged_revision": false
+  },
+  "quality_gates": [
+    {
+      "gate_id": "gate_weapon_function",
+      "profile": "correctness",
+      "claim": "Fire, reload, empty-magazine, direction, and hit state use the shipping weapon path correctly.",
+      "required": true,
+      "scenario_ids": ["scenario_weapon_fixture"],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": ["coverage matrix completes", "state transitions and ammo accounting pass", "artifact manifest is complete"],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_weapon_presentation",
+      "profile": "game_feel",
+      "claim": "Weapon action remains legible and coherent from every declared review viewpoint.",
+      "required": true,
+      "scenario_ids": ["scenario_weapon_fixture"],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": ["all declared viewpoints are present", "animation, audio, VFX, recoil, and impact agree with the state trace"],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_weapon_integration",
+      "profile": "correctness",
+      "claim": "The accepted weapon candidate remains correct and cohesive in the representative whole player path.",
+      "required": true,
+      "scenario_ids": ["scenario_weapon_integration"],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": ["one bounded integration pass succeeds", "shared contracts and affected frozen gates remain valid"],
+      "freeze_on_pass": true
+    }
+  ],
+  "ownership": [
+    {
+      "owner": "weapon work-unit owner",
+      "surface": "weapon implementation plus dedicated development fixture",
+      "public_contract": "weapon data and normal equip, fire, reload, aim, camera, and hit interfaces",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "integration owner",
+      "surface": "main player path, shared contracts, and composition root",
+      "public_contract": "representative player-path integration scenario",
+      "coupling": "integration_only"
+    }
+  ],
+  "budgets": {
+    "max_iterations": 8,
+    "max_same_finding_retries": 2,
+    "no_progress_window": 2,
+    "max_wall_time_minutes": 120,
+    "max_regressions": 1
+  },
+  "stop_policy": {
+    "minimum_material_improvement": 0.03,
+    "terminal_results": [
+      "completed",
+      "budget_exhausted",
+      "no_material_progress",
+      "blocked",
+      "human_required",
+      "capability_unavailable",
+      "regression_limit",
+      "user_stopped",
+      "failed"
+    ]
+  }
+}

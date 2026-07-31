@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caesar.local/schemas/caesar-awesome/iteration-result.schema.json",
+  "title": "Caesar Loop IterationResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "iteration",
+    "work_unit",
+    "status",
+    "changed_files",
+    "evidence_ids",
+    "resolved_findings",
+    "new_findings",
+    "failed_checks",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": { "const": "caesar-loop/v2" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "iteration": { "type": "integer", "minimum": 1 },
+    "work_unit": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": [
+        "progress",
+        "verification_requested",
+        "blocked",
+        "no_progress",
+        "completion_candidate",
+        "rejected"
+      ]
+    },
+    "changed_files": { "type": "array", "items": { "type": "string" } },
+    "evidence_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^ev_[a-zA-Z0-9._-]+$" },
+      "uniqueItems": true
+    },
+    "resolved_findings": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^finding_[a-zA-Z0-9._-]+$" },
+      "uniqueItems": true
+    },
+    "new_findings": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^finding_[a-zA-Z0-9._-]+$" },
+      "uniqueItems": true
+    },
+    "failed_checks": { "type": "array", "items": { "type": "string" } },
+    "rejected_approaches": { "type": "array", "items": { "type": "string" } },
+    "next_action": { "type": "string", "minLength": 1 },
+    "blocker": { "type": ["string", "null"] }
+  }
+}

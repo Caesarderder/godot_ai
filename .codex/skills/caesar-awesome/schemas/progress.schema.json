@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caesar.local/schemas/caesar-awesome/progress.schema.json",
+  "title": "Caesar Loop Progress",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "state",
+    "revision",
+    "iteration",
+    "active_work_unit",
+    "frozen_gates",
+    "gate_status",
+    "open_findings",
+    "evidence_ledger",
+    "decisions"
+  ],
+  "properties": {
+    "schema_version": { "const": "caesar-loop/v2" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "state": {
+      "enum": [
+        "draft",
+        "scenario_authoring",
+        "baselining",
+        "slice_building",
+        "unit_looping",
+        "integrating",
+        "player_validating",
+        "completion_review",
+        "completed",
+        "blocked",
+        "human_required",
+        "capability_unavailable",
+        "budget_exhausted",
+        "no_material_progress",
+        "regression_limit",
+        "user_stopped",
+        "failed"
+      ]
+    },
+    "revision": { "type": "string", "minLength": 1 },
+    "iteration": { "type": "integer", "minimum": 0 },
+    "active_work_unit": { "type": ["string", "null"] },
+    "frozen_gates": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "gate_status": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["pending", "pass", "fail", "stale", "not_run", "human_required", "unsupported"]
+      }
+    },
+    "open_findings": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^finding_[a-zA-Z0-9._-]+$" },
+      "uniqueItems": true
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^ev_[a-zA-Z0-9._-]+$" },
+      "uniqueItems": true
+    },
+    "continuation_anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goal",
+        "scope",
+        "in_scope_dimensions",
+        "next_action",
+        "updated_at"
+      ],
+      "properties": {
+        "goal": { "type": "string", "minLength": 1 },
+        "scope": { "type": "array", "items": { "type": "string" } },
+        "in_scope_dimensions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "next_action": { "type": "string", "minLength": 1 },
+        "updated_at": { "type": "string", "minLength": 1 }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "decision", "evidence_ids"],
+        "properties": {
+          "at": { "type": "string", "minLength": 1 },
+          "decision": { "type": "string", "minLength": 1 },
+          "evidence_ids": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^ev_[a-zA-Z0-9._-]+$" },
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  }
+}

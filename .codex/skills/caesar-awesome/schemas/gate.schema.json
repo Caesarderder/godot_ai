@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://caesar.local/schemas/caesar-awesome/gate.schema.json",
+  "title": "Caesar Loop Quality Gate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gate_id",
+    "profile",
+    "claim",
+    "required",
+    "scenario_ids",
+    "grader",
+    "assertions"
+  ],
+  "properties": {
+    "gate_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$" },
+    "profile": {
+      "enum": [
+        "correctness",
+        "visual",
+        "game_feel",
+        "performance",
+        "accessibility",
+        "player_learning"
+      ]
+    },
+    "claim": { "type": "string", "minLength": 1 },
+    "required": { "type": "boolean" },
+    "scenario_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "grader": { "enum": ["code", "runtime", "diff", "model", "human", "mixed"] },
+    "independent_critic": { "type": "boolean", "default": false },
+    "assertions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "freeze_on_pass": { "type": "boolean", "default": true }
+  }
+}

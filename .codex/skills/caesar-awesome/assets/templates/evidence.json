@@ -1,0 +1,49 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_example_001",
+  "run_id": "example_weapon_fixture",
+  "revision": "replace-with-tested-revision",
+  "valid_through_revision": "replace-with-tested-revision",
+  "gate_id": "gate_weapon_function",
+  "claim": "Fire, reload, empty-magazine, direction, and hit state use the shipping weapon path correctly.",
+  "scenario_id": "scenario_weapon_fixture",
+  "execution_id": "weapon_fixture_run_001",
+  "evidence_type": "runtime_state",
+  "artifact_or_command": "replace-with-command-or-artifact",
+  "case_results": [
+    {
+      "case_id": "fire_and_direction",
+      "result": "not_run",
+      "assertions": ["Replace with assertion results."],
+      "artifacts": ["replace-with-artifact"]
+    },
+    {
+      "case_id": "reload_and_empty",
+      "result": "not_run",
+      "assertions": ["Replace with assertion results."],
+      "artifacts": ["replace-with-artifact"]
+    }
+  ],
+  "artifact_manifest": ["replace-with-complete-scenario-artifact-manifest"],
+  "environment": {
+    "engine": "replace-with-engine-version",
+    "platform": "replace-with-platform",
+    "device": "",
+    "viewport": "844x390",
+    "seed": 1042,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "replace-with-grader",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "Replace with a direct observation.",
+  "inference": "",
+  "result": "not_run",
+  "confidence": 0,
+  "freshness": "current",
+  "limitations": ["Template only; no evidence has been collected."],
+  "created_at": "replace-with-current-time"
+}
