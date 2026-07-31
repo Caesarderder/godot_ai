@@ -51,7 +51,8 @@
         "gate_faction_choice_visual",
         "gate_blueprint_forge_visual",
         "gate_action_compass_visual",
-        "gate_achievement_cabinet_visual"
+        "gate_achievement_cabinet_visual",
+        "gate_growth_duel_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -97,7 +98,9 @@
         "gate_action_compass_visual",
         "gate_action_compass_runtime",
         "gate_achievement_cabinet_visual",
-        "gate_achievement_cabinet_runtime"
+        "gate_achievement_cabinet_runtime",
+        "gate_growth_duel_visual",
+        "gate_growth_duel_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -165,7 +168,8 @@
         "gate_faction_choice_visual",
         "gate_blueprint_forge_visual",
         "gate_action_compass_visual",
-        "gate_achievement_cabinet_visual"
+        "gate_achievement_cabinet_visual",
+        "gate_growth_duel_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -184,7 +188,8 @@
         "gate_faction_choice_responsive",
         "gate_blueprint_forge_responsive",
         "gate_action_compass_responsive",
-        "gate_achievement_cabinet_responsive"
+        "gate_achievement_cabinet_responsive",
+        "gate_growth_duel_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -209,7 +214,9 @@
         "gate_action_compass_runtime",
         "gate_action_compass_responsive",
         "gate_achievement_cabinet_runtime",
-        "gate_achievement_cabinet_responsive"
+        "gate_achievement_cabinet_responsive",
+        "gate_growth_duel_runtime",
+        "gate_growth_duel_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -1833,6 +1840,191 @@
       "limitations": [
         "Static captures cannot prove that a target player values permanent honor collection."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_first_growth_duel",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping LegionScreen first irreversible two-star growth choice and its immediate boss handoff.",
+      "player_question": "Can the player compare two character-led combat identities, understand availability, and commit one route without reading dense stat cards?",
+      "gate_ids": [
+        "gate_growth_duel_visual",
+        "gate_growth_duel_runtime",
+        "gate_growth_duel_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_first_growth_duel_scenario.gd and run_first_growth_flow_tests.gd",
+        "shipping_surface": "legion_screen.gd first_growth_choice and boss_ready panels",
+        "public_adapter": "LegionScreen.configure plus action_requested star/boss"
+      },
+      "fixture": {
+        "subject_parameter": "growth_route_state",
+        "reuse_scope": "ready duel, resource blocked and committed boss handoff",
+        "extension_contract": "add deterministic LegionScreen views; never duplicate star cost, affordability or durable hero identity rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate legion_screen.tscn with deterministic shipping view dictionaries",
+        "state": "assault and armored two-star routes before the first chapter boss",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_ready",
+          "at": "case start",
+          "action": "show both verified growth routes affordable"
+        },
+        {
+          "stimulus_id": "show_blocked",
+          "at": "after ready",
+          "action": "show both identities when legion data is insufficient"
+        },
+        {
+          "stimulus_id": "show_committed",
+          "at": "after blocked",
+          "action": "show the chosen assault route ready for boss verification"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "growth_duel_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-first-growth-duel/manifest.json"
+        },
+        {
+          "observation_id": "growth_duel_standard",
+          "source": "fixed 844x390 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-first-growth-duel"
+        },
+        {
+          "observation_id": "growth_duel_compact",
+          "source": "fixed 568x320 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-first-growth-duel"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "route_duel",
+          "state": "both irreversible two-star routes affordable",
+          "stimulus_ids": [
+            "show_ready"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "character portraits dominate",
+            "fast and guard identities separate without long copy",
+            "both exact hero actions remain touch-sized"
+          ],
+          "observation_ids": [
+            "growth_duel_manifest",
+            "growth_duel_standard",
+            "growth_duel_compact"
+          ]
+        },
+        {
+          "case_id": "resource_blocked",
+          "state": "both routes visible but insufficient legion data",
+          "stimulus_ids": [
+            "show_blocked"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "blocked state has no fake primary action",
+            "missing resource is visual and concise",
+            "both identities remain comparable"
+          ],
+          "observation_ids": [
+            "growth_duel_manifest",
+            "growth_duel_standard",
+            "growth_duel_compact"
+          ]
+        },
+        {
+          "case_id": "route_committed",
+          "state": "assault route upgraded and ready for chapter boss",
+          "stimulus_ids": [
+            "show_committed"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "chosen character and boss tactic dominate",
+            "one boss action remains",
+            "handoff does not revert to a text report"
+          ],
+          "observation_ids": [
+            "growth_duel_manifest",
+            "growth_duel_standard",
+            "growth_duel_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh LegionScreen per state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "ready captures",
+          "blocked captures",
+          "committed captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed growth state with no live timer",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_first_growth_duel_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_first_growth_flow_tests.gd && godot --path project-a -s tools/capture_first_growth_duel_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and LegionScreen after capture",
+      "failure_conditions": [
+        "dense text cards dominate characters",
+        "routes differ only by prose",
+        "blocked controls look active",
+        "buttons clip or require scrolling",
+        "post-choice handoff loses chosen identity"
+      ],
+      "limitations": [
+        "Static captures cannot prove that a target player predicts the long-term tactical consequence."
+      ]
     }
   ],
   "integration_policy": {
@@ -2288,6 +2480,60 @@
         "no interaction depends on hover"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_growth_duel_visual",
+      "profile": "visual",
+      "claim": "The first growth choice reads as a dramatic duel between two character combat identities rather than a stat-card form.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_first_growth_duel"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "character art dominates",
+        "route identities are immediate",
+        "availability is non-color encoded",
+        "copy stays concise"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_growth_duel_runtime",
+      "profile": "correctness",
+      "claim": "Growth and boss actions preserve exact hero and stage identities while blocked routes expose no executable star action.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_first_growth_duel"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "assault emits star with assault hero id",
+        "armored emits star with armored hero id",
+        "blocked routes are disabled",
+        "committed handoff emits boss stage_1_5"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_growth_duel_responsive",
+      "profile": "correctness",
+      "claim": "Both growth identities and their decisive actions remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_first_growth_duel"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "route targets remain at least 48 px",
+        "both routes stay above the fold",
+        "no horizontal scroll",
+        "no interaction depends on hover"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -2337,6 +2583,12 @@
       "owner": "achievement medal cabinet work-unit owner",
       "surface": "GoalsScreen achievement UI plus dedicated focused fixture",
       "public_contract": "GoalsScreen.configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "first growth duel work-unit owner",
+      "surface": "LegionScreen growth choice and boss-ready UI plus focused fixture",
+      "public_contract": "LegionScreen.configure and action_requested",
       "coupling": "coupled"
     }
   ],

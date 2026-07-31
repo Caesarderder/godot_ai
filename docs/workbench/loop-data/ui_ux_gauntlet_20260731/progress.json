@@ -1,10 +1,10 @@
 {
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
-  "state": "integrating",
+  "state": "unit_looping",
   "revision": "ecb65b2",
   "iteration": 8,
-  "active_work_unit": null,
+  "active_work_unit": "mobile first growth duel",
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -50,6 +50,9 @@
     "gate_factory_responsive": "pass",
     "gate_factory_runtime": "pass",
     "gate_factory_visual": "pass",
+    "gate_growth_duel_responsive": "pending",
+    "gate_growth_duel_runtime": "pending",
+    "gate_growth_duel_visual": "pending",
     "gate_legion_responsive": "pass",
     "gate_legion_runtime": "pass",
     "gate_legion_visual": "pass",
@@ -141,8 +144,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "Accepted achievement cabinet enters the shared mobile UI integration checkpoint.",
-    "updated_at": "2026-07-31T13:51:21Z"
+    "next_action": "mobile first growth duel",
+    "updated_at": "2026-07-31T13:54:20Z"
   },
   "decisions": [
     {
@@ -1162,6 +1165,19 @@
         "ev_ui_achievement_integration_runtime_ecb65b2",
         "ev_ui_achievement_integration_responsive_ecb65b2"
       ]
+    },
+    {
+      "at": "2026-07-31T13:54:15Z",
+      "decision": "Achievement cabinet integration passed; the next unfrozen gap is the text-heavy irreversible first growth choice.",
+      "evidence_ids": [
+        "ev_ui_achievement_integration_runtime_ecb65b2",
+        "ev_ui_achievement_integration_responsive_ecb65b2"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:54:20Z",
+      "decision": "Add the mobile first growth duel work unit before implementation.",
+      "evidence_ids": []
     }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "route_duel-844x390.png",
+    "route_duel-568x320.png",
+    "resource_blocked-844x390.png",
+    "resource_blocked-568x320.png",
+    "route_committed-844x390.png",
+    "route_committed-568x320.png"
+  ],
+  "assertions": [
+    "ready routes emit exact assault and armored hero identities",
+    "blocked routes expose no executable star action",
+    "committed handoff emits boss stage_1_5",
+    "decisive targets remain at least 48 logical pixels"
+  ],
+  "cases": [
+    "route_duel",
+    "resource_blocked",
+    "route_committed"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping LegionScreen through configure and action_requested",
+  "scenario_id": "scenario_mobile_first_growth_duel",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
