@@ -44,7 +44,8 @@
         "title hero art and map landmark silhouettes"
       ],
       "gate_ids": [
-        "gate_ui_visual"
+        "gate_ui_visual",
+        "gate_factory_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -154,7 +155,8 @@
         "dual-coded stage state, Chinese text fit and mobile touch size"
       ],
       "gate_ids": [
-        "gate_ui_responsive"
+        "gate_ui_responsive",
+        "gate_factory_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -167,7 +169,8 @@
       ],
       "gate_ids": [
         "gate_ui_runtime",
-        "gate_ui_responsive"
+        "gate_ui_responsive",
+        "gate_factory_runtime"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -471,6 +474,217 @@
       "limitations": [
         "Automated integration cannot close target-player comprehension or desire."
       ]
+    },
+    {
+      "scenario_id": "scenario_factory_world_hud",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping FactoryScreen HUD states without navigating the production main scene.",
+      "player_question": "Does the factory world remain dominant while action, facility and construction controls appear only when needed?",
+      "gate_ids": [
+        "gate_factory_visual",
+        "gate_factory_runtime",
+        "gate_factory_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_factory_hud_scenario.gd and run_factory_screen_tests.gd",
+        "shipping_surface": "factory_screen.gd and factory_screen.tscn",
+        "public_adapter": "FactoryScreen.configure plus panel_selected and action_requested signals"
+      },
+      "fixture": {
+        "subject_parameter": "factory_hud_state",
+        "reuse_scope": "mission, selected facility, build catalog and placement confirmation states",
+        "extension_contract": "add a view-state case to the matrix; never duplicate logistics or construction rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate factory_screen.tscn directly over a neutral world-visibility field",
+        "state": "deterministic mission, facility, build and valid placement view dictionaries",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_mission",
+          "at": "case start",
+          "action": "configure the compact action beacon"
+        },
+        {
+          "stimulus_id": "open_facility",
+          "at": "after mission",
+          "action": "open a selected built facility through the public panel state"
+        },
+        {
+          "stimulus_id": "open_build",
+          "at": "after facility",
+          "action": "open the horizontal construction catalog"
+        },
+        {
+          "stimulus_id": "confirm_placement",
+          "at": "after choosing a building",
+          "action": "show a valid placement and emit confirmation"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "factory_assertions",
+          "source": "focused runtime assertions",
+          "window": "all matrix cases",
+          "artifact": "project-a/artifacts/scenario-factory-hud/manifest.json"
+        },
+        {
+          "observation_id": "factory_standard",
+          "source": "844x390 state captures",
+          "window": "mission, build and placement",
+          "artifact": "project-a/artifacts/scenario-factory-hud"
+        },
+        {
+          "observation_id": "factory_compact",
+          "source": "568x320 state captures",
+          "window": "mission and build",
+          "artifact": "project-a/artifacts/scenario-factory-hud"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "mission_world_first",
+          "state": "current war action with collectable industrial output",
+          "stimulus_ids": [
+            "show_mission"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "world field remains unobstructed",
+            "one action beacon is visible",
+            "resource island stays compact"
+          ],
+          "observation_ids": [
+            "factory_assertions",
+            "factory_standard",
+            "factory_compact"
+          ]
+        },
+        {
+          "case_id": "contextual_facility",
+          "state": "selected level-one production facility",
+          "stimulus_ids": [
+            "open_facility"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "facility detail opens on demand",
+            "close affordance is explicit",
+            "world remains visible"
+          ],
+          "observation_ids": [
+            "factory_assertions",
+            "factory_standard",
+            "factory_compact"
+          ]
+        },
+        {
+          "case_id": "construction_carousel",
+          "state": "two eligible building options and one locked option",
+          "stimulus_ids": [
+            "open_build"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "building choices form one horizontal bottom strip",
+            "cards use icons and short costs",
+            "world is not covered by a modal"
+          ],
+          "observation_ids": [
+            "factory_assertions",
+            "factory_standard",
+            "factory_compact"
+          ]
+        },
+        {
+          "case_id": "placement_decision",
+          "state": "valid selected grid cell before resource deduction",
+          "stimulus_ids": [
+            "confirm_placement"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "confirm and cancel remain touch-sized",
+            "transaction boundary remains visible",
+            "placement world stays dominant"
+          ],
+          "observation_ids": [
+            "factory_assertions",
+            "factory_standard",
+            "factory_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reconfigure a fresh FactoryScreen for every state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "mission captures",
+          "facility captures",
+          "build captures",
+          "placement captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed view dictionaries with no domain timer",
+        "warmup": "six process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_factory_hud_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size multi-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_factory_screen_tests.gd && godot --path project-a -s tools/capture_factory_hud_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and FactoryScreen after capture",
+      "failure_conditions": [
+        "persistent HUD covers most of the world field",
+        "panel state exposes unrelated controls",
+        "primary action clips",
+        "touch target drops below 44 px"
+      ],
+      "limitations": [
+        "The focused neutral world field measures HUD occlusion but final 3D composition still requires the declared integration capture."
+      ]
     }
   ],
   "integration_policy": {
@@ -541,6 +755,57 @@
       "freeze_on_pass": true
     },
     {
+      "gate_id": "gate_factory_visual",
+      "profile": "visual",
+      "claim": "The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_factory_world_hud"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "world field dominates every state",
+        "action, facility and build modes have distinct silhouettes",
+        "construction uses a horizontal card strip rather than a text modal"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_factory_runtime",
+      "profile": "correctness",
+      "claim": "Factory HUD controls preserve shipping panel and semantic action signals across mission, facility, build and placement states.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_factory_world_hud"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "panel toggles emit exact IDs",
+        "construction confirmation remains explicit",
+        "resource and facility actions remain domain-owned"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_factory_responsive",
+      "profile": "correctness",
+      "claim": "Factory world targets and contextual controls remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_factory_world_hud"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "touch controls are at least 44px",
+        "context panels remain inside the viewport",
+        "world field retains a clear center"
+      ],
+      "freeze_on_pass": true
+    },
+    {
       "gate_id": "gate_player_learning",
       "profile": "player_learning",
       "claim": "A fresh target player understands territorial progression and wants to inspect the next hostile landmark without coaching.",
@@ -559,6 +824,12 @@
     }
   ],
   "ownership": [
+    {
+      "owner": "factory HUD work-unit owner",
+      "surface": "FactoryScreen shipping UI plus dedicated focused fixture",
+      "public_contract": "FactoryScreen.configure and existing panel/action signals",
+      "coupling": "coupled"
+    },
     {
       "owner": "war-zone work-unit owner",
       "surface": "war-zone shipping UI plus dedicated focused fixture",

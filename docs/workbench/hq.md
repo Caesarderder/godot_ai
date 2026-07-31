@@ -352,12 +352,12 @@ state: unit_looping
 phase: unit_looping
 iteration: 1/8
 revision: b13a0a1
-active_unit: war-zone exploration hierarchy and atmosphere
+active_unit: factory world-first HUD and contextual construction flow
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T11:14:31Z
+updated_at: 2026-07-31T11:22:01Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -366,10 +366,14 @@ terminal: no
 ## Test Scenarios
 - [ready] scenario_war_zone_exploration :: Does the map communicate territorial progress, current opportunity and an intriguing hostile frontier before its detail panel? :: fast=godot --path project-a -s tools/capture_war_zone_exploration.gd :: strict=godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd
 - [ready] scenario_ui_path_integration :: Does the accepted map remain coherent with the simplified title and world-first factory without breaking navigation? :: fast=godot --path project-a -s tools/capture_ui_review.gd :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
+- [ready] scenario_factory_world_hud :: Does the factory world remain dominant while action, facility and construction controls appear only when needed? :: fast=godot --path project-a -s tools/capture_factory_hud_scenario.gd :: strict=godot --headless --path project-a -s tools/run_factory_screen_tests.gd && godot --path project-a -s tools/capture_factory_hud_scenario.gd
 ## Quality Gates
 - [pass] gate_ui_visual :: visual :: The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports. :: evidence=2
 - [pass] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=2
 - [pass] gate_ui_responsive :: correctness :: All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320. :: evidence=2
+- [pending] gate_factory_visual :: visual :: The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard. :: evidence=0
+- [pending] gate_factory_runtime :: correctness :: Factory HUD controls preserve shipping panel and semantic action signals across mission, facility, build and placement states. :: evidence=0
+- [pending] gate_factory_responsive :: correctness :: Factory world targets and contextual controls remain visible and touch-sized at 844x390 and 568x320. :: evidence=0
 - [human_required] gate_player_learning :: player_learning :: A fresh target player understands territorial progression and wants to inspect the next hostile landmark without coaching. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
@@ -395,15 +399,15 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T11:05:05Z :: Focused fixture qualified with identical dual-run hashes and strict runtime assertions
-- 2026-07-31T11:05:05Z :: Baseline recorded for every required gate; visual baseline fails while runtime/responsive pass and player-learning is human_required
-- 2026-07-31T11:09:32Z :: 战区地图视觉语言、专用场景与窄屏标注均已更新 Affected gates=['gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime', 'gate_ui_visual']; carried gates=[].
-- 2026-07-31T11:13:17Z :: Focused dual-size candidate is deterministic and ready for gate decision.
 - 2026-07-31T11:13:54Z :: Deterministic dual-size bundle plus fresh blind independent critic PASS (8.1/10).
 - 2026-07-31T11:13:54Z :: Focused assertions, import, smoke suite and canonical integration capture passed.
 - 2026-07-31T11:13:54Z :: Both declared landscape sizes retain targets, state and primary action across focused and canonical routes.
 - 2026-07-31T11:14:30Z :: Only a fresh target player can prove comprehension and voluntary exploration desire; model critique is not substituted.
-summary: scenarios=2 gates=4 evidence=11 current=7 findings=0 iterations=1
+- 2026-07-31T11:18:12Z :: War-zone focused candidate completed its deterministic and independent critic gates.
+- 2026-07-31T11:18:12Z :: Declared title-factory-map integration evidence is already current and passing.
+- 2026-07-31T11:18:12Z :: Continue the active UI/UX goal with the next user-reported visual gap.
+- 2026-07-31T11:20:39Z :: Add a dedicated factory HUD scenario and three factory-specific gates before implementation.
+summary: scenarios=3 gates=7 evidence=11 current=7 findings=0 iterations=1
 ```
 
 ```status #hq
@@ -503,6 +507,7 @@ state: building
 - 2026-07-31T11:01:55Z 同步 Caesar Loop：ui_ux_gauntlet_20260731 · draft
 - 2026-07-31T11:14:31Z 同步 Caesar Loop：ui_ux_gauntlet_20260731 · unit_looping
 - 2026-07-31T11:14:31Z 同步 Caesar Loop：ui_ux_gauntlet_20260731 · unit_looping
+- 2026-07-31T11:22:01Z 同步 Caesar Loop：ui_ux_gauntlet_20260731 · unit_looping
 ## Checklist
 - [x] 初始化项目看板
 - [x] 初始化项目状态

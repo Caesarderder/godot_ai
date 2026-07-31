@@ -4,17 +4,20 @@
   "state": "unit_looping",
   "revision": "b13a0a1",
   "iteration": 1,
-  "active_work_unit": "war-zone exploration hierarchy and atmosphere",
+  "active_work_unit": "factory world-first HUD and contextual construction flow",
   "frozen_gates": [
     "gate_ui_visual",
     "gate_ui_runtime",
     "gate_ui_responsive"
   ],
   "gate_status": {
-    "gate_ui_visual": "pass",
-    "gate_ui_runtime": "pass",
+    "gate_factory_responsive": "pending",
+    "gate_factory_runtime": "pending",
+    "gate_factory_visual": "pending",
+    "gate_player_learning": "human_required",
     "gate_ui_responsive": "pass",
-    "gate_player_learning": "human_required"
+    "gate_ui_runtime": "pass",
+    "gate_ui_visual": "pass"
   },
   "open_findings": [],
   "evidence_ledger": [
@@ -49,8 +52,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "war-zone exploration hierarchy and atmosphere",
-    "updated_at": "2026-07-31T11:13:17Z"
+    "next_action": "factory world-first HUD and contextual construction flow",
+    "updated_at": "2026-07-31T11:20:39Z"
   },
   "decisions": [
     {
@@ -127,6 +130,35 @@
       "evidence_ids": [
         "ev_player_learning_human_required_b13a0a1"
       ]
+    },
+    {
+      "at": "2026-07-31T11:18:12Z",
+      "decision": "War-zone focused candidate completed its deterministic and independent critic gates.",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:18:12Z",
+      "decision": "Declared title-factory-map integration evidence is already current and passing.",
+      "evidence_ids": [
+        "ev_candidate_integration_runtime_b13a0a1"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:18:12Z",
+      "decision": "Continue the active UI/UX goal with the next user-reported visual gap.",
+      "evidence_ids": [
+        "ev_candidate_integration_runtime_b13a0a1"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:20:39Z",
+      "decision": "Add a dedicated factory HUD scenario and three factory-specific gates before implementation.",
+      "evidence_ids": []
     }
   ]
 }
