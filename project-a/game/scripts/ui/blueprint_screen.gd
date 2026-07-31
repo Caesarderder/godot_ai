@@ -15,6 +15,9 @@ const ICON_ABILITY_SONIC := preload("res://assets/ui/blueprints/ability_sonic.we
 const ICON_STATUS_LOCKED := preload("res://assets/ui/icons/kenney_game_icons/locked.png")
 const ICON_STATUS_READY := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const ICON_STATUS_RESEARCH := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
+const ICON_LOOT_GEAR := preload("res://assets/ui/icons/kenney_game_icons/gear.png")
+const ICON_LOOT_SIGNAL := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
+const ICON_LOOT_TROPHY := preload("res://assets/ui/icons/kenney_game_icons/trophy.png")
 const ASSAULT_FORGE_ART := preload("res://assets/ui/recruit/faction-assault-v2.webp")
 const ARMORED_FORGE_ART := preload("res://assets/ui/recruit/faction-armored-v2.webp")
 const BG := Color("#090d10")
@@ -42,7 +45,7 @@ const BRANCHES := [
 @onready var breakthrough_button: Button = %ClaimResearchBreakthroughTen
 @onready var results_panel: PanelContainer = %ResearchBreakthroughResults
 @onready var results_summary: Label = %BlueprintResultsSummary
-@onready var results_grid: GridContainer = %BlueprintResultsGrid
+@onready var results_grid: VBoxContainer = %BlueprintResultsGrid
 @onready var tech_preview: PanelContainer = %FactionTechPreview
 @onready var doctrine_hero: TextureRect = %DoctrineHero
 @onready var tech_identity: Label = %Identity
@@ -183,14 +186,28 @@ func _apply_view() -> void:
 		)
 	)
 	branch_row.visible = not showing_results and preview.is_empty()
-	results_summary.text = String(_view.get(
-		"results_summary",
-		"两名永久援军响应召唤 · 现在把他们编入反攻队"
-	))
+	results_summary.text = (
+		"2名精锐入列 · 高墙反攻条件已经凑齐"
+		if showing_results
+		else String(_view.get("results_summary", "两名永久援军响应召唤"))
+	)
 	_clear_children(results_grid)
+	var hero_row := HBoxContainer.new()
+	hero_row.name = "BreakthroughHeroRow"
+	hero_row.add_theme_constant_override("separation", 8)
+	var loot_row := HBoxContainer.new()
+	loot_row.name = "BreakthroughLootStrip"
+	loot_row.add_theme_constant_override("separation", 4)
 	for result_value in results:
 		var result := result_value as Dictionary
-		results_grid.add_child(_build_result_card(result))
+		if String(result.get("kind", "")) == "hero":
+			hero_row.add_child(_build_hero_reveal(result, compact))
+		else:
+			loot_row.add_child(_build_loot_chip(result))
+	if not hero_row.get_children().is_empty():
+		results_grid.add_child(hero_row)
+	if not loot_row.get_children().is_empty():
+		results_grid.add_child(loot_row)
 	if showing_results:
 		call_deferred("_animate_results")
 	branch_row.name = "BlueprintBranchRow_%s" % selected
@@ -231,43 +248,88 @@ func _configure_doctrine_choice(
 	button.add_theme_color_override("font_pressed_color", accent)
 
 
-func _build_result_card(view: Dictionary) -> PanelContainer:
-	var is_hero := String(view.get("kind", "")) == "hero"
+func _build_hero_reveal(view: Dictionary, compact: bool) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "BreakthroughResult_%s" % String(view.get("id", "resource"))
-	card.custom_minimum_size = Vector2(118, 64 if is_hero else 54)
+	card.custom_minimum_size = Vector2(0, 100 if compact else 112)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var style := _panel_style(Color("#242015") if is_hero else PANEL_2)
-	style.border_color = GOLD if is_hero else Color(LINE, 0.8)
-	style.set_border_width_all(2 if is_hero else 1)
+	var style := _panel_style(Color("#242015"))
+	style.border_color = GOLD
+	style.set_border_width_all(2)
 	card.add_theme_stylebox_override("panel", style)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	card.add_child(row)
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(88 if compact else 102, 96 if compact else 108)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture = ARMORED_FORGE_ART if String(view.get("id", "")) == "armored" else ASSAULT_FORGE_ART
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(portrait)
 	var content := VBoxContainer.new()
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 1)
-	card.add_child(content)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 2)
+	row.add_child(content)
 	var title := Label.new()
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.text = String(view.get("title", "研究资源"))
+	title.text = String(view.get("title", "永久援军")).replace("精锐 · ", "")
 	title.add_theme_font_override("font", CJK_FONT)
-	title.add_theme_font_size_override("font_size", 13 if is_hero else 11)
-	title.add_theme_color_override("font_color", GOLD if is_hero else TEXT)
+	title.add_theme_font_size_override("font_size", 14 if compact else 16)
+	title.add_theme_color_override("font_color", GOLD)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(title)
 	var subtitle := Label.new()
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.text = String(view.get("subtitle", ""))
 	subtitle.add_theme_font_override("font", CJK_FONT)
-	subtitle.add_theme_font_size_override("font_size", 10)
-	subtitle.add_theme_color_override("font_color", CYAN if is_hero else MUTED)
+	subtitle.add_theme_font_size_override("font_size", 11)
+	subtitle.add_theme_color_override("font_color", CYAN)
 	content.add_child(subtitle)
-	if is_hero:
-		var impact := Label.new()
-		impact.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		impact.text = String(view.get("impact", "永久援军"))
-		impact.add_theme_font_override("font", CJK_FONT)
-		impact.add_theme_font_size_override("font_size", 10)
-		impact.add_theme_color_override("font_color", GREEN)
-		content.add_child(impact)
+	var impact := Label.new()
+	impact.text = String(view.get("impact", "永久援军")).replace("反攻：", "")
+	impact.add_theme_font_override("font", CJK_FONT)
+	impact.add_theme_font_size_override("font_size", 10)
+	impact.add_theme_color_override("font_color", GREEN)
+	impact.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(impact)
 	return card
+
+
+func _build_loot_chip(view: Dictionary) -> PanelContainer:
+	var kind := String(view.get("kind", "resource"))
+	var chip := PanelContainer.new()
+	chip.name = "BreakthroughResult_%s" % String(view.get("id", "resource"))
+	chip.custom_minimum_size = Vector2(0, 42)
+	chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chip.add_theme_stylebox_override("panel", _panel_style(PANEL_2))
+	var content := VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 0)
+	chip.add_child(content)
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(20, 20)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture = _loot_icon(kind)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(icon)
+	var amount := Label.new()
+	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	amount.text = String(view.get("subtitle", "+1"))
+	amount.add_theme_font_override("font", CJK_FONT)
+	amount.add_theme_font_size_override("font_size", 9)
+	amount.add_theme_color_override("font_color", TEXT)
+	content.add_child(amount)
+	return chip
+
+
+func _loot_icon(kind: String) -> Texture2D:
+	match kind:
+		"skill_chip": return ICON_LOOT_TROPHY
+		"parts": return ICON_LOOT_GEAR
+		"energy": return ICON_LOOT_SIGNAL
+		"sludge": return ICON_STATUS_RESEARCH
+		_: return ICON_STATUS_READY
 
 
 func _animate_results() -> void:
@@ -275,7 +337,7 @@ func _animate_results() -> void:
 		return
 	if _reveal_tween != null and _reveal_tween.is_valid():
 		_reveal_tween.kill()
-	var cards := results_grid.get_children()
+	var cards := results_grid.find_children("BreakthroughResult_*", "Control", true, false)
 	var reduced_motion := bool(_view.get("reduced_motion", false))
 	for card_value in cards:
 		var card := card_value as Control

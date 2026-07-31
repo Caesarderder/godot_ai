@@ -123,16 +123,16 @@ layout_mode = 2
 text = "两名永久援军响应召唤 · 现在把他们编入反攻队"
 autowrap_mode = 2
 
-[node name="BlueprintResultsGrid" type="GridContainer" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
+[node name="BlueprintResultsGrid" type="VBoxContainer" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
 unique_name_in_owner = true
 layout_mode = 2
-columns = 5
+theme_override_constants/separation = 5
 
 [node name="BlueprintResultsLegionButton" type="Button" parent="BlueprintTree/ResearchBreakthroughResults/Margin/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "立即编入反攻队"
+text = "编入军团  ›"
 
 [node name="FactionTechPreview" type="PanelContainer" parent="BlueprintTree"]
 unique_name_in_owner = true
