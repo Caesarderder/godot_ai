@@ -55,7 +55,8 @@
         "gate_growth_duel_visual",
         "gate_doctrine_deck_visual",
         "gate_breakthrough_reveal_visual",
-        "gate_pass_runway_visual"
+        "gate_pass_runway_visual",
+        "gate_chapter_victory_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -109,7 +110,9 @@
         "gate_breakthrough_reveal_visual",
         "gate_breakthrough_reveal_runtime",
         "gate_pass_runway_visual",
-        "gate_pass_runway_runtime"
+        "gate_pass_runway_runtime",
+        "gate_chapter_victory_visual",
+        "gate_chapter_victory_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -181,7 +184,8 @@
         "gate_growth_duel_visual",
         "gate_doctrine_deck_visual",
         "gate_breakthrough_reveal_visual",
-        "gate_pass_runway_visual"
+        "gate_pass_runway_visual",
+        "gate_chapter_victory_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -204,7 +208,8 @@
         "gate_growth_duel_responsive",
         "gate_doctrine_deck_responsive",
         "gate_breakthrough_reveal_responsive",
-        "gate_pass_runway_responsive"
+        "gate_pass_runway_responsive",
+        "gate_chapter_victory_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -237,7 +242,9 @@
         "gate_breakthrough_reveal_runtime",
         "gate_breakthrough_reveal_responsive",
         "gate_pass_runway_runtime",
-        "gate_pass_runway_responsive"
+        "gate_pass_runway_responsive",
+        "gate_chapter_victory_runtime",
+        "gate_chapter_victory_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -2601,6 +2608,154 @@
       "limitations": [
         "Static captures cannot prove long-term season motivation."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_chapter_victory_tableau",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping BattleResultScreen chapter victory as a hero-led mobile climax while preserving exact reward and handoff contracts.",
+      "player_question": "Does clearing the chapter feel like the resistance heroes broke the wall, with rewards and the sole next action understood at a glance?",
+      "gate_ids": [
+        "gate_chapter_victory_visual",
+        "gate_chapter_victory_runtime",
+        "gate_chapter_victory_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_chapter_victory_tableau_scenario.gd",
+        "shipping_surface": "BattleResultScreen chapter-complete composition and slg_main result projection",
+        "public_adapter": "BattleResultScreen.configure plus action_requested"
+      },
+      "fixture": {
+        "subject_parameter": "chapter_result_state",
+        "reuse_scope": "fresh chapter clear, already-claimed replay and compact viewport",
+        "extension_contract": "reuse exact shipping result strings, raster hero assets and action payloads"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate battle_result_screen.tscn with deterministic chapter views",
+        "state": "chapter-one boss victory with rewards and forward handoff",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "fresh_clear",
+          "at": "case start",
+          "action": "show first chapter clear and celebration claim"
+        },
+        {
+          "stimulus_id": "replay_clear",
+          "at": "after fresh clear",
+          "action": "show replayed clear routing to chapter two"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "chapter_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-chapter-victory-tableau/manifest.json"
+        },
+        {
+          "observation_id": "chapter_captures",
+          "source": "dual-size captures",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-chapter-victory-tableau"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "fresh_chapter_clear",
+          "state": "first clear with celebration reward",
+          "stimulus_ids": [
+            "fresh_clear"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "two resistance heroes dominate",
+            "reward icons remain complete",
+            "one celebration action remains obvious"
+          ],
+          "observation_ids": [
+            "chapter_manifest",
+            "chapter_captures"
+          ]
+        },
+        {
+          "case_id": "replayed_chapter_clear",
+          "state": "reward already claimed and next chapter available",
+          "stimulus_ids": [
+            "replay_clear"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "no fake reward action",
+            "chapter-two handoff remains exact",
+            "victory composition still reads as settled"
+          ],
+          "observation_ids": [
+            "chapter_manifest",
+            "chapter_captures"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh BattleResultScreen per state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "fresh-clear captures",
+          "replay captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "capture failure",
+          "action payload mismatch"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed result state",
+        "warmup": "ten process frames",
+        "temporal_isolation": "fresh screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_chapter_victory_tableau_scenario.gd",
+        "expected_seconds": 15,
+        "outputs": [
+          "dual-size two-state bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_chapter_one_completion_tests.gd && godot --path project-a -s tools/capture_chapter_victory_tableau_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each result screen after capture",
+      "failure_conditions": [
+        "result becomes a text report",
+        "hero art obscures rewards or CTA",
+        "replay exposes spent reward",
+        "primary action clips"
+      ],
+      "limitations": [
+        "Static victory art cannot prove long-term emotional attachment."
+      ]
     }
   ],
   "integration_policy": {
@@ -3270,6 +3425,58 @@
         "no interaction depends on hover"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_chapter_victory_visual",
+      "profile": "visual",
+      "claim": "Chapter victory reads as an awesome two-hero resistance climax rather than a generic result dashboard.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_chapter_victory_tableau"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "hero tableau dominates",
+        "reward hierarchy stays clear",
+        "industrial resistance style remains cohesive",
+        "text stays subordinate"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_chapter_victory_runtime",
+      "profile": "correctness",
+      "claim": "Fresh and replayed chapter victories preserve exact reward visibility and forward action payloads without reopening spent rewards.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_chapter_victory_tableau"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "fresh welfare action exact",
+        "replay map-stage payload exact",
+        "reward metrics preserved"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_chapter_victory_responsive",
+      "profile": "correctness",
+      "claim": "Hero tableau, reward icons and sole primary action fit and remain touch-operable at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_chapter_victory_tableau"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "primary action at least 48px",
+        "no essential clipping",
+        "hero art never intercepts touch"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -3343,6 +3550,12 @@
       "owner": "battle-pass supply-runway work-unit owner",
       "surface": "GoalsScreen pass composition plus focused fixture",
       "public_contract": "GoalsScreen.configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "chapter-victory tableau work-unit owner",
+      "surface": "BattleResultScreen chapter composition plus focused fixture",
+      "public_contract": "configure and action_requested",
       "coupling": "coupled"
     }
   ],
