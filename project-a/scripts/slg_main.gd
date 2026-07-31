@@ -1370,6 +1370,7 @@ func _legion_view() -> Dictionary:
 		formation.append({
 			"slot_id": slot_id,
 			"hero_id": hero_id,
+			"archetype_id": String(hero.archetype_id) if hero != null else "",
 			"display_name": String(hero.display_name) if hero != null else "空位",
 			"role": _legion_role(String(hero.archetype_id)) if hero != null else "待命",
 		})

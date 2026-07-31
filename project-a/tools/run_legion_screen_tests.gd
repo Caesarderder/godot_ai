@@ -29,12 +29,13 @@ func _run() -> void:
 		"target_stage_name": "E11 · 飞行马桶交战",
 		"recommended_power": 6500,
 		"formation": [
-			{"slot_id": "commander", "display_name": "Gman", "role": "统帅 · 稳定输出"},
-			{"slot_id": "troop_1", "display_name": "冲锋马桶人", "role": "突击 · 快速压制"},
+			{"slot_id": "commander", "hero_id": "hero_gman", "archetype_id": "gman", "display_name": "Gman", "role": "统帅 · 稳定输出"},
+			{"slot_id": "troop_1", "hero_id": "hero_assault", "archetype_id": "assault", "display_name": "冲锋马桶人", "role": "突击 · 快速压制"},
 		],
 		"candidates": [
 			{
 				"hero_id": "hero_assault",
+				"archetype_id": "assault",
 				"display_name": "冲锋马桶人",
 				"role": "突击 · 快速压制",
 				"power": 1900,
@@ -44,6 +45,7 @@ func _run() -> void:
 			},
 			{
 				"hero_id": "hero_armored",
+				"archetype_id": "armored",
 				"display_name": "装甲马桶人",
 				"role": "重装 · 承伤保护",
 				"power": 2050,
@@ -61,6 +63,8 @@ func _run() -> void:
 	_check(_tree_has_text(legion, "高墙反攻编队 0/2"), "first formation exposes visible two-reinforcement progress")
 	_check(_tree_has_text(legion, "先让装甲进入前排承伤"), "first formation explains the recommended responsibility")
 	_check(_tree_has_text(legion, "推荐下一步"), "recommended candidate is explicit without disabling alternatives")
+	_check(legion.find_child("FormationPortrait_commander", true, false) is TextureRect, "occupied formation slot uses the archetype portrait")
+	_check(legion.find_child("CandidatePortrait_armored", true, false) is TextureRect, "deployment candidate uses the archetype portrait")
 	_check(not (legion.get_node("TaskTabs") as HBoxContainer).visible, "first formation hides unrelated recruit and roster tabs")
 	var candidate := legion.find_child("FormationCandidate_hero_armored", true, false) as Button
 	_check(candidate != null and not candidate.disabled, "a replacement candidate is actionable")

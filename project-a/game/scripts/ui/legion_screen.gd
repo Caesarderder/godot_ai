@@ -15,7 +15,10 @@ signal action_requested(action_id: String, payload: Dictionary)
 signal hero_selected(hero_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
-const COMMANDER_BADGE := preload("res://assets/generated/vector/characters/commander_badge.svg")
+const FORMATION_ICON := preload("res://assets/ui/icons/kenney_game_icons/multiplayer.png")
+const RECRUIT_TAB_ICON := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
+const CODEX_TAB_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const ROSTER_TAB_ICON := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
 const RECRUIT_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const RECRUIT_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const RECRUIT_SELECT_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
@@ -94,15 +97,19 @@ func _rebuild() -> void:
 		and not bool(first_growth.get("active", false))
 		and not bool(boss_ready.get("active", false))
 	)
-	formation_tab.text = "阵型" if compact else "出击阵型"
-	recruit_tab.text = "招募" if compact else "信号招募"
-	codex_tab.text = "图鉴" if compact else "角色图鉴"
-	roster_tab.text = "培养" if compact else "成员培养"
+	formation_tab.text = "阵型"
+	recruit_tab.text = "招募"
+	codex_tab.text = "图鉴"
+	roster_tab.text = "培养"
 	scroll.name = "LegionContentScroll_%s" % active_tab
 	_style_tab(formation_tab, active_tab == "formation")
 	_style_tab(recruit_tab, active_tab == "recruit")
 	_style_tab(codex_tab, active_tab == "codex")
 	_style_tab(roster_tab, active_tab == "roster")
+	_configure_tool_tab(formation_tab, FORMATION_ICON, "阵型", "六人出击阵型")
+	_configure_tool_tab(recruit_tab, RECRUIT_TAB_ICON, "招募", "信号招募")
+	_configure_tool_tab(codex_tab, CODEX_TAB_ICON, "图鉴", "角色图鉴")
+	_configure_tool_tab(roster_tab, ROSTER_TAB_ICON, "培养", "成员培养")
 	scroll.vertical_scroll_mode = (
 		ScrollContainer.SCROLL_MODE_DISABLED
 		if active_tab == "roster"
@@ -250,6 +257,7 @@ func _formation_panel() -> Control:
 	var first_formation := _view.get("first_formation", {}) as Dictionary
 	var onboarding_active := bool(first_formation.get("active", false))
 	var compact := bool(_view.get("compact", get_viewport_rect().size.x < 720.0))
+	var edit_slot := String(_view.get("formation_edit_slot", ""))
 	var panel := _panel("")
 	panel.add_theme_constant_override("separation", 5)
 	if onboarding_active:
@@ -269,7 +277,7 @@ func _formation_panel() -> Control:
 			"stage_id": String(counterattack.get("stage_id", "stage_1_4")),
 		}))
 		panel.add_child(action)
-	if not onboarding_active:
+	if not onboarding_active and edit_slot.is_empty():
 		var readiness := HBoxContainer.new()
 		readiness.name = "FormationReadinessStrip"
 		readiness.custom_minimum_size.y = 34
@@ -328,7 +336,6 @@ func _formation_panel() -> Control:
 		button.pressed.connect(action_requested.emit.bind("select_slot", {"slot": slot_id}))
 		grid.add_child(button)
 	panel.add_child(grid)
-	var edit_slot := String(_view.get("formation_edit_slot", ""))
 	if not edit_slot.is_empty():
 		panel.add_child(_candidate_panel(edit_slot))
 	return panel
@@ -346,7 +353,7 @@ func _formation_slot_card(
 	var emphasized := selected or suggested
 	var button := _button("", emphasized)
 	button.name = "FormationSlot_%s" % slot_id
-	button.custom_minimum_size = Vector2(0, 54 if not onboarding_active else 56)
+	button.custom_minimum_size = Vector2(0, 56 if compact else 60)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.tooltip_text = "%s · %s · %s" % [
 		String(SLOT_NAMES.get(slot_id, slot_id)),
@@ -356,35 +363,32 @@ func _formation_slot_card(
 	var row := HBoxContainer.new()
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 8
-	row.offset_top = 5
-	row.offset_right = -8
-	row.offset_bottom = -5
-	row.add_theme_constant_override("separation", 8)
+	row.offset_left = 6
+	row.offset_top = 4
+	row.offset_right = -6
+	row.offset_bottom = -4
+	row.add_theme_constant_override("separation", 6)
 	button.add_child(row)
 	var badge := PanelContainer.new()
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	badge.custom_minimum_size = Vector2(40, 40)
+	badge.custom_minimum_size = Vector2(52, 52) if not compact else Vector2(42, 42)
 	var badge_style := _box(
 		Color("#10232a") if occupied else Color("#10191f"),
 		CYAN if occupied else LINE
 	)
-	badge_style.set_corner_radius_all(8)
+	badge_style.set_corner_radius_all(10)
 	badge.add_theme_stylebox_override("panel", badge_style)
 	row.add_child(badge)
-	if occupied and slot_id == "commander":
+	if occupied:
 		var portrait := TextureRect.new()
+		portrait.name = "FormationPortrait_%s" % slot_id
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait.texture = COMMANDER_BADGE
+		portrait.texture = _hero_portrait(String(slot.get("archetype_id", "gman" if slot_id == "commander" else "")))
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		badge.add_child(portrait)
 	else:
-		var symbol := _label(
-			String(slot.get("display_name", "?")).left(1) if occupied else "+",
-			24 if occupied else 28,
-			CYAN if occupied else MUTED
-		)
+		var symbol := _label("+", 30, Color("#443515") if emphasized else MUTED)
 		symbol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		symbol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -395,23 +399,24 @@ func _formation_slot_card(
 	copy.alignment = BoxContainer.ALIGNMENT_CENTER
 	copy.add_theme_constant_override("separation", 1)
 	row.add_child(copy)
+	var tactical_slot := String(SLOT_NAMES.get(slot_id, slot_id)).replace("排 ", "")
 	var slot_label := _label(
-		String(SLOT_NAMES.get(slot_id, slot_id)),
-		10,
+		tactical_slot,
+		9,
 		Color("#443515") if emphasized else MUTED
 	)
 	slot_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	copy.add_child(slot_label)
 	var title := _label(
-		String(slot.get("display_name", "空位")) if occupied else ("推荐部署" if suggested else "部署成员"),
-		13,
+		String(slot.get("display_name", "空位")) if occupied else ("推荐" if suggested else "待命"),
+		12,
 		Color("#182127") if emphasized else TEXT
 	)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.max_lines_visible = 1
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	copy.add_child(title)
-	if not compact and not onboarding_active:
+	if occupied and not compact and not onboarding_active:
 		var role := _label(
 			String(slot.get("role", "待命")),
 			10,
@@ -424,36 +429,26 @@ func _formation_slot_card(
 	return button
 
 
+func _hero_portrait(archetype_id: String) -> Texture2D:
+	if archetype_id.is_empty():
+		return null
+	return load("res://assets/ui/codex/%s.webp" % archetype_id) as Texture2D
+
+
 func _candidate_panel(slot_id: String) -> Control:
 	var slot_name := String(SLOT_NAMES.get(slot_id, slot_id))
 	var target_empty := _formation_slot_is_empty(slot_id)
 	var journey_candidate := _journey_focus_candidate()
-	var panel := _panel(
-		"永久角色已入列 · %s" % String(journey_candidate.get("display_name", "阵营核心"))
-		if target_empty and not journey_candidate.is_empty()
-		else "%s为空 · 部署阵营核心" % slot_name
-		if target_empty
-		else "替换 %s · 比较职责与战力变化" % slot_name
-	)
+	var panel := _panel("选择 %s" % slot_name)
 	panel.name = "FormationCandidatePanel"
 	if target_empty:
 		panel.add_child(_label(
-			"%s · %s · 1★主动「%s」\n目标%s · 部署后%d人军团 · 接下来完成3场磨合" % [
-				String(journey_candidate.get("faction", "阵营待确认")),
-				String(journey_candidate.get("playstyle", "灵活应战")),
-				String(journey_candidate.get("skill_name", "待命")),
-				slot_name,
-				_formation_deployed_count() + 1,
-			]
-			if not journey_candidate.is_empty()
-			else "部署后形成%d人军团 · 下一步：完成3场磨合" % (
-				_formation_deployed_count() + 1
-			),
+			"部署后 %d 人 · 完成 3 场磨合" % (_formation_deployed_count() + 1),
 			11,
 			CYAN
 		))
 	var candidates := GridContainer.new()
-	candidates.columns = 1 if get_viewport_rect().size.x < 720.0 else 3
+	candidates.columns = 2
 	candidates.add_theme_constant_override("h_separation", 6)
 	candidates.add_theme_constant_override("v_separation", 6)
 	var ordered_candidates: Array = []
@@ -465,27 +460,9 @@ func _candidate_panel(slot_id: String) -> Control:
 			ordered_candidates.append(candidate_value)
 	for candidate_value in ordered_candidates:
 		var candidate := candidate_value as Dictionary
-		var delta := int(candidate.get("power_delta", 0))
-		var current := bool(candidate.get("current", false))
-		var recommended := bool(candidate.get("recommended", false))
-		var journey_focus := bool(candidate.get("journey_focus", false))
-		var action := _button(
-			"%s%s%s%s\n%s · 战力 %d\n军团变化 %s" % [
-				String(candidate.get("display_name", "")),
-				" ✓" if current else "",
-				" · 推荐下一步" if recommended else "",
-				" · ★%s" % String(candidate.get("journey_focus_label", "阵营核心"))
-					if journey_focus
-					else "",
-				String(candidate.get("role", "")),
-				int(candidate.get("power", 0)),
-				("%+d" % delta) if delta != 0 else "不变",
-			],
-			(recommended or journey_focus) and not current
-		)
+		var action := _formation_candidate_card(candidate)
 		action.name = "FormationCandidate_%s" % String(candidate.get("hero_id", ""))
-		action.custom_minimum_size = Vector2(220, 66 if bool((_view.get("first_formation", {}) as Dictionary).get("active", false)) else 72)
-		action.disabled = current
+		action.disabled = bool(candidate.get("current", false))
 		action.pressed.connect(action_requested.emit.bind("assign_slot", {
 			"slot": slot_id,
 			"hero_id": String(candidate.get("hero_id", "")),
@@ -502,6 +479,46 @@ func _candidate_panel(slot_id: String) -> Control:
 			MUTED
 		))
 	return panel
+
+
+func _formation_candidate_card(candidate: Dictionary) -> Button:
+	var recommended := bool(candidate.get("recommended", false)) or bool(candidate.get("journey_focus", false))
+	var current := bool(candidate.get("current", false))
+	var action := _button("", recommended and not current)
+	action.custom_minimum_size = Vector2(0, 76)
+	action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action.tooltip_text = "%s · %s · %s · 战力 %d" % [
+		String(candidate.get("display_name", "")), String(candidate.get("faction", "")),
+		String(candidate.get("skill_name", "")), int(candidate.get("power", 0))
+	]
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 7
+	row.offset_top = 5
+	row.offset_right = -7
+	row.offset_bottom = -5
+	row.add_theme_constant_override("separation", 7)
+	action.add_child(row)
+	var portrait := TextureRect.new()
+	portrait.name = "CandidatePortrait_%s" % String(candidate.get("archetype_id", ""))
+	portrait.custom_minimum_size = Vector2(62, 62)
+	portrait.texture = _hero_portrait(String(candidate.get("archetype_id", "")))
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(portrait)
+	var copy := VBoxContainer.new()
+	copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.alignment = BoxContainer.ALIGNMENT_CENTER
+	copy.add_theme_constant_override("separation", 0)
+	row.add_child(copy)
+	copy.add_child(_label(("推荐下一步 · " if recommended else "") + String(candidate.get("display_name", "")), 12, Color("#182127") if recommended else TEXT))
+	copy.add_child(_label(String(candidate.get("role", "")), 10, Color("#3d4b2d") if recommended else CYAN))
+	var delta := int(candidate.get("power_delta", 0))
+	copy.add_child(_label("军团变化 %+d" % delta if delta != 0 else "当前阵位", 10, Color("#3d4b2d") if recommended else MUTED))
+	return action
 
 
 func _journey_focus_candidate() -> Dictionary:
@@ -1460,6 +1477,16 @@ func _style_tab(button: Button, active: bool) -> void:
 	button.add_theme_color_override("font_color", CYAN if active else TEXT)
 	button.add_theme_color_override("font_hover_color", CYAN if active else TEXT)
 	button.add_theme_color_override("font_pressed_color", CYAN if active else TEXT)
+
+
+func _configure_tool_tab(button: Button, icon: Texture2D, short_label: String, hint: String) -> void:
+	button.text = short_label
+	button.icon = icon
+	button.expand_icon = true
+	button.add_theme_constant_override("icon_max_width", 24)
+	button.tooltip_text = hint
+	button.custom_minimum_size = Vector2(96, 48)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_END
 
 
 func _button(value: String, primary: bool) -> Button:
