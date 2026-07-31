@@ -22,6 +22,7 @@ const ROSTER_TAB_ICON := preload("res://assets/ui/icons/kenney_game_icons/wrench
 const RECRUIT_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const RECRUIT_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const RECRUIT_SELECT_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const FACTION_ASSAULT_CHOICE_ART := preload("res://assets/ui/recruit/faction-assault-v2.webp")
 const CODEX_LOCK_ICON := preload("res://assets/ui/icons/kenney_game_icons/locked.png")
 const CODEX_STAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/star.png")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
@@ -438,6 +439,12 @@ func _hero_portrait(archetype_id: String) -> Texture2D:
 	return load("res://assets/ui/codex/%s.webp" % archetype_id) as Texture2D
 
 
+func _faction_choice_portrait(archetype_id: String) -> Texture2D:
+	if archetype_id == "assault":
+		return FACTION_ASSAULT_CHOICE_ART
+	return _hero_portrait(archetype_id)
+
+
 func _candidate_panel(slot_id: String) -> Control:
 	var slot_name := String(SLOT_NAMES.get(slot_id, slot_id))
 	var target_empty := _formation_slot_is_empty(slot_id)
@@ -827,8 +834,8 @@ func _faction_core_choice_card(choice: Dictionary, compact: bool) -> Control:
 	card.add_child(identity)
 	var portrait := TextureRect.new()
 	portrait.name = "FactionChoicePortrait_%s" % archetype_id
-	portrait.custom_minimum_size = Vector2(74 if compact else 96, 72 if compact else 92)
-	portrait.texture = _hero_portrait(archetype_id)
+	portrait.custom_minimum_size = Vector2(92 if compact else 118, 88 if compact else 108)
+	portrait.texture = _faction_choice_portrait(archetype_id)
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	identity.add_child(portrait)
@@ -837,25 +844,27 @@ func _faction_core_choice_card(choice: Dictionary, compact: bool) -> Control:
 	copy.alignment = BoxContainer.ALIGNMENT_CENTER
 	copy.add_theme_constant_override("separation", 1)
 	identity.add_child(copy)
-	var name := _label(String(choice.get("display_name", "")), 13 if compact else 14, TEXT)
+	var name := _label(String(choice.get("display_name", "")), 15 if compact else 16, TEXT)
 	name.max_lines_visible = 1
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name.autowrap_mode = TextServer.AUTOWRAP_OFF
 	copy.add_child(name)
-	copy.add_child(_label(String(choice.get("playstyle", "")), 13, GOLD))
-	var synergy := _label(String(choice.get("synergy_summary", "")), 10, accent)
-	synergy.max_lines_visible = 1
-	synergy.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	synergy.autowrap_mode = TextServer.AUTOWRAP_OFF
-	copy.add_child(synergy)
+	copy.add_child(_label(String(choice.get("playstyle", "")), 14, GOLD))
 	copy.add_child(_icon_copy(
 		RECRUIT_STAR_ICON,
-		"2★  %s" % String(choice.get("next_star_effect", "")),
+		"2★  %s" % _short_faction_effect(archetype_id),
 		CYAN
 	))
 	var choose := _button("选定  ·  %s" % String(choice.get("playstyle", "")), true)
 	choose.name = "ChooseFactionCore_%s" % archetype_id
 	choose.custom_minimum_size.y = 48
+	# Equal long-term choices use the same clean material in every state. The
+	# global textured primary frame has corner marks and a bright focus fill
+	# that read as resize handles plus a recommended/default answer here.
+	choose.add_theme_stylebox_override("normal", _choice_button_style(GOLD))
+	choose.add_theme_stylebox_override("hover", _choice_button_style(Color("#f2bd5d")))
+	choose.add_theme_stylebox_override("pressed", _choice_button_style(Color("#c98c30")))
+	choose.add_theme_stylebox_override("focus", _choice_button_style(GOLD, Color.WHITE))
 	choose.tooltip_text = "选择%s作为阵营核心 · %s" % [
 		String(choice.get("display_name", "")),
 		String(choice.get("synergy_summary", "")),
@@ -866,6 +875,17 @@ func _faction_core_choice_card(choice: Dictionary, compact: bool) -> Control:
 	))
 	card.add_child(choose)
 	return card
+
+
+func _short_faction_effect(archetype_id: String) -> String:
+	return "破城顺劈" if archetype_id == "assault" else "四联齐射"
+
+
+func _choice_button_style(fill: Color, border: Color = Color("#f6d27a")) -> StyleBoxFlat:
+	var style := _box(fill, border)
+	style.set_corner_radius_all(7)
+	style.set_border_width_all(2)
+	return style
 
 
 func _faction_core_handoff_panel(focus: Dictionary) -> Control:
@@ -1241,17 +1261,6 @@ func _focus_recruit_result() -> void:
 	if result_panel == null:
 		return
 	var action := result_panel.find_child("RecruitFocusActionButton", true, false) as Button
-	if action == null:
-		for choice_value in _view.get("recruit_core_choices", []):
-			action = result_panel.find_child(
-				"ChooseFactionCore_%s" % String(
-					(choice_value as Dictionary).get("archetype_id", "")
-				),
-				true,
-				false
-			) as Button
-			if action != null:
-				break
 	if action != null and not action.disabled:
 		action.grab_focus()
 	scroll.scroll_vertical = clampi(
