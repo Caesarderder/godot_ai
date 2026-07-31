@@ -596,11 +596,16 @@ func _build_pass() -> void:
 		overview.add_child(settled)
 	var runway_scroll := ScrollContainer.new()
 	runway_scroll.name = "BattlePassRunwayScroll"
-	runway_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	runway_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	runway_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	runway_scroll.custom_minimum_size.y = 96
+	runway_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	runway_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.add_child(runway_scroll)
+	var runway_shell := Control.new()
+	runway_shell.name = "BattlePassRunwayShell"
+	runway_shell.custom_minimum_size.y = 96
+	runway_shell.clip_contents = true
+	panel.add_child(runway_shell)
+	runway_shell.add_child(runway_scroll)
 	var track := HBoxContainer.new()
 	track.name = "MetaPassRewardTrack"
 	track.add_theme_constant_override("h_separation", 5)
@@ -654,16 +659,81 @@ func _build_pass() -> void:
 		}))
 		track.add_child(card)
 	runway_scroll.add_child(track)
+	var left_hint := _runway_edge_hint("BattlePassRunwayLeftHint", true)
+	var right_hint := _runway_edge_hint("BattlePassRunwayRightHint", false)
+	runway_shell.add_child(left_hint)
+	runway_shell.add_child(right_hint)
+	runway_scroll.get_h_scroll_bar().value_changed.connect(
+		func(_value: float) -> void: _update_runway_edge_hints(runway_scroll, left_hint, right_hint)
+	)
 	var frontier := maxi(0, int(pass_view.get("reached", 0)) - 2)
-	call_deferred("_focus_pass_frontier", runway_scroll, frontier, 86 if compact else 104)
+	call_deferred(
+		"_focus_pass_frontier",
+		runway_scroll,
+		frontier,
+		86 if compact else 104,
+		left_hint,
+		right_hint
+	)
 	content.add_child(panel)
 
 
-func _focus_pass_frontier(runway_scroll: ScrollContainer, frontier: int, card_width: int) -> void:
+func _runway_edge_hint(node_name: String, left: bool) -> Label:
+	var hint := Label.new()
+	hint.name = node_name
+	hint.custom_minimum_size = Vector2(24, 40)
+	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint.text = "◀" if left else "▶"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint.add_theme_font_override("font", CJK_FONT)
+	hint.add_theme_font_size_override("font_size", 17)
+	hint.add_theme_color_override("font_color", CYAN)
+	hint.add_theme_color_override("font_shadow_color", Color("#071013"))
+	hint.add_theme_constant_override("shadow_offset_x", 2 if left else -2)
+	hint.add_theme_constant_override("shadow_offset_y", 1)
+	var hint_style := StyleBoxFlat.new()
+	hint_style.bg_color = Color("#071013d9")
+	hint_style.border_color = Color("#58c9c266")
+	hint_style.set_border_width_all(1)
+	hint_style.set_corner_radius_all(8)
+	hint.add_theme_stylebox_override("normal", hint_style)
+	hint.anchor_left = 0.0 if left else 1.0
+	hint.anchor_right = 0.0 if left else 1.0
+	hint.anchor_top = 0.5
+	hint.anchor_bottom = 0.5
+	hint.offset_left = 3.0 if left else -31.0
+	hint.offset_right = 31.0 if left else -3.0
+	hint.offset_top = -22.0
+	hint.offset_bottom = 22.0
+	return hint
+
+
+func _update_runway_edge_hints(
+	runway_scroll: ScrollContainer,
+	left_hint: Label,
+	right_hint: Label
+) -> void:
+	if not is_instance_valid(runway_scroll):
+		return
+	var bar := runway_scroll.get_h_scroll_bar()
+	var maximum_offset := maxf(0.0, bar.max_value - bar.page)
+	left_hint.visible = runway_scroll.scroll_horizontal > 4
+	right_hint.visible = runway_scroll.scroll_horizontal < maximum_offset - 4.0
+
+
+func _focus_pass_frontier(
+	runway_scroll: ScrollContainer,
+	frontier: int,
+	card_width: int,
+	left_hint: Label,
+	right_hint: Label
+) -> void:
 	if not is_instance_valid(runway_scroll):
 		return
 	await get_tree().process_frame
 	runway_scroll.scroll_horizontal = frontier * (card_width + 5)
+	_update_runway_edge_hints(runway_scroll, left_hint, right_hint)
 
 
 func _pass_reward_icon(reward: Dictionary) -> Texture2D:

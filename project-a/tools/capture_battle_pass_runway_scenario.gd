@@ -91,8 +91,14 @@ func _verify_structure(goals: GoalsScreen, case_id: String) -> bool:
 	var runway := goals.find_child("BattlePassRunwayScroll", true, false) as ScrollContainer
 	if cards.size() != 30 or runway == null:
 		return _fail("thirty-level runway missing")
-	if runway.horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED or runway.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED:
+	if runway.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_SHOW_NEVER or runway.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED:
 		return _fail("runway is not horizontal-only")
+	var left_hint := goals.find_child("BattlePassRunwayLeftHint", true, false) as Label
+	var right_hint := goals.find_child("BattlePassRunwayRightHint", true, false) as Label
+	if left_hint == null or right_hint == null or left_hint.text != "◀" or right_hint.text != "▶":
+		return _fail("directional drag edge hints are missing")
+	if not right_hint.visible:
+		return _fail("runway does not expose a forward drag hint")
 	var batch := goals.find_child("MetaPassBatchClaim", true, false) as Button
 	if case_id == "claimable_runway" and (batch == null or batch.disabled or batch.size.y < 48.0):
 		return _fail("claimable batch action is not touch-ready")
