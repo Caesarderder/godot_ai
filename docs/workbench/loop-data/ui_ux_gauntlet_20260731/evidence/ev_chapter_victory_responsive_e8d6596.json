@@ -1,0 +1,64 @@
+{
+  "evidence_id": "ev_chapter_victory_responsive_e8d6596",
+  "revision": "e8d6596",
+  "valid_through_revision": "e8d6596",
+  "gate_id": "gate_chapter_victory_responsive",
+  "claim": "Hero tableau, reward icons and sole primary action fit and remain touch-operable at 844x390 and 568x320.",
+  "scenario_id": "scenario_mobile_chapter_victory_tableau",
+  "execution_id": "chapter_victory_responsive_e8d6596",
+  "evidence_type": "test",
+  "artifact_or_command": "fixed SubViewport dual-size capture with pixel-size, 48px CTA and mouse-filter assertions",
+  "case_results": [
+    {
+      "case_id": "fresh_chapter_clear",
+      "result": "pass",
+      "assertions": [
+        "exact 844x390 and 568x320; CTA >=48px; hero art ignores touch"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/fresh_chapter_clear-568x320.png"
+      ]
+    },
+    {
+      "case_id": "replayed_chapter_clear",
+      "result": "pass",
+      "assertions": [
+        "exact sizes and unobscured chapter-two handoff"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/replayed_chapter_clear-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "fresh-clear captures",
+    "replay captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "exact-size chapter victory geometry assertions",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "All four target files assert exact pixel dimensions; current heroes, metrics and actions fit with no clipping.",
+  "inference": "The chapter climax remains readable and touch-safe on both declared mobile landscape sizes.",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [
+    "No physical safe-area device sample."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

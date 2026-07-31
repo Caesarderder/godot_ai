@@ -44,7 +44,7 @@
   "inference": "The shared touch router and horizontal reward runway remain operable in the actual Web input route.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Browser automation emulates touch rather than using a physical phone."
   ],

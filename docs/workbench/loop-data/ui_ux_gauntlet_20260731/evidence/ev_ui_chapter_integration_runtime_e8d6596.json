@@ -1,23 +1,22 @@
 {
-  "evidence_id": "ev_ui_pass_integration_runtime_b562758",
-  "revision": "b562758",
-  "valid_through_revision": "b562758",
+  "evidence_id": "ev_ui_chapter_integration_runtime_e8d6596",
+  "revision": "e8d6596",
+  "valid_through_revision": "e8d6596",
   "gate_id": "gate_ui_runtime",
   "claim": "Title, factory and war-zone actions use shipping state and navigation without regressions.",
   "scenario_id": "scenario_ui_path_integration",
-  "execution_id": "ui_pass_integration_runtime_b562758",
+  "execution_id": "ui_chapter_integration_runtime_e8d6596",
   "evidence_type": "test",
-  "artifact_or_command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; goals and mobile-scroll focused suites",
+  "artifact_or_command": "UI smoke plus complete chapter-one reward and resume flow",
   "case_results": [
     {
       "case_id": "cross_screen_cohesion",
       "result": "pass",
       "assertions": [
-        "shipping navigation and shared UI contracts pass; pass actions remain exact"
+        "shared navigation passes; chapter reward chain and resume route are executable"
       ],
       "artifacts": [
-        "project-a/artifacts/ui-title-844x390.png",
-        "project-a/artifacts/ui-battle-pass-runway-844x390.png"
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/fresh_chapter_clear-844x390.png"
       ]
     }
   ],
@@ -36,17 +35,17 @@
   },
   "grader": {
     "kind": "runtime",
-    "name": "shared mobile UI integration assertions",
+    "name": "shared UI and complete chapter-flow integration assertions",
     "version": "1",
     "independence": "not_applicable"
   },
-  "observation": "UI_SMOKE_TESTS_PASS, GOALS_SCREEN_TESTS_OK and MOBILE_SCROLL_INPUT_TESTS_OK at the integrated revision.",
-  "inference": "The accepted title, factory, map and goals contracts remain coherent after the shared input change.",
+  "observation": "UI_SMOKE_TESTS_PASS and CHAPTER_ONE_COMPLETION_TESTS_OK at e8d6596.",
+  "inference": "The chapter result and visible reward rail preserve existing title, base, map and navigation contracts.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "stale",
+  "freshness": "current",
   "limitations": [
-    "Existing headless exit leak warnings remain non-failing."
+    "Headless exit leak warnings remain non-failing."
   ],
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731"

@@ -30,14 +30,14 @@ revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
 state: integrating
 phase: integrating
-iteration: 13/8
-revision: b562758
+iteration: 14/8
+revision: e8d6596
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T15:00:59Z
+updated_at: 2026-07-31T15:17:28Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -57,6 +57,7 @@ terminal: no
 - [ready] scenario_mobile_faction_doctrine_command_deck :: Can the player compare army-wide coordination against faction specialization as two visual command doctrines and understand the permanent consequence without reading dense cards? :: fast=godot --path project-a -s tools/capture_faction_doctrine_deck_scenario.gd :: strict=godot --headless --path project-a -s tools/run_blueprint_screen_tests.gd && godot --path project-a -s tools/capture_faction_doctrine_deck_scenario.gd
 - [ready] scenario_mobile_breakthrough_hero_reveal :: Does the ten-pull breakthrough feel like two permanent toilet heroes joining the resistance, with materials reading as secondary loot instead of ten equal text boxes? :: fast=godot --path project-a -s tools/capture_breakthrough_hero_reveal_scenario.gd :: strict=godot --headless --path project-a -s tools/run_blueprint_screen_tests.gd && godot --path project-a -s tools/capture_breakthrough_hero_reveal_scenario.gd
 - [ready] scenario_mobile_battle_pass_supply_runway :: Can the player drag along one supply line, instantly distinguish claimed, claimable and future tiers, and collect the current rewards without reading a four-column inventory grid? :: fast=godot --path project-a -s tools/capture_battle_pass_runway_scenario.gd :: strict=godot --headless --path project-a -s tools/run_goals_screen_tests.gd && godot --path project-a -s tools/capture_battle_pass_runway_scenario.gd
+- [ready] scenario_mobile_chapter_victory_tableau :: Does clearing the chapter feel like the resistance heroes broke the wall, with rewards and the sole next action understood at a glance? :: fast=godot --path project-a -s tools/capture_chapter_victory_tableau_scenario.gd :: strict=godot --headless --path project-a -s tools/run_chapter_one_completion_tests.gd && godot --path project-a -s tools/capture_chapter_victory_tableau_scenario.gd
 ## Quality Gates
 - [pass] gate_ui_visual :: visual :: The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports. :: evidence=2
 - [pass] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=1
@@ -95,13 +96,16 @@ terminal: no
 - [pass] gate_pass_runway_visual :: visual :: Battle pass reads as a touch-draggable supply runway with a clear current frontier rather than a four-column inventory dashboard. :: evidence=2
 - [pass] gate_pass_runway_runtime :: correctness :: All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim. :: evidence=1
 - [pass] gate_pass_runway_responsive :: correctness :: Current tier, next rewards and sole batch action remain visible and touch-operable at 844x390 and 568x320. :: evidence=1
+- [pass] gate_chapter_victory_visual :: visual :: Chapter victory reads as an awesome two-hero resistance climax rather than a generic result dashboard. :: evidence=2
+- [pass] gate_chapter_victory_runtime :: correctness :: Fresh and replayed chapter victories preserve exact reward visibility and forward action payloads without reopening spent rewards. :: evidence=1
+- [pass] gate_chapter_victory_responsive :: correctness :: Hero tableau, reward icons and sole primary action fit and remain touch-operable at 844x390 and 568x320. :: evidence=1
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
-- [pass] ev_ui_blueprint_integration_responsive_4336f06 :: capture :: gate=gate_ui_responsive :: freshness=stale :: project-a/artifacts/ui-blueprint-tree-844x390.png
-- [pass] ev_ui_blueprint_integration_runtime_4336f06 :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
 - [pass] ev_ui_breakthrough_integration_responsive_5a8d8a4 :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a --script res://tools/capture_breakthrough_hero_reveal_scenario.gd && godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd
 - [pass] ev_ui_breakthrough_integration_runtime_5a8d8a4 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a --script res://tools/run_blueprint_screen_tests.gd && godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd && godot --headless --path project-a --script res://tools/run_ui_focus_tests.gd
+- [pass] ev_ui_chapter_integration_responsive_e8d6596 :: test :: gate=gate_ui_responsive :: freshness=current :: WEB_TOUCH_DRAG_SMOKE_OK plus exact-size chapter victory captures
+- [pass] ev_ui_chapter_integration_runtime_e8d6596 :: test :: gate=gate_ui_runtime :: freshness=current :: UI smoke plus complete chapter-one reward and resume flow
 - [pass] ev_ui_codex_integration_responsive_e1da84a :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: dual-size main-scene capture plus UI smoke geometry assertions
 - [pass] ev_ui_codex_integration_runtime_e1da84a :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
 - [pass] ev_ui_faction_integration_responsive_01bc769 :: capture :: gate=gate_ui_responsive :: freshness=stale :: App Shell dual viewport captures plus compact layout and focus assertions
@@ -114,8 +118,8 @@ terminal: no
 - [pass] ev_ui_growth_integration_runtime_7626daf :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_legion_screen_tests.gd && godot --headless --path . -s tools/run_first_growth_flow_tests.gd && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
 - [pass] ev_ui_integration_responsive_eacfb8b :: runtime_state :: gate=gate_ui_responsive :: freshness=stale :: canonical dual-size capture plus UI smoke geometry assertions
 - [pass] ev_ui_integration_runtime_eacfb8b :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
-- [pass] ev_ui_pass_integration_responsive_b562758 :: test :: gate=gate_ui_responsive :: freshness=current :: GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs plus dual-size focused captures
-- [pass] ev_ui_pass_integration_runtime_b562758 :: test :: gate=gate_ui_runtime :: freshness=current :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; goals and mobile-scroll focused suites
+- [pass] ev_ui_pass_integration_responsive_b562758 :: test :: gate=gate_ui_responsive :: freshness=stale :: GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs plus dual-size focused captures
+- [pass] ev_ui_pass_integration_runtime_b562758 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; goals and mobile-scroll focused suites
 - [pass] ev_ui_touch_integration_responsive_c48c224 :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a --script res://tools/capture_faction_doctrine_deck_scenario.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd
 - [pass] ev_ui_touch_integration_runtime_c48c224 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd && GODOT_WEB_TOUCH_DRAG_ONLY=1 node project-a/tools/run_web_browser_smoke.mjs
 ## Host Capabilities
@@ -128,13 +132,13 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T14:56:41Z :: Current-tier marker resolves the independent critic's only threshold-level frontier ambiguity without changing pass actions or global scroll contracts. Affected gates=['gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].
-- 2026-07-31T14:58:32Z :: Thirty tier identities and exact individual/batch actions pass in the focused shipping fixture.
-- 2026-07-31T14:58:32Z :: Finger drag and hovered wheel move the horizontal-only runway at both mobile landscape sizes.
-- 2026-07-31T14:58:59Z :: Deterministic six-capture evidence and independent 8.8/8.6 re-review jointly pass the visual gate.
-- 2026-07-31T14:59:38Z :: Runtime, responsive and mixed visual gates pass at b562758; independent critic minimum improved from 8.4 to 8.6 after the current-frontier marker.
-- 2026-07-31T14:59:38Z :: Focused mobile battle-pass supply-runway unit accepted; enter the declared shared mobile UI integration checkpoint.
-- 2026-07-31T15:00:59Z :: Shared mobile UI smoke and focused shipping suites pass after the global wheel/touch change.
-- 2026-07-31T15:00:59Z :: Real-browser touch drag and both declared phone landscape sizes pass at the integrated revision.
-summary: scenarios=13 gates=37 evidence=87 current=50 findings=0 iterations=13
+- 2026-07-31T15:15:10Z :: Two-hero chapter tableau, exact-size capture rig and visible one-action welfare handoff are integrated at the shipping revision. Affected gates=['gate_chapter_victory_responsive', 'gate_chapter_victory_runtime', 'gate_chapter_victory_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_ui_visual'].
+- 2026-07-31T15:16:19Z :: Fresh/replay actions, rewards and the visible welfare chain pass the complete chapter flow.
+- 2026-07-31T15:16:19Z :: Exact-size SubViewport captures and touch geometry assertions pass at both target sizes.
+- 2026-07-31T15:16:20Z :: Deterministic captures and independent 8.7/8.6 verdict pass the mixed visual gate.
+- 2026-07-31T15:16:30Z :: All chapter-victory runtime, responsive and mixed visual gates pass at e8d6596; hidden welfare semantics were replaced by a visible one-action chain.
+- 2026-07-31T15:16:30Z :: Focused chapter-victory hero-tableau unit accepted; enter shared mobile UI integration.
+- 2026-07-31T15:17:28Z :: Shared UI and complete chapter reward/resume flow pass at the integrated revision.
+- 2026-07-31T15:17:28Z :: Real-browser touch route and exact phone-size chapter captures pass after the reward-chain repair.
+summary: scenarios=14 gates=40 evidence=93 current=54 findings=0 iterations=14
 ```

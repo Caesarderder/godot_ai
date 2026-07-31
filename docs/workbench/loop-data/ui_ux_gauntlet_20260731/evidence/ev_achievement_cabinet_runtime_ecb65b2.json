@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_achievement_cabinet_runtime_ecb65b2",
   "revision": "ecb65b2",
-  "valid_through_revision": "b562758",
+  "valid_through_revision": "e8d6596",
   "gate_id": "gate_achievement_cabinet_runtime",
   "claim": "Batch and individual achievement claims preserve durable achievement identities while locked and settled states expose no fake action.",
   "scenario_id": "scenario_mobile_achievement_medal_cabinet",

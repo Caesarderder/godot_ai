@@ -1,0 +1,67 @@
+{
+  "evidence_id": "ev_chapter_victory_visual_critic_e8d6596",
+  "revision": "e8d6596",
+  "valid_through_revision": "e8d6596",
+  "gate_id": "gate_chapter_victory_visual",
+  "claim": "Chapter victory reads as an awesome two-hero resistance climax rather than a generic result dashboard.",
+  "scenario_id": "scenario_mobile_chapter_victory_tableau",
+  "execution_id": "chapter_victory_independent_critic_e8d6596",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "independent blind baseline/current dual-size review after exact-size capture repair",
+  "case_results": [
+    {
+      "case_id": "fresh_chapter_clear",
+      "result": "pass",
+      "assertions": [
+        "8.7 at 844 and 8.6 at 568; resistance climax and reward hierarchy clear"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/fresh_chapter_clear-844x390.png",
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/fresh_chapter_clear-568x320.png"
+      ]
+    },
+    {
+      "case_id": "replayed_chapter_clear",
+      "result": "pass",
+      "assertions": [
+        "8.7 at 844 and 8.6 at 568; replay CTA is non-misleading"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/replayed_chapter_clear-844x390.png",
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/replayed_chapter_clear-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "fresh-clear captures",
+    "replay captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent chapter-victory visual critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Baseline 6.3; final candidate 8.7 overall and 8.6 minimum with all target sizes exact and no clipping.",
+  "inference": "The candidate materially improves toilet-man identity and hero-led climax without losing clarity.",
+  "result": "pass",
+  "confidence": 0.97,
+  "freshness": "current",
+  "limitations": [
+    "Secondary base action remains; medal emblem repeats; tableau is static."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

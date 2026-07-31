@@ -1,0 +1,62 @@
+{
+  "evidence_id": "ev_chapter_victory_runtime_e8d6596",
+  "revision": "e8d6596",
+  "valid_through_revision": "e8d6596",
+  "gate_id": "gate_chapter_victory_runtime",
+  "claim": "Fresh and replayed chapter victories preserve exact reward visibility and forward action payloads without reopening spent rewards.",
+  "scenario_id": "scenario_mobile_chapter_victory_tableau",
+  "execution_id": "chapter_victory_runtime_e8d6596",
+  "evidence_type": "test",
+  "artifact_or_command": "chapter completion, battle result, goals and focused tableau scenario suites",
+  "case_results": [
+    {
+      "case_id": "fresh_chapter_clear",
+      "result": "pass",
+      "assertions": [
+        "exact welfare action; visible claim, case and reinforcement chain; reward metrics preserved"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/fresh_chapter_clear-844x390.png"
+      ]
+    },
+    {
+      "case_id": "replayed_chapter_clear",
+      "result": "pass",
+      "assertions": [
+        "exact map_stage stage_2_1 payload; no spent reward action"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-chapter-victory-tableau/replayed_chapter_clear-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "fresh-clear captures",
+    "replay captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "chapter victory and durable reward-chain assertions",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "CHAPTER_ONE_COMPLETION_TESTS_OK, BATTLE_RESULT_SCREEN_TESTS_OK, GOALS_SCREEN_TESTS_OK and CHAPTER_VICTORY_TABLEAU_SCENARIO_OK.",
+  "inference": "The hero-led result preserves exact forward actions and repairs the previously hidden welfare chain.",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_pass_runway_responsive_b562758",
   "revision": "b562758",
-  "valid_through_revision": "b562758",
+  "valid_through_revision": "e8d6596",
   "gate_id": "gate_pass_runway_responsive",
   "claim": "Current tier, next rewards and sole batch action remain visible and touch-operable at 844x390 and 568x320.",
   "scenario_id": "scenario_mobile_battle_pass_supply_runway",

@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_doctrine_visual_critic_c48c224",
   "revision": "c48c224",
-  "valid_through_revision": "b562758",
+  "valid_through_revision": "e8d6596",
   "gate_id": "gate_doctrine_deck_visual",
   "claim": "Tier-2 doctrine selection reads as a visual command-deck choice rather than a dense settings form.",
   "scenario_id": "scenario_mobile_faction_doctrine_command_deck",
