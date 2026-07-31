@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "early_collection-844x390.png",
+    "early_collection-568x320.png",
+    "blueprint_focus-844x390.png",
+    "blueprint_focus-568x320.png",
+    "mixed_collection-844x390.png",
+    "mixed_collection-568x320.png"
+  ],
+  "assertions": [
+    "collection progress remains visible",
+    "collected, blueprint-ready and unknown states remain distinct",
+    "every character choice remains reachable",
+    "interactive gallery targets remain touch sized"
+  ],
+  "cases": [
+    "early_collection",
+    "blueprint_focus",
+    "mixed_collection"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping LegionScreen through configure and public signals",
+  "scenario_id": "scenario_codex_gallery_identity",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}

@@ -37,7 +37,7 @@ run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T12:04:51Z
+updated_at: 2026-07-31T12:13:23Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -48,6 +48,7 @@ terminal: no
 - [ready] scenario_ui_path_integration :: Does the accepted map remain coherent with the simplified title and world-first factory without breaking navigation? :: fast=godot --path project-a -s tools/capture_ui_review.gd :: strict=godot --headless --path project-a -s tools/run_ui_smoke_tests.gd
 - [ready] scenario_factory_world_hud :: Does the factory world remain dominant while action, facility and construction controls appear only when needed? :: fast=godot --path project-a -s tools/capture_factory_hud_scenario.gd :: strict=godot --headless --path project-a -s tools/run_factory_screen_tests.gd && godot --path project-a -s tools/capture_factory_hud_scenario.gd
 - [ready] scenario_legion_formation_identity :: Can the player identify deployed toilet characters, the recommended open position and the next formation action without reading a table? :: fast=godot --path project-a -s tools/capture_legion_formation_scenario.gd :: strict=godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --path project-a -s tools/capture_legion_formation_scenario.gd
+- [ready] scenario_codex_gallery_identity :: Can the player distinguish collected, blueprint-ready and unknown toilet characters and choose one to inspect without reading a card table? :: fast=godot --path project-a -s tools/capture_codex_gallery_scenario.gd :: strict=godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --path project-a -s tools/capture_codex_gallery_scenario.gd
 ## Quality Gates
 - [pass] gate_ui_visual :: visual :: The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports. :: evidence=2
 - [pass] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=1
@@ -59,6 +60,9 @@ terminal: no
 - [pass] gate_legion_visual :: visual :: The formation screen reads as a six-character toilet resistance squad rather than a generic roster table. :: evidence=2
 - [pass] gate_legion_runtime :: correctness :: Formation selection and deployment preserve shipping tab and action signals across empty, selected and full squad states. :: evidence=1
 - [pass] gate_legion_responsive :: correctness :: Formation portraits, six slots and the primary action remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
+- [pending] gate_codex_visual :: visual :: The codex reads as a collectible toilet-character gallery rather than a generic card table. :: evidence=0
+- [pending] gate_codex_runtime :: correctness :: Codex selection and research routing preserve stable archetype and recipe identities. :: evidence=0
+- [pending] gate_codex_responsive :: correctness :: Focused portrait, gallery choices and the primary action remain visible and touch-sized at 844x390 and 568x320. :: evidence=0
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
@@ -92,7 +96,6 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T12:01:45Z :: Legion formation now uses stable archetype WebP portraits, compact icon tools and contextual candidate cards. Affected gates=['gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_ui_visual'].
 - 2026-07-31T12:04:15Z :: Focused LegionScreen signals and stable portrait lookup pass.
 - 2026-07-31T12:04:15Z :: Six slots, portrait candidates and primary actions fit both declared viewports.
 - 2026-07-31T12:04:15Z :: Deterministic A/B bundle plus fresh independent critic pass at 8.4.
@@ -100,5 +103,6 @@ terminal: no
 - 2026-07-31T12:04:16Z :: Canonical integration and focused compact captures retain critical controls.
 - 2026-07-31T12:04:42Z :: Legion formation runtime, responsive, mixed visual and integration gates pass.
 - 2026-07-31T12:04:43Z :: Publish the accepted legion slice and preserve the next continuation anchor.
-summary: scenarios=4 gates=10 evidence=29 current=12 findings=0 iterations=3
+- 2026-07-31T12:12:08Z :: Add the next bounded codex gallery work unit through the append-only managed route.
+summary: scenarios=5 gates=13 evidence=29 current=12 findings=0 iterations=3
 ```

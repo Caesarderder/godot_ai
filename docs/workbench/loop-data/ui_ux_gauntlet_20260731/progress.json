@@ -17,6 +17,9 @@
     "gate_ui_responsive"
   ],
   "gate_status": {
+    "gate_codex_responsive": "pending",
+    "gate_codex_runtime": "pending",
+    "gate_codex_visual": "pending",
     "gate_factory_responsive": "pass",
     "gate_factory_runtime": "pass",
     "gate_factory_visual": "pass",
@@ -80,7 +83,7 @@
       "ui_ux"
     ],
     "next_action": "Publish the accepted legion slice and preserve the next continuation anchor.",
-    "updated_at": "2026-07-31T12:04:43Z"
+    "updated_at": "2026-07-31T12:12:08Z"
   },
   "decisions": [
     {
@@ -407,6 +410,11 @@
       "evidence_ids": [
         "ev_legion_visual_critic_eacfb8b"
       ]
+    },
+    {
+      "at": "2026-07-31T12:12:08Z",
+      "decision": "Add the next bounded codex gallery work unit through the append-only managed route.",
+      "evidence_ids": []
     }
   ]
 }

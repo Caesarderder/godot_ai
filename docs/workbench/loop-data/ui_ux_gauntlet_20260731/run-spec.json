@@ -46,7 +46,8 @@
       "gate_ids": [
         "gate_ui_visual",
         "gate_factory_visual",
-        "gate_legion_visual"
+        "gate_legion_visual",
+        "gate_codex_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -82,7 +83,9 @@
         "gate_ui_runtime",
         "gate_player_learning",
         "gate_legion_visual",
-        "gate_legion_runtime"
+        "gate_legion_runtime",
+        "gate_codex_visual",
+        "gate_codex_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -160,7 +163,8 @@
       "gate_ids": [
         "gate_ui_responsive",
         "gate_factory_responsive",
-        "gate_legion_responsive"
+        "gate_legion_responsive",
+        "gate_codex_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -175,7 +179,9 @@
         "gate_ui_runtime",
         "gate_ui_responsive",
         "gate_factory_runtime",
-        "gate_legion_runtime"
+        "gate_legion_runtime",
+        "gate_codex_runtime",
+        "gate_codex_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -875,6 +881,191 @@
       "limitations": [
         "Static captures cannot prove player preference or direct touch feel."
       ]
+    },
+    {
+      "scenario_id": "scenario_codex_gallery_identity",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping LegionScreen codex as a character-collection gallery without navigating the production main scene.",
+      "player_question": "Can the player distinguish collected, blueprint-ready and unknown toilet characters and choose one to inspect without reading a card table?",
+      "gate_ids": [
+        "gate_codex_visual",
+        "gate_codex_runtime",
+        "gate_codex_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_codex_gallery_scenario.gd and run_legion_screen_tests.gd",
+        "shipping_surface": "legion_screen.gd codex gallery and slg_main codex view projection",
+        "public_adapter": "LegionScreen.configure plus hero_selected and action_requested signals"
+      },
+      "fixture": {
+        "subject_parameter": "codex_state",
+        "reuse_scope": "early collection, blueprint-ready focus and developed mixed collection",
+        "extension_contract": "add a codex-state dictionary to the matrix; never duplicate hero, blueprint, fragment or faction rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate legion_screen.tscn directly with deterministic shipping codex dictionaries",
+        "state": "known 24-character catalog with stable archetype IDs, ratings, roles, factions, fragments and discovery states",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_early_collection",
+          "at": "case start",
+          "action": "configure Gman as collected with the rest undiscovered"
+        },
+        {
+          "stimulus_id": "focus_blueprint",
+          "at": "after early collection",
+          "action": "select an owned assault blueprint and expose its research route"
+        },
+        {
+          "stimulus_id": "show_mixed_collection",
+          "at": "after blueprint focus",
+          "action": "configure collected, blueprint-ready and unknown characters across ratings and factions"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "codex_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-codex-gallery/manifest.json"
+        },
+        {
+          "observation_id": "codex_standard",
+          "source": "fixed 844x390 captures",
+          "window": "early, blueprint and mixed states",
+          "artifact": "project-a/artifacts/scenario-codex-gallery"
+        },
+        {
+          "observation_id": "codex_compact",
+          "source": "fixed 568x320 captures",
+          "window": "early, blueprint and mixed states",
+          "artifact": "project-a/artifacts/scenario-codex-gallery"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "early_collection",
+          "state": "Gman collected with twenty-three unknown signals",
+          "stimulus_ids": [
+            "show_early_collection"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "Gman is the dominant discovered character",
+            "unknown silhouettes invite collection without exposing fake identity",
+            "collection progress remains visible"
+          ],
+          "observation_ids": [
+            "codex_manifest",
+            "codex_standard",
+            "codex_compact"
+          ]
+        },
+        {
+          "case_id": "blueprint_focus",
+          "state": "assault blueprint owned but not researched",
+          "stimulus_ids": [
+            "focus_blueprint"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "selected portrait and state are visually explicit",
+            "research route is the sole dominant action",
+            "gallery context remains visible"
+          ],
+          "observation_ids": [
+            "codex_manifest",
+            "codex_standard",
+            "codex_compact"
+          ]
+        },
+        {
+          "case_id": "mixed_collection",
+          "state": "multiple collected, blueprint-ready and unknown characters",
+          "stimulus_ids": [
+            "show_mixed_collection"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "three discovery states differ beyond colour",
+            "portrait identity dominates over copy",
+            "every character remains reachable through one horizontal gallery"
+          ],
+          "observation_ids": [
+            "codex_manifest",
+            "codex_standard",
+            "codex_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reconfigure a fresh LegionScreen for each state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "early collection captures",
+          "blueprint focus captures",
+          "mixed collection captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed view dictionaries with no domain timer",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_codex_gallery_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --path project-a -s tools/capture_codex_gallery_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and LegionScreen after capture",
+      "failure_conditions": [
+        "codex reads as a generic card grid",
+        "character portraits are subordinate to labels",
+        "discovery states rely on colour alone",
+        "selected detail hides collection context",
+        "touch target drops below 44 px"
+      ],
+      "limitations": [
+        "Static captures cannot prove collection desire or direct touch feel."
+      ]
     }
   ],
   "integration_policy": {
@@ -1064,6 +1255,59 @@
         "candidate detail remains inside the compact viewport"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_codex_visual",
+      "profile": "visual",
+      "claim": "The codex reads as a collectible toilet-character gallery rather than a generic card table.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_codex_gallery_identity"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "one focused character portrait dominates",
+        "the horizontal gallery preserves collection context",
+        "collected, blueprint-ready and unknown states have distinct silhouettes",
+        "copy is subordinate to character art"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_codex_runtime",
+      "profile": "correctness",
+      "claim": "Codex selection and research routing preserve stable archetype and recipe identities.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_codex_gallery_identity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "selection emits the exact archetype ID",
+        "blueprint research emits the exact recipe ID",
+        "portrait lookup follows stable archetype IDs",
+        "undiscovered entries cannot expose unavailable actions"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_codex_responsive",
+      "profile": "correctness",
+      "claim": "Focused portrait, gallery choices and the primary action remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_codex_gallery_identity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "gallery choices remain at least 44 px",
+        "focused detail remains inside the compact viewport",
+        "primary action never overlaps persistent navigation"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -1084,6 +1328,12 @@
       "surface": "title/base/map composition and main UI route",
       "public_contract": "existing main-scene navigation and UI smoke fixture",
       "coupling": "integration_only"
+    },
+    {
+      "owner": "codex gallery work-unit owner",
+      "surface": "LegionScreen codex UI plus dedicated focused fixture",
+      "public_contract": "LegionScreen.configure, hero_selected and action_requested",
+      "coupling": "coupled"
     }
   ],
   "budgets": {
