@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_chapter_victory_responsive_e8d6596",
   "revision": "e8d6596",
-  "valid_through_revision": "3b797a9",
+  "valid_through_revision": "ee79abe",
   "gate_id": "gate_chapter_victory_responsive",
   "claim": "Hero tableau, reward icons and sole primary action fit and remain touch-operable at 844x390 and 568x320.",
   "scenario_id": "scenario_mobile_chapter_victory_tableau",

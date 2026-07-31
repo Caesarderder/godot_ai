@@ -1,0 +1,32 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 21,
+  "work_unit": "mobile battle-pass gesture runway",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/goals_screen.gd",
+    "project-a/tools/capture_battle_pass_runway_scenario.gd"
+  ],
+  "evidence_ids": [
+    "ev_pass_runway_runtime_ee79abe",
+    "ev_pass_runway_responsive_ee79abe",
+    "ev_pass_runway_visual_runtime_ee79abe",
+    "ev_pass_runway_visual_critic_ee79abe",
+    "ev_ui_runtime_ee79abe",
+    "ev_ui_responsive_ee79abe"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [
+    "Independent critic rejected 6b9be7c at 7.8 because boxed arrows covered reward content and looked tappable."
+  ],
+  "rejected_approaches": [
+    "Keep the native gray desktop scrollbar.",
+    "Overlay boxed arrows directly on reward cards.",
+    "Use the exit-door raster icon as a drag affordance.",
+    "Add explanatory drag text to the compact HUD."
+  ],
+  "next_action": "Close the runway unit, sync Workbench, and continue toward the remaining target-player learning gate.",
+  "blocker": null
+}

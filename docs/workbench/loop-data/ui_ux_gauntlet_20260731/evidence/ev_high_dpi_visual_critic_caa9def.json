@@ -3,7 +3,7 @@
   "evidence_id": "ev_high_dpi_visual_critic_caa9def",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "caa9def",
-  "valid_through_revision": "3b797a9",
+  "valid_through_revision": "ee79abe",
   "gate_id": "gate_high_dpi_visual",
   "claim": "The factory world, Chinese HUD text and raster icons look materially crisper at DPR 2 without changing the accepted composition.",
   "scenario_id": "scenario_high_dpi_web_clarity",

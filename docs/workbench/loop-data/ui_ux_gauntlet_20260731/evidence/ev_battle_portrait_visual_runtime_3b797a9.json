@@ -3,7 +3,7 @@
   "evidence_id": "ev_battle_portrait_visual_runtime_3b797a9",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "3b797a9",
-  "valid_through_revision": "3b797a9",
+  "valid_through_revision": "ee79abe",
   "gate_id": "gate_battle_portrait_visual",
   "claim": "Battle unit state reads as a cohesive portrait-led mobile combat HUD instead of a text-heavy HP/EN debug table.",
   "scenario_id": "scenario_battle_portrait_hud",

@@ -3,7 +3,7 @@
   "evidence_id": "ev_war_zone_gesture_visual_runtime_e43fe45",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "e43fe45",
-  "valid_through_revision": "3b797a9",
+  "valid_through_revision": "ee79abe",
   "gate_id": "gate_war_zone_gesture_visual",
   "claim": "The campaign map reads as an explorable occupied city route with cohesive raster landmark states and world-first hierarchy.",
   "scenario_id": "scenario_war_zone_gesture_icons",

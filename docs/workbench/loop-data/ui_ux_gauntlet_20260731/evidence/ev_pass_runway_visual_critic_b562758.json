@@ -70,7 +70,7 @@
   "inference": "The candidate clears the 8.4 per-capture floor and communicates progression and reward state without color alone.",
   "result": "pass",
   "confidence": 0.95,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Thin scrollbar remains a weak direct-touch affordance; static images cannot prove gesture feel."
   ],

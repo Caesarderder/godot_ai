@@ -69,7 +69,7 @@
   "inference": "Deterministic artifacts are suitable for the independent visual verdict.",
   "result": "pass",
   "confidence": 0.99,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Capture audit is not an independent aesthetic judgment."
   ],

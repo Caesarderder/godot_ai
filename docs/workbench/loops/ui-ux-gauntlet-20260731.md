@@ -30,14 +30,14 @@ revision 的证据。全部运行见 [KM:map.caesar-loop-runs](index.md)。
 title: Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.
 state: integrating
 phase: integrating
-iteration: 20/8
-revision: 3b797a9
+iteration: 21/8
+revision: ee79abe
 active_unit: —
 run_dir: docs/workbench/loop-data/ui_ux_gauntlet_20260731
 run_spec: docs/workbench/loop-data/ui_ux_gauntlet_20260731/run-spec.json
 progress: docs/workbench/loop-data/ui_ux_gauntlet_20260731/progress.json
 knowledge_node: docs/workbench/loops/ui-ux-gauntlet-20260731.md
-updated_at: 2026-07-31T16:33:46Z
+updated_at: 2026-07-31T16:43:41Z
 terminal: no
 ## Player Outcome
 - target: first-time mobile landscape light-SLG player familiar with anime city-war imagery
@@ -66,8 +66,8 @@ terminal: no
 - [ready] scenario_global_mobile_scroll :: Can I drag lists naturally on a phone and use the wheel on desktop without accidentally activating a card? :: fast=godot --headless --path project-a --script tools/run_mobile_scroll_input_tests.gd :: strict=godot --headless --path project-a --script tools/run_mobile_scroll_input_tests.gd && godot --headless --path project-a --script tools/run_ui_smoke_tests.gd
 ## Quality Gates
 - [pass] gate_ui_visual :: visual :: The world-first UI has strong character identity, spatial depth and an exploration-led hierarchy at both target viewports. :: evidence=2
-- [stale] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=0
-- [stale] gate_ui_responsive :: correctness :: All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320. :: evidence=0
+- [pass] gate_ui_runtime :: correctness :: Title, factory and war-zone actions use shipping state and navigation without regressions. :: evidence=1
+- [pass] gate_ui_responsive :: correctness :: All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320. :: evidence=1
 - [pass] gate_factory_visual :: visual :: The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard. :: evidence=2
 - [pass] gate_factory_runtime :: correctness :: Factory HUD controls preserve shipping panel and semantic action signals across mission, facility, build and placement states. :: evidence=1
 - [pass] gate_factory_responsive :: correctness :: Factory world targets and contextual controls remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
@@ -100,7 +100,7 @@ terminal: no
 - [pass] gate_breakthrough_reveal_runtime :: correctness :: Breakthrough result preserves all reward identities and emits the exact open_legion handoff without exposing a repeat claim. :: evidence=1
 - [pass] gate_breakthrough_reveal_responsive :: correctness :: Both permanent heroes, secondary loot and the legion handoff remain visible and touch-sized at 844x390 and 568x320. :: evidence=1
 - [pass] gate_pass_runway_visual :: visual :: Battle pass reads as a touch-draggable supply runway with a clear current frontier rather than a four-column inventory dashboard. :: evidence=2
-- [stale] gate_pass_runway_runtime :: correctness :: All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim. :: evidence=0
+- [pass] gate_pass_runway_runtime :: correctness :: All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim. :: evidence=1
 - [pass] gate_pass_runway_responsive :: correctness :: Current tier, next rewards and sole batch action remain visible and touch-operable at 844x390 and 568x320. :: evidence=1
 - [pass] gate_chapter_victory_visual :: visual :: Chapter victory reads as an awesome two-hero resistance climax rather than a generic result dashboard. :: evidence=2
 - [pass] gate_chapter_victory_runtime :: correctness :: Fresh and replayed chapter victories preserve exact reward visibility and forward action payloads without reopening spent rewards. :: evidence=1
@@ -124,8 +124,6 @@ terminal: no
 ## Open Findings
 - [clear] 无未关闭 finding
 ## Evidence
-- [pass] ev_ui_gauntlet_responsive_baseline_16b05bb :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a -s tools/capture_war_zone_exploration.gd
-- [pass] ev_ui_gauntlet_runtime_baseline_16b05bb :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_war_zone_screen_tests.gd
 - [fail] ev_ui_gauntlet_visual_baseline_16b05bb :: capture :: gate=gate_ui_visual :: freshness=stale :: project-a/artifacts/scenario-war-zone-exploration
 - [pass] ev_ui_growth_integration_responsive_7626daf :: capture :: gate=gate_ui_responsive :: freshness=stale :: cd project-a && godot --path . -s tools/capture_first_growth_duel_scenario.gd
 - [pass] ev_ui_growth_integration_runtime_7626daf :: test :: gate=gate_ui_runtime :: freshness=stale :: cd project-a && godot --headless --path . -s tools/run_legion_screen_tests.gd && godot --headless --path . -s tools/run_first_growth_flow_tests.gd && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd
@@ -135,6 +133,8 @@ terminal: no
 - [pass] ev_ui_integration_runtime_eacfb8b :: runtime_state :: gate=gate_ui_runtime :: freshness=stale :: run_ui_smoke_tests.gd and capture_ui_review.gd
 - [pass] ev_ui_pass_integration_responsive_b562758 :: test :: gate=gate_ui_responsive :: freshness=stale :: GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs plus dual-size focused captures
 - [pass] ev_ui_pass_integration_runtime_b562758 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; goals and mobile-scroll focused suites
+- [pass] ev_ui_responsive_ee79abe :: runtime_state :: gate=gate_ui_responsive :: freshness=current :: dual-size runway captures, shared UI smoke and clean Web touch smoke
+- [pass] ev_ui_runtime_ee79abe :: runtime_state :: gate=gate_ui_runtime :: freshness=current :: godot --headless --path project-a --script tools/run_ui_smoke_tests.gd plus clean Web export touch smoke
 - [pass] ev_ui_touch_integration_responsive_c48c224 :: capture :: gate=gate_ui_responsive :: freshness=stale :: godot --path project-a --script res://tools/capture_faction_doctrine_deck_scenario.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd
 - [pass] ev_ui_touch_integration_runtime_c48c224 :: test :: gate=gate_ui_runtime :: freshness=stale :: godot --headless --path project-a --script res://tools/run_ui_smoke_tests.gd && godot --headless --path project-a --script res://tools/run_mobile_scroll_input_tests.gd && GODOT_WEB_TOUCH_DRAG_ONLY=1 node project-a/tools/run_web_browser_smoke.mjs
 - [fail] ev_war_zone_gesture_critic_fail_a0b49c8 :: model_critique :: gate=gate_war_zone_gesture_visual :: freshness=stale :: Independent review of first candidate dual-size map captures against baseline
@@ -154,13 +154,13 @@ terminal: no
 - [supported] persistent_run_state :: Managed Caesar JSON ledgers and Workbench projection are writable.
 - [unsupported] target_player_access :: No uncoached target player is available to the host.
 ## Decisions
-- 2026-07-31T16:31:24Z :: Runtime captures and an independent critic both accept the portrait-led HUD.
-- 2026-07-31T16:31:24Z :: Portrait HUD has current runtime, responsive and independent visual evidence.
-- 2026-07-31T16:31:24Z :: Battle portrait HUD unit accepted; global gesture input is the next user-raised gap.
-- 2026-07-31T16:32:53Z :: User reported that the Web-mobile UI does not reliably support finger drag and requires desktop wheel behavior.
-- 2026-07-31T16:32:53Z :: Start a focused acceptance unit for the user-reported gesture gap.
-- 2026-07-31T16:33:26Z :: Both phone drag axes, both desktop wheel paths and accidental child activation are covered by current shipping-adapter assertions.
-- 2026-07-31T16:33:26Z :: The user-reported gesture gap has deterministic runtime evidence at the pushed revision.
-- 2026-07-31T16:33:26Z :: Global gesture unit accepted; keep the challenge loop active for browser feedback and the stale runway contract.
-summary: scenarios=20 gates=56 evidence=123 current=72 findings=0 iterations=20
+- 2026-07-31T16:42:02Z :: Begin iteration 21 acceptance using the existing parameterized runway scenario.
+- 2026-07-31T16:43:40Z :: All thirty tier identities and exact claim commands pass the current focused scenario.
+- 2026-07-31T16:43:40Z :: Dual-size captures and a clean Web touch smoke prove the current mobile interaction surface.
+- 2026-07-31T16:43:40Z :: Shipping captures and an independent critic accept the corrected non-overlapping gesture runway.
+- 2026-07-31T16:43:41Z :: Shared UI smoke and clean Web touch boot pass at the integrated revision.
+- 2026-07-31T16:43:41Z :: Affected shared UI actions fit both accepted phone sizes and accept browser touch input.
+- 2026-07-31T16:43:41Z :: Iteration 21 has current runtime, responsive, browser-touch and independent visual evidence.
+- 2026-07-31T16:43:41Z :: Battle-pass gesture runway accepted; only the target-player learning gate remains stale.
+summary: scenarios=20 gates=56 evidence=129 current=75 findings=0 iterations=21
 ```

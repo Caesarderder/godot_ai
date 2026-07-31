@@ -2,8 +2,8 @@
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
   "state": "integrating",
-  "revision": "3b797a9",
-  "iteration": 20,
+  "revision": "ee79abe",
+  "iteration": 21,
   "active_work_unit": null,
   "frozen_gates": [
     "gate_ui_visual",
@@ -37,8 +37,6 @@
     "gate_breakthrough_reveal_runtime",
     "gate_breakthrough_reveal_responsive",
     "gate_breakthrough_reveal_visual",
-    "gate_pass_runway_responsive",
-    "gate_pass_runway_visual",
     "gate_chapter_victory_runtime",
     "gate_chapter_victory_responsive",
     "gate_chapter_victory_visual",
@@ -57,7 +55,12 @@
     "gate_battle_portrait_runtime",
     "gate_battle_portrait_responsive",
     "gate_battle_portrait_visual",
-    "gate_global_mobile_scroll_runtime"
+    "gate_global_mobile_scroll_runtime",
+    "gate_pass_runway_runtime",
+    "gate_pass_runway_responsive",
+    "gate_pass_runway_visual",
+    "gate_ui_runtime",
+    "gate_ui_responsive"
   ],
   "gate_status": {
     "gate_achievement_cabinet_responsive": "pass",
@@ -107,11 +110,11 @@
     "gate_legion_runtime": "pass",
     "gate_legion_visual": "pass",
     "gate_pass_runway_responsive": "pass",
-    "gate_pass_runway_runtime": "stale",
+    "gate_pass_runway_runtime": "pass",
     "gate_pass_runway_visual": "pass",
     "gate_player_learning": "stale",
-    "gate_ui_responsive": "stale",
-    "gate_ui_runtime": "stale",
+    "gate_ui_responsive": "pass",
+    "gate_ui_runtime": "pass",
     "gate_ui_visual": "pass",
     "gate_war_zone_gesture_responsive": "pass",
     "gate_war_zone_gesture_runtime": "pass",
@@ -241,7 +244,13 @@
     "ev_battle_portrait_responsive_3b797a9",
     "ev_battle_portrait_visual_runtime_3b797a9",
     "ev_battle_portrait_visual_critic_3b797a9",
-    "ev_global_mobile_scroll_runtime_3b797a9"
+    "ev_global_mobile_scroll_runtime_3b797a9",
+    "ev_pass_runway_runtime_ee79abe",
+    "ev_pass_runway_responsive_ee79abe",
+    "ev_pass_runway_visual_runtime_ee79abe",
+    "ev_pass_runway_visual_critic_ee79abe",
+    "ev_ui_runtime_ee79abe",
+    "ev_ui_responsive_ee79abe"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -262,8 +271,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "Global gesture unit accepted; keep the challenge loop active for browser feedback and the stale runway contract.",
-    "updated_at": "2026-07-31T16:33:26Z"
+    "next_action": "Battle-pass gesture runway accepted; only the target-player learning gate remains stale.",
+    "updated_at": "2026-07-31T16:43:41Z"
   },
   "decisions": [
     {
@@ -3998,6 +4007,193 @@
     {
       "at": "2026-07-31T16:33:26Z",
       "decision": "Global gesture unit accepted; keep the challenge loop active for browser feedback and the stale runway contract.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T16:42:02Z",
+      "decision": "Battle-pass runway presentation and interaction affordance changed; shared GoalsScreen integration evidence must be refreshed at the pushed revision. Affected gates=['gate_pass_runway_responsive', 'gate_pass_runway_runtime', 'gate_pass_runway_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_achievement_cabinet_responsive', 'gate_achievement_cabinet_runtime', 'gate_achievement_cabinet_visual', 'gate_action_compass_responsive', 'gate_action_compass_runtime', 'gate_action_compass_visual', 'gate_battle_portrait_responsive', 'gate_battle_portrait_runtime', 'gate_battle_portrait_visual', 'gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_boss_briefing_responsive', 'gate_boss_briefing_runtime', 'gate_boss_briefing_visual', 'gate_breakthrough_reveal_responsive', 'gate_breakthrough_reveal_runtime', 'gate_breakthrough_reveal_visual', 'gate_chapter_victory_responsive', 'gate_chapter_victory_runtime', 'gate_chapter_victory_visual', 'gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_doctrine_deck_responsive', 'gate_doctrine_deck_runtime', 'gate_doctrine_deck_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_depth_responsive', 'gate_factory_depth_runtime', 'gate_factory_depth_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_global_mobile_scroll_runtime', 'gate_growth_duel_responsive', 'gate_growth_duel_runtime', 'gate_growth_duel_visual', 'gate_high_dpi_responsive', 'gate_high_dpi_runtime', 'gate_high_dpi_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual', 'gate_war_zone_gesture_responsive', 'gate_war_zone_gesture_runtime', 'gate_war_zone_gesture_visual'].",
+      "evidence_ids": [
+        "ev_achievement_cabinet_responsive_ecb65b2",
+        "ev_achievement_cabinet_runtime_ecb65b2",
+        "ev_achievement_cabinet_visual_critic_ecb65b2",
+        "ev_achievement_cabinet_visual_runtime_ecb65b2",
+        "ev_action_compass_responsive_07e7e65",
+        "ev_action_compass_runtime_07e7e65",
+        "ev_action_compass_visual_critic_07e7e65",
+        "ev_action_compass_visual_runtime_07e7e65",
+        "ev_battle_portrait_critic_fail_bc0852d",
+        "ev_battle_portrait_responsive_3b797a9",
+        "ev_battle_portrait_runtime_3b797a9",
+        "ev_battle_portrait_visual_baseline_e43fe45",
+        "ev_battle_portrait_visual_critic_3b797a9",
+        "ev_battle_portrait_visual_runtime_3b797a9",
+        "ev_blueprint_forge_responsive_4336f06",
+        "ev_blueprint_forge_runtime_4336f06",
+        "ev_blueprint_forge_visual_critic_4336f06",
+        "ev_blueprint_forge_visual_runtime_4336f06",
+        "ev_boss_briefing_responsive_059157f",
+        "ev_boss_briefing_runtime_059157f",
+        "ev_boss_briefing_visual_critic_059157f",
+        "ev_boss_briefing_visual_runtime_059157f",
+        "ev_breakthrough_responsive_5a8d8a4",
+        "ev_breakthrough_runtime_5a8d8a4",
+        "ev_breakthrough_visual_critic_5a8d8a4",
+        "ev_breakthrough_visual_runtime_5a8d8a4",
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_chapter_victory_responsive_e8d6596",
+        "ev_chapter_victory_runtime_e8d6596",
+        "ev_chapter_victory_visual_critic_e8d6596",
+        "ev_chapter_victory_visual_runtime_e8d6596",
+        "ev_codex_responsive_e1da84a",
+        "ev_codex_runtime_e1da84a",
+        "ev_codex_visual_critic_e1da84a",
+        "ev_codex_visual_runtime_e1da84a",
+        "ev_doctrine_responsive_83972d3",
+        "ev_doctrine_responsive_c48c224",
+        "ev_doctrine_runtime_83972d3",
+        "ev_doctrine_runtime_c48c224",
+        "ev_doctrine_visual_critic_c48c224",
+        "ev_doctrine_visual_runtime_c48c224",
+        "ev_faction_choice_model_critic_01bc769",
+        "ev_faction_choice_responsive_01bc769",
+        "ev_faction_choice_runtime_01bc769",
+        "ev_faction_choice_visual_critic_01bc769",
+        "ev_faction_choice_visual_diff_01bc769",
+        "ev_faction_choice_visual_runtime_01bc769",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_factory_depth_responsive_301d08a",
+        "ev_factory_depth_runtime_301d08a",
+        "ev_factory_depth_visual_critic_301d08a",
+        "ev_factory_depth_visual_runtime_301d08a",
+        "ev_factory_responsive_2e23dd4",
+        "ev_factory_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4",
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_world_critic_fail_09516dd",
+        "ev_global_mobile_scroll_runtime_3b797a9",
+        "ev_growth_duel_responsive_7626daf",
+        "ev_growth_duel_runtime_7626daf",
+        "ev_growth_duel_visual_critic_7626daf",
+        "ev_growth_duel_visual_runtime_7626daf",
+        "ev_high_dpi_responsive_caa9def",
+        "ev_high_dpi_runtime_caa9def",
+        "ev_high_dpi_visual_critic_caa9def",
+        "ev_high_dpi_visual_runtime_caa9def",
+        "ev_legion_baseline_responsive_2e23dd4",
+        "ev_legion_baseline_runtime_2e23dd4",
+        "ev_legion_baseline_visual_2e23dd4",
+        "ev_legion_responsive_eacfb8b",
+        "ev_legion_runtime_eacfb8b",
+        "ev_legion_visual_critic_eacfb8b",
+        "ev_legion_visual_runtime_eacfb8b",
+        "ev_pass_runway_responsive_b562758",
+        "ev_pass_runway_runtime_b562758",
+        "ev_pass_runway_visual_critic_b562758",
+        "ev_pass_runway_visual_runtime_b562758",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_achievement_integration_responsive_ecb65b2",
+        "ev_ui_achievement_integration_runtime_ecb65b2",
+        "ev_ui_action_integration_responsive_07e7e65",
+        "ev_ui_action_integration_runtime_07e7e65",
+        "ev_ui_blueprint_integration_responsive_4336f06",
+        "ev_ui_blueprint_integration_runtime_4336f06",
+        "ev_ui_breakthrough_integration_responsive_5a8d8a4",
+        "ev_ui_breakthrough_integration_runtime_5a8d8a4",
+        "ev_ui_chapter_integration_responsive_e8d6596",
+        "ev_ui_chapter_integration_runtime_e8d6596",
+        "ev_ui_codex_integration_responsive_e1da84a",
+        "ev_ui_codex_integration_runtime_e1da84a",
+        "ev_ui_drag_integration_responsive_874a992",
+        "ev_ui_drag_integration_runtime_874a992",
+        "ev_ui_faction_integration_responsive_01bc769",
+        "ev_ui_faction_integration_runtime_01bc769",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb",
+        "ev_ui_growth_integration_responsive_7626daf",
+        "ev_ui_growth_integration_runtime_7626daf",
+        "ev_ui_hidpi_integration_responsive_caa9def",
+        "ev_ui_hidpi_integration_runtime_caa9def",
+        "ev_ui_integration_responsive_eacfb8b",
+        "ev_ui_integration_runtime_eacfb8b",
+        "ev_ui_pass_integration_responsive_b562758",
+        "ev_ui_pass_integration_runtime_b562758",
+        "ev_ui_touch_integration_responsive_c48c224",
+        "ev_ui_touch_integration_runtime_c48c224",
+        "ev_war_zone_gesture_critic_fail_a0b49c8",
+        "ev_war_zone_gesture_responsive_e43fe45",
+        "ev_war_zone_gesture_runtime_baseline_301d08a",
+        "ev_war_zone_gesture_runtime_e43fe45",
+        "ev_war_zone_gesture_visual_baseline_301d08a",
+        "ev_war_zone_gesture_visual_critic_e43fe45",
+        "ev_war_zone_gesture_visual_runtime_e43fe45"
+      ]
+    },
+    {
+      "at": "2026-07-31T16:42:02Z",
+      "decision": "Begin iteration 21 acceptance using the existing parameterized runway scenario.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T16:43:40Z",
+      "decision": "All thirty tier identities and exact claim commands pass the current focused scenario.",
+      "evidence_ids": [
+        "ev_pass_runway_runtime_ee79abe"
+      ]
+    },
+    {
+      "at": "2026-07-31T16:43:40Z",
+      "decision": "Dual-size captures and a clean Web touch smoke prove the current mobile interaction surface.",
+      "evidence_ids": [
+        "ev_pass_runway_responsive_ee79abe"
+      ]
+    },
+    {
+      "at": "2026-07-31T16:43:40Z",
+      "decision": "Shipping captures and an independent critic accept the corrected non-overlapping gesture runway.",
+      "evidence_ids": [
+        "ev_pass_runway_visual_runtime_ee79abe",
+        "ev_pass_runway_visual_critic_ee79abe"
+      ]
+    },
+    {
+      "at": "2026-07-31T16:43:41Z",
+      "decision": "Shared UI smoke and clean Web touch boot pass at the integrated revision.",
+      "evidence_ids": [
+        "ev_ui_runtime_ee79abe"
+      ]
+    },
+    {
+      "at": "2026-07-31T16:43:41Z",
+      "decision": "Affected shared UI actions fit both accepted phone sizes and accept browser touch input.",
+      "evidence_ids": [
+        "ev_ui_responsive_ee79abe"
+      ]
+    },
+    {
+      "at": "2026-07-31T16:43:41Z",
+      "decision": "Iteration 21 has current runtime, responsive, browser-touch and independent visual evidence.",
+      "evidence_ids": [
+        "ev_pass_runway_runtime_ee79abe",
+        "ev_pass_runway_responsive_ee79abe",
+        "ev_pass_runway_visual_runtime_ee79abe",
+        "ev_pass_runway_visual_critic_ee79abe",
+        "ev_ui_runtime_ee79abe",
+        "ev_ui_responsive_ee79abe"
+      ]
+    },
+    {
+      "at": "2026-07-31T16:43:41Z",
+      "decision": "Battle-pass gesture runway accepted; only the target-player learning gate remains stale.",
       "evidence_ids": []
     }
   ]

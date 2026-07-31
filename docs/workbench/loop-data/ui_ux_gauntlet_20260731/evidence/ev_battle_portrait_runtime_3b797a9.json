@@ -3,7 +3,7 @@
   "evidence_id": "ev_battle_portrait_runtime_3b797a9",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "3b797a9",
-  "valid_through_revision": "3b797a9",
+  "valid_through_revision": "ee79abe",
   "gate_id": "gate_battle_portrait_runtime",
   "claim": "Portrait battle cards preserve exact health, charge, ready-state and whole-card skill interaction behavior.",
   "scenario_id": "scenario_battle_portrait_hud",

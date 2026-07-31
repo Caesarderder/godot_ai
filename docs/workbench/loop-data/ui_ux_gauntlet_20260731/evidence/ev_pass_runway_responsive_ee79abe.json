@@ -1,0 +1,79 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_pass_runway_responsive_ee79abe",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "ee79abe",
+  "valid_through_revision": "ee79abe",
+  "gate_id": "gate_pass_runway_responsive",
+  "claim": "Current tier, next rewards and sole batch action remain visible and touch-operable at 844x390 and 568x320.",
+  "scenario_id": "scenario_mobile_battle_pass_supply_runway",
+  "execution_id": "pass_runway_responsive_ee79abe",
+  "evidence_type": "runtime_state",
+  "artifact_or_command": "dual-size scenario capture plus clean Web candidate GODOT_WEB_TOUCH_DRAG_ONLY=1 browser smoke",
+  "case_results": [
+    {
+      "case_id": "claimable_runway",
+      "result": "pass",
+      "assertions": [
+        "Batch claim remains at least 48px and both current rewards fit at both sizes."
+      ],
+      "artifacts": [
+        "claimable captures",
+        "runtime assertions"
+      ]
+    },
+    {
+      "case_id": "settled_runway",
+      "result": "pass",
+      "assertions": [
+        "Settled copy and next reward remain visible without a fake action."
+      ],
+      "artifacts": [
+        "settled captures",
+        "case manifest"
+      ]
+    },
+    {
+      "case_id": "future_focus",
+      "result": "pass",
+      "assertions": [
+        "Runway stays horizontal-only; real browser touch drag moves a shipping ScrollContainer."
+      ],
+      "artifacts": [
+        "future-focus captures",
+        "exit code"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "claimable captures",
+    "settled captures",
+    "future-focus captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 WebGL2",
+    "platform": "Chrome headless clean Web candidate",
+    "device": "emulated phone touch",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "release candidate"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "dual-size geometry and Web touch smoke",
+    "version": "2",
+    "independence": "not_applicable"
+  },
+  "observation": "All six captures fit and WEB_TOUCH_DRAG_SMOKE_OK passes on clean ee79abe Web export.",
+  "inference": "The runway remains touch-operable at both accepted mobile viewports.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Physical iOS and Android inertia feel remains unmeasured."
+  ],
+  "created_at": "2026-08-01T00:00:00+08:00"
+}

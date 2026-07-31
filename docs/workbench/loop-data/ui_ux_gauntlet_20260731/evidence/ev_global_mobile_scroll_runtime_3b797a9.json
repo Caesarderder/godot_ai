@@ -3,7 +3,7 @@
   "evidence_id": "ev_global_mobile_scroll_runtime_3b797a9",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "3b797a9",
-  "valid_through_revision": "3b797a9",
+  "valid_through_revision": "ee79abe",
   "gate_id": "gate_global_mobile_scroll_runtime",
   "claim": "Phone users can finger-drag vertical and horizontal UI lists while desktop users can wheel-scroll the hovered list without accidental child-button activation.",
   "scenario_id": "scenario_global_mobile_scroll",

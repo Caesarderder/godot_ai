@@ -1,0 +1,55 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_ui_responsive_ee79abe",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "ee79abe",
+  "valid_through_revision": "ee79abe",
+  "gate_id": "gate_ui_responsive",
+  "claim": "All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320.",
+  "scenario_id": "scenario_ui_path_integration",
+  "execution_id": "ui_responsive_ee79abe",
+  "evidence_type": "runtime_state",
+  "artifact_or_command": "dual-size runway captures, shared UI smoke and clean Web touch smoke",
+  "case_results": [
+    {
+      "case_id": "cross_screen_cohesion",
+      "result": "pass",
+      "assertions": [
+        "Primary actions remain touch-sized; dual-size captures fit; real Web touch drag changes the shipping UI."
+      ],
+      "artifacts": [
+        "UI smoke assertions",
+        "canonical captures",
+        "exit code"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "UI smoke assertions",
+    "canonical captures",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 WebGL2",
+    "platform": "macOS headless and Chrome",
+    "device": "desktop plus emulated touch",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "release candidate"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "responsive UI integration assertions",
+    "version": "2",
+    "independence": "not_applicable"
+  },
+  "observation": "All targeted phone sizes render without action clipping and browser touch smoke passes.",
+  "inference": "The affected shared UI responsive contract is current at ee79abe.",
+  "result": "pass",
+  "confidence": 0.96,
+  "freshness": "current",
+  "limitations": [
+    "Physical safe-area hardware is not part of this local run."
+  ],
+  "created_at": "2026-08-01T00:00:00+08:00"
+}
