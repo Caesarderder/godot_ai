@@ -43,7 +43,7 @@
   "inference": "The chapter result and visible reward rail preserve existing title, base, map and navigation contracts.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Headless exit leak warnings remain non-failing."
   ],

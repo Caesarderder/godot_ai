@@ -1,0 +1,55 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_ui_drag_integration_responsive_874a992",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "874a992",
+  "valid_through_revision": "874a992",
+  "gate_id": "gate_ui_responsive",
+  "claim": "All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320.",
+  "scenario_id": "scenario_ui_path_integration",
+  "execution_id": "ui_drag_integration_responsive_874a992",
+  "evidence_type": "test",
+  "artifact_or_command": "GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs plus dual-size focused captures",
+  "case_results": [
+    {
+      "case_id": "cross_screen_cohesion",
+      "result": "pass",
+      "assertions": [
+        "real browser touchStart, touchMove and touchEnd change the visible scroll state",
+        "the same router preserves desktop drag and wheel fallback"
+      ],
+      "artifacts": [
+        "project-a/tools/run_web_browser_smoke.mjs",
+        "project-a/artifacts/browser-settings-storage-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "UI smoke assertions",
+    "canonical captures",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 Web Compatibility",
+    "platform": "Chromium browser on macOS",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug Web"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "real-browser mobile touch integration assertion",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "WEB_TOUCH_DRAG_SMOKE_OK after exporting revision 874a992.",
+  "inference": "Scrollable mobile UI responds to actual Web touch events and no longer requires a mouse wheel.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Browser automation emulates a phone touch stream rather than using a physical handset."
+  ],
+  "created_at": "2026-07-31T16:00:00Z"
+}

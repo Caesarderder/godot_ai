@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_pass_runway_runtime_b562758",
   "revision": "b562758",
-  "valid_through_revision": "e8d6596",
+  "valid_through_revision": "874a992",
   "gate_id": "gate_pass_runway_runtime",
   "claim": "All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim.",
   "scenario_id": "scenario_mobile_battle_pass_supply_runway",

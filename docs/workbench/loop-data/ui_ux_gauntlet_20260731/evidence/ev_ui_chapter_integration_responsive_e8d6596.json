@@ -43,7 +43,7 @@
   "inference": "The shared mobile interaction route remains operable after the chapter reward-chain repair.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Touch is browser-emulated, not a physical handset."
   ],

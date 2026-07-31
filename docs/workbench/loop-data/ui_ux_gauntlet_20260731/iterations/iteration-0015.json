@@ -1,0 +1,27 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 15,
+  "work_unit": "mobile boss siege briefing",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/war_zone_screen.gd",
+    "project-a/tools/capture_boss_siege_briefing_scenario.gd"
+  ],
+  "evidence_ids": [
+    "ev_boss_briefing_runtime_059157f",
+    "ev_boss_briefing_responsive_059157f",
+    "ev_boss_briefing_visual_runtime_059157f",
+    "ev_boss_briefing_visual_critic_059157f"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "Treating the stale overlapping boss screenshot as current shipping state.",
+    "Using only a small generic 1-5 node.",
+    "Expanding the bottom briefing instead of preserving the map."
+  ],
+  "next_action": "Close the accepted boss-briefing unit and run the shared mobile UI integration checkpoint.",
+  "blocker": null
+}
