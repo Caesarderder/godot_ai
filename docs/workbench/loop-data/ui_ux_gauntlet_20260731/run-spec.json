@@ -48,7 +48,8 @@
         "gate_factory_visual",
         "gate_legion_visual",
         "gate_codex_visual",
-        "gate_faction_choice_visual"
+        "gate_faction_choice_visual",
+        "gate_blueprint_forge_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -88,7 +89,9 @@
         "gate_codex_visual",
         "gate_codex_runtime",
         "gate_faction_choice_visual",
-        "gate_faction_choice_runtime"
+        "gate_faction_choice_runtime",
+        "gate_blueprint_forge_visual",
+        "gate_blueprint_forge_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -153,7 +156,8 @@
       ],
       "gate_ids": [
         "gate_player_learning",
-        "gate_faction_choice_visual"
+        "gate_faction_choice_visual",
+        "gate_blueprint_forge_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -169,7 +173,8 @@
         "gate_factory_responsive",
         "gate_legion_responsive",
         "gate_codex_responsive",
-        "gate_faction_choice_responsive"
+        "gate_faction_choice_responsive",
+        "gate_blueprint_forge_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -188,7 +193,9 @@
         "gate_codex_runtime",
         "gate_codex_responsive",
         "gate_faction_choice_runtime",
-        "gate_faction_choice_responsive"
+        "gate_faction_choice_responsive",
+        "gate_blueprint_forge_runtime",
+        "gate_blueprint_forge_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -1258,6 +1265,191 @@
       "limitations": [
         "Static captures cannot prove player identification or preference."
       ]
+    },
+    {
+      "scenario_id": "scenario_blueprint_character_forge",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping BlueprintScreen character-research states without navigating the production main scene.",
+      "player_question": "Can the player see which permanent toilet character a blueprint creates, understand its current research state, and take the one correct next action?",
+      "gate_ids": [
+        "gate_blueprint_forge_visual",
+        "gate_blueprint_forge_runtime",
+        "gate_blueprint_forge_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_blueprint_forge_scenario.gd and run_blueprint_screen_tests.gd",
+        "shipping_surface": "blueprint_screen.gd character research presentation and slg_main blueprint projection",
+        "public_adapter": "BlueprintScreen.configure plus action_requested start_research/claim_research"
+      },
+      "fixture": {
+        "subject_parameter": "blueprint_research_state",
+        "reuse_scope": "available, ready-to-claim and locked character blueprint states",
+        "extension_contract": "add a deterministic BlueprintScreen view state; never duplicate factory research, recipe, character or timer rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate blueprint_screen.tscn directly with deterministic shipping view dictionaries",
+        "state": "focused assault blueprint with real character, role, star effect, source and durable action IDs",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_available",
+          "at": "case start",
+          "action": "show an obtained assault blueprint ready for free five-second research"
+        },
+        {
+          "stimulus_id": "show_ready",
+          "at": "after available",
+          "action": "show the same character with research complete and waiting to be claimed"
+        },
+        {
+          "stimulus_id": "show_locked",
+          "at": "after ready",
+          "action": "show a locked sonic character preview with its acquisition source and no action"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "blueprint_forge_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-blueprint-character-forge/manifest.json"
+        },
+        {
+          "observation_id": "blueprint_forge_standard",
+          "source": "fixed 844x390 captures",
+          "window": "all research states",
+          "artifact": "project-a/artifacts/scenario-blueprint-character-forge"
+        },
+        {
+          "observation_id": "blueprint_forge_compact",
+          "source": "fixed 568x320 captures",
+          "window": "all research states",
+          "artifact": "project-a/artifacts/scenario-blueprint-character-forge"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "available_research",
+          "state": "assault blueprint obtained and not yet researched",
+          "stimulus_ids": [
+            "show_available"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "assault character portrait dominates",
+            "free five-second consequence is clear",
+            "one start-research action dominates"
+          ],
+          "observation_ids": [
+            "blueprint_forge_manifest",
+            "blueprint_forge_standard",
+            "blueprint_forge_compact"
+          ]
+        },
+        {
+          "case_id": "ready_to_claim",
+          "state": "assault research complete and awaiting durable claim",
+          "stimulus_ids": [
+            "show_ready"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "the same character identity persists",
+            "completion is unmistakable",
+            "one claim action dominates"
+          ],
+          "observation_ids": [
+            "blueprint_forge_manifest",
+            "blueprint_forge_standard",
+            "blueprint_forge_compact"
+          ]
+        },
+        {
+          "case_id": "locked_preview",
+          "state": "sonic blueprint is not owned",
+          "stimulus_ids": [
+            "show_locked"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "locked character remains previewable",
+            "source is readable",
+            "no fake primary action is present"
+          ],
+          "observation_ids": [
+            "blueprint_forge_manifest",
+            "blueprint_forge_standard",
+            "blueprint_forge_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reconfigure a fresh BlueprintScreen for each state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "available captures",
+          "ready captures",
+          "locked captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed research state with no live timer",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_blueprint_forge_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_blueprint_screen_tests.gd && godot --path project-a -s tools/capture_blueprint_forge_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and BlueprintScreen after capture",
+      "failure_conditions": [
+        "generic ability icons replace character identity",
+        "copy dominates the selected character",
+        "research state is ambiguous",
+        "locked preview exposes an action",
+        "primary action clips or drops below 48 px"
+      ],
+      "limitations": [
+        "Static captures cannot prove whether the permanent-character reward feels valuable to a target player."
+      ]
     }
   ],
   "integration_policy": {
@@ -1553,6 +1745,59 @@
         "actions stay above persistent navigation"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_blueprint_forge_visual",
+      "profile": "visual",
+      "claim": "Blueprint research reads as forging a permanent toilet character rather than browsing a generic icon tech tree.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_blueprint_character_forge"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "selected character art dominates",
+        "research state is icon-led and immediately legible",
+        "branch and character thumbnails remain subordinate",
+        "copy stays concise"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_blueprint_forge_runtime",
+      "profile": "correctness",
+      "claim": "Blueprint selection, start research and claim handoff preserve stable recipe identities and durable commands.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_blueprint_character_forge"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "available action emits the exact recipe ID",
+        "ready action emits claim_research",
+        "locked preview emits no action",
+        "selection never mutates domain state directly"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_blueprint_forge_responsive",
+      "profile": "correctness",
+      "claim": "Character art, research state and the sole primary action remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_blueprint_character_forge"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "focused character and state remain above persistent navigation",
+        "primary targets remain at least 48 px",
+        "branch and thumbnail controls remain operable without hover"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -1584,6 +1829,12 @@
       "owner": "faction-core choice work-unit owner",
       "surface": "LegionScreen recruit result UI plus dedicated focused fixture",
       "public_contract": "LegionScreen.configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "blueprint forge work-unit owner",
+      "surface": "BlueprintScreen character research UI plus dedicated focused fixture",
+      "public_contract": "BlueprintScreen.configure and action_requested",
       "coupling": "coupled"
     }
   ],

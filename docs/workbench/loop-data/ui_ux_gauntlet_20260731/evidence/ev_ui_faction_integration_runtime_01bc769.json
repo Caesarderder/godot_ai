@@ -43,7 +43,7 @@
   "inference": "Shared UI runtime gate passes for this revision.",
   "result": "pass",
   "confidence": 0.97,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "The separate post-30m suite reports pre-existing downstream journey failures."
   ],

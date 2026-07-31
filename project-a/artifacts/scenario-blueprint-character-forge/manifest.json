@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "available_research-844x390.png",
+    "available_research-568x320.png",
+    "ready_to_claim-844x390.png",
+    "ready_to_claim-568x320.png",
+    "locked_preview-844x390.png",
+    "locked_preview-568x320.png"
+  ],
+  "assertions": [
+    "available research emits start_research with ordinary.assault",
+    "ready claim emits claim_research with ordinary.assault",
+    "locked preview exposes no primary blueprint action",
+    "all visible primary actions remain at least 48 logical pixels"
+  ],
+  "cases": [
+    "available_research",
+    "ready_to_claim",
+    "locked_preview"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping BlueprintScreen through configure and action_requested",
+  "scenario_id": "scenario_blueprint_character_forge",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}

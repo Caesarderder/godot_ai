@@ -44,7 +44,7 @@
   "inference": "Shared UI responsive gate passes with physical-device validation still outstanding.",
   "result": "pass",
   "confidence": 0.93,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "No physical-device safe-area test; small metadata remains near the comfort floor."
   ],
