@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_boss_briefing_responsive_059157f",
   "revision": "059157f",
-  "valid_through_revision": "874a992",
+  "valid_through_revision": "caa9def",
   "gate_id": "gate_boss_briefing_responsive",
   "claim": "Boss node, readiness HUD and required touch actions fit without overlap at 844x390 and 568x320.",
   "scenario_id": "scenario_mobile_boss_siege_briefing",

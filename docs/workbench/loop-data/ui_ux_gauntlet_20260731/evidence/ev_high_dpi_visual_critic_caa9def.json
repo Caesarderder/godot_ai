@@ -1,0 +1,71 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_high_dpi_visual_critic_caa9def",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "caa9def",
+  "valid_through_revision": "caa9def",
+  "gate_id": "gate_high_dpi_visual",
+  "claim": "The factory world, Chinese HUD text and raster icons look materially crisper at DPR 2 without changing the accepted composition.",
+  "scenario_id": "scenario_high_dpi_web_clarity",
+  "execution_id": "high_dpi_visual_critic_caa9def",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "Independent review of browser-factory-hidpi-1688x780.png against the user-supplied blurred Workbench reference",
+  "case_results": [
+    {
+      "case_id": "standard_density",
+      "result": "pass",
+      "assertions": [
+        "blurred reference scores 6.5 overall"
+      ],
+      "artifacts": [
+        "user-provided blurred factory reference"
+      ]
+    },
+    {
+      "case_id": "retina_density",
+      "result": "pass",
+      "assertions": [
+        "Chinese HUD clarity 9.1",
+        "3D detail 8.4",
+        "raster icon sharpness 8.0",
+        "aspect correctness 9.5",
+        "world-first hierarchy 9.0",
+        "overall 8.8 and lowest 8.0"
+      ],
+      "artifacts": [
+        "project-a/artifacts/browser-factory-hidpi-1688x780.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "canvas metric assertions",
+    "1x capture",
+    "2x high-DPI capture",
+    "touch assertion",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "visual evidence review",
+    "platform": "independent agent",
+    "device": "artifact inspection",
+    "viewport": "reference and 1688x780",
+    "seed": 20260731,
+    "build_mode": "review"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent high-DPI visual critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Independent critic returned PASS: candidate 8.8 overall, 8.0 lowest, versus 6.5 blurred reference, confidence 0.92.",
+  "inference": "The 2x backing capture materially resolves the reported blur while retaining the accepted factory composition.",
+  "result": "pass",
+  "confidence": 0.92,
+  "freshness": "current",
+  "limitations": [
+    "Dark machinery still merges into the platform; tiny glyphs remain blocky; right raster icons expose source-resolution softness; reference and candidate UI state are not identical."
+  ],
+  "created_at": "2026-07-31T16:35:00Z"
+}

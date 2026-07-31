@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_boss_briefing_runtime_059157f",
   "revision": "059157f",
-  "valid_through_revision": "874a992",
+  "valid_through_revision": "caa9def",
   "gate_id": "gate_boss_briefing_runtime",
   "claim": "Underpowered, ready and cleared boss states emit exact preparation, attack and replay actions for stage_1_5.",
   "scenario_id": "scenario_mobile_boss_siege_briefing",

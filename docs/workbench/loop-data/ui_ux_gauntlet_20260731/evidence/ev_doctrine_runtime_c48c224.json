@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_doctrine_runtime_c48c224",
   "revision": "c48c224",
-  "valid_through_revision": "874a992",
+  "valid_through_revision": "caa9def",
   "gate_id": "gate_doctrine_deck_runtime",
   "claim": "Doctrine actions preserve exact coordination and specialization identities while activated state exposes no replacement action.",
   "scenario_id": "scenario_mobile_faction_doctrine_command_deck",

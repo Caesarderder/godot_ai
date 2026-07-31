@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_breakthrough_runtime_5a8d8a4",
   "revision": "5a8d8a4",
-  "valid_through_revision": "874a992",
+  "valid_through_revision": "caa9def",
   "gate_id": "gate_breakthrough_reveal_runtime",
   "claim": "Breakthrough result preserves all reward identities and emits the exact open_legion handoff without exposing a repeat claim.",
   "scenario_id": "scenario_mobile_breakthrough_hero_reveal",

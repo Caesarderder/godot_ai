@@ -47,7 +47,7 @@
   "inference": "Scrollable mobile UI responds to actual Web touch events and no longer requires a mouse wheel.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Browser automation emulates a phone touch stream rather than using a physical handset."
   ],

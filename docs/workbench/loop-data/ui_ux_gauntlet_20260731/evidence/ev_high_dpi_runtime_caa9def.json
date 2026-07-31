@@ -1,0 +1,65 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_high_dpi_runtime_caa9def",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "caa9def",
+  "valid_through_revision": "caa9def",
+  "gate_id": "gate_high_dpi_runtime",
+  "claim": "The shipping Web canvas allocates physical backing pixels for browser devicePixelRatio instead of upscaling an 844x390 bitmap.",
+  "scenario_id": "scenario_high_dpi_web_clarity",
+  "execution_id": "high_dpi_runtime_caa9def",
+  "evidence_type": "test",
+  "artifact_or_command": "GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node tools/run_web_browser_smoke.mjs",
+  "case_results": [
+    {
+      "case_id": "standard_density",
+      "result": "pass",
+      "assertions": [
+        "DPR 1 route remains supported by the same canvas policy"
+      ],
+      "artifacts": [
+        "project-a/tools/run_web_browser_smoke.mjs"
+      ]
+    },
+    {
+      "case_id": "retina_density",
+      "result": "pass",
+      "assertions": [
+        "844x390 CSS surface owns a 1688x780 backing buffer at DPR 2"
+      ],
+      "artifacts": [
+        "project-a/artifacts/browser-factory-hidpi-1688x780.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "canvas metric assertions",
+    "1x capture",
+    "2x high-DPI capture",
+    "touch assertion",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 Web Compatibility",
+    "platform": "Chromium on macOS",
+    "device": "Apple M4",
+    "viewport": "844x390 CSS / 1688x780 backing",
+    "seed": 20260731,
+    "build_mode": "debug Web"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "Chromium canvas metric assertions",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "WEB_HIDPI_CLARITY_OK reported width 1688, height 780, cssWidth 844, cssHeight 390 and dpr 2.",
+  "inference": "The browser displays native physical pixels instead of stretching the low-density 844x390 bitmap.",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [
+    "Chromium emulates DPR rather than using a physical phone panel."
+  ],
+  "created_at": "2026-07-31T16:30:00Z"
+}

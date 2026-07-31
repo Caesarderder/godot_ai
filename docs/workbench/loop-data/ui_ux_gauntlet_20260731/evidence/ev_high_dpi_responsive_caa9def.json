@@ -1,0 +1,67 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_high_dpi_responsive_caa9def",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "caa9def",
+  "valid_through_revision": "caa9def",
+  "gate_id": "gate_high_dpi_responsive",
+  "claim": "High-DPI rendering preserves the logical mobile layout and exact touch mapping.",
+  "scenario_id": "scenario_high_dpi_web_clarity",
+  "execution_id": "high_dpi_responsive_caa9def",
+  "evidence_type": "test",
+  "artifact_or_command": "GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node tools/run_web_browser_smoke.mjs; GODOT_WEB_TOUCH_DRAG_ONLY=1 node tools/run_web_browser_smoke.mjs",
+  "case_results": [
+    {
+      "case_id": "standard_density",
+      "result": "pass",
+      "assertions": [
+        "real touch drag changes the overflowing storage list"
+      ],
+      "artifacts": [
+        "project-a/artifacts/browser-touch-drag-before.png",
+        "project-a/artifacts/browser-touch-drag-after.png"
+      ]
+    },
+    {
+      "case_id": "retina_density",
+      "result": "pass",
+      "assertions": [
+        "CSS coordinate 422x357 activates the shipping construction tab at DPR 2",
+        "logical CSS layout remains 844x390"
+      ],
+      "artifacts": [
+        "project-a/artifacts/browser-factory-hidpi-1688x780.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "canvas metric assertions",
+    "1x capture",
+    "2x high-DPI capture",
+    "touch assertion",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 Web Compatibility",
+    "platform": "Chromium on macOS",
+    "device": "Apple M4",
+    "viewport": "844x390 CSS at DPR 1 and 2",
+    "seed": 20260731,
+    "build_mode": "debug Web"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "real Web touch and DPR assertion",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "WEB_TOUCH_DRAG_SMOKE_OK and WEB_HIDPI_CLARITY_OK both pass after targeting the real storage list and construction tab.",
+  "inference": "Increasing physical clarity does not change the player's mobile coordinate system or drag behavior.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Touch stream is generated through Chromium DevTools."
+  ],
+  "created_at": "2026-07-31T16:30:00Z"
+}

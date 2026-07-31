@@ -69,7 +69,8 @@
         "map depth, occupied-city atmosphere and readable value hierarchy"
       ],
       "gate_ids": [
-        "gate_ui_visual"
+        "gate_ui_visual",
+        "gate_high_dpi_visual"
       ],
       "rationale": "Exploration desire depends on depth and atmosphere rather than flat panels."
     },
@@ -115,7 +116,9 @@
         "gate_chapter_victory_visual",
         "gate_chapter_victory_runtime",
         "gate_boss_briefing_visual",
-        "gate_boss_briefing_runtime"
+        "gate_boss_briefing_runtime",
+        "gate_high_dpi_visual",
+        "gate_high_dpi_responsive"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -128,7 +131,8 @@
       ],
       "gate_ids": [
         "gate_ui_runtime",
-        "gate_boss_briefing_responsive"
+        "gate_boss_briefing_responsive",
+        "gate_high_dpi_responsive"
       ],
       "rationale": "The player must manipulate the real shipping screen without blocked map targets."
     },
@@ -251,7 +255,8 @@
         "gate_chapter_victory_runtime",
         "gate_chapter_victory_responsive",
         "gate_boss_briefing_runtime",
-        "gate_boss_briefing_responsive"
+        "gate_boss_briefing_responsive",
+        "gate_high_dpi_runtime"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -263,7 +268,8 @@
         "Web-safe map drawing and lightweight raster budget"
       ],
       "gate_ids": [
-        "gate_ui_runtime"
+        "gate_ui_runtime",
+        "gate_high_dpi_runtime"
       ],
       "rationale": "The accepted candidate must import and run without destabilizing the Web target."
     }
@@ -2937,6 +2943,156 @@
       "limitations": [
         "Static map capture cannot prove long-term exploration desire."
       ]
+    },
+    {
+      "scenario_id": "scenario_high_dpi_web_clarity",
+      "scenario_kind": "whole_path_integration",
+      "purpose": "Exercise the shipping Web canvas at phone CSS dimensions and high device-pixel ratios without changing logical mobile layout.",
+      "player_question": "Does the factory world and HUD remain crisp on a Retina/high-DPI browser while touch coordinates and mobile layout stay correct?",
+      "gate_ids": [
+        "gate_high_dpi_runtime",
+        "gate_high_dpi_responsive",
+        "gate_high_dpi_visual"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/run_web_browser_smoke.mjs",
+        "shipping_surface": "Godot Web canvas and FactoryScreen",
+        "public_adapter": "browser canvas resize policy plus MobileViewportAdapter"
+      },
+      "fixture": {
+        "subject_parameter": "deviceScaleFactor",
+        "reuse_scope": "1x and 2x browser backing resolutions",
+        "extension_contract": "preserve 844x390 logical layout and Web touch coordinates"
+      },
+      "setup": {
+        "execution_surface": "main_scene",
+        "entry": "export and boot the real Web build",
+        "state": "title then factory",
+        "camera_or_view": "browser screenshot",
+        "viewport": "844x390 CSS at 1x and 2x DPR",
+        "target_device": "mobile landscape and Retina-class browser"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "boot_1x",
+          "at": "case start",
+          "action": "boot at DPR 1"
+        },
+        {
+          "stimulus_id": "boot_2x",
+          "at": "after 1x",
+          "action": "boot at DPR 2 and enter factory"
+        },
+        {
+          "stimulus_id": "touch_2x",
+          "at": "factory ready",
+          "action": "drag a shipping scroll surface with physical touch coordinates"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "canvas_metrics",
+          "source": "browser runtime metrics",
+          "window": "after engine ready",
+          "artifact": "canvas CSS/backing dimensions and DPR"
+        },
+        {
+          "observation_id": "hidpi_capture",
+          "source": "Chromium screenshot",
+          "window": "stable factory",
+          "artifact": "project-a/artifacts/browser-factory-hidpi-1688x780.png"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "standard_density",
+          "state": "844x390 CSS at DPR 1",
+          "stimulus_ids": [
+            "boot_1x"
+          ],
+          "viewpoints": [
+            "844x390"
+          ],
+          "assertions": [
+            "backing resolution equals CSS resolution",
+            "layout remains canonical"
+          ],
+          "observation_ids": [
+            "canvas_metrics"
+          ]
+        },
+        {
+          "case_id": "retina_density",
+          "state": "844x390 CSS at DPR 2",
+          "stimulus_ids": [
+            "boot_2x",
+            "touch_2x"
+          ],
+          "viewpoints": [
+            "1688x780 backing"
+          ],
+          "assertions": [
+            "backing resolution is two physical pixels per CSS pixel",
+            "factory HUD is not bitmap-upscaled",
+            "touch mapping remains exact"
+          ],
+          "observation_ids": [
+            "canvas_metrics",
+            "hidpi_capture"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh Chromium profile per density",
+        "artifact_manifest": [
+          "canvas metric assertions",
+          "1x capture",
+          "2x high-DPI capture",
+          "touch assertion",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "backing ratio mismatch",
+          "touch coordinate mismatch"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "browser load milestones",
+        "warmup": "stable engine ready plus 900ms",
+        "temporal_isolation": "fresh browser process"
+      },
+      "fast_review_route": {
+        "command": "GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node tools/run_web_browser_smoke.mjs",
+        "expected_seconds": 30,
+        "outputs": [
+          "canvas metrics",
+          "high-DPI factory capture",
+          "exit code"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node project-a/tools/run_web_browser_smoke.mjs",
+        "isolation": "fresh Godot and Chromium processes",
+        "outputs": [
+          "UI assertions",
+          "high-DPI Web evidence"
+        ]
+      },
+      "reset": "close Chromium and remove temporary profile",
+      "failure_conditions": [
+        "canvas backing size remains 844x390 at DPR 2",
+        "HUD is raster-upscaled",
+        "touch coordinates drift",
+        "phone layout changes"
+      ],
+      "limitations": [
+        "Chromium emulation is not a physical OLED phone panel."
+      ]
     }
   ],
   "integration_policy": {
@@ -3710,6 +3866,57 @@
         "no essential clipping"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_high_dpi_runtime",
+      "profile": "correctness",
+      "claim": "The shipping Web canvas allocates physical backing pixels for browser devicePixelRatio instead of upscaling an 844x390 bitmap.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_high_dpi_web_clarity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "DPR 2 produces 1688x780 backing",
+        "CSS viewport stays 844x390"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_high_dpi_responsive",
+      "profile": "correctness",
+      "claim": "High-DPI rendering preserves the logical mobile layout and exact touch mapping.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_high_dpi_web_clarity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "logical layout unchanged",
+        "touch interaction succeeds",
+        "safe-area adapter reads CSS dimensions"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_high_dpi_visual",
+      "profile": "visual",
+      "claim": "The factory world, Chinese HUD text and raster icons look materially crisper at DPR 2 without changing the accepted composition.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_high_dpi_web_clarity"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "text edges are crisp",
+        "3D silhouettes retain detail",
+        "icons are not visibly smeared",
+        "composition remains world-first"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -3795,6 +4002,12 @@
       "owner": "boss siege briefing work-unit owner",
       "surface": "WarZoneScreen and StageDetailPanel boss composition plus fixture",
       "public_contract": "configure and map signals",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "high-DPI Web clarity work-unit owner",
+      "surface": "Web export canvas sizing, browser smoke and FactoryScreen capture",
+      "public_contract": "CSS layout size differs from physical backing size only by DPR",
       "coupling": "coupled"
     }
   ],

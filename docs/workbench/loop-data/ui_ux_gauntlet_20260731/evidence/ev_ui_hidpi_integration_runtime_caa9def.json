@@ -1,26 +1,24 @@
 {
   "schema_version": "caesar-loop/v2",
-  "evidence_id": "ev_ui_drag_integration_runtime_874a992",
+  "evidence_id": "ev_ui_hidpi_integration_runtime_caa9def",
   "run_id": "ui_ux_gauntlet_20260731",
-  "revision": "874a992",
-  "valid_through_revision": "874a992",
+  "revision": "caa9def",
+  "valid_through_revision": "caa9def",
   "gate_id": "gate_ui_runtime",
   "claim": "Title, factory and war-zone actions use shipping state and navigation without regressions.",
   "scenario_id": "scenario_ui_path_integration",
-  "execution_id": "ui_drag_integration_runtime_874a992",
+  "execution_id": "ui_hidpi_integration_runtime_caa9def",
   "evidence_type": "test",
-  "artifact_or_command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd; focused goals and mobile-scroll suites",
+  "artifact_or_command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd",
   "case_results": [
     {
       "case_id": "cross_screen_cohesion",
       "result": "pass",
       "assertions": [
-        "shipping navigation and shared UI contracts pass",
-        "finger drag, desktop left-button drag and hovered wheel input scroll the intended target"
+        "UI_SMOKE_TESTS_PASS after the high-DPI browser scenario update"
       ],
       "artifacts": [
-        "project-a/tools/run_ui_smoke_tests.gd",
-        "project-a/tools/run_mobile_scroll_input_tests.gd"
+        "project-a/tools/run_ui_smoke_tests.gd"
       ]
     }
   ],
@@ -43,13 +41,13 @@
     "version": "1",
     "independence": "not_applicable"
   },
-  "observation": "UI_SMOKE_TESTS_PASS, GOALS_SCREEN_TESTS_OK and MOBILE_SCROLL_INPUT_TESTS_OK at 874a992.",
-  "inference": "The accepted title, factory, map and goals contracts remain coherent after the shared input change.",
+  "observation": "UI_SMOKE_TESTS_PASS at caa9def; existing non-failing exit leak warnings remain.",
+  "inference": "The high-DPI browser harness changes do not regress shipping title, factory or war-zone behavior.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "stale",
+  "freshness": "current",
   "limitations": [
-    "Existing headless CanvasItem and ObjectDB exit warnings remain non-failing."
+    "Headless exit leak warnings remain non-failing."
   ],
-  "created_at": "2026-07-31T16:00:00Z"
+  "created_at": "2026-07-31T16:40:00Z"
 }
