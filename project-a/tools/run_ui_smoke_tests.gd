@@ -1168,22 +1168,25 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	)
 	_ok(
 		assault_route != null
-			and assault_route.is_visible_in_tree()
+			and not assault_route.is_visible_in_tree()
 			and not assault_name.is_empty()
 			and assault_route.text.contains(assault_name)
 			and assault_route.text.contains("2★")
 			and assault_route.text.contains("抢拆炮台")
 			and armored_route != null
-			and armored_route.is_visible_in_tree()
+			and not armored_route.is_visible_in_tree()
 			and not armored_name.is_empty()
 			and armored_route.text.contains(armored_name)
 			and armored_route.text.contains("2★")
 			and armored_route.text.contains("格挡反震")
 			and boss_attack != null
 			and boss_attack.custom_minimum_size.y >= 48.0
+			and boss_attack.icon != null
+			and boss_detail.tooltip_text.contains(assault_name)
+			and boss_detail.tooltip_text.contains(armored_name)
 			and not assault_route.text.contains("验证")
 			and not armored_route.text.contains("质变"),
-		"chapter boss exposes both structured two-star recovery routes and a touch-ready battle action"
+		"chapter boss keeps both recovery routes in progressive disclosure and a touch-ready icon action"
 	)
 	_ok(not _tree_has_text(instance, "战后无损"), "war-zone cards avoid exposing implementation-facing settlement rules")
 	_ok(_tree_has_button(instance, "第2章"), "war-zone screen exposes chapter navigation")

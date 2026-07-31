@@ -5,6 +5,8 @@ signal attack_requested(stage_id: String)
 signal preparation_requested(action_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const ATTACK_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const PREPARE_ICON := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
 const FactoryCatalog := preload("res://game/scripts/domain/factory/factory_catalog.gd")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const PANEL := Color("#12171c")
@@ -71,19 +73,24 @@ func configure(
 
 func _apply_configuration() -> void:
 	var stats := get_node("Margin/Columns/Stats") as VBoxContainer
-	stats.custom_minimum_size.x = 150.0 if _compact else 220.0
+	stats.custom_minimum_size.x = 142.0 if _compact else 205.0
 	var status := "已夺回" if _cleared else ("等待命令" if _unlocked else "信号中断")
 	var ratio_percent := clampi(int(round(float(_report.get("capability_ratio", 0.0)) * 100.0)), 0, 150)
 	var risk_id := String(_report.get("risk_id", "extreme"))
 	var risk_color := _risk_color(risk_id)
+	var display_name := _compact_stage_name(String(_config.get("display_name", _stage_id)))
 	stage_name.text = (
 		"%s · %d/%d" % [
-			_compact_stage_name(String(_config.get("display_name", _stage_id))),
+			display_name,
 			int(_report.get("cp_ready", 0)),
 			int(_report.get("recommended_power", 0)),
 		]
 		if _compact
-		else String(_config.get("display_name", _stage_id))
+		else "%s  ·  %d/%d" % [
+			display_name,
+			int(_report.get("cp_ready", 0)),
+			int(_report.get("recommended_power", 0)),
+		]
 	)
 	stage_name.add_theme_color_override("font_color", GREEN if _cleared else TEXT)
 	status_label.text = status
@@ -99,6 +106,7 @@ func _apply_configuration() -> void:
 	)
 	var formation_plan := _report.get("formation_plan", {}) as Dictionary
 	_configure_boss_recovery_routes()
+	var full_decision_copy := ""
 	if not faction_proof.is_empty():
 		decision_hint.text = "%s\n%s" % [
 			String(faction_proof.get("headline", "核心磨合")),
@@ -139,8 +147,19 @@ func _apply_configuration() -> void:
 			String(formation_plan.get("missing_copy", "无")),
 			plan_consequence,
 		]
+	full_decision_copy = decision_hint.text
+	if _stage_id == "stage_1_5":
+		decision_hint.text = "2★快攻拆炮  /  2★守势反震"
 	decision_hint.text = _brief_clause(decision_hint.text)
 	decision_hint.visible = not _compact
+	tooltip_text = "%s\n%s\n%s" % [
+		String(_config.get("threat_summary", "")),
+		full_decision_copy,
+		"快攻：%s\n守势：%s" % [
+			assault_recovery_route.text,
+			armored_recovery_route.text,
+		] if _stage_id == "stage_1_5" else "",
+	]
 	power_line.text = (
 		"%d / %d" % [
 			int(_report.get("cp_ready", 0)),
@@ -152,7 +171,7 @@ func _apply_configuration() -> void:
 			int(_report.get("recommended_power", 0)),
 		]
 	)
-	power_line.visible = not _compact
+	power_line.visible = false
 	capability.value = mini(ratio_percent, 100)
 	capability.visible = false
 	capability.add_theme_color_override("font_color", risk_color)
@@ -183,7 +202,7 @@ func _apply_configuration() -> void:
 		blocks_attack = false
 	_preparation_action_id = action_id
 	next_action.text = "下一步 · %s" % String(action.get("title", "继续观察"))
-	next_action.visible = (needs_preparation or needs_discovery) and not _compact
+	next_action.visible = false
 	growth_button.visible = needs_preparation
 	if action_id == "upgrade":
 		growth_button.text = "先培养军团"
@@ -194,7 +213,9 @@ func _apply_configuration() -> void:
 	else:
 		growth_button.text = String(action.get("title", "建造研究所")) if needs_preparation else "先培养军团"
 	attack_button.disabled = not _unlocked or blocks_attack
-	attack_button.custom_minimum_size.y = 48.0
+	attack_button.custom_minimum_size.y = 56.0
+	attack_button.icon = ATTACK_ICON
+	attack_button.expand_icon = true
 	attack_button.text = String(faction_proof.get("attack_label", "")) if not faction_proof.is_empty() else (
 		"再次夺取"
 		if _cleared
@@ -208,15 +229,25 @@ func _apply_configuration() -> void:
 			)
 		)
 	)
+	if _stage_id == "stage_1_5":
+		if growth_button.visible:
+			growth_button.text = "培养"
+			growth_button.tooltip_text = "先培养军团 · 查看2★快攻或守势路线"
+		if attack_button.text == "仍要试探":
+			attack_button.text = "试探"
+			attack_button.tooltip_text = "仍要试探 · 失败不会永久损失角色或资源"
 	if force_primary_attack:
 		needs_preparation = false
+	growth_button.icon = PREPARE_ICON
+	growth_button.expand_icon = true
+	growth_button.custom_minimum_size.y = 56.0
 	_style_action_button(growth_button, needs_preparation)
 	_style_action_button(
 		attack_button,
 		_unlocked and not blocks_attack and not needs_preparation and not needs_discovery
 	)
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(PANEL, 0.9)
+	panel_style.bg_color = Color(PANEL, 0.84)
 	panel_style.border_color = Color(CYAN, 0.72) if _unlocked else LINE
 	panel_style.set_border_width_all(1)
 	panel_style.set_corner_radius_all(14)
@@ -260,8 +291,8 @@ func _apply_theme() -> void:
 
 
 func _configure_boss_recovery_routes() -> void:
-	boss_recovery_routes.visible = _stage_id == "stage_1_5"
-	if not boss_recovery_routes.visible:
+	boss_recovery_routes.visible = false
+	if _stage_id != "stage_1_5":
 		return
 	var assault_name := String(
 		FactoryCatalog.recipe("ordinary.assault").get(

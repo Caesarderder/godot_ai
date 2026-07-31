@@ -120,8 +120,60 @@ func _verify_layout(viewport_size: Vector2) -> void:
 				location.name,
 				location.get_global_rect(),
 				detail.get_global_rect(),
-			]
-		)
+				]
+			)
+	var boss_stages := stages.duplicate(true)
+	(boss_stages[4] as Dictionary)["unlocked"] = true
+	war_zone.configure(
+		1,
+		1,
+		"stage_1_5",
+		boss_stages,
+		{
+			"display_name": "1-5 E11 · 飞行马桶交战",
+			"threat_summary": "飞行马桶加入交战，优先处理炮台。",
+			"counter_hint": "升级两名援军形成快攻或守势解法。",
+		},
+		{
+			"cp_ready": 3792,
+			"recommended_power": 5400,
+			"capability_ratio": 0.70,
+			"risk_id": "extreme",
+			"risk_label": "极高风险",
+			"next_action": {"id": "upgrade", "title": "先培养军团"},
+		},
+		true,
+		false,
+		"高",
+		viewport_size.x < 650.0
+	)
+	await process_frame
+	await process_frame
+	await process_frame
+	detail = war_zone.get_node("%StageDetailHost") as Control
+	var boss_card := detail.get_child(0) as Control
+	var boss_growth := boss_card.find_child("GrowthButton", true, false) as Button
+	var boss_attack := boss_card.find_child("AttackButton", true, false) as Button
+	_check(
+		detail.size.y <= 86.0,
+		"%s keeps the boss briefing as a compact map card" % viewport_size
+	)
+	_check(
+		boss_growth != null
+			and boss_growth.is_visible_in_tree()
+			and boss_growth.size.y >= 48.0
+			and boss_growth.icon != null
+			and boss_attack != null
+			and boss_attack.is_visible_in_tree()
+			and boss_attack.size.y >= 48.0
+			and boss_attack.icon != null,
+		"%s keeps icon-led preparation and probe actions touch-ready" % viewport_size
+	)
+	_check(
+		boss_card.tooltip_text.contains("抢拆炮台")
+			and boss_card.tooltip_text.contains("格挡反震"),
+		"%s preserves both full boss recovery routes in progressive disclosure" % viewport_size
+	)
 	host.queue_free()
 	await process_frame
 

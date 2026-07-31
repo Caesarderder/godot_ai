@@ -136,14 +136,14 @@ func _rebuild() -> void:
 func _apply_layout() -> void:
 	if _is_compact_layout():
 		detail_host.offset_left = -330.0
-		detail_host.offset_top = -74.0
+		detail_host.offset_top = -68.0
 		detail_host.offset_right = -6.0
 		detail_host.offset_bottom = -3.0
 		chapter_nav.offset_left = 20.0
 		chapter_nav.offset_right = -20.0
 	else:
 		detail_host.offset_left = -470.0
-		detail_host.offset_top = -108.0
+		detail_host.offset_top = -78.0
 		detail_host.offset_right = -8.0
 		detail_host.offset_bottom = -4.0
 		chapter_nav.offset_left = 34.0
