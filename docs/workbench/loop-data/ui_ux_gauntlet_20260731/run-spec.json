@@ -50,7 +50,8 @@
         "gate_codex_visual",
         "gate_faction_choice_visual",
         "gate_blueprint_forge_visual",
-        "gate_action_compass_visual"
+        "gate_action_compass_visual",
+        "gate_achievement_cabinet_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -94,7 +95,9 @@
         "gate_blueprint_forge_visual",
         "gate_blueprint_forge_runtime",
         "gate_action_compass_visual",
-        "gate_action_compass_runtime"
+        "gate_action_compass_runtime",
+        "gate_achievement_cabinet_visual",
+        "gate_achievement_cabinet_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -161,7 +164,8 @@
         "gate_player_learning",
         "gate_faction_choice_visual",
         "gate_blueprint_forge_visual",
-        "gate_action_compass_visual"
+        "gate_action_compass_visual",
+        "gate_achievement_cabinet_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -179,7 +183,8 @@
         "gate_codex_responsive",
         "gate_faction_choice_responsive",
         "gate_blueprint_forge_responsive",
-        "gate_action_compass_responsive"
+        "gate_action_compass_responsive",
+        "gate_achievement_cabinet_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -202,7 +207,9 @@
         "gate_blueprint_forge_runtime",
         "gate_blueprint_forge_responsive",
         "gate_action_compass_runtime",
-        "gate_action_compass_responsive"
+        "gate_action_compass_responsive",
+        "gate_achievement_cabinet_runtime",
+        "gate_achievement_cabinet_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -1641,6 +1648,191 @@
       "limitations": [
         "Static captures cannot prove that a target player understands the long-term objective ladder."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_achievement_medal_cabinet",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise shipping GoalsScreen achievement states without navigating the production main scene.",
+      "player_question": "Can the player see which permanent honors are earned, which can be claimed now, and inspect progress without reading a card dashboard?",
+      "gate_ids": [
+        "gate_achievement_cabinet_visual",
+        "gate_achievement_cabinet_runtime",
+        "gate_achievement_cabinet_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_achievement_medal_cabinet_scenario.gd and run_goals_screen_tests.gd",
+        "shipping_surface": "goals_screen.gd achievement tab and slg_main achievement projection",
+        "public_adapter": "GoalsScreen.configure plus action_requested claim_all_achievements/claim_achievement"
+      },
+      "fixture": {
+        "subject_parameter": "achievement_collection_state",
+        "reuse_scope": "mixed claimable, settled collection and locked cabinet states",
+        "extension_contract": "add deterministic GoalsScreen achievement views; never duplicate achievement progress, reward or durable claim rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate goals_screen.tscn directly with deterministic shipping view dictionaries",
+        "state": "six permanent campaign, factory, legion and collection medals with real claim states",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_mixed",
+          "at": "case start",
+          "action": "show two claimable, two progressing, one claimed and one unknown honor"
+        },
+        {
+          "stimulus_id": "show_settled",
+          "at": "after mixed",
+          "action": "show earned medals already claimed with the next milestones progressing"
+        },
+        {
+          "stimulus_id": "show_locked",
+          "at": "after settled",
+          "action": "show the cabinet before commander level and stage unlock requirements are met"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "medal_cabinet_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-achievement-cabinet/manifest.json"
+        },
+        {
+          "observation_id": "medal_cabinet_standard",
+          "source": "fixed 844x390 captures",
+          "window": "all cabinet states",
+          "artifact": "project-a/artifacts/scenario-mobile-achievement-cabinet"
+        },
+        {
+          "observation_id": "medal_cabinet_compact",
+          "source": "fixed 568x320 captures",
+          "window": "all cabinet states",
+          "artifact": "project-a/artifacts/scenario-mobile-achievement-cabinet"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "mixed_claimable",
+          "state": "two permanent honors complete and unclaimed",
+          "stimulus_ids": [
+            "show_mixed"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "claimable medals dominate through icon and non-color state",
+            "one batch claim dominates",
+            "progressing medals remain inspectable"
+          ],
+          "observation_ids": [
+            "medal_cabinet_manifest",
+            "medal_cabinet_standard",
+            "medal_cabinet_compact"
+          ]
+        },
+        {
+          "case_id": "settled_collection",
+          "state": "earned honors are already claimed and next honors are progressing",
+          "stimulus_ids": [
+            "show_settled"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "claimed and progressing states differ without color alone",
+            "no fake batch claim appears",
+            "cabinet remains image led"
+          ],
+          "observation_ids": [
+            "medal_cabinet_manifest",
+            "medal_cabinet_standard",
+            "medal_cabinet_compact"
+          ]
+        },
+        {
+          "case_id": "locked_cabinet",
+          "state": "achievement system locked before commander level 3 and stage 1-2",
+          "stimulus_ids": [
+            "show_locked"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "both unlock requirements are concise and readable",
+            "no claim action appears",
+            "lock state does not look like an empty error"
+          ],
+          "observation_ids": [
+            "medal_cabinet_manifest",
+            "medal_cabinet_standard",
+            "medal_cabinet_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reconfigure a fresh GoalsScreen for each state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "mixed captures",
+          "settled captures",
+          "locked captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed achievement state with no live timer",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_achievement_medal_cabinet_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_goals_screen_tests.gd && godot --path project-a -s tools/capture_achievement_medal_cabinet_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and GoalsScreen after capture",
+      "failure_conditions": [
+        "large text cards dominate medal art",
+        "multiple claim buttons compete",
+        "claim state depends only on color",
+        "locked state exposes an action",
+        "medal target clips or drops below 64 px"
+      ],
+      "limitations": [
+        "Static captures cannot prove that a target player values permanent honor collection."
+      ]
     }
   ],
   "integration_policy": {
@@ -2042,6 +2234,60 @@
         "no interaction depends on hover"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_achievement_cabinet_visual",
+      "profile": "visual",
+      "claim": "Achievements read as a permanent medal cabinet rather than a scrolling card-management dashboard.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_achievement_medal_cabinet"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "medal art dominates",
+        "claimable state is immediately legible",
+        "detail is contextual rather than repeated",
+        "copy stays concise"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_achievement_cabinet_runtime",
+      "profile": "correctness",
+      "claim": "Batch and individual achievement claims preserve durable achievement identities while locked and settled states expose no fake action.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_achievement_medal_cabinet"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "batch action emits claim_all_achievements",
+        "individual action emits exact achievement_id",
+        "settled state has no batch action",
+        "locked state has no claim action"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_achievement_cabinet_responsive",
+      "profile": "correctness",
+      "claim": "Medal identity, state and the sole primary action remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_achievement_medal_cabinet"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "medal targets remain at least 64 px",
+        "batch action remains at least 48 px",
+        "critical state remains above navigation",
+        "no interaction depends on hover"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -2084,6 +2330,12 @@
     {
       "owner": "objective action compass work-unit owner",
       "surface": "GoalsScreen action UI plus dedicated focused fixture",
+      "public_contract": "GoalsScreen.configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "achievement medal cabinet work-unit owner",
+      "surface": "GoalsScreen achievement UI plus dedicated focused fixture",
       "public_contract": "GoalsScreen.configure and action_requested",
       "coupling": "coupled"
     }

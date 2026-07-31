@@ -4,7 +4,7 @@
   "state": "unit_looping",
   "revision": "07e7e65",
   "iteration": 7,
-  "active_work_unit": null,
+  "active_work_unit": "mobile achievement medal cabinet",
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -29,6 +29,9 @@
     "gate_ui_responsive"
   ],
   "gate_status": {
+    "gate_achievement_cabinet_responsive": "pending",
+    "gate_achievement_cabinet_runtime": "pending",
+    "gate_achievement_cabinet_visual": "pending",
     "gate_action_compass_responsive": "pass",
     "gate_action_compass_runtime": "pass",
     "gate_action_compass_visual": "pass",
@@ -129,8 +132,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "Select the next unfrozen mobile screen gap after the integration checkpoint.",
-    "updated_at": "2026-07-31T13:31:11Z"
+    "next_action": "mobile achievement medal cabinet",
+    "updated_at": "2026-07-31T13:35:14Z"
   },
   "decisions": [
     {
@@ -1016,6 +1019,26 @@
         "ev_ui_action_integration_runtime_07e7e65",
         "ev_ui_action_integration_responsive_07e7e65"
       ]
+    },
+    {
+      "at": "2026-07-31T13:34:28Z",
+      "decision": "Accepted action compass reached the declared shared UI integration checkpoint.",
+      "evidence_ids": [
+        "ev_ui_action_integration_runtime_07e7e65",
+        "ev_ui_action_integration_responsive_07e7e65"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:34:28Z",
+      "decision": "Integration passed; the next unfrozen gap is the card-heavy achievement dashboard.",
+      "evidence_ids": [
+        "ev_ui_action_integration_runtime_07e7e65"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:35:14Z",
+      "decision": "Add the mobile achievement medal cabinet work unit before implementation.",
+      "evidence_ids": []
     }
   ]
 }

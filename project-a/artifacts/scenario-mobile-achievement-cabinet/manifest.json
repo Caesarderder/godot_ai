@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "mixed_claimable-844x390.png",
+    "mixed_claimable-568x320.png",
+    "settled_collection-844x390.png",
+    "settled_collection-568x320.png",
+    "locked_cabinet-844x390.png",
+    "locked_cabinet-568x320.png"
+  ],
+  "assertions": [
+    "mixed state emits claim_achievement with meta.campaign.first",
+    "mixed state emits claim_all_achievements",
+    "settled and locked states expose no batch claim",
+    "visible medal targets remain at least 64 logical pixels"
+  ],
+  "cases": [
+    "mixed_claimable",
+    "settled_collection",
+    "locked_cabinet"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping GoalsScreen through configure and action_requested",
+  "scenario_id": "scenario_mobile_achievement_medal_cabinet",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
