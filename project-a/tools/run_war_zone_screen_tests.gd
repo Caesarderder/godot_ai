@@ -42,13 +42,13 @@ func _verify_layout(viewport_size: Vector2) -> void:
 		stages.append({
 			"stage_id": "stage_1_%d" % stage_number,
 			"display_name": "第%d前线" % stage_number,
-			"status": "前线" if stage_number == 1 else "信号中断",
-			"unlocked": stage_number == 1,
+			"status": "已夺回" if stage_number < 2 else ("前线" if stage_number < 4 else "信号中断"),
+			"unlocked": stage_number < 4,
 		})
 	war_zone.configure(
 		1,
 		1,
-		"stage_1_1",
+		"stage_1_2",
 		stages,
 		{
 			"display_name": "1-1 E07 · 监控人登场",
@@ -122,6 +122,57 @@ func _verify_layout(viewport_size: Vector2) -> void:
 				detail.get_global_rect(),
 				]
 			)
+	for stage_node in stage_nodes:
+		var icon_node := stage_node as Button
+		_check(
+			icon_node.icon != null
+				and not icon_node.text.contains("◇")
+				and not icon_node.text.contains("△")
+				and not icon_node.text.contains("?")
+				and not icon_node.text.contains("✓"),
+			"%s stage %s uses a raster state icon instead of Unicode status glyphs" % [viewport_size, icon_node.name]
+		)
+	var selected_by_gesture := {"stage_id": ""}
+	war_zone.stage_selected.connect(func(stage_id: String) -> void: selected_by_gesture["stage_id"] = stage_id)
+	var map_position := Vector2(viewport_size.x * 0.42, viewport_size.y * 0.48)
+	var touch_start := InputEventScreenTouch.new()
+	touch_start.index = 0
+	touch_start.position = map_position
+	touch_start.pressed = true
+	war_zone.call("_handle_map_input", touch_start)
+	var touch_drag := InputEventScreenDrag.new()
+	touch_drag.index = 0
+	touch_drag.position = map_position - Vector2(70, 0)
+	touch_drag.relative = Vector2(-70, 0)
+	_check(
+		bool(war_zone.call("_handle_map_input", touch_drag))
+			and selected_by_gesture["stage_id"] == "stage_1_3",
+		"%s leftward touch drag selects the next reachable world landmark" % viewport_size
+	)
+	selected_by_gesture["stage_id"] = ""
+	var wheel_up := InputEventMouseButton.new()
+	wheel_up.position = map_position
+	wheel_up.button_index = MOUSE_BUTTON_WHEEL_UP
+	wheel_up.pressed = true
+	_check(
+		bool(war_zone.call("_handle_map_input", wheel_up))
+			and selected_by_gesture["stage_id"] == "stage_1_1",
+		"%s desktop wheel traverses to the previous reachable world landmark" % viewport_size
+	)
+	selected_by_gesture["stage_id"] = ""
+	var locked_probe := InputEventMouseButton.new()
+	locked_probe.position = map_position
+	locked_probe.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	locked_probe.pressed = true
+	war_zone.configure(
+		1, 1, "stage_1_3", stages, {}, {}, true, false, "高", viewport_size.x < 650.0
+	)
+	await process_frame
+	_check(
+		not bool(war_zone.call("_handle_map_input", locked_probe))
+			and selected_by_gesture["stage_id"].is_empty(),
+		"%s gesture traversal cannot select the locked stage beyond the frontline" % viewport_size
+	)
 	var boss_stages := stages.duplicate(true)
 	(boss_stages[4] as Dictionary)["unlocked"] = true
 	war_zone.configure(

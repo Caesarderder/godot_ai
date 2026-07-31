@@ -10,14 +10,17 @@ const STAGE_DETAIL_PANEL_SCENE := preload("res://game/scenes/ui/stage_detail_pan
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const BOSS_FORTRESS_ICON := preload("res://assets/ui/goals/chapter_stronghold.webp")
+const RECOVERED_STAGE_ICON := preload("res://assets/ui/icons/kenney_game_icons/checkmark.png")
+const FRONTLINE_STAGE_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const LOCKED_STAGE_ICON := preload("res://assets/ui/icons/kenney_game_icons/locked.png")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
 const MUTED := Color("#9c9990")
 const CYAN := Color("#58c9c2")
 const GOLD := Color("#e5a84b")
-const LANDMARK_GLYPHS: Array[String] = ["◇", "△", "▣", "▲", "◆"]
 const ROUTE_Y_FACTORS: Array[float] = [0.36, 0.285, 0.35, 0.245, 0.32]
+const MAP_SWIPE_THRESHOLD := 54.0
 
 @onready var chapter_nav: HBoxContainer = %ChapterNav
 @onready var stage_strip: Control = %StageNodeStrip
@@ -33,12 +36,22 @@ var _selected_unlocked := false
 var _selected_cleared := false
 var _estimated_threat := "未知"
 var _compact := false
+var _touch_map_active := false
+var _touch_drag_accumulator := 0.0
+var _touch_swipe_committed := false
 
 
 func _ready() -> void:
 	resized.connect(_on_resized)
 	if not _selected_config.is_empty():
 		_rebuild()
+
+
+func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		return
+	if _handle_map_input(event):
+		get_viewport().set_input_as_handled()
 
 
 func configure(
@@ -79,18 +92,10 @@ func _rebuild() -> void:
 		var row := visible_rows[row_index]
 		var stage_id := String(row.get("stage_id", ""))
 		var stage_number := stage_id.trim_prefix("stage_").replace("_", "-")
-		var landmark: String = LANDMARK_GLYPHS[row_index]
 		var unlocked := bool(row.get("unlocked", false))
 		var recovered := String(row.get("status", "")) == "已夺回"
-		var stage_state: String = "%s ●" % landmark if unlocked else "%s ?" % landmark
-		if String(row.get("status", "")) == "已夺回":
-			stage_state = "%s ✓" % landmark
 		var stage_button := _stage_node_button(
-			(
-				"%s\n%s" % [stage_number, "✓" if recovered else ("!" if unlocked else "?")]
-				if row_index == visible_rows.size() - 1
-				else "%s\n%s" % [stage_number, stage_state]
-			),
+			stage_number,
 			stage_id == _selected_stage_id,
 			recovered,
 			unlocked
@@ -99,13 +104,21 @@ func _rebuild() -> void:
 		var boss_node := row_index == visible_rows.size() - 1
 		var node_size := (
 			Vector2(84, 74) if _is_compact_layout() else Vector2(94, 82)
-		) if boss_node else (Vector2(46, 42) if _is_compact_layout() else Vector2(58, 50))
+		) if boss_node else (Vector2(52, 44) if _is_compact_layout() else Vector2(64, 52))
 		if boss_node:
 			stage_button.set_meta("boss_fortress", true)
 			stage_button.icon = BOSS_FORTRESS_ICON
 			stage_button.expand_icon = true
 			stage_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 			stage_button.add_theme_constant_override("icon_max_width", 46 if _is_compact_layout() else 52)
+		else:
+			stage_button.icon = (
+				RECOVERED_STAGE_ICON
+				if recovered
+				else (FRONTLINE_STAGE_ICON if unlocked else LOCKED_STAGE_ICON)
+			)
+			stage_button.expand_icon = true
+			stage_button.add_theme_constant_override("icon_max_width", 18 if _is_compact_layout() else 21)
 		stage_button.custom_minimum_size = node_size
 		stage_button.size = node_size
 		stage_button.position = _route_point(row_index, visible_rows.size()) - node_size * 0.5
@@ -438,6 +451,67 @@ func _visible_stage_rows() -> Array[Dictionary]:
 	for index in range(start, start + 5):
 		result.append((_stage_rows[index] as Dictionary).duplicate(true))
 	return result
+
+
+func _handle_map_input(event: InputEvent) -> bool:
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		if touch.pressed:
+			_touch_map_active = _map_accepts_position(touch.position)
+			_touch_drag_accumulator = 0.0
+			_touch_swipe_committed = false
+			return false
+		var consumed := _touch_swipe_committed
+		_touch_map_active = false
+		_touch_drag_accumulator = 0.0
+		_touch_swipe_committed = false
+		return consumed
+	if event is InputEventScreenDrag:
+		var drag := event as InputEventScreenDrag
+		if not _touch_map_active or _touch_swipe_committed:
+			return false
+		_touch_drag_accumulator += drag.relative.x
+		if absf(_touch_drag_accumulator) < MAP_SWIPE_THRESHOLD:
+			return false
+		_touch_swipe_committed = true
+		return _select_adjacent_reachable(1 if _touch_drag_accumulator < 0.0 else -1)
+	if event is InputEventMouseButton:
+		var mouse := event as InputEventMouseButton
+		if not mouse.pressed or not _map_accepts_position(mouse.position):
+			return false
+		if mouse.button_index == MOUSE_BUTTON_WHEEL_DOWN or mouse.button_index == MOUSE_BUTTON_WHEEL_RIGHT:
+			return _select_adjacent_reachable(1)
+		if mouse.button_index == MOUSE_BUTTON_WHEEL_UP or mouse.button_index == MOUSE_BUTTON_WHEEL_LEFT:
+			return _select_adjacent_reachable(-1)
+	return false
+
+
+func _map_accepts_position(global_position: Vector2) -> bool:
+	if not get_global_rect().has_point(global_position):
+		return false
+	if chapter_nav != null and chapter_nav.get_global_rect().has_point(global_position):
+		return false
+	if detail_host != null and detail_host.get_global_rect().has_point(global_position):
+		return false
+	return true
+
+
+func _select_adjacent_reachable(direction: int) -> bool:
+	var visible_rows := _visible_stage_rows()
+	if visible_rows.is_empty():
+		return false
+	var selected_index := _selected_stage_index()
+	var candidate_index := selected_index + signi(direction)
+	if candidate_index < 0 or candidate_index >= visible_rows.size():
+		return false
+	var candidate := visible_rows[candidate_index] as Dictionary
+	if not bool(candidate.get("unlocked", false)):
+		return false
+	var stage_id := String(candidate.get("stage_id", ""))
+	if stage_id.is_empty():
+		return false
+	stage_selected.emit(stage_id)
+	return true
 
 
 func _button(value: String, selected: bool) -> Button:
