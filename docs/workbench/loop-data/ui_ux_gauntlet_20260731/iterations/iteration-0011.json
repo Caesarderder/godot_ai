@@ -1,0 +1,30 @@
+{
+  "iteration": 11,
+  "work_unit": "mobile breakthrough hero reveal",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scenes/screens/blueprint_screen.tscn",
+    "project-a/game/scripts/ui/blueprint_screen.gd",
+    "project-a/tools/capture_breakthrough_hero_reveal_scenario.gd"
+  ],
+  "evidence_ids": [
+    "ev_breakthrough_runtime_5a8d8a4",
+    "ev_breakthrough_responsive_5a8d8a4",
+    "ev_breakthrough_visual_runtime_5a8d8a4",
+    "ev_breakthrough_visual_critic_5a8d8a4",
+    "ev_ui_breakthrough_integration_runtime_5a8d8a4",
+    "ev_ui_breakthrough_integration_responsive_5a8d8a4"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "ten equal text reward boxes with six rewards clipped on 568",
+    "capturing the entrance tween at arbitrary frames as deterministic evidence",
+    "hero reveal copy that said入列 without proving permanent ownership"
+  ],
+  "next_action": "Integrate the accepted breakthrough reveal and select the next evidence-backed weak mobile state.",
+  "blocker": null,
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

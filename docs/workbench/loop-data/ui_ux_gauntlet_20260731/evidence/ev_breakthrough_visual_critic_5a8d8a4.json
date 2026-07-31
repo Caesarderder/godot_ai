@@ -1,0 +1,79 @@
+{
+  "evidence_id": "ev_breakthrough_visual_critic_5a8d8a4",
+  "revision": "5a8d8a4",
+  "valid_through_revision": "5a8d8a4",
+  "gate_id": "gate_breakthrough_reveal_visual",
+  "claim": "Research breakthrough reads as two permanent toilet heroes joining the resistance rather than a ten-cell reward spreadsheet.",
+  "scenario_id": "scenario_mobile_breakthrough_hero_reveal",
+  "execution_id": "breakthrough_blind_critic_5a8d8a4",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "independent blind baseline/current three-state dual-size comparison plus permanent-ownership re-review",
+  "case_results": [
+    {
+      "case_id": "mixed_reveal",
+      "result": "pass",
+      "assertions": [
+        "8.9; two equal hero portraits dominate and permanent ownership is explicit"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal/mixed_reveal-844x390.png",
+        "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal/mixed_reveal-568x320.png"
+      ]
+    },
+    {
+      "case_id": "resource_heavy_reveal",
+      "result": "pass",
+      "assertions": [
+        "8.8; resource value changes remain subordinate and complete"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal/resource_heavy_reveal-844x390.png",
+        "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal/resource_heavy_reveal-568x320.png"
+      ]
+    },
+    {
+      "case_id": "reduced_motion_reveal",
+      "result": "pass",
+      "assertions": [
+        "8.8; final hierarchy is immediately understandable without animation"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal/reduced_motion_reveal-844x390.png",
+        "project-a/artifacts/scenario-mobile-breakthrough-hero-reveal/reduced_motion_reveal-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "mixed reveal captures",
+    "resource-heavy captures",
+    "reduced-motion captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent breakthrough hero-reveal blind visual critic",
+    "version": "1",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Baseline scored 4.3 overall/4.2 minimum with six rewards clipped. Final hero-led candidate scored 8.8 overall and minimum after explicit permanent ownership copy.",
+  "inference": "Candidate clears overall>=8 and every state>=7 while resolving hierarchy, clipping and ownership failures.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Secondary loot icons omit resource names; new players may not identify each type without broader HUD familiarity."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

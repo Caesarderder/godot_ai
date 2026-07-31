@@ -45,7 +45,7 @@
   "inference": "The shared responsive contract now includes operable touch dragging rather than layout size alone.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Physical-device momentum and platform overscroll remain outside automation."
   ],

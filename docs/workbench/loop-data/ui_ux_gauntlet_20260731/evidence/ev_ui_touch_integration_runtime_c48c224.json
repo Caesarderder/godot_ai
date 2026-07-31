@@ -45,7 +45,7 @@
   "inference": "Global ScrollContainer touch handling integrates with the shipping Web UI without replacing desktop wheel behavior.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "The legacy full browser smoke later times out at its unrelated local playtest-report coordinate flow; the isolated real-touch route completes before that state."
   ],
