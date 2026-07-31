@@ -47,7 +47,8 @@
         "gate_ui_visual",
         "gate_factory_visual",
         "gate_legion_visual",
-        "gate_codex_visual"
+        "gate_codex_visual",
+        "gate_faction_choice_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -85,7 +86,9 @@
         "gate_legion_visual",
         "gate_legion_runtime",
         "gate_codex_visual",
-        "gate_codex_runtime"
+        "gate_codex_runtime",
+        "gate_faction_choice_visual",
+        "gate_faction_choice_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -149,7 +152,8 @@
         "two-second territorial progression and desire to inspect the next landmark"
       ],
       "gate_ids": [
-        "gate_player_learning"
+        "gate_player_learning",
+        "gate_faction_choice_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -164,7 +168,8 @@
         "gate_ui_responsive",
         "gate_factory_responsive",
         "gate_legion_responsive",
-        "gate_codex_responsive"
+        "gate_codex_responsive",
+        "gate_faction_choice_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -181,7 +186,9 @@
         "gate_factory_runtime",
         "gate_legion_runtime",
         "gate_codex_runtime",
-        "gate_codex_responsive"
+        "gate_codex_responsive",
+        "gate_faction_choice_runtime",
+        "gate_faction_choice_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -1066,6 +1073,191 @@
       "limitations": [
         "Static captures cannot prove collection desire or direct touch feel."
       ]
+    },
+    {
+      "scenario_id": "scenario_faction_core_choice_identity",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping LegionScreen faction-core decision without navigating the production main scene.",
+      "player_question": "Can the player compare two real toilet-character candidates by playstyle and deliberately choose a long-term faction core?",
+      "gate_ids": [
+        "gate_faction_choice_visual",
+        "gate_faction_choice_runtime",
+        "gate_faction_choice_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_faction_core_choice_scenario.gd and run_legion_screen_tests.gd",
+        "shipping_surface": "legion_screen.gd recruit result choice and slg_main recruit projection",
+        "public_adapter": "LegionScreen.configure plus action_requested choose_faction_core/open_research"
+      },
+      "fixture": {
+        "subject_parameter": "faction_choice_state",
+        "reuse_scope": "two-candidate choice, reduced-motion choice and selected-core handoff",
+        "extension_contract": "add a state dictionary to the matrix; never duplicate recruitment receipt, faction, star or research rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate legion_screen.tscn directly with deterministic shipping recruit dictionaries",
+        "state": "same-rating assault and rocket candidates, real faction/playstyle/synergy/2-star data and durable action IDs",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_choice",
+          "at": "case start",
+          "action": "show two unselected candidates after the free faction ten-pull"
+        },
+        {
+          "stimulus_id": "show_reduced_motion",
+          "at": "after choice",
+          "action": "show the same decision with reveal motion disabled"
+        },
+        {
+          "stimulus_id": "show_selected_handoff",
+          "at": "after reduced-motion choice",
+          "action": "show the chosen assault core awaiting research"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "faction_choice_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-faction-core-choice/manifest.json"
+        },
+        {
+          "observation_id": "faction_choice_standard",
+          "source": "fixed 844x390 captures",
+          "window": "choice and handoff states",
+          "artifact": "project-a/artifacts/scenario-faction-core-choice"
+        },
+        {
+          "observation_id": "faction_choice_compact",
+          "source": "fixed 568x320 captures",
+          "window": "choice and handoff states",
+          "artifact": "project-a/artifacts/scenario-faction-core-choice"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "candidate_choice",
+          "state": "assault and rocket are equal-rating unselected candidates",
+          "stimulus_ids": [
+            "show_choice"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "both real portraits dominate",
+            "playstyle difference is visible",
+            "neither candidate is visually recommended"
+          ],
+          "observation_ids": [
+            "faction_choice_manifest",
+            "faction_choice_standard",
+            "faction_choice_compact"
+          ]
+        },
+        {
+          "case_id": "reduced_motion_choice",
+          "state": "the same choice with reduced motion enabled",
+          "stimulus_ids": [
+            "show_reduced_motion"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "both candidates are immediately readable",
+            "actions remain identical",
+            "no reveal state hides copy or portraits"
+          ],
+          "observation_ids": [
+            "faction_choice_manifest",
+            "faction_choice_standard",
+            "faction_choice_compact"
+          ]
+        },
+        {
+          "case_id": "selected_handoff",
+          "state": "assault core selected and awaiting research",
+          "stimulus_ids": [
+            "show_selected_handoff"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "selected character remains visually dominant",
+            "research is the sole dominant action",
+            "permanent-character consequence is clear"
+          ],
+          "observation_ids": [
+            "faction_choice_manifest",
+            "faction_choice_standard",
+            "faction_choice_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reconfigure a fresh LegionScreen for each state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "candidate choice captures",
+          "reduced-motion captures",
+          "selected handoff captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed view dictionaries with no domain timer",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_faction_core_choice_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_legion_screen_tests.gd && godot --path project-a -s tools/capture_faction_core_choice_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and LegionScreen after capture",
+      "failure_conditions": [
+        "generic signal icons replace character identity",
+        "copy dominates portraits",
+        "one equal-rating candidate looks system-recommended",
+        "choice clips behind navigation",
+        "touch target drops below 48 px"
+      ],
+      "limitations": [
+        "Static captures cannot prove player identification or preference."
+      ]
     }
   ],
   "integration_policy": {
@@ -1308,6 +1500,59 @@
         "primary action never overlaps persistent navigation"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_faction_choice_visual",
+      "profile": "visual",
+      "claim": "The faction-core choice reads as a consequential duel between two distinct toilet characters rather than two generic signal cards.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_faction_core_choice_identity"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "real portraits dominate both choices",
+        "equal candidates retain equal visual weight",
+        "playstyle and faction are icon-led and scannable",
+        "copy stays subordinate to the characters"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_faction_choice_runtime",
+      "profile": "correctness",
+      "claim": "Faction choice and selected-core research handoff preserve stable archetype identities and durable commands.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_faction_core_choice_identity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "each choice emits its exact archetype ID",
+        "reduced motion preserves actions",
+        "selected handoff emits open_research for the chosen archetype",
+        "the UI does not auto-select or auto-deploy"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_faction_choice_responsive",
+      "profile": "correctness",
+      "claim": "Both candidate portraits and choice actions remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_faction_core_choice_identity"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "both candidates remain simultaneously comparable",
+        "choice targets remain at least 48 px",
+        "actions stay above persistent navigation"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -1333,6 +1578,12 @@
       "owner": "codex gallery work-unit owner",
       "surface": "LegionScreen codex UI plus dedicated focused fixture",
       "public_contract": "LegionScreen.configure, hero_selected and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "faction-core choice work-unit owner",
+      "surface": "LegionScreen recruit result UI plus dedicated focused fixture",
+      "public_contract": "LegionScreen.configure and action_requested",
       "coupling": "coupled"
     }
   ],

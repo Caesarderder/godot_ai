@@ -23,6 +23,9 @@
     "gate_codex_responsive": "pass",
     "gate_codex_runtime": "pass",
     "gate_codex_visual": "pass",
+    "gate_faction_choice_responsive": "pending",
+    "gate_faction_choice_runtime": "pending",
+    "gate_faction_choice_visual": "pending",
     "gate_factory_responsive": "pass",
     "gate_factory_runtime": "pass",
     "gate_factory_visual": "pass",
@@ -92,7 +95,7 @@
       "ui_ux"
     ],
     "next_action": "Codex gallery work unit is accepted and integrated.",
-    "updated_at": "2026-07-31T12:22:08Z"
+    "updated_at": "2026-07-31T12:25:03Z"
   },
   "decisions": [
     {
@@ -551,6 +554,11 @@
     {
       "at": "2026-07-31T12:22:08Z",
       "decision": "Codex gallery work unit is accepted and integrated.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T12:25:03Z",
+      "decision": "Add the bounded faction-core character-choice work unit.",
       "evidence_ids": []
     }
   ]

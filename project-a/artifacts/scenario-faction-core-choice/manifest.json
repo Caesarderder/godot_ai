@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "candidate_choice-844x390.png",
+    "candidate_choice-568x320.png",
+    "reduced_motion_choice-844x390.png",
+    "reduced_motion_choice-568x320.png",
+    "selected_handoff-844x390.png",
+    "selected_handoff-568x320.png"
+  ],
+  "assertions": [
+    "two equal candidates remain simultaneously comparable",
+    "stable archetype portraits and actions remain available",
+    "reduced motion preserves the complete decision",
+    "selected handoff exposes one research action"
+  ],
+  "cases": [
+    "candidate_choice",
+    "reduced_motion_choice",
+    "selected_handoff"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping LegionScreen through configure and action_requested",
+  "scenario_id": "scenario_faction_core_choice_identity",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
