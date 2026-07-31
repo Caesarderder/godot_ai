@@ -137,6 +137,7 @@ func _apply_view() -> void:
 	var choosing_doctrine := choices.size() == 2
 	var faction_name := String(preview.get("faction", "阵营"))
 	doctrine_hero.texture = ARMORED_FORGE_ART if faction_name.contains("铁甲") else ASSAULT_FORGE_ART
+	doctrine_hero.custom_minimum_size.x = 112.0 if compact else 142.0
 	results_panel.visible = showing_results
 	tech_preview.visible = not showing_results and not preview.is_empty()
 	if choosing_doctrine:
@@ -149,14 +150,16 @@ func _apply_view() -> void:
 			"全军联动",
 			String(coordination.get("choice_summary", "全队共享增益")),
 			ICON_BRANCH_SUPPORT,
-			CYAN
+			CYAN,
+			compact
 		)
 		_configure_doctrine_choice(
 			specialization_choice,
 			"核心过载",
 			String(specialization.get("choice_summary", "阵营核心强化")),
 			ICON_ABILITY_CHARGE,
-			GOLD
+			GOLD,
+			compact
 		)
 	else:
 		tech_identity.text = "%d阶指令已激活 · %s\n%s\n%s" % [
@@ -209,20 +212,20 @@ func _configure_doctrine_choice(
 	title: String,
 	summary: String,
 	icon: Texture2D,
-	accent: Color
+	accent: Color,
+	compact: bool
 ) -> void:
 	var compact_effect := summary
 	compact_effect = compact_effect.replace("全队协同 · ", "")
 	compact_effect = compact_effect.replace("阵营专精 · ", "")
-	compact_effect = compact_effect.replace("\n", " · ")
 	var action_copy := "确认联动 ›" if title == "全军联动" else "确认过载 ›"
 	button.text = "%s\n%s\n%s" % [title, compact_effect, action_copy]
 	button.tooltip_text = summary.replace("\n", " · ") + " · 选择后不可更改"
 	button.icon = icon
 	button.expand_icon = true
-	button.add_theme_constant_override("icon_max_width", 52)
+	button.add_theme_constant_override("icon_max_width", 40 if compact else 52)
 	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_font_size_override("font_size", 11 if compact else 13)
 	button.add_theme_color_override("font_color", accent)
 	button.add_theme_color_override("font_hover_color", accent.lightened(0.14))
 	button.add_theme_color_override("font_pressed_color", accent)
