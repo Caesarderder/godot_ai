@@ -82,6 +82,13 @@ func _verify_layout(viewport_size: Vector2) -> void:
 		"%s keeps the single primary attack action visible and touch-sized" % viewport_size
 	)
 	_check(
+		attack != null
+			and not attack.text.is_empty()
+			and attack.get_theme_constant("icon_max_width") <= 26
+			and attack.size.x >= attack.get_minimum_size().x,
+		"%s budgets the raster action icon without clipping the CTA label" % viewport_size
+	)
+	_check(
 		war_zone.find_child("StageNode_stage_1_1", true, false) != null,
 		"%s exposes the selected world node" % viewport_size
 	)

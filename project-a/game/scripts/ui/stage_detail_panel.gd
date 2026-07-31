@@ -286,6 +286,10 @@ func _apply_theme() -> void:
 	for button: Button in [growth_button, attack_button]:
 		button.add_theme_font_override("font", CJK_FONT)
 		button.add_theme_font_size_override("font_size", 16)
+		# Keep high-resolution raster actions from consuming the text area on
+		# wider map cards. Compact cards happened to constrain this implicitly;
+		# the standard phone layout needs the same explicit icon budget.
+		button.add_theme_constant_override("icon_max_width", 26)
 		button.focus_mode = Control.FOCUS_ALL
 		_style_action_button(button, false)
 
