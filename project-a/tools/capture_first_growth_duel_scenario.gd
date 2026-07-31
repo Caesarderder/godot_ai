@@ -76,6 +76,11 @@ func _capture_case(case_id: String, viewport_size: Vector2i, path: String) -> bo
 		await process_frame
 	if not _verify_case(legion, case_id, requested):
 		return false
+	var scroll := legion.find_child("LegionContentScroll_*", true, false) as ScrollContainer
+	if scroll != null:
+		scroll.scroll_vertical = 0
+	for _frame in 2:
+		await process_frame
 	RenderingServer.force_draw(false)
 	var image := root.get_texture().get_image()
 	if image == null or image.save_png(path) != OK:

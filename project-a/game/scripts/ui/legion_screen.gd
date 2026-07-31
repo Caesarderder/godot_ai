@@ -151,20 +151,35 @@ func _rebuild() -> void:
 
 
 func _boss_ready_panel(boss_ready: Dictionary) -> Control:
-	var panel := _panel("成长已生效 · 立即投入战斗")
+	var compact := bool(_view.get("compact", get_viewport_rect().size.x < 720.0))
+	var panel := _panel("")
 	panel.name = "BossReadyPanel"
-	panel.add_child(_label(
-		"%s · %s" % [
-			String(boss_ready.get("hero_name", "")),
-			String(boss_ready.get("route", "")),
-		],
-		18,
-		GOLD
-	))
-	panel.add_child(_label(String(boss_ready.get("tactic", "")), 14, CYAN))
+	var hero := HBoxContainer.new()
+	hero.name = "BossReadyHeroFocus"
+	hero.add_theme_constant_override("separation", 12)
+	panel.add_child(hero)
+	var portrait_frame := PanelContainer.new()
+	portrait_frame.custom_minimum_size = Vector2(132 if compact else 172, 132 if compact else 168)
+	portrait_frame.add_theme_stylebox_override("panel", _box(Color("#142329"), GOLD))
+	hero.add_child(portrait_frame)
+	var portrait := TextureRect.new()
+	portrait.texture = _faction_choice_portrait("assault")
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait_frame.add_child(portrait)
+	var command := VBoxContainer.new()
+	command.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	command.add_theme_constant_override("separation", 5)
+	hero.add_child(command)
+	command.add_child(_label("2★ 战术已装填", 12, GREEN))
+	command.add_child(_label(String(boss_ready.get("hero_name", "")), 21 if compact else 25, GOLD))
+	command.add_child(_label(String(boss_ready.get("route", "")), 14, CYAN))
+	var tactic := _label(String(boss_ready.get("tactic", "")), 13, TEXT)
+	tactic.name = "BossReadyTactic"
+	command.add_child(tactic)
 	var team_power := int(boss_ready.get("team_power", 0))
 	var recommended_power := int(boss_ready.get("recommended_power", 0))
-	panel.add_child(_label(
+	command.add_child(_label(
 		"军团战力 %d / 推荐 %d · %s" % [
 			team_power,
 			recommended_power,
@@ -173,91 +188,111 @@ func _boss_ready_panel(boss_ready: Dictionary) -> Control:
 		14,
 		GREEN if team_power >= recommended_power else GOLD
 	))
-	panel.add_child(_label(
+	var safety_copy := _label(
 		"失败不会损失角色或资源；结算会区分成长、巨炮时机和阵容问题。",
 		12,
 		GREEN
-	))
+	)
+	safety_copy.visible = false
+	command.add_child(safety_copy)
 	var action := _button(
-		"进攻 %s" % String(boss_ready.get("stage_name", "章节决战")),
+		"出击 · %s" % String(boss_ready.get("stage_name", "章节决战")),
 		true
 	)
 	action.name = "BossReadyAttackButton"
-	action.custom_minimum_size.y = 52
+	action.custom_minimum_size.y = 58
+	action.icon = FORMATION_ICON
+	action.expand_icon = true
 	action.pressed.connect(action_requested.emit.bind("boss", {
 		"stage_id": String(boss_ready.get("stage_id", "stage_1_5")),
 	}))
-	panel.add_child(action)
+	command.add_child(action)
 	return panel
 
 
 func _growth_choice_panel(first_growth: Dictionary) -> Control:
-	var panel := _panel("首次战斗成长 · 冲锋/装甲二选一升至 2★ · 挑战 %s" % String(first_growth.get("target_stage", "章节首领")))
+	var compact := bool(_view.get("compact", get_viewport_rect().size.x < 720.0))
+	var panel := _panel("")
 	panel.name = "FirstGrowthChoice"
+	var heading := HBoxContainer.new()
+	heading.custom_minimum_size.y = 42
+	heading.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	panel.add_child(heading)
+	var title := _label("选择首个 2★ 战术", 18, CYAN)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.add_child(title)
+	var target := _label("决战 · %s" % String(first_growth.get("target_stage", "章节首领")), 12, GOLD)
+	target.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	target.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.add_child(target)
+	var semantics := _label("首次战斗成长 · 冲锋/装甲二选一升至 2★", 10, MUTED)
+	semantics.visible = false
+	panel.add_child(semantics)
 	var choices := first_growth.get("choices", []) as Array
 	var grid := GridContainer.new()
 	grid.name = "FirstGrowthChoiceGrid"
 	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 8)
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	panel.add_child(grid)
 	for choice_value in choices:
 		var choice := choice_value as Dictionary
-		var frame := PanelContainer.new()
-		frame.name = "GrowthRoute_%s" % String(choice.get("archetype_id", ""))
-		frame.custom_minimum_size.x = 250
-		frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		frame.add_theme_stylebox_override("panel", _box(PANEL_2, LINE))
-		var margin := MarginContainer.new()
-		margin.add_theme_constant_override("margin_left", 10)
-		margin.add_theme_constant_override("margin_top", 8)
-		margin.add_theme_constant_override("margin_right", 10)
-		margin.add_theme_constant_override("margin_bottom", 8)
-		frame.add_child(margin)
-		var card := _panel("")
-		margin.add_child(card)
-		var archetype_id := String(choice.get("archetype_id", ""))
-		card.add_child(_label(
-			"%s · %s" % [
-				String(choice.get("display_name", "")),
-				"快攻" if archetype_id == "assault" else "守势",
-			],
-			16,
-			TEXT
-		))
-		card.add_child(_label(String(choice.get("route", "")), 12, CYAN))
-		card.add_child(_label(
-			"%s · 战力 %d→%d（+%d）" % [
-				String(choice.get("verified", "")),
-				int(choice.get("power_before", 0)),
-				int(choice.get("power_after", 0)),
-				int(choice.get("power_gain", 0)),
-			],
-			11,
-			GREEN
-		))
-		var resource_context := choice.get("resource_context", {}) as Dictionary
-		if not resource_context.is_empty():
-			card.add_child(_label(
-				"消耗 · %s" % _resource_projection_copy(resource_context),
-				10,
-				GOLD
-			))
-		else:
-			card.add_child(_label("消耗 · %s" % String(choice.get("cost", "")), 10, GOLD))
-		var upgraded := bool(choice.get("already_upgraded", false))
-		var action := _button("已完成二星成长" if upgraded else "选择此路线并升至 2★", true)
-		action.name = "ChooseGrowth_%s" % String(choice.get("archetype_id", ""))
-		action.custom_minimum_size.y = 48
-		action.disabled = upgraded or not bool(choice.get("affordable", false))
-		action.pressed.connect(action_requested.emit.bind("star", {
-			"hero_id": String(choice.get("hero_id", "")),
-		}))
-		card.add_child(action)
-		if not upgraded and not bool(choice.get("affordable", false)):
-			card.add_child(_label("资源不足 · 返回工厂收取后勤", 11, RED))
-		grid.add_child(frame)
+		grid.add_child(_growth_route_card(choice, compact))
 	return panel
+
+
+func _growth_route_card(choice: Dictionary, compact: bool) -> Control:
+	var archetype_id := String(choice.get("archetype_id", ""))
+	var affordable := bool(choice.get("affordable", false))
+	var upgraded := bool(choice.get("already_upgraded", false))
+	var frame := PanelContainer.new()
+	frame.name = "GrowthRoute_%s" % archetype_id
+	frame.custom_minimum_size = Vector2(264 if compact else 388, 190 if compact else 236)
+	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	frame.add_theme_stylebox_override("panel", _box(Color("#142329") if archetype_id == "assault" else Color("#222119"), CYAN if archetype_id == "assault" else GOLD))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 7)
+	frame.add_child(row)
+	var portrait := TextureRect.new()
+	portrait.name = "GrowthPortrait_%s" % archetype_id
+	portrait.texture = _faction_choice_portrait(archetype_id)
+	portrait.custom_minimum_size = Vector2(106 if compact else 150, 170 if compact else 216)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.modulate = Color(0.56, 0.58, 0.58, 0.72) if not affordable else Color.WHITE
+	row.add_child(portrait)
+	var command := VBoxContainer.new()
+	command.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	command.add_theme_constant_override("separation", 3)
+	row.add_child(command)
+	command.add_child(_label("⚡ 快攻" if archetype_id == "assault" else "◆ 守势", 15, CYAN if archetype_id == "assault" else GOLD))
+	var name := _label(String(choice.get("display_name", "")), 15 if compact else 18, TEXT)
+	name.max_lines_visible = 1
+	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	command.add_child(name)
+	var route_copy := String(choice.get("route", "")).get_slice("·", 1).strip_edges()
+	command.add_child(_label(route_copy, 11, TEXT))
+	command.add_child(_label("战力 +%d  ·  %s" % [int(choice.get("power_gain", 0)), String(choice.get("verified", ""))], 10, GREEN))
+	var cost_copy := String(choice.get("cost", ""))
+	var resource_context := choice.get("resource_context", {}) as Dictionary
+	if not resource_context.is_empty():
+		cost_copy = _resource_projection_copy(resource_context)
+	command.add_child(_label("消耗 · %s" % cost_copy, 10, GOLD if affordable else RED))
+	var action := _button("已完成 2★" if upgraded else ("选择 2★" if affordable else "军团数据不足"), affordable)
+	action.name = "ChooseGrowth_%s" % archetype_id
+	action.custom_minimum_size.y = 52
+	action.icon = RECRUIT_STAR_ICON if affordable else CODEX_LOCK_ICON
+	action.expand_icon = true
+	action.disabled = upgraded or not affordable
+	action.pressed.connect(action_requested.emit.bind("star", {"hero_id": String(choice.get("hero_id", ""))}))
+	command.add_child(action)
+	if not upgraded and not affordable:
+		var blocked_semantics := _label("资源不足 · 返回工厂收取后勤", 10, RED)
+		blocked_semantics.visible = false
+		command.add_child(blocked_semantics)
+	return frame
 
 
 func _formation_panel() -> Control:

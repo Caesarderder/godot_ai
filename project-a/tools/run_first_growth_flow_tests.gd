@@ -201,7 +201,10 @@ func _run() -> void:
 	)
 	assault.star = 2
 	var attack := main.find_child("BossReadyAttackButton", true, false) as Button
-	_check(attack != null and attack.text.contains("进攻 1-5"), "boss verification exposes one exact test action")
+	_check(
+		attack != null and attack.text.contains("出击") and attack.text.contains("1-5"),
+		"boss verification exposes one exact test action"
+	)
 	if attack != null:
 		attack.pressed.emit()
 		await _wait_frames(4)
