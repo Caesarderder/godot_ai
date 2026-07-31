@@ -23,6 +23,7 @@ config/icon="res://release/web-icon.svg"
 SaveManager="*res://game/scripts/autoloads/save_manager.gd"
 Game="*res://game/scripts/autoloads/game.gd"
 AppBootstrap="*res://game/scripts/autoloads/app_bootstrap.gd"
+MobileScrollInput="*res://game/scripts/autoloads/mobile_scroll_input.gd"
 
 [display]
 

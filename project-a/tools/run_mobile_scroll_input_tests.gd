@@ -29,8 +29,11 @@ func _run() -> void:
 	await process_frame
 
 	_dispatch_touch(0, Vector2(140, 180), true)
+	await process_frame
 	_dispatch_drag(0, Vector2(140, 100), Vector2(0, -80))
+	await process_frame
 	_dispatch_drag(0, Vector2(140, 55), Vector2(0, -45))
+	await process_frame
 	_dispatch_touch(0, Vector2(140, 55), false)
 	await process_frame
 	_check(scroll.scroll_vertical >= 100, "finger drag scrolls a list even when the gesture starts on a button")
@@ -44,6 +47,31 @@ func _run() -> void:
 	Input.parse_input_event(wheel)
 	await process_frame
 	_check(scroll.scroll_vertical > before_wheel, "desktop mouse wheel remains supported")
+
+	var strip := ScrollContainer.new()
+	strip.name = "MobileHorizontalProbe"
+	strip.position = Vector2(310, 20)
+	strip.size = Vector2(238, 110)
+	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	root.add_child(strip)
+	var strip_content := HBoxContainer.new()
+	strip_content.custom_minimum_size = Vector2(720, 110)
+	strip.add_child(strip_content)
+	for index in 6:
+		var card := Button.new()
+		card.text = "建筑 %d" % index
+		card.custom_minimum_size = Vector2(116, 100)
+		strip_content.add_child(card)
+	await process_frame
+	await process_frame
+	_dispatch_touch(1, Vector2(500, 75), true)
+	await process_frame
+	_dispatch_drag(1, Vector2(410, 75), Vector2(-90, 0))
+	await process_frame
+	_dispatch_touch(1, Vector2(410, 75), false)
+	await process_frame
+	_check(strip.scroll_horizontal >= 80, "finger drag scrolls horizontal building and character strips")
 
 	if failures.is_empty():
 		print("MOBILE_SCROLL_INPUT_TESTS_OK")
@@ -59,7 +87,7 @@ func _dispatch_touch(index: int, position: Vector2, pressed: bool) -> void:
 	event.index = index
 	event.position = position
 	event.pressed = pressed
-	Input.parse_input_event(event)
+	(root.get_node("MobileScrollInput") as Node).call("_input", event)
 
 
 func _dispatch_drag(index: int, position: Vector2, relative: Vector2) -> void:
@@ -67,7 +95,7 @@ func _dispatch_drag(index: int, position: Vector2, relative: Vector2) -> void:
 	event.index = index
 	event.position = position
 	event.relative = relative
-	Input.parse_input_event(event)
+	(root.get_node("MobileScrollInput") as Node).call("_input", event)
 
 
 func _check(condition: bool, message: String) -> void:
