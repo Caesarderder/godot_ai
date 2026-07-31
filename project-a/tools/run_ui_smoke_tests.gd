@@ -1503,11 +1503,21 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		var pause_retreat := instance.find_child("BattlePauseRetreatButton", true, false) as Button
 		var pause_volume := instance.find_child("BattlePauseVolumeSlider", true, false) as HSlider
 		var pause_reduced := instance.find_child("BattlePauseReducedMotionToggle", true, false) as CheckButton
+		var pause_card := instance.find_child("BattlePauseCard", true, false) as PanelContainer
+		var pause_shade := instance.find_child("BattlePauseShade", true, false) as ColorRect
+		var pause_header_icon := instance.find_child("BattlePauseHeaderIcon", true, false) as TextureRect
+		var pause_volume_icon := instance.find_child("BattlePauseVolumeIcon", true, false) as TextureRect
 		_ok(pause_overlay != null and pause_overlay.visible, "pausing opens a blocking full-screen battle menu")
 		_ok(pause_overlay != null and pause_overlay.process_mode == Node.PROCESS_MODE_ALWAYS, "battle pause menu remains interactive while combat is frozen")
 		_ok(pause_resume != null and pause_resume.custom_minimum_size.y >= 48.0, "pause menu exposes a touch-sized resume action")
 		_ok(pause_retreat != null and pause_retreat.custom_minimum_size.y >= 48.0, "pause menu keeps the durable retreat path available")
 		_ok(pause_volume != null and pause_reduced != null, "pause menu exposes safe audio and reduced-motion settings without destroying the battle")
+		_ok(pause_card != null and pause_card.size.x <= 380.0, "pause command surface preserves battlefield context instead of filling the phone")
+		_ok(pause_shade != null and pause_shade.color.a <= 0.75, "pause shade keeps the frozen battle legible behind the command surface")
+		_ok(pause_header_icon != null and pause_header_icon.texture != null and pause_volume_icon != null and pause_volume_icon.texture != null, "pause state and audio setting use repository raster icon semantics")
+		_ok(pause_resume != null and pause_resume.icon != null and pause_retreat != null and pause_retreat.icon != null, "resume and retreat actions are icon-led without hiding their short labels")
+		_ok(pause_reduced != null and pause_reduced.text == "动效" and pause_reduced.icon != null, "reduced-motion control uses concise icon-led copy")
+		_ok(not _tree_has_text(pause_card, "战线冻结") and not _tree_has_text(pause_card, "战线与技能计时均已冻结"), "compact pause HUD removes redundant frozen-state prose")
 		var cancel_event := InputEventAction.new()
 		cancel_event.action = "ui_cancel"
 		cancel_event.pressed = true

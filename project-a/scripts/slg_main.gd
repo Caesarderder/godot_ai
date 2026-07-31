@@ -58,6 +58,10 @@ const CJKFont := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const NAV_WAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const NAV_LEGION_ICON := preload("res://assets/ui/icons/kenney_game_icons/multiplayer.png")
 const NAV_GOALS_ICON := preload("res://assets/ui/icons/kenney_game_icons/trophy.png")
+const BATTLE_PAUSE_ICON := preload("res://assets/ui/icons/kenney_game_icons/pause.png")
+const BATTLE_PAUSE_SIGNAL_ICON := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
+const BATTLE_PAUSE_SETTINGS_ICON := preload("res://assets/ui/icons/kenney_game_icons/gear.png")
+const BATTLE_PAUSE_EXIT_ICON := preload("res://assets/ui/icons/kenney_game_icons/exit_right.png")
 
 enum Screen { BOOT, TITLE, SETTINGS, BASE, MAP, LEGION, GOALS, INTELLIGENCE, BATTLE, RESULT, EPILOGUE, HELP, BLUEPRINTS }
 
@@ -2883,7 +2887,8 @@ func _build_battle_pause_overlay() -> void:
 	ui_root.add_child(battle_pause_overlay)
 
 	var shade := ColorRect.new()
-	shade.color = Color(BG, 0.88)
+	shade.name = "BattlePauseShade"
+	shade.color = Color(BG, 0.72)
 	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	battle_pause_overlay.add_child(shade)
@@ -2894,23 +2899,29 @@ func _build_battle_pause_overlay() -> void:
 	battle_pause_overlay.add_child(center)
 	var card := PanelContainer.new()
 	card.name = "BattlePauseCard"
-	card.custom_minimum_size = Vector2(410, 0)
+	card.custom_minimum_size = Vector2(360, 0)
 	card.add_theme_stylebox_override("panel", _box(PANEL, 14, CYAN))
 	center.add_child(card)
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 8)
+	content.add_theme_constant_override("separation", 5)
 	card.add_child(content)
-	var title := _label("战斗已暂停", 24, TEXT)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(title)
-	var hint := _label("战线与技能计时均已冻结", 13, GREEN)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(hint)
+	var header := HBoxContainer.new()
+	header.custom_minimum_size.y = 42
+	header.add_theme_constant_override("separation", 8)
+	header.add_child(_battle_pause_icon(BATTLE_PAUSE_ICON, "BattlePauseHeaderIcon"))
+	var title := _label("暂停", 22, TEXT)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.tooltip_text = "战斗进程与技能计时已冻结"
+	header.add_child(title)
+	content.add_child(header)
 
 	var volume_row := HBoxContainer.new()
 	volume_row.custom_minimum_size.y = 48
-	var volume_label := _label("主音量", 14, TEXT)
-	volume_label.custom_minimum_size.x = 72
+	volume_row.add_theme_constant_override("separation", 6)
+	volume_row.add_child(_battle_pause_icon(BATTLE_PAUSE_SIGNAL_ICON, "BattlePauseVolumeIcon"))
+	var volume_label := _label("音量", 14, TEXT)
+	volume_label.custom_minimum_size.x = 42
 	volume_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	volume_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	volume_row.add_child(volume_label)
@@ -2920,7 +2931,7 @@ func _build_battle_pause_overlay() -> void:
 	volume.max_value = 100
 	volume.step = 1
 	volume.value = settings_store.master_volume
-	volume.custom_minimum_size = Vector2(250, 48)
+	volume.custom_minimum_size = Vector2(190, 48)
 	volume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	volume.value_changed.connect(func(value: float) -> void:
 		settings_store.set_master_volume(value)
@@ -2934,7 +2945,11 @@ func _build_battle_pause_overlay() -> void:
 
 	var reduced := CheckButton.new()
 	reduced.name = "BattlePauseReducedMotionToggle"
-	reduced.text = "减少动态效果"
+	reduced.text = "动效"
+	reduced.icon = BATTLE_PAUSE_SETTINGS_ICON
+	reduced.expand_icon = true
+	reduced.add_theme_constant_override("icon_max_width", 28)
+	reduced.tooltip_text = "减少动态效果"
 	reduced.button_pressed = settings_store.reduced_motion
 	reduced.custom_minimum_size.y = 48
 	reduced.toggled.connect(func(enabled: bool) -> void:
@@ -2947,15 +2962,38 @@ func _build_battle_pause_overlay() -> void:
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	content.add_child(actions)
-	battle_pause_resume_button = _button("继续战斗", Callable(self, "_set_battle_paused").bind(false), true)
+	battle_pause_resume_button = _button("继续", Callable(self, "_set_battle_paused").bind(false), true)
 	battle_pause_resume_button.name = "BattlePauseResumeButton"
+	battle_pause_resume_button.icon = NAV_WAR_ICON
+	battle_pause_resume_button.expand_icon = true
+	battle_pause_resume_button.add_theme_constant_override("icon_max_width", 28)
 	battle_pause_resume_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(battle_pause_resume_button)
-	var retreat := _button("撤退并结算", _retreat, false)
+	var retreat := _button("撤退", _retreat, false)
 	retreat.name = "BattlePauseRetreatButton"
+	retreat.icon = BATTLE_PAUSE_EXIT_ICON
+	retreat.expand_icon = true
+	retreat.add_theme_constant_override("icon_max_width", 28)
+	retreat.add_theme_stylebox_override("normal", _box(Color(RED, 0.12), 8, Color(RED, 0.75)))
+	retreat.add_theme_stylebox_override("hover", _box(Color(RED, 0.2), 8, RED))
+	retreat.add_theme_stylebox_override("pressed", _box(Color(RED, 0.3), 8, RED))
+	retreat.add_theme_color_override("font_color", Color("#f29b91"))
+	retreat.add_theme_color_override("font_hover_color", Color("#ffd4cf"))
 	retreat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(retreat)
 	_apply_mobile_interactive_targets.call_deferred()
+
+
+func _battle_pause_icon(texture: Texture2D, node_name: String) -> TextureRect:
+	var icon := TextureRect.new()
+	icon.name = node_name
+	icon.texture = texture
+	icon.custom_minimum_size = Vector2(32, 32)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return icon
 
 
 func _on_runtime_state_changed(state: Dictionary) -> void:
