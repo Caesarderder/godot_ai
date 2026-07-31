@@ -43,6 +43,7 @@ func _verify_layout(viewport_size: Vector2, compact: bool, unit_count: int) -> v
 	var portraits := hud.find_children("BattleUnitPortrait_*", "TextureRect", true, false)
 	var cards := hud.find_children("BattleUnitCard_*", "PanelContainer", true, false)
 	var name_labels := hud.find_children("BattleUnitNameLabel", "Label", true, false)
+	var role_badges := hud.find_children("BattleUnitRoleBadge_*", "TextureRect", true, false)
 	var portraits_valid := portraits.size() == unit_count
 	for value in portraits:
 		var portrait := value as TextureRect
@@ -52,6 +53,10 @@ func _verify_layout(viewport_size: Vector2, compact: bool, unit_count: int) -> v
 	var cards_touch_sized := cards.size() == unit_count
 	for value in cards:
 		cards_touch_sized = cards_touch_sized and (value as Control).size.y >= 44.0
+	var role_badges_valid := role_badges.size() == unit_count
+	for value in role_badges:
+		var badge := value as TextureRect
+		role_badges_valid = role_badges_valid and badge.texture != null and badge.visible == compact
 	_check(
 		tactical_style != null and tactical_style.bg_color.a <= 0.01,
 		"%s top controls float over the battlefield instead of drawing a full-width slab" % viewport_size
@@ -82,6 +87,11 @@ func _verify_layout(viewport_size: Vector2, compact: bool, unit_count: int) -> v
 		hud.find_children("Battle生命Bar", "ProgressBar", true, false).size() == unit_count
 			and hud.find_children("Battle技能充能Bar", "ProgressBar", true, false).size() == unit_count,
 		"%s replaces visible HP/EN table rows with paired health and charge bars" % viewport_size
+	)
+	_check(
+		hud.find_children("Battle技能充能Icon", "TextureRect", true, false).size() == unit_count
+			and role_badges_valid,
+		"%s gives charge and compact character roles distinct raster semantics" % viewport_size
 	)
 	_check(
 		(not compact and name_labels.all(func(value: Node) -> bool: return (value as Control).visible))

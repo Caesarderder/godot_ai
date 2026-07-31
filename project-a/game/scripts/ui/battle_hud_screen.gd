@@ -12,6 +12,10 @@ const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd
 const ICON_PAUSE := preload("res://assets/ui/icons/kenney_game_icons/pause.png")
 const ICON_TARGET := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const ICON_RETREAT := preload("res://assets/ui/icons/kenney_game_icons/exit_right.png")
+const ICON_STAR := preload("res://assets/ui/icons/kenney_game_icons/star.png")
+const ICON_WRENCH := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
+const ICON_WARNING := preload("res://assets/ui/icons/kenney_game_icons/warning.png")
+const ICON_SIGNAL := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
 const PANEL := Color("#0b1117e8")
 const PANEL_2 := Color("#111a21")
 const LINE := Color("#42525d")
@@ -626,17 +630,32 @@ func _build_unit_card(
 	var content := HBoxContainer.new()
 	content.add_theme_constant_override("separation", 5 if not dense else 3)
 	root.add_child(content)
+	var portrait_column := VBoxContainer.new()
+	portrait_column.alignment = BoxContainer.ALIGNMENT_CENTER
+	portrait_column.add_theme_constant_override("separation", 1)
+	content.add_child(portrait_column)
 	var portrait := TextureRect.new()
 	portrait.name = "BattleUnitPortrait_%s" % unit_id
 	portrait.texture = _battle_portrait(snapshot)
-	var portrait_size := 30.0 if dense else (38.0 if compact else 46.0)
+	var portrait_size := 34.0 if dense else (42.0 if compact else 46.0)
 	portrait.custom_minimum_size = Vector2(portrait_size, portrait_size)
 	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	portrait.tooltip_text = String(snapshot.get("display_name", unit_id))
-	content.add_child(portrait)
+	portrait_column.add_child(portrait)
+	var role_badge := TextureRect.new()
+	role_badge.name = "BattleUnitRoleBadge_%s" % unit_id
+	role_badge.texture = _battle_role_icon(snapshot)
+	role_badge.custom_minimum_size = Vector2(12, 12)
+	role_badge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	role_badge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	role_badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	role_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	role_badge.tooltip_text = "角色职责"
+	role_badge.visible = compact
+	portrait_column.add_child(role_badge)
 	var stack := VBoxContainer.new()
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -665,7 +684,7 @@ func _build_unit_card(
 		8.0
 	)
 	stack.add_child(hp["root"])
-	var energy := _portrait_meter("技能充能", CYAN, 0, 100, 6.0)
+	var energy := _portrait_meter("技能充能", CYAN, 0, 100, 8.0, ICON_TARGET)
 	stack.add_child(energy["root"])
 	var skill := Button.new()
 	skill.name = "BattleSkillButton_%s" % unit_id
@@ -677,8 +696,10 @@ func _build_unit_card(
 		String(snapshot.get("skill_timing", "能量达到 100% 后释放")),
 	]
 	var empty_style := StyleBoxEmpty.new()
-	for state in ["normal", "hover", "pressed", "disabled"]:
-		skill.add_theme_stylebox_override(state, empty_style)
+	skill.add_theme_stylebox_override("normal", empty_style)
+	skill.add_theme_stylebox_override("disabled", empty_style)
+	skill.add_theme_stylebox_override("hover", _box(Color(CYAN, 0.06), 6, Color(CYAN, 0.55)))
+	skill.add_theme_stylebox_override("pressed", _box(Color(CYAN, 0.14), 6, CYAN))
 	skill.add_theme_stylebox_override("focus", _box(Color(0, 0, 0, 0), 6, Color.WHITE))
 	skill.pressed.connect(skill_requested.emit.bind(unit_id))
 	root.add_child(skill)
@@ -694,6 +715,7 @@ func _build_unit_card(
 		"energy_label": energy["value"],
 		"state_label": state_label,
 		"portrait": portrait,
+		"role_badge": role_badge,
 	}
 
 
@@ -706,16 +728,40 @@ func _battle_portrait(snapshot: Dictionary) -> Texture2D:
 	return ICON_TARGET
 
 
+func _battle_role_icon(snapshot: Dictionary) -> Texture2D:
+	var archetype_id := String(snapshot.get("archetype_id", "gman"))
+	if archetype_id == "gman":
+		return ICON_STAR
+	if archetype_id.contains("repair") or archetype_id.contains("support"):
+		return ICON_WRENCH
+	if archetype_id.contains("armored") or archetype_id.contains("bulwark"):
+		return ICON_WARNING
+	if archetype_id.contains("signal") or archetype_id.contains("sonic"):
+		return ICON_SIGNAL
+	return ICON_TARGET
+
+
 func _portrait_meter(
 	label_text: String,
 	color: Color,
 	value: int,
 	maximum: int,
-	height: float
+	height: float,
+	semantic_icon: Texture2D = null
 ) -> Dictionary:
 	var row := HBoxContainer.new()
 	row.custom_minimum_size.y = height
 	row.tooltip_text = label_text
+	if semantic_icon != null:
+		var icon := TextureRect.new()
+		icon.name = "Battle%sIcon" % label_text
+		icon.texture = semantic_icon
+		icon.custom_minimum_size = Vector2(12, 12)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.tooltip_text = label_text
+		row.add_child(icon)
 	var bar := ProgressBar.new()
 	bar.name = "Battle%sBar" % label_text
 	bar.show_percentage = false
@@ -742,12 +788,16 @@ func _unit_card_style(highlighted: bool) -> StyleBoxFlat:
 	var style := _box(
 		Color(PANEL_2, 0.9),
 		5,
-		GOLD if highlighted else Color(0, 0, 0, 0)
+		GOLD if highlighted else Color(CYAN, 0.38)
 	)
+	style.content_margin_left = 5
+	style.content_margin_right = 5
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
 	if highlighted:
 		style.set_border_width_all(2)
 	else:
-		style.set_border_width_all(0)
+		style.set_border_width_all(1)
 	return style
 
 
