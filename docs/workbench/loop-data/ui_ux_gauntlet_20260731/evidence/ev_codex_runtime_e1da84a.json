@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_codex_runtime_e1da84a",
   "revision": "e1da84a",
-  "valid_through_revision": "4336f06",
+  "valid_through_revision": "07e7e65",
   "gate_id": "gate_codex_runtime",
   "claim": "Codex selection and research routing preserve stable archetype and recipe identities.",
   "scenario_id": "scenario_codex_gallery_identity",

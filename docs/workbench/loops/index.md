@@ -28,5 +28,5 @@ related:
 |---|---|---|
 | `mobile_slg_ui_refresh_20260730` | `slice_building` | [KM:reference.caesar-loop-run-mobile-slg-ui-refresh-20260730](mobile-slg-ui-refresh-20260730.md) |
 | `mobile_slg_ui_refresh_20260731` | `human_required` | [KM:reference.caesar-loop-run-mobile-slg-ui-refresh-20260731](mobile-slg-ui-refresh-20260731.md) |
-| `ui_ux_gauntlet_20260731` | `integrating` | [KM:reference.caesar-loop-run-ui-ux-gauntlet-20260731](ui-ux-gauntlet-20260731.md) |
+| `ui_ux_gauntlet_20260731` | `unit_looping` | [KM:reference.caesar-loop-run-ui-ux-gauntlet-20260731](ui-ux-gauntlet-20260731.md) |
 <!-- loop-runs:end -->

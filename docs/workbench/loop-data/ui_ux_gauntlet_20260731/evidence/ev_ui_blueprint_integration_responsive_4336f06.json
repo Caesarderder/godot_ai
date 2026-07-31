@@ -45,7 +45,7 @@
   "inference": "本轮共享响应式门可重新通过。",
   "result": "pass",
   "confidence": 0.94,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "568 证据来自同一 shipping screen 的 focused fixture，而非第二次 main-scene launch。"
   ],
