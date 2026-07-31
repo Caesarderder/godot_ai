@@ -11,6 +11,7 @@ const NotificationBadgeScript := preload(
 )
 const FACTORY_FACILITY_ICON := preload("res://assets/ui/icons/factory/factory-facility-v1.png")
 const FACTORY_BUILD_ICON := preload("res://assets/ui/icons/factory/factory-build-v1.png")
+const MISSION_TARGET_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
@@ -199,7 +200,7 @@ func _mission_panel() -> Control:
 	var task := _view.get("task", {}) as Dictionary
 	var panel := _panel("")
 	panel.name = "OnboardingMissionPanel"
-	var title := _label("⚑ 当前行动", 11, GOLD)
+	var title := _label("当前行动", 11, GOLD)
 	title.max_lines_visible = 1
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	panel.add_child(title)
@@ -208,8 +209,11 @@ func _mission_panel() -> Control:
 		var objective := objectives[0] as Dictionary
 		title.tooltip_text = String(objective.get("label", ""))
 	var actions := HBoxContainer.new()
-	var primary := _button("➤  %s" % String(task.get("cta_label", "继续")), true)
+	var primary := _button(String(task.get("cta_label", "继续")), true)
 	primary.name = "FactoryMissionPrimaryAction"
+	primary.icon = MISSION_TARGET_ICON
+	primary.expand_icon = true
+	primary.add_theme_constant_override("icon_max_width", 22)
 	primary.tooltip_text = String(task.get("title", "当前行动"))
 	primary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if bool(task.get("completed", false)) and not bool(task.get("claimed", false)):

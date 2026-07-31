@@ -1000,6 +1000,23 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(factory_resource_hud != null and not (factory_resource_hud.get_parent() is ScrollContainer), "factory resources remain fixed outside scrolling detail")
 	_ok(instance.find_child("FactoryDetailScroll", true, false) == null, "factory detail remains scroll-free after construction refreshes")
 	_ok(instance.get_node_or_null("WorldHost/FactoryCamera") != null, "factory screen builds an interactive 3D camera")
+	var factory_environment := instance.get_node_or_null("WorldHost/FactoryEnvironment") as WorldEnvironment
+	_ok(
+		factory_environment != null
+			and factory_environment.environment != null
+			and factory_environment.environment.ambient_light_energy >= 0.7,
+		"factory world keeps enough ambient separation for dark mobile displays"
+	)
+	_ok(instance.get_node_or_null("WorldHost/FactoryRimLight") is DirectionalLight3D, "factory adds a cool rim light to separate machinery from the deck")
+	for nav_name in ["TopNav战区Button", "TopNav军团Button", "TopNav行动Button"]:
+		var nav_button := instance.find_child(nav_name, true, false) as Button
+		_ok(
+			nav_button != null
+				and nav_button.icon != null
+				and nav_button.text.is_empty()
+				and nav_button.custom_minimum_size.y >= 48.0,
+			"factory destination uses a text-free raster icon with a 48px touch target: %s" % nav_name
+		)
 	for facility_id in ["command_center", "porcelain_plant"]:
 		var building := instance.get_node_or_null("WorldHost/FactoryBuilding_%s" % facility_id)
 		_ok(building != null and String(building.get_meta("facility_id", "")) == facility_id, "factory builds clickable %s" % facility_id)

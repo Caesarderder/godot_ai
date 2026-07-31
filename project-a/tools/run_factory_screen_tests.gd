@@ -24,6 +24,7 @@ func _run() -> void:
 		"factory keeps logistics in a shrink-wrapped edge island"
 	)
 	var mission_action := factory.find_child("FactoryMissionPrimaryAction", true, false) as Button
+	_check(mission_action != null and mission_action.icon != null, "factory mission action uses a raster target icon instead of a Unicode arrow")
 	_check(
 		mission_action != null
 		and mission_action.text.contains("前往 1-4")

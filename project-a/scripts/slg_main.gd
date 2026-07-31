@@ -55,6 +55,9 @@ const LocalPlaytestJournalScript := preload("res://game/scripts/platform/local_p
 const AudioDirectorScript := preload("res://game/scripts/presentation/audio_director.gd")
 const MusicDirectorScene := preload("res://game/scenes/presentation/music_director.tscn")
 const CJKFont := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const NAV_WAR_ICON := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const NAV_LEGION_ICON := preload("res://assets/ui/icons/kenney_game_icons/multiplayer.png")
+const NAV_GOALS_ICON := preload("res://assets/ui/icons/kenney_game_icons/trophy.png")
 
 enum Screen { BOOT, TITLE, SETTINGS, BASE, MAP, LEGION, GOALS, INTELLIGENCE, BATTLE, RESULT, EPILOGUE, HELP, BLUEPRINTS }
 
@@ -4801,8 +4804,9 @@ func _build_factory_world() -> void:
 	environment_resource.background_mode = Environment.BG_COLOR
 	environment_resource.background_color = Color("#151a1c")
 	environment_resource.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment_resource.ambient_light_color = Color("#739096")
-	environment_resource.ambient_light_energy = 0.56
+	environment_resource.ambient_light_color = Color("#86a6ab")
+	environment_resource.ambient_light_energy = 0.72
+	environment_resource.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.environment = environment_resource
 	world_host.add_child(environment)
 
@@ -4813,6 +4817,14 @@ func _build_factory_world() -> void:
 	sun.light_energy = 1.15
 	sun.shadow_enabled = true
 	world_host.add_child(sun)
+
+	var rim_light := DirectionalLight3D.new()
+	rim_light.name = "FactoryRimLight"
+	rim_light.rotation_degrees = Vector3(-28.0, 142.0, 0.0)
+	rim_light.light_color = Color("#6edbd4")
+	rim_light.light_energy = 0.48
+	rim_light.shadow_enabled = false
+	world_host.add_child(rim_light)
 
 	factory_camera = Camera3D.new()
 	factory_camera.name = "FactoryCamera"
@@ -4853,13 +4865,13 @@ func _build_factory_world() -> void:
 	deck_mesh.radial_segments = 24
 	deck.mesh = deck_mesh
 	deck.position.y = 0.015
-	deck.material_override = _factory_material(Color("#2d4145"), 0.86)
+	deck.material_override = _factory_material(Color("#354f54"), 0.82)
 	world_host.add_child(deck)
 	for plate_index in range(8):
 		var plate_angle := TAU * float(plate_index) / 8.0
 		var plate := _factory_box(
 			Vector3(3.6, 0.07, 2.15),
-			Color("#20333a") if plate_index % 2 == 0 else Color("#294047")
+			Color("#29434b") if plate_index % 2 == 0 else Color("#315057")
 		)
 		plate.name = "FactoryDeckPlate_%02d" % plate_index
 		plate.position = Vector3(
@@ -4890,10 +4902,10 @@ func _build_factory_world() -> void:
 		)
 		utility_root.rotation.y = -utility_angle
 		world_host.add_child(utility_root)
-		var bunker := _factory_box(Vector3(2.25, 1.05, 1.55), Color("#253b42"))
+		var bunker := _factory_box(Vector3(2.25, 1.05, 1.55), Color("#34545c"))
 		bunker.position.y = 0.58
 		utility_root.add_child(bunker)
-		var pipe := _factory_cylinder(0.22, 0.22, 2.55, Color("#58747a"))
+		var pipe := _factory_cylinder(0.22, 0.22, 2.55, Color("#789399"))
 		pipe.rotation_degrees.z = 90.0
 		pipe.position = Vector3(0.0, 1.22, -0.28)
 		utility_root.add_child(pipe)
@@ -4903,7 +4915,7 @@ func _build_factory_world() -> void:
 				0.42,
 				0.5,
 				tank_height,
-				Color("#36545b") if tank_index == 0 else Color("#2e454c")
+				Color("#4a737b") if tank_index == 0 else Color("#3f6068")
 			)
 			tank.position = Vector3(
 				-0.65 if tank_index == 0 else 0.65,
@@ -4911,7 +4923,7 @@ func _build_factory_world() -> void:
 				0.22
 			)
 			utility_root.add_child(tank)
-		var overhead := _factory_box(Vector3(2.9, 0.18, 0.18), Color("#4d6970"))
+		var overhead := _factory_box(Vector3(2.9, 0.18, 0.18), Color("#789097"))
 		overhead.position = Vector3(0.0, 2.55, 0.2)
 		utility_root.add_child(overhead)
 		var warning := _factory_box(
@@ -5026,7 +5038,7 @@ func _add_factory_building(facility_id: String) -> void:
 	root.collision_mask = 0
 	world_host.add_child(root)
 
-	var pad_color := CYAN.darkened(0.35) if selected_facility_id == facility_id else Color("#364853")
+	var pad_color := CYAN.darkened(0.28) if selected_facility_id == facility_id else Color("#4a606a")
 	var pad := _factory_box(Vector3(3.2, 0.28, 2.8), pad_color)
 	pad.position.y = 0.14
 	root.add_child(pad)
@@ -5338,6 +5350,8 @@ func _factory_material(color: Color, roughness: float) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
 	material.roughness = roughness
+	material.metallic = 0.12
+	material.metallic_specular = 0.42
 	if color.a < 1.0:
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	return material
@@ -5362,17 +5376,24 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 			["军团", Screen.LEGION, _show_legion],
 			["行动", Screen.GOALS, _show_goals],
 		]
-	var base_icons := {"战区":"◇", "军团":"▦", "行动":"◎"}
+	var base_icons := {
+		"战区": NAV_WAR_ICON,
+		"军团": NAV_LEGION_ICON,
+		"行动": NAV_GOALS_ICON,
+	}
 	var notification_counts := NotificationSummaryScript.derive(
 		game.current_state(),
 		int(Time.get_unix_time_from_system())
 	)
 	for entry in entries:
-		var label := String(base_icons.get(String(entry[0]), entry[0])) if active == Screen.BASE else String(entry[0])
+		var label := "" if active == Screen.BASE else String(entry[0])
 		var button := _button(label, entry[2], int(entry[1]) == active)
 		button.name = "TopNav%sButton" % String(entry[0])
 		if active == Screen.BASE:
 			button.tooltip_text = String(entry[0])
+			button.icon = base_icons.get(String(entry[0])) as Texture2D
+			button.expand_icon = true
+			button.add_theme_constant_override("icon_max_width", 28)
 		var badge_count := 0
 		if int(entry[1]) == Screen.BASE:
 			badge_count = int(notification_counts.get("factory_ready", 0))
