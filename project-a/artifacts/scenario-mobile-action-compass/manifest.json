@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "active_hurdle-844x390.png",
+    "active_hurdle-568x320.png",
+    "claimable_supply-844x390.png",
+    "claimable_supply-568x320.png",
+    "locked_missions-844x390.png",
+    "locked_missions-568x320.png"
+  ],
+  "assertions": [
+    "active hurdle emits follow_task with stage_1_4",
+    "claimable supply emits claim_starter_gift with rookie_departure_v1",
+    "locked missions expose no mission claim action",
+    "all visible primary actions remain at least 48 logical pixels"
+  ],
+  "cases": [
+    "active_hurdle",
+    "claimable_supply",
+    "locked_missions"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping GoalsScreen through configure and action_requested",
+  "scenario_id": "scenario_mobile_objective_action_compass",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}

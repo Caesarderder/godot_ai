@@ -1,0 +1,54 @@
+{
+  "evidence_id": "ev_ui_blueprint_integration_responsive_4336f06",
+  "revision": "4336f06",
+  "valid_through_revision": "4336f06",
+  "gate_id": "gate_ui_responsive",
+  "claim": "All decisive map targets and primary actions fit and remain operable at 844x390 and 568x320.",
+  "scenario_id": "scenario_ui_path_integration",
+  "execution_id": "ui_blueprint_integration_4336f06",
+  "evidence_type": "capture",
+  "artifact_or_command": "project-a/artifacts/ui-blueprint-tree-844x390.png",
+  "case_results": [
+    {
+      "case_id": "cross_screen_cohesion",
+      "result": "pass",
+      "assertions": [
+        "顶部资源和菜单保留",
+        "分支与主要操作完整位于内容区"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-blueprint-tree-844x390.png",
+        "project-a/artifacts/scenario-blueprint-character-forge/available_research-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "UI smoke assertions",
+    "canonical captures",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "App Shell responsive capture audit",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "真实 844 App Shell 与紧凑 568 fixture 均保留核心交互。",
+  "inference": "本轮共享响应式门可重新通过。",
+  "result": "pass",
+  "confidence": 0.94,
+  "freshness": "current",
+  "limitations": [
+    "568 证据来自同一 shipping screen 的 focused fixture，而非第二次 main-scene launch。"
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

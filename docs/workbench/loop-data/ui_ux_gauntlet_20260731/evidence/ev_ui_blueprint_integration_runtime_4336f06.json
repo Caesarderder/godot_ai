@@ -1,0 +1,53 @@
+{
+  "evidence_id": "ev_ui_blueprint_integration_runtime_4336f06",
+  "revision": "4336f06",
+  "valid_through_revision": "4336f06",
+  "gate_id": "gate_ui_runtime",
+  "claim": "Title, factory and war-zone actions use shipping state and navigation without regressions.",
+  "scenario_id": "scenario_ui_path_integration",
+  "execution_id": "ui_blueprint_integration_4336f06",
+  "evidence_type": "test",
+  "artifact_or_command": "cd project-a && godot --headless --path . -s tools/run_ui_smoke_tests.gd && godot --headless --path . -s tools/run_ui_focus_tests.gd",
+  "case_results": [
+    {
+      "case_id": "cross_screen_cohesion",
+      "result": "pass",
+      "assertions": [
+        "UI smoke tests pass",
+        "visible controls remain focusable"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-blueprint-tree-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "UI smoke assertions",
+    "canonical captures",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "shared UI smoke and focus suites",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "UI SMOKE TESTS PASS；UI_FOCUS_TESTS_OK。",
+  "inference": "共享 UI 路径在当前提交可运行。",
+  "result": "pass",
+  "confidence": 0.97,
+  "freshness": "current",
+  "limitations": [
+    "未覆盖完整章节旅程。"
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

@@ -49,7 +49,8 @@
         "gate_legion_visual",
         "gate_codex_visual",
         "gate_faction_choice_visual",
-        "gate_blueprint_forge_visual"
+        "gate_blueprint_forge_visual",
+        "gate_action_compass_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -91,7 +92,9 @@
         "gate_faction_choice_visual",
         "gate_faction_choice_runtime",
         "gate_blueprint_forge_visual",
-        "gate_blueprint_forge_runtime"
+        "gate_blueprint_forge_runtime",
+        "gate_action_compass_visual",
+        "gate_action_compass_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -157,7 +160,8 @@
       "gate_ids": [
         "gate_player_learning",
         "gate_faction_choice_visual",
-        "gate_blueprint_forge_visual"
+        "gate_blueprint_forge_visual",
+        "gate_action_compass_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -174,7 +178,8 @@
         "gate_legion_responsive",
         "gate_codex_responsive",
         "gate_faction_choice_responsive",
-        "gate_blueprint_forge_responsive"
+        "gate_blueprint_forge_responsive",
+        "gate_action_compass_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -195,7 +200,9 @@
         "gate_faction_choice_runtime",
         "gate_faction_choice_responsive",
         "gate_blueprint_forge_runtime",
-        "gate_blueprint_forge_responsive"
+        "gate_blueprint_forge_responsive",
+        "gate_action_compass_runtime",
+        "gate_action_compass_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -1450,6 +1457,190 @@
       "limitations": [
         "Static captures cannot prove whether the permanent-character reward feels valuable to a target player."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_objective_action_compass",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping GoalsScreen action states without navigating the production main scene.",
+      "player_question": "Can the player identify the one action that advances the campaign now, its obstacle, and the immediate reward without reading a dashboard?",
+      "gate_ids": [
+        "gate_action_compass_visual",
+        "gate_action_compass_runtime",
+        "gate_action_compass_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_action_compass_scenario.gd and run_goals_screen_tests.gd",
+        "shipping_surface": "goals_screen.gd action tab and slg_main goal projection",
+        "public_adapter": "GoalsScreen.configure plus action_requested goal_action/claim_starter_gift"
+      },
+      "fixture": {
+        "subject_parameter": "objective_action_state",
+        "reuse_scope": "active hurdle, claimable supply and locked mission states",
+        "extension_contract": "add a deterministic GoalsScreen view state; never duplicate campaign, objective, reward or unlock rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate goals_screen.tscn directly with deterministic shipping view dictionaries",
+        "state": "first-chapter high-wall action with real campaign hierarchy, reward and durable action IDs",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_active_hurdle",
+          "at": "case start",
+          "action": "show the current 1-4 high-wall action and its immediate reward preview"
+        },
+        {
+          "stimulus_id": "show_claimable_supply",
+          "at": "after active hurdle",
+          "action": "show a completed starter reward waiting for one-tap claim"
+        },
+        {
+          "stimulus_id": "show_locked_missions",
+          "at": "after reward",
+          "action": "show the next mission system locked by commander level with no fake progress action"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "action_compass_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-action-compass/manifest.json"
+        },
+        {
+          "observation_id": "action_compass_standard",
+          "source": "fixed 844x390 captures",
+          "window": "all action states",
+          "artifact": "project-a/artifacts/scenario-mobile-action-compass"
+        },
+        {
+          "observation_id": "action_compass_compact",
+          "source": "fixed 568x320 captures",
+          "window": "all action states",
+          "artifact": "project-a/artifacts/scenario-mobile-action-compass"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "active_hurdle",
+          "state": "campaign action available at the 1-4 wall",
+          "stimulus_ids": [
+            "show_active_hurdle"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "one current target dominates",
+            "obstacle and consequence are concise",
+            "one expedition action dominates"
+          ],
+          "observation_ids": [
+            "action_compass_manifest",
+            "action_compass_standard",
+            "action_compass_compact"
+          ]
+        },
+        {
+          "case_id": "claimable_supply",
+          "state": "starter supply is claimable after a completed milestone",
+          "stimulus_ids": [
+            "show_claimable_supply"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "reward identity dominates",
+            "claim state is unmistakable",
+            "one claim action dominates"
+          ],
+          "observation_ids": [
+            "action_compass_manifest",
+            "action_compass_standard",
+            "action_compass_compact"
+          ]
+        },
+        {
+          "case_id": "locked_missions",
+          "state": "daily and weekly missions remain locked by commander level",
+          "stimulus_ids": [
+            "show_locked_missions"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "lock condition is readable",
+            "current available campaign action remains accessible",
+            "no fake mission claim action appears"
+          ],
+          "observation_ids": [
+            "action_compass_manifest",
+            "action_compass_standard",
+            "action_compass_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "reconfigure a fresh GoalsScreen for each state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "active captures",
+          "claimable captures",
+          "locked captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "case state leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed goal and reward state with no live timer",
+        "warmup": "eight process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_action_compass_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state capture bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_goals_screen_tests.gd && godot --path project-a -s tools/capture_action_compass_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and GoalsScreen after capture",
+      "failure_conditions": [
+        "multiple button-like regions compete with the next action",
+        "copy dominates the current campaign target",
+        "reward and mission lock states look identical",
+        "primary action clips or drops below 48 px"
+      ],
+      "limitations": [
+        "Static captures cannot prove that a target player understands the long-term objective ladder."
+      ]
     }
   ],
   "integration_policy": {
@@ -1798,6 +1989,59 @@
         "branch and thumbnail controls remain operable without hover"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_action_compass_visual",
+      "profile": "visual",
+      "claim": "The action screen reads as a mobile campaign compass rather than a generic task dashboard.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_objective_action_compass"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "current target dominates",
+        "campaign path is image and icon led",
+        "reward is previewed without a second competing CTA",
+        "copy stays concise"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_action_compass_runtime",
+      "profile": "correctness",
+      "claim": "Current action, reward claim and mission lock preserve durable target and reward command identities.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_objective_action_compass"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "campaign CTA emits the exact target",
+        "claim emits the exact gift ID",
+        "locked missions expose no fake claim",
+        "UI does not mutate goal state directly"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_action_compass_responsive",
+      "profile": "correctness",
+      "claim": "Current target, reward preview and sole primary action remain visible and touch-sized at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_objective_action_compass"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "primary target remains at least 48 px",
+        "critical state stays above persistent navigation",
+        "no interaction depends on hover"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -1835,6 +2079,12 @@
       "owner": "blueprint forge work-unit owner",
       "surface": "BlueprintScreen character research UI plus dedicated focused fixture",
       "public_contract": "BlueprintScreen.configure and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "objective action compass work-unit owner",
+      "surface": "GoalsScreen action UI plus dedicated focused fixture",
+      "public_contract": "GoalsScreen.configure and action_requested",
       "coupling": "coupled"
     }
   ],

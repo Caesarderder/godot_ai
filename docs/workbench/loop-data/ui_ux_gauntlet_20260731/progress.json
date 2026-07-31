@@ -2,9 +2,9 @@
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
   "state": "unit_looping",
-  "revision": "4dee270",
-  "iteration": 5,
-  "active_work_unit": "mobile portrait-led character blueprint forge",
+  "revision": "4336f06",
+  "iteration": 6,
+  "active_work_unit": "mobile objective action compass",
   "frozen_gates": [
     "gate_ui_visual",
     "gate_factory_runtime",
@@ -18,12 +18,20 @@
     "gate_codex_visual",
     "gate_faction_choice_runtime",
     "gate_faction_choice_responsive",
-    "gate_faction_choice_visual"
+    "gate_faction_choice_visual",
+    "gate_blueprint_forge_runtime",
+    "gate_blueprint_forge_responsive",
+    "gate_blueprint_forge_visual",
+    "gate_ui_runtime",
+    "gate_ui_responsive"
   ],
   "gate_status": {
-    "gate_blueprint_forge_responsive": "stale",
-    "gate_blueprint_forge_runtime": "stale",
-    "gate_blueprint_forge_visual": "stale",
+    "gate_action_compass_responsive": "pending",
+    "gate_action_compass_runtime": "pending",
+    "gate_action_compass_visual": "pending",
+    "gate_blueprint_forge_responsive": "pass",
+    "gate_blueprint_forge_runtime": "pass",
+    "gate_blueprint_forge_visual": "pass",
     "gate_codex_responsive": "pass",
     "gate_codex_runtime": "pass",
     "gate_codex_visual": "pass",
@@ -37,8 +45,8 @@
     "gate_legion_runtime": "pass",
     "gate_legion_visual": "pass",
     "gate_player_learning": "stale",
-    "gate_ui_responsive": "stale",
-    "gate_ui_runtime": "stale",
+    "gate_ui_responsive": "pass",
+    "gate_ui_runtime": "pass",
     "gate_ui_visual": "pass"
   },
   "open_findings": [],
@@ -85,7 +93,13 @@
     "ev_ui_faction_integration_runtime_01bc769",
     "ev_ui_faction_integration_responsive_01bc769",
     "ev_faction_choice_visual_diff_01bc769",
-    "ev_faction_choice_model_critic_01bc769"
+    "ev_faction_choice_model_critic_01bc769",
+    "ev_blueprint_forge_runtime_4336f06",
+    "ev_blueprint_forge_responsive_4336f06",
+    "ev_blueprint_forge_visual_runtime_4336f06",
+    "ev_blueprint_forge_visual_critic_4336f06",
+    "ev_ui_blueprint_integration_runtime_4336f06",
+    "ev_ui_blueprint_integration_responsive_4336f06"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -106,8 +120,8 @@
       "performance_stability",
       "ui_ux"
     ],
-    "next_action": "mobile portrait-led character blueprint forge",
-    "updated_at": "2026-07-31T13:04:33Z"
+    "next_action": "mobile objective action compass",
+    "updated_at": "2026-07-31T13:21:26Z"
   },
   "decisions": [
     {
@@ -772,6 +786,123 @@
     {
       "at": "2026-07-31T13:04:33Z",
       "decision": "Begin the next bounded mobile UI challenge with an authored three-state BlueprintScreen scenario.",
+      "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T13:16:03Z",
+      "decision": "Character blueprint forge implementation and App Shell projection changed. Affected gates=['gate_blueprint_forge_responsive', 'gate_blueprint_forge_runtime', 'gate_blueprint_forge_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_codex_responsive', 'gate_codex_runtime', 'gate_codex_visual', 'gate_faction_choice_responsive', 'gate_faction_choice_runtime', 'gate_faction_choice_visual', 'gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_legion_responsive', 'gate_legion_runtime', 'gate_legion_visual', 'gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_codex_responsive_e1da84a",
+        "ev_codex_runtime_e1da84a",
+        "ev_codex_visual_critic_e1da84a",
+        "ev_codex_visual_runtime_e1da84a",
+        "ev_faction_choice_model_critic_01bc769",
+        "ev_faction_choice_responsive_01bc769",
+        "ev_faction_choice_runtime_01bc769",
+        "ev_faction_choice_visual_critic_01bc769",
+        "ev_faction_choice_visual_diff_01bc769",
+        "ev_faction_choice_visual_runtime_01bc769",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_factory_critic_fail_30244a8",
+        "ev_factory_responsive_2e23dd4",
+        "ev_factory_runtime_2e23dd4",
+        "ev_factory_visual_critic_2e23dd4",
+        "ev_factory_visual_runtime_2e23dd4",
+        "ev_factory_world_critic_fail_09516dd",
+        "ev_legion_baseline_responsive_2e23dd4",
+        "ev_legion_baseline_runtime_2e23dd4",
+        "ev_legion_baseline_visual_2e23dd4",
+        "ev_legion_responsive_eacfb8b",
+        "ev_legion_runtime_eacfb8b",
+        "ev_legion_visual_critic_eacfb8b",
+        "ev_legion_visual_runtime_eacfb8b",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_codex_integration_responsive_e1da84a",
+        "ev_ui_codex_integration_runtime_e1da84a",
+        "ev_ui_faction_integration_responsive_01bc769",
+        "ev_ui_faction_integration_runtime_01bc769",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb",
+        "ev_ui_integration_responsive_eacfb8b",
+        "ev_ui_integration_runtime_eacfb8b"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:18:58Z",
+      "decision": "Focused shipping-state assertions pass.",
+      "evidence_ids": [
+        "ev_blueprint_forge_runtime_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:18:58Z",
+      "decision": "Both target landscape sizes retain identity and action.",
+      "evidence_ids": [
+        "ev_blueprint_forge_responsive_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:19:14Z",
+      "decision": "Rendered state evidence and fresh independent blind critic pass every declared threshold.",
+      "evidence_ids": [
+        "ev_blueprint_forge_visual_runtime_4336f06",
+        "ev_blueprint_forge_visual_critic_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:19:14Z",
+      "decision": "Shared smoke and focus suites pass at integrated revision.",
+      "evidence_ids": [
+        "ev_ui_blueprint_integration_runtime_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:19:14Z",
+      "decision": "App Shell capture and compact shipping screen preserve the primary path.",
+      "evidence_ids": [
+        "ev_ui_blueprint_integration_responsive_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:19:31Z",
+      "decision": "Character blueprint forge passed focused runtime, responsive and independent mixed visual gates.",
+      "evidence_ids": [
+        "ev_blueprint_forge_runtime_4336f06",
+        "ev_blueprint_forge_responsive_4336f06",
+        "ev_blueprint_forge_visual_runtime_4336f06",
+        "ev_blueprint_forge_visual_critic_4336f06",
+        "ev_ui_blueprint_integration_runtime_4336f06",
+        "ev_ui_blueprint_integration_responsive_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:20:38Z",
+      "decision": "Accepted blueprint forge candidate reached the declared App Shell integration checkpoint.",
+      "evidence_ids": [
+        "ev_ui_blueprint_integration_runtime_4336f06",
+        "ev_ui_blueprint_integration_responsive_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:20:38Z",
+      "decision": "Integration passed; the next player-visible gap is the text-heavy action goals screen.",
+      "evidence_ids": [
+        "ev_ui_blueprint_integration_runtime_4336f06"
+      ]
+    },
+    {
+      "at": "2026-07-31T13:21:26Z",
+      "decision": "Add the mobile objective action compass work unit before implementation.",
       "evidence_ids": []
     }
   ]
