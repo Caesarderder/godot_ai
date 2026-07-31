@@ -161,6 +161,61 @@ class ManagedArtifactTests(unittest.TestCase):
         self.assertEqual("draft", progress["state"])
         self.assertEqual("Keep the managed run anchored.", progress["continuation_anchor"]["goal"])
 
+    def test_loop_spec_append_only_extension_adds_new_scenario_and_gate(self) -> None:
+        parent = artifacts.ROOT / "docs" / "workbench"
+        with tempfile.TemporaryDirectory(dir=parent) as directory:
+            temp_dir = Path(directory)
+            run_dir = self.init_run(temp_dir)
+            current = json.loads((run_dir / "run-spec.json").read_text(encoding="utf-8"))
+            scenario = json.loads(json.dumps(current["scenarios"][0]))
+            scenario["scenario_id"] = "scenario_extension_test"
+            gate = json.loads(json.dumps(current["quality_gates"][0]))
+            gate["gate_id"] = "gate_extension_test"
+            gate["scenario_ids"] = ["scenario_extension_test"]
+            scenario["gate_ids"] = ["gate_extension_test"]
+            extension_path = temp_dir / "extension.json"
+            dimension_id = next(
+                item["dimension_id"]
+                for item in current["quality_dimensions"]
+                if "gate_weapon_function" in item["gate_ids"]
+            )
+            extension_path.write_text(
+                json.dumps({
+                    "scenarios": [scenario],
+                    "quality_gates": [gate],
+                    "dimension_gate_bindings": {
+                        dimension_id: ["gate_extension_test"],
+                    },
+                }),
+                encoding="utf-8",
+            )
+            artifacts.loop_spec(
+                Namespace(
+                    run_dir=str(run_dir),
+                    spec=None,
+                    extend=str(extension_path),
+                    expect_run_id=current["run_id"],
+                    reason="Append a bounded test unit.",
+                )
+            )
+            updated = json.loads((run_dir / "run-spec.json").read_text(encoding="utf-8"))
+            progress = json.loads((run_dir / "progress.json").read_text(encoding="utf-8"))
+            self.assertIn(
+                "scenario_extension_test",
+                {item["scenario_id"] for item in updated["scenarios"]},
+            )
+            self.assertEqual("pending", progress["gate_status"]["gate_extension_test"])
+            with self.assertRaisesRegex(artifacts.ArtifactError, "cannot replace"):
+                artifacts.loop_spec(
+                    Namespace(
+                        run_dir=str(run_dir),
+                        spec=None,
+                        extend=str(extension_path),
+                        expect_run_id=current["run_id"],
+                        reason="Duplicate IDs must fail.",
+                    )
+                )
+
     def test_work_unit_close_clears_only_matching_completion_candidate(self) -> None:
         parent = artifacts.ROOT / "docs" / "workbench"
         with tempfile.TemporaryDirectory(dir=parent) as directory:

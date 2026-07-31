@@ -469,7 +469,74 @@ def loop_spec(args: argparse.Namespace) -> None:
     require_active(progress, "loop-spec")
     if old_spec["run_id"] != args.expect_run_id:
         raise ArtifactError("expect-run-id mismatch")
-    candidate = normalized_run_spec(load_json(repo_path(args.spec, must_exist=True), "RunSpec input"))
+    if args.extend:
+        extension = load_json(repo_path(args.extend, must_exist=True), "RunSpec extension")
+        allowed_keys = {
+            "scenarios",
+            "quality_gates",
+            "ownership",
+            "dimension_gate_bindings",
+        }
+        unknown_keys = sorted(set(extension) - allowed_keys)
+        if unknown_keys:
+            raise ArtifactError(
+                f"RunSpec extension contains unsupported keys: {unknown_keys}"
+            )
+        candidate = json.loads(json.dumps(old_spec))
+        for key in ("scenarios", "quality_gates", "ownership"):
+            additions = extension.get(key, [])
+            if not isinstance(additions, list):
+                raise ArtifactError(f"RunSpec extension {key} must be an array")
+            if key == "scenarios":
+                identity_key = "scenario_id"
+            elif key == "quality_gates":
+                identity_key = "gate_id"
+            else:
+                identity_key = None
+            if identity_key:
+                existing_ids = {item[identity_key] for item in candidate[key]}
+                addition_ids = [item.get(identity_key) for item in additions if isinstance(item, dict)]
+                duplicate_ids = sorted(
+                    item_id for item_id in addition_ids if item_id in existing_ids
+                )
+                repeated_ids = sorted(
+                    {item_id for item_id in addition_ids if addition_ids.count(item_id) > 1}
+                )
+                if duplicate_ids or repeated_ids:
+                    raise ArtifactError(
+                        f"RunSpec extension cannot replace or repeat {identity_key}: "
+                        f"{sorted(set(duplicate_ids + repeated_ids))}"
+                    )
+            candidate[key].extend(additions)
+        bindings = extension.get("dimension_gate_bindings", {})
+        if not isinstance(bindings, dict):
+            raise ArtifactError("RunSpec extension dimension_gate_bindings must be an object")
+        dimensions = {
+            item["dimension_id"]: item for item in candidate["quality_dimensions"]
+        }
+        known_gate_ids = {item["gate_id"] for item in candidate["quality_gates"]}
+        for dimension_id, gate_ids in bindings.items():
+            if dimension_id not in dimensions:
+                raise ArtifactError(f"unknown quality dimension binding: {dimension_id}")
+            if not isinstance(gate_ids, list) or not all(
+                isinstance(gate_id, str) for gate_id in gate_ids
+            ):
+                raise ArtifactError(
+                    f"quality dimension binding {dimension_id} must be an array of gate IDs"
+                )
+            unknown_gate_ids = sorted(set(gate_ids) - known_gate_ids)
+            if unknown_gate_ids:
+                raise ArtifactError(
+                    f"quality dimension binding references unknown gates: {unknown_gate_ids}"
+                )
+            dimensions[dimension_id]["gate_ids"] = list(dict.fromkeys(
+                [*dimensions[dimension_id]["gate_ids"], *gate_ids]
+            ))
+        candidate = normalized_run_spec(candidate)
+    else:
+        candidate = normalized_run_spec(
+            load_json(repo_path(args.spec, must_exist=True), "RunSpec input")
+        )
     if candidate["run_id"] != old_spec["run_id"]:
         raise ArtifactError("run_id is immutable")
     old_gates = set(progress["gate_status"])
@@ -1285,9 +1352,14 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--revision", required=True)
     init.set_defaults(handler=loop_init)
 
-    spec = sub.add_parser("loop-spec", help="Update RunSpec without changing run_id or protected gates.")
+    spec = sub.add_parser("loop-spec", help="Update or safely extend RunSpec without changing run_id or protected gates.")
     spec.add_argument("--run-dir", required=True)
-    spec.add_argument("--spec", required=True)
+    spec_input = spec.add_mutually_exclusive_group(required=True)
+    spec_input.add_argument("--spec", help="Complete replacement RunSpec input.")
+    spec_input.add_argument(
+        "--extend",
+        help="Append-only JSON containing new scenarios, quality_gates, or ownership entries.",
+    )
     spec.add_argument("--expect-run-id", required=True)
     spec.add_argument("--reason", required=True)
     spec.set_defaults(handler=loop_spec)

@@ -112,6 +112,19 @@ python3 .codex/skills/caesar-awesome/scripts/caesar_artifacts.py loop-spec \
   --reason "Scenario contract updated before baselining."
 ```
 
+When an active run only needs new bounded scenarios, gates, or ownership rows,
+prefer the append-only extension form instead of copying and editing the whole
+RunSpec. The extension JSON may contain only `scenarios`, `quality_gates`,
+`ownership`, and `dimension_gate_bindings`; existing or repeated scenario/gate
+IDs are rejected. Bind every new required gate to a relevant existing quality
+dimension through that mapping:
+
+```bash
+python3 .codex/skills/caesar-awesome/scripts/caesar_artifacts.py loop-spec \
+  --run-dir <run-dir> --extend <run-spec-extension.json> \
+  --expect-run-id <run-id> --reason "Add the next bounded work unit."
+```
+
 An evaluated gate or its linked Test Scenario cannot change until the gate and
 evidence are explicitly marked stale.
 
