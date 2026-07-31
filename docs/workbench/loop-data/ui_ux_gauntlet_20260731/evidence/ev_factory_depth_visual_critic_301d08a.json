@@ -1,0 +1,85 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_factory_depth_visual_critic_301d08a",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "301d08a",
+  "valid_through_revision": "301d08a",
+  "gate_id": "gate_factory_depth_visual",
+  "claim": "Factory buildings separate clearly from the deck and raster destination icons read as one cohesive industrial mobile HUD.",
+  "scenario_id": "scenario_factory_depth_icon_semantics",
+  "execution_id": "factory_depth_visual_critic_301d08a",
+  "evidence_type": "model_critique",
+  "artifact_or_command": "Independent comparison of final 844x390 and 568x320 factory captures against d46bfdb",
+  "case_results": [
+    {
+      "case_id": "mission_depth",
+      "result": "pass",
+      "assertions": [
+        "viewport score 8.7",
+        "command landmark primacy 8.8",
+        "3D depth and world priority 8.7"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-camp-844x390.png"
+      ]
+    },
+    {
+      "case_id": "facility_icons",
+      "result": "pass",
+      "assertions": [
+        "viewport score 8.4",
+        "resource crowding and truncation removed",
+        "command label no longer covers the toilet building"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-camp-568x320.png"
+      ]
+    },
+    {
+      "case_id": "construction_depth",
+      "result": "pass",
+      "assertions": [
+        "overall 8.6",
+        "lowest viewport 8.4",
+        "lowest dimension 8.1",
+        "critical HUD and icons remain inside bounds"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-camp-844x390.png",
+        "project-a/artifacts/ui-camp-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "mission captures",
+    "facility captures",
+    "construction captures",
+    "DPR2 capture",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "visual evidence review",
+    "platform": "independent agent",
+    "device": "artifact inspection",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "review"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "independent factory depth and icon critic",
+    "version": "2",
+    "independence": "independent",
+    "agent_thread_id": "/root/faction_choice_critic"
+  },
+  "observation": "Independent critic returned PASS with 8.6 overall, 8.4 lowest viewport, 8.1 lowest dimension and 0.96 confidence.",
+  "inference": "The second pass resolves the compact HUD and landmark-obstruction regressions while retaining the accepted world-first factory direction.",
+  "result": "pass",
+  "confidence": 0.96,
+  "freshness": "current",
+  "limitations": [
+    "Compact production-rate text remains small; background towers touch the top edge; right detailed color icons and bottom monochrome icons are not fully unified; peripheral platform materials remain somewhat uniform."
+  ],
+  "created_at": "2026-07-31T17:38:00Z"
+}

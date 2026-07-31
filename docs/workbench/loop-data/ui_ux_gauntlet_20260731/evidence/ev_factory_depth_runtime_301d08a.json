@@ -1,0 +1,81 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_factory_depth_runtime_301d08a",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "301d08a",
+  "valid_through_revision": "301d08a",
+  "gate_id": "gate_factory_depth_runtime",
+  "claim": "Factory navigation preserves exact map, legion and goals actions while material changes remain Web Compatibility safe.",
+  "scenario_id": "scenario_factory_depth_icon_semantics",
+  "execution_id": "factory_depth_runtime_301d08a",
+  "evidence_type": "test",
+  "artifact_or_command": "godot --headless --path project-a --script tools/run_factory_screen_tests.gd; godot --headless --path project-a --script tools/run_ui_smoke_tests.gd; godot --headless --editor --path project-a --quit",
+  "case_results": [
+    {
+      "case_id": "mission_depth",
+      "result": "pass",
+      "assertions": [
+        "factory environment and rim light instantiate",
+        "mission action uses PNG target icon"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-camp-844x390.png"
+      ]
+    },
+    {
+      "case_id": "facility_icons",
+      "result": "pass",
+      "assertions": [
+        "compact material name becomes a PNG wrench with tooltip",
+        "command marker remains clear of edge HUD"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-camp-568x320.png"
+      ]
+    },
+    {
+      "case_id": "construction_depth",
+      "result": "pass",
+      "assertions": [
+        "FACTORY_SCREEN_TESTS_OK",
+        "UI SMOKE TESTS PASS",
+        "Godot editor import exits zero"
+      ],
+      "artifacts": [
+        "project-a/tools/run_factory_screen_tests.gd",
+        "project-a/tools/run_ui_smoke_tests.gd"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "mission captures",
+    "facility captures",
+    "construction captures",
+    "DPR2 capture",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3 Compatibility",
+    "platform": "macOS",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "factory and shared UI assertions",
+    "version": "2",
+    "independence": "not_applicable"
+  },
+  "observation": "Factory and shared UI suites pass after the compact HUD correction.",
+  "inference": "The visual hierarchy changes preserve navigation, construction, and factory runtime behavior.",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [
+    "Non-failing CanvasItem leak warnings remain in headless shutdown."
+  ],
+  "created_at": "2026-07-31T17:35:00Z"
+}

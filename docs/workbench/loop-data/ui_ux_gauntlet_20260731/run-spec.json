@@ -57,7 +57,8 @@
         "gate_breakthrough_reveal_visual",
         "gate_pass_runway_visual",
         "gate_chapter_victory_visual",
-        "gate_boss_briefing_visual"
+        "gate_boss_briefing_visual",
+        "gate_factory_depth_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -70,7 +71,9 @@
       ],
       "gate_ids": [
         "gate_ui_visual",
-        "gate_high_dpi_visual"
+        "gate_high_dpi_visual",
+        "gate_factory_depth_visual",
+        "gate_factory_depth_runtime"
       ],
       "rationale": "Exploration desire depends on depth and atmosphere rather than flat panels."
     },
@@ -118,7 +121,9 @@
         "gate_boss_briefing_visual",
         "gate_boss_briefing_runtime",
         "gate_high_dpi_visual",
-        "gate_high_dpi_responsive"
+        "gate_high_dpi_responsive",
+        "gate_factory_depth_visual",
+        "gate_factory_depth_responsive"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -132,7 +137,8 @@
       "gate_ids": [
         "gate_ui_runtime",
         "gate_boss_briefing_responsive",
-        "gate_high_dpi_responsive"
+        "gate_high_dpi_responsive",
+        "gate_factory_depth_responsive"
       ],
       "rationale": "The player must manipulate the real shipping screen without blocked map targets."
     },
@@ -256,7 +262,8 @@
         "gate_chapter_victory_responsive",
         "gate_boss_briefing_runtime",
         "gate_boss_briefing_responsive",
-        "gate_high_dpi_runtime"
+        "gate_high_dpi_runtime",
+        "gate_factory_depth_runtime"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -3093,6 +3100,180 @@
       "limitations": [
         "Chromium emulation is not a physical OLED phone panel."
       ]
+    },
+    {
+      "scenario_id": "scenario_factory_depth_icon_semantics",
+      "scenario_kind": "whole_path_integration",
+      "purpose": "Exercise the shipping factory at canonical phone sizes after material separation and raster icon replacement.",
+      "player_question": "Can the player read the toilet command landmark, surrounding industrial structures and three bottom destinations at a glance without more text or larger HUD panels?",
+      "gate_ids": [
+        "gate_factory_depth_visual",
+        "gate_factory_depth_runtime",
+        "gate_factory_depth_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_ui_review.gd and high-DPI browser capture",
+        "shipping_surface": "project-a/scripts/slg_main.gd factory world and navigation plus FactoryScreen mission HUD",
+        "public_adapter": "shipping main scene navigation and factory world builder"
+      },
+      "fixture": {
+        "subject_parameter": "factory lighting and navigation state",
+        "reuse_scope": "mission, facility and construction states at standard and compact sizes",
+        "extension_contract": "reuse existing factory state, PNG icon registry and world-first HUD geometry"
+      },
+      "setup": {
+        "execution_surface": "main_scene",
+        "entry": "boot shipping main scene into factory",
+        "state": "factory mission with built facilities",
+        "camera_or_view": "canonical factory orbit",
+        "viewport": "844x390, 568x320 and 844x390 CSS at DPR 2",
+        "target_device": "mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_factory",
+          "at": "case start",
+          "action": "render mission factory"
+        },
+        {
+          "stimulus_id": "open_facility",
+          "at": "after mission",
+          "action": "select facility HUD"
+        },
+        {
+          "stimulus_id": "open_build",
+          "at": "after facility",
+          "action": "open construction strip"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "factory_captures",
+          "source": "shipping main scene captures",
+          "window": "stable factory states",
+          "artifact": "project-a/artifacts/ui-factory-depth-*"
+        },
+        {
+          "observation_id": "factory_runtime",
+          "source": "UI and 3D node assertions",
+          "window": "all states",
+          "artifact": "test output"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "mission_depth",
+          "state": "mission HUD over factory",
+          "stimulus_ids": [
+            "show_factory"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320",
+            "DPR2"
+          ],
+          "assertions": [
+            "building silhouettes separate from deck",
+            "command landmark dominates",
+            "mission remains one action"
+          ],
+          "observation_ids": [
+            "factory_captures",
+            "factory_runtime"
+          ]
+        },
+        {
+          "case_id": "facility_icons",
+          "state": "facility HUD and bottom navigation",
+          "stimulus_ids": [
+            "open_facility"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "three destinations use raster icons",
+            "icons remain distinct without labels",
+            "HUD area does not grow"
+          ],
+          "observation_ids": [
+            "factory_captures",
+            "factory_runtime"
+          ]
+        },
+        {
+          "case_id": "construction_depth",
+          "state": "horizontal construction strip",
+          "stimulus_ids": [
+            "open_build"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "world remains visible",
+            "building choices retain drag",
+            "materials remain coherent"
+          ],
+          "observation_ids": [
+            "factory_captures",
+            "factory_runtime"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh main scene state per capture",
+        "artifact_manifest": [
+          "runtime assertions",
+          "mission captures",
+          "facility captures",
+          "construction captures",
+          "DPR2 capture",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "contrast regression",
+          "icon clipping"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed factory state",
+        "warmup": "stable render frames",
+        "temporal_isolation": "fresh scene per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_ui_review.gd",
+        "expected_seconds": 30,
+        "outputs": [
+          "dual-size factory captures"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_ui_smoke_tests.gd && GODOT_WEB_HIDPI_ONLY=1 GODOT_WEB_DEVICE_SCALE_FACTOR=2 node project-a/tools/run_web_browser_smoke.mjs",
+        "isolation": "fresh Godot and Chromium processes",
+        "outputs": [
+          "runtime assertions",
+          "high-DPI capture",
+          "exit code"
+        ]
+      },
+      "reset": "free main scene and close Chromium",
+      "failure_conditions": [
+        "HUD grows into world",
+        "buildings remain value-merged",
+        "icons require text to distinguish",
+        "touch targets shrink"
+      ],
+      "limitations": [
+        "Static captures cannot measure physical OLED black crush."
+      ]
     }
   ],
   "integration_policy": {
@@ -3917,6 +4098,59 @@
         "composition remains world-first"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_factory_depth_visual",
+      "profile": "visual",
+      "claim": "Factory buildings separate clearly from the deck and raster destination icons read as one cohesive industrial mobile HUD.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_factory_depth_icon_semantics"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "depth separation improves",
+        "command landmark remains dominant",
+        "raster icons are distinct",
+        "no extra text or HUD area"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_factory_depth_runtime",
+      "profile": "correctness",
+      "claim": "Factory navigation preserves exact map, legion and goals actions while material changes remain Web Compatibility safe.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_factory_depth_icon_semantics"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "navigation actions exact",
+        "PNG icons load",
+        "Compatibility materials compile"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_factory_depth_responsive",
+      "profile": "correctness",
+      "claim": "Mission, facility and construction states retain visible 48px icon actions at 844x390 and 568x320 without increasing HUD coverage.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_factory_depth_icon_semantics"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "48px touch targets",
+        "no icon clipping",
+        "world-first area retained",
+        "construction drag preserved"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -4008,6 +4242,12 @@
       "owner": "high-DPI Web clarity work-unit owner",
       "surface": "Web export canvas sizing, browser smoke and FactoryScreen capture",
       "public_contract": "CSS layout size differs from physical backing size only by DPR",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "factory depth and icon semantics work-unit owner",
+      "surface": "slg_main factory world, bottom navigation and FactoryScreen mission icon",
+      "public_contract": "existing action IDs and HUD geometry",
       "coupling": "coupled"
     }
   ],

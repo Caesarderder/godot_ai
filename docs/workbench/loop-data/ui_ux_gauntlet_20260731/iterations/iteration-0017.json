@@ -1,0 +1,29 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 17,
+  "work_unit": "factory depth and icon semantics",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/scripts/slg_main.gd",
+    "project-a/game/scripts/ui/factory_screen.gd",
+    "project-a/tools/run_ui_smoke_tests.gd",
+    "project-a/tools/run_factory_screen_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_factory_depth_runtime_301d08a",
+    "ev_factory_depth_responsive_301d08a",
+    "ev_factory_depth_visual_runtime_301d08a",
+    "ev_factory_depth_visual_critic_301d08a"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "Keeping compact resource text where it competed with the capacity value.",
+    "Pinning the command marker across the landmark silhouette.",
+    "Expanding HUD panels to explain destinations with more text."
+  ],
+  "next_action": "Close the focused factory-depth unit, refresh integration evidence, and continue the active mobile UI/UX challenge loop.",
+  "blocker": null
+}

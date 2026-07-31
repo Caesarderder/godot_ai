@@ -3,7 +3,7 @@
   "evidence_id": "ev_legion_responsive_eacfb8b",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "eacfb8b",
-  "valid_through_revision": "caa9def",
+  "valid_through_revision": "301d08a",
   "gate_id": "gate_legion_responsive",
   "claim": "Formation portraits, six slots and the primary action remain visible and touch-sized at 844x390 and 568x320.",
   "scenario_id": "scenario_legion_formation_identity",

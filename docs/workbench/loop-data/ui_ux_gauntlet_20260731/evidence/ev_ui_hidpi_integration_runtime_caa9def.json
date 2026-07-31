@@ -45,7 +45,7 @@
   "inference": "The high-DPI browser harness changes do not regress shipping title, factory or war-zone behavior.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Headless exit leak warnings remain non-failing."
   ],

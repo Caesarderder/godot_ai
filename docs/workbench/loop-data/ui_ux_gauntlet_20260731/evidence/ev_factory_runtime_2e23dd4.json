@@ -3,7 +3,7 @@
   "evidence_id": "ev_factory_runtime_2e23dd4",
   "run_id": "ui_ux_gauntlet_20260731",
   "revision": "2e23dd4",
-  "valid_through_revision": "caa9def",
+  "valid_through_revision": "301d08a",
   "gate_id": "gate_factory_runtime",
   "claim": "Factory HUD controls preserve shipping panel and semantic action signals across mission, facility, build and placement states.",
   "scenario_id": "scenario_factory_world_hud",

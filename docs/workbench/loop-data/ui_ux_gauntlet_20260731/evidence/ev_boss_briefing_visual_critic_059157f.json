@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_boss_briefing_visual_critic_059157f",
   "revision": "059157f",
-  "valid_through_revision": "caa9def",
+  "valid_through_revision": "301d08a",
   "gate_id": "gate_boss_briefing_visual",
   "claim": "Chapter-boss briefing reads as a fortress siege on an explorable route rather than overlapping map widgets.",
   "scenario_id": "scenario_mobile_boss_siege_briefing",

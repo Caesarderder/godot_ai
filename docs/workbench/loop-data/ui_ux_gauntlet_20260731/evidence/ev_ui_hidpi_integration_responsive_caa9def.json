@@ -48,7 +48,7 @@
   "inference": "Mobile actions and scroll surfaces remain operable across normal and high-density Web canvases.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Chromium emulates rather than physically supplies the handset panel."
   ],
