@@ -1,44 +1,44 @@
 {
   "schema_version": "caesar-loop/v2",
-  "evidence_id": "ev_legion_baseline_runtime_2e23dd4",
+  "evidence_id": "ev_legion_runtime_eacfb8b",
   "run_id": "ui_ux_gauntlet_20260731",
-  "revision": "2e23dd4",
-  "valid_through_revision": "2e23dd4",
+  "revision": "eacfb8b",
+  "valid_through_revision": "eacfb8b",
   "gate_id": "gate_legion_runtime",
   "claim": "Formation selection and deployment preserve shipping tab and action signals across empty, selected and full squad states.",
   "scenario_id": "scenario_legion_formation_identity",
-  "execution_id": "legion_baseline_2e23dd4",
+  "execution_id": "legion_candidate_eacfb8b",
   "evidence_type": "runtime_state",
-  "artifact_or_command": "run_legion_screen_tests.gd plus capture_legion_formation_scenario.gd twice",
+  "artifact_or_command": "run_legion_screen_tests.gd and capture_legion_formation_scenario.gd twice",
   "case_results": [
     {
       "case_id": "single_commander",
       "result": "pass",
       "assertions": [
-        "six shipping slots render and selection signals remain available"
+        "stable archetype portrait loads and slot signal remains exact"
       ],
       "artifacts": [
-        "project-a/artifacts/scenario-legion-formation/baseline/single_commander-844x390.png"
+        "project-a/artifacts/scenario-legion-formation/single_commander-844x390.png"
       ]
     },
     {
       "case_id": "slot_selected",
       "result": "pass",
       "assertions": [
-        "selected slot and candidate actions retain exact IDs"
+        "candidate portrait and exact hero-slot assignment pass"
       ],
       "artifacts": [
-        "project-a/artifacts/scenario-legion-formation/baseline/slot_selected-844x390.png"
+        "project-a/artifacts/scenario-legion-formation/slot_selected-844x390.png"
       ]
     },
     {
       "case_id": "full_squad",
       "result": "pass",
       "assertions": [
-        "counterattack state preserves stage action"
+        "six stable identities and counterattack stage ID remain correct"
       ],
       "artifacts": [
-        "project-a/artifacts/scenario-legion-formation/baseline/full_squad-568x320.png"
+        "project-a/artifacts/scenario-legion-formation/full_squad-568x320.png"
       ]
     }
   ],
@@ -60,17 +60,17 @@
   },
   "grader": {
     "kind": "runtime",
-    "name": "LegionScreen focused fixture",
+    "name": "LegionScreen focused suite",
     "version": "1",
     "independence": "not_applicable"
   },
-  "observation": "Two scenario launches produced identical hashes and existing LegionScreen actions remain bound to shipping signals.",
-  "inference": "Runtime baseline passes before the visual reconstruction.",
+  "observation": "Focused tests pass and two candidate launches produce identical hashes.",
+  "inference": "Formation runtime gate passes.",
   "result": "pass",
   "confidence": 0.99,
-  "freshness": "stale",
+  "freshness": "current",
   "limitations": [
-    "Does not judge character identity."
+    "Does not judge preference."
   ],
-  "created_at": "2026-07-31T20:35:00+08:00"
+  "created_at": "2026-07-31T20:55:00+08:00"
 }

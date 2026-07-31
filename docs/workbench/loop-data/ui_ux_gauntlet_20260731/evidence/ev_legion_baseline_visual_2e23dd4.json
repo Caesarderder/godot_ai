@@ -68,7 +68,7 @@
   "inference": "Visual baseline fails and requires character-first reconstruction.",
   "result": "fail",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Non-independent baseline audit cannot close the mixed gate."
   ],

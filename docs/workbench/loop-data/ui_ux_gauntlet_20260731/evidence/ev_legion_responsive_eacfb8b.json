@@ -1,44 +1,45 @@
 {
   "schema_version": "caesar-loop/v2",
-  "evidence_id": "ev_legion_baseline_responsive_2e23dd4",
+  "evidence_id": "ev_legion_responsive_eacfb8b",
   "run_id": "ui_ux_gauntlet_20260731",
-  "revision": "2e23dd4",
-  "valid_through_revision": "2e23dd4",
+  "revision": "eacfb8b",
+  "valid_through_revision": "eacfb8b",
   "gate_id": "gate_legion_responsive",
   "claim": "Formation portraits, six slots and the primary action remain visible and touch-sized at 844x390 and 568x320.",
   "scenario_id": "scenario_legion_formation_identity",
-  "execution_id": "legion_baseline_2e23dd4",
+  "execution_id": "legion_candidate_eacfb8b",
   "evidence_type": "runtime_state",
-  "artifact_or_command": "dual viewport LegionScreen focused bundle",
+  "artifact_or_command": "dual viewport focused bundle plus canonical App Shell capture",
   "case_results": [
     {
       "case_id": "single_commander",
-      "result": "fail",
+      "result": "pass",
       "assertions": [
-        "slots fit but occupied character portrait is only a tiny badge"
+        "six 56-60px slots fit and recommended slot is visible"
       ],
       "artifacts": [
-        "project-a/artifacts/scenario-legion-formation/baseline/single_commander-568x320.png"
+        "project-a/artifacts/scenario-legion-formation/single_commander-568x320.png",
+        "project-a/artifacts/ui-legion-844x390.png"
       ]
     },
     {
       "case_id": "slot_selected",
-      "result": "fail",
+      "result": "pass",
       "assertions": [
-        "candidate panel pushes content and becomes text-dense at compact size"
+        "two portrait candidates remain inside compact scroll and retain 76px actions"
       ],
       "artifacts": [
-        "project-a/artifacts/scenario-legion-formation/baseline/slot_selected-568x320.png"
+        "project-a/artifacts/scenario-legion-formation/slot_selected-568x320.png"
       ]
     },
     {
       "case_id": "full_squad",
       "result": "pass",
       "assertions": [
-        "six slots and counterattack remain inside viewport"
+        "six portraits and counterattack fit both viewports"
       ],
       "artifacts": [
-        "project-a/artifacts/scenario-legion-formation/baseline/full_squad-568x320.png"
+        "project-a/artifacts/scenario-legion-formation/full_squad-568x320.png"
       ]
     }
   ],
@@ -64,13 +65,13 @@
     "version": "1",
     "independence": "not_applicable"
   },
-  "observation": "Geometry fits, but the compact selected state spends most of its useful height on prose and character identity collapses to initials.",
-  "inference": "Responsive baseline fails the readable-portrait and contextual-detail portion.",
-  "result": "fail",
-  "confidence": 0.96,
-  "freshness": "stale",
+  "observation": "Both target sizes retain six positions, readable portraits and touch-sized primary choices.",
+  "inference": "Responsive gate passes; physical safe areas remain human validation.",
+  "result": "pass",
+  "confidence": 0.97,
+  "freshness": "current",
   "limitations": [
-    "Static fixture does not measure physical safe areas."
+    "No physical-phone safe-area session."
   ],
-  "created_at": "2026-07-31T20:35:00+08:00"
+  "created_at": "2026-07-31T20:55:00+08:00"
 }

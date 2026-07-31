@@ -1,0 +1,57 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_ui_integration_runtime_eacfb8b",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "eacfb8b",
+  "valid_through_revision": "eacfb8b",
+  "gate_id": "gate_ui_runtime",
+  "claim": "Title, factory and war-zone actions use shipping state and navigation without regressions.",
+  "scenario_id": "scenario_ui_path_integration",
+  "execution_id": "ui_integration_eacfb8b",
+  "evidence_type": "runtime_state",
+  "artifact_or_command": "run_ui_smoke_tests.gd and capture_ui_review.gd",
+  "case_results": [
+    {
+      "case_id": "cross_screen_cohesion",
+      "result": "pass",
+      "assertions": [
+        "title factory map and legion routes boot",
+        "shared navigation and primary actions remain wired"
+      ],
+      "artifacts": [
+        "project-a/artifacts/ui-title-844x390.png",
+        "project-a/artifacts/ui-camp-844x390.png",
+        "project-a/artifacts/ui-war-intelligence-844x390.png",
+        "project-a/artifacts/ui-legion-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "UI smoke assertions",
+    "canonical captures",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "full UI smoke integration",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "The declared shipping path passes after the legion projection and UI changes.",
+  "inference": "Cross-screen runtime gate passes at the integrated revision.",
+  "result": "pass",
+  "confidence": 0.99,
+  "freshness": "current",
+  "limitations": [
+    "Does not prove player comprehension."
+  ],
+  "created_at": "2026-07-31T20:55:00+08:00"
+}

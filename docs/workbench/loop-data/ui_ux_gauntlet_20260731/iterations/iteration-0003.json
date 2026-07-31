@@ -1,0 +1,33 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "iteration": 3,
+  "work_unit": "legion character-first formation and contextual deployment",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scenes/screens/legion_screen.tscn",
+    "project-a/game/scripts/ui/legion_screen.gd",
+    "project-a/scripts/slg_main.gd",
+    "project-a/tools/run_legion_screen_tests.gd",
+    "project-a/tools/capture_legion_formation_scenario.gd"
+  ],
+  "evidence_ids": [
+    "ev_legion_runtime_eacfb8b",
+    "ev_legion_responsive_eacfb8b",
+    "ev_legion_visual_runtime_eacfb8b",
+    "ev_legion_visual_critic_eacfb8b",
+    "ev_ui_integration_runtime_eacfb8b",
+    "ev_ui_integration_responsive_eacfb8b"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "single-letter occupied slot identity",
+    "four equal-width text navigation tabs",
+    "text-only candidate comparison cards",
+    "78px formation cards that hid the second row behind the App Shell navigation"
+  ],
+  "next_action": "Expose the accepted legion result in the simple Workbench feedback route, then continue to the next highest-value secondary-screen gap.",
+  "blocker": null
+}
