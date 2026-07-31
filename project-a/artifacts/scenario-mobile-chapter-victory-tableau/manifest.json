@@ -1,0 +1,25 @@
+{
+  "artifacts": [
+    "fresh_chapter_clear-844x390.png",
+    "fresh_chapter_clear-568x320.png",
+    "replayed_chapter_clear-844x390.png",
+    "replayed_chapter_clear-568x320.png"
+  ],
+  "assertions": [
+    "fresh clear emits exact welfare action",
+    "replayed clear emits exact map_stage stage_2_1 payload",
+    "gold, legion data and battle fact metrics remain present",
+    "primary action remains a 48px touch target"
+  ],
+  "cases": [
+    "fresh_chapter_clear",
+    "replayed_chapter_clear"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping BattleResultScreen through configure and action_requested",
+  "scenario_id": "scenario_mobile_chapter_victory_tableau",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
