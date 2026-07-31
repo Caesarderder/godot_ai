@@ -72,6 +72,14 @@ func _run() -> void:
 	_dispatch_touch(1, Vector2(410, 75), false)
 	await process_frame
 	_check(strip.scroll_horizontal >= 80, "finger drag scrolls horizontal building and character strips")
+	var before_horizontal_wheel := strip.scroll_horizontal
+	var horizontal_wheel := InputEventMouseButton.new()
+	horizontal_wheel.position = Vector2(420, 75)
+	horizontal_wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	horizontal_wheel.pressed = true
+	(root.get_node("MobileScrollInput") as Node).call("_input", horizontal_wheel)
+	await process_frame
+	_check(strip.scroll_horizontal > before_horizontal_wheel, "desktop wheel scrolls a hovered horizontal runway")
 
 	if failures.is_empty():
 		print("MOBILE_SCROLL_INPUT_TESTS_OK")

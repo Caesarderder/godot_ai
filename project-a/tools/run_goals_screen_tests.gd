@@ -137,6 +137,10 @@ func _run() -> void:
 		"pass tab exposes one icon-led batch claim"
 	)
 	var first_pass_level := goals.find_child("MetaPassLevel_1", true, false) as Button
+	var pass_runway_scroll := goals.find_child("BattlePassRunwayScroll", true, false) as ScrollContainer
+	_check(pass_runway_scroll != null, "battle pass has a dedicated horizontal runway")
+	_check(pass_runway_scroll != null and pass_runway_scroll.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED, "battle pass runway supports horizontal drag and wheel navigation")
+	_check(pass_runway_scroll != null and pass_runway_scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED, "battle pass rewards never wrap into a vertical inventory grid")
 	_check(
 		first_pass_level != null
 			and first_pass_level.icon != null

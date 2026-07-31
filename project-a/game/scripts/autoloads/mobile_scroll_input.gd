@@ -44,6 +44,19 @@ func _input(event: InputEvent) -> void:
 		_handle_touch(event as InputEventScreenTouch)
 	elif event is InputEventScreenDrag:
 		_handle_drag(event as InputEventScreenDrag)
+	elif event is InputEventMouseButton:
+		_handle_mouse_wheel(event as InputEventMouseButton)
+
+
+func _handle_mouse_wheel(event: InputEventMouseButton) -> void:
+	if not event.pressed or event.button_index not in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+		return
+	var owner := _best_target(event.position, true)
+	if owner == null or _can_scroll_vertically(owner):
+		return
+	var direction := -1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1
+	owner.scroll_horizontal += direction * 72
+	get_viewport().set_input_as_handled()
 
 
 func _handle_touch(event: InputEventScreenTouch) -> void:

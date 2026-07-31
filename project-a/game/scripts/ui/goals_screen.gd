@@ -583,10 +583,17 @@ func _build_pass() -> void:
 		settled.custom_minimum_size.x = 150
 		settled.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		overview.add_child(settled)
-	var track := HFlowContainer.new()
+	var runway_scroll := ScrollContainer.new()
+	runway_scroll.name = "BattlePassRunwayScroll"
+	runway_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	runway_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	runway_scroll.custom_minimum_size.y = 96
+	runway_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_child(runway_scroll)
+	var track := HBoxContainer.new()
 	track.name = "MetaPassRewardTrack"
 	track.add_theme_constant_override("h_separation", 5)
-	track.add_theme_constant_override("v_separation", 6)
+	track.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	var compact := bool(_view.get("compact", false))
 	var short_screen := bool(_view.get("short", false))
 	for level_value in pass_view.get("levels", []):
@@ -594,9 +601,9 @@ func _build_pass() -> void:
 		var reward := level.get("reward", {}) as Dictionary
 		var claimed := bool(level.get("claimed", false))
 		var claimable_level := bool(level.get("claimable", false))
-		var status_mark := "✓" if claimed else ("!" if claimable_level else "·")
+		var status_mark := "✓" if claimed else ("领取" if claimable_level else "🔒")
 		var card := _button(
-			"%02d  %s\n×%d" % [
+			"%02d\n%s  ×%d" % [
 				int(level.get("level", 0)),
 				status_mark,
 				_pass_reward_amount(reward),
@@ -606,12 +613,12 @@ func _build_pass() -> void:
 		card.name = "MetaPassLevel_%d" % int(level.get("level", 0))
 		card.icon = _pass_reward_icon(reward)
 		card.expand_icon = true
-		card.add_theme_constant_override("icon_max_width", 48)
-		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		card.add_theme_constant_override("icon_max_width", 42)
+		card.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		card.disabled = not claimable_level
 		card.custom_minimum_size = Vector2(
-			128 if compact else 150,
-			56 if short_screen else (72 if compact else 92)
+			86 if compact else 104,
+			76 if short_screen else 88
 		)
 		card.tooltip_text = "%d级 · %s · %s" % [
 			int(level.get("level", 0)),
@@ -630,8 +637,17 @@ func _build_pass() -> void:
 			"level": int(level.get("level", 0)),
 		}))
 		track.add_child(card)
-	panel.add_child(track)
+	runway_scroll.add_child(track)
+	var frontier := maxi(0, int(pass_view.get("reached", 0)) - 2)
+	call_deferred("_focus_pass_frontier", runway_scroll, frontier, 86 if compact else 104)
 	content.add_child(panel)
+
+
+func _focus_pass_frontier(runway_scroll: ScrollContainer, frontier: int, card_width: int) -> void:
+	if not is_instance_valid(runway_scroll):
+		return
+	await get_tree().process_frame
+	runway_scroll.scroll_horizontal = frontier * (card_width + 5)
 
 
 func _pass_reward_icon(reward: Dictionary) -> Texture2D:

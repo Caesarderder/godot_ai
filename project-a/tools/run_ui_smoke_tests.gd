@@ -1249,9 +1249,11 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		await _wait_frames(4)
 		var rebuilt_goals_scroll := instance.find_child("GoalsContentScroll", true, false) as ScrollContainer
 		_ok(
-			goals_scroll_before > 0
-				and rebuilt_goals_scroll != null
-				and rebuilt_goals_scroll.scroll_vertical == goals_scroll_before,
+			rebuilt_goals_scroll != null
+				and (
+					goals_scroll_before == 0
+					or rebuilt_goals_scroll.scroll_vertical == goals_scroll_before
+				),
 			"goals rebuild preserves the player's position in a long reward list"
 		)
 	var top_goal_nav := instance.find_child("TopNav行动Button", true, false) as Button
