@@ -20,34 +20,40 @@ layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="HelpTopicRail" type="VBoxContainer" parent="HelpLandscapeColumns/HelpGameplayScroll"]
+[node name="HelpTopicRail" type="GridContainer" parent="HelpLandscapeColumns/HelpGameplayScroll"]
+custom_minimum_size = Vector2(214, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
+columns = 2
 
 [node name="HelpNowTab" type="Button" parent="HelpLandscapeColumns/HelpGameplayScroll/HelpTopicRail"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(102, 72)
 layout_mode = 2
-text = "01  现在做什么"
+size_flags_horizontal = 3
+text = "行动"
 
 [node name="HelpRecoveryTab" type="Button" parent="HelpLandscapeColumns/HelpGameplayScroll/HelpTopicRail"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(102, 72)
 layout_mode = 2
-text = "02  卡关怎么恢复"
+size_flags_horizontal = 3
+text = "恢复"
 
 [node name="HelpControlsTab" type="Button" parent="HelpLandscapeColumns/HelpGameplayScroll/HelpTopicRail"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(102, 72)
 layout_mode = 2
-text = "03  战斗与建造"
+size_flags_horizontal = 3
+text = "操作"
 
 [node name="HelpDataTab" type="Button" parent="HelpLandscapeColumns/HelpGameplayScroll/HelpTopicRail"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(102, 72)
 layout_mode = 2
-text = "04  存档与版本"
+size_flags_horizontal = 3
+text = "数据"
 
 [node name="HelpInfoScroll" type="ScrollContainer" parent="HelpLandscapeColumns"]
 layout_mode = 2
@@ -56,6 +62,7 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="HelpDetailPanel" type="PanelContainer" parent="HelpLandscapeColumns/HelpInfoScroll"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -87,11 +94,17 @@ layout_mode = 2
 text = "行动页把大目标、中目标、小目标、当前卡点和唯一推荐行动放在同一屏。"
 autowrap_mode = 2
 
+[node name="HelpStepRow" type="HBoxContainer" parent="HelpLandscapeColumns/HelpInfoScroll/HelpDetailPanel/Margin/HelpDetailContent"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
 [node name="HelpDetailSteps" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/HelpDetailPanel/Margin/HelpDetailContent"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "① 看青色中目标\n② 找金色主按钮\n③ 完成后回到世界继续推进"
 autowrap_mode = 2
+visible = false
 
 [node name="HelpDetailTip" type="Label" parent="HelpLandscapeColumns/HelpInfoScroll/HelpDetailPanel/Margin/HelpDetailContent"]
 unique_name_in_owner = true
@@ -101,7 +114,7 @@ autowrap_mode = 2
 
 [node name="HelpBackButton" type="Button" parent="."]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(300, 48)
+custom_minimum_size = Vector2(300, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "返回"

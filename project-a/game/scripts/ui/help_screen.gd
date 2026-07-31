@@ -4,6 +4,15 @@ extends VBoxContainer
 signal back_requested
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const ICON_CHECK := preload("res://assets/ui/icons/kenney_game_icons/checkmark.png")
+const ICON_EXIT := preload("res://assets/ui/icons/kenney_game_icons/exit_right.png")
+const ICON_GEAR := preload("res://assets/ui/icons/kenney_game_icons/gear.png")
+const ICON_HOME := preload("res://assets/ui/icons/kenney_game_icons/home.png")
+const ICON_MULTIPLAYER := preload("res://assets/ui/icons/kenney_game_icons/multiplayer.png")
+const ICON_SIGNAL := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
+const ICON_TARGET := preload("res://assets/ui/icons/kenney_game_icons/target.png")
+const ICON_WARNING := preload("res://assets/ui/icons/kenney_game_icons/warning.png")
+const ICON_WRENCH := preload("res://assets/ui/icons/kenney_game_icons/wrench.png")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
 const PANEL := Color("#12171c")
 const TEXT := Color("#f3ead8")
@@ -42,12 +51,25 @@ const TOPICS := {
 		"tip": "version",
 	},
 }
+const TOPIC_LABELS := {
+	"now": "行动",
+	"recovery": "恢复",
+	"controls": "操作",
+	"data": "数据",
+}
+const STEP_LABELS := {
+	"now": ["中目标", "主行动", "回到世界"],
+	"recovery": ["收后勤", "做研发", "重新编队"],
+	"controls": ["放技能", "选地格", "确认建造"],
+	"data": ["下载", "先校验", "确认清理"],
+}
 
 @onready var back_button: Button = %HelpBackButton
 @onready var detail_eyebrow: Label = %HelpDetailEyebrow
 @onready var detail_heading: Label = %HelpDetailHeading
 @onready var detail_summary: Label = %HelpDetailSummary
 @onready var detail_steps: Label = %HelpDetailSteps
+@onready var step_row: HBoxContainer = %HelpStepRow
 @onready var detail_tip: Label = %HelpDetailTip
 @onready var topic_buttons := {
 	"now": %HelpNowTab,
@@ -61,9 +83,23 @@ var _active_topic := "now"
 
 
 func _ready() -> void:
+	var topic_icons := {
+		"now": ICON_TARGET,
+		"recovery": ICON_WARNING,
+		"controls": ICON_WRENCH,
+		"data": ICON_GEAR,
+	}
 	for topic_id in topic_buttons:
-		(topic_buttons[topic_id] as Button).pressed.connect(_select_topic.bind(topic_id))
+		var topic_button := topic_buttons[topic_id] as Button
+		topic_button.text = String(TOPIC_LABELS[topic_id])
+		topic_button.icon = topic_icons[topic_id] as Texture2D
+		topic_button.expand_icon = true
+		topic_button.tooltip_text = String((TOPICS[topic_id] as Dictionary)["heading"])
+		topic_button.pressed.connect(_select_topic.bind(topic_id))
 	back_button.pressed.connect(back_requested.emit)
+	back_button.icon = ICON_EXIT
+	back_button.expand_icon = true
+	back_button.tooltip_text = "返回游戏"
 	_apply_theme()
 	_select_topic(_active_topic)
 	_focus_primary_after_layout()
@@ -90,6 +126,64 @@ func _select_topic(topic_id: String) -> void:
 	)
 	for id in topic_buttons:
 		_style_topic_button(topic_buttons[id] as Button, id == _active_topic)
+	_rebuild_step_cards(String(topic["steps"]))
+	var compact := get_viewport_rect().size.x < 650.0
+	detail_summary.visible = not compact
+	detail_tip.visible = not compact
+	(%HelpDetailPanel as Control).tooltip_text = "%s\n%s" % [
+		String(topic["summary"]),
+		detail_tip.text,
+	]
+
+
+func _rebuild_step_cards(step_copy: String) -> void:
+	for child in step_row.get_children():
+		child.queue_free()
+	var icons: Array[Texture2D] = _step_icons(_active_topic)
+	var lines := step_copy.split("\n", false)
+	for index in mini(3, lines.size()):
+		var card := PanelContainer.new()
+		card.name = "HelpStepCard_%d" % (index + 1)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.custom_minimum_size.y = 68
+		var card_style := UiArtDirectionScript.panel_style(0.94)
+		card_style.modulate_color = (
+			Color("#17353d") if index == 0 else Color("#102129")
+		)
+		card.add_theme_stylebox_override("panel", card_style)
+		var stack := VBoxContainer.new()
+		stack.alignment = BoxContainer.ALIGNMENT_CENTER
+		stack.add_theme_constant_override("separation", 2)
+		card.add_child(stack)
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(24, 24)
+		icon.texture = icons[index]
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.modulate = GOLD if index == 1 else CYAN
+		stack.add_child(icon)
+		var label := Label.new()
+		label.text = String((STEP_LABELS[_active_topic] as Array)[index])
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		label.add_theme_font_override("font", CJK_FONT)
+		label.add_theme_font_size_override("font_size", 11)
+		label.add_theme_color_override("font_color", TEXT)
+		stack.add_child(label)
+		card.tooltip_text = String(lines[index])
+		step_row.add_child(card)
+
+
+func _step_icons(topic_id: String) -> Array[Texture2D]:
+	match topic_id:
+		"recovery":
+			return [ICON_HOME, ICON_WRENCH, ICON_MULTIPLAYER]
+		"controls":
+			return [ICON_TARGET, ICON_WRENCH, ICON_CHECK]
+		"data":
+			return [ICON_EXIT, ICON_CHECK, ICON_WARNING]
+		_:
+			return [ICON_TARGET, ICON_CHECK, ICON_EXIT]
 
 
 func _focus_primary_after_layout() -> void:
@@ -123,7 +217,7 @@ func _apply_theme() -> void:
 
 func _style_topic_button(button: Button, active: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(active))

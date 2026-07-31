@@ -36,11 +36,32 @@ func _run() -> void:
 	_check(columns.get_child_count() == 2, "help keeps two independent landscape columns")
 	var back := help.get_node("%HelpBackButton") as Button
 	var now := help.get_node("%HelpNowTab") as Button
+	var topic_grid := help.get_node(
+		"HelpLandscapeColumns/HelpGameplayScroll/HelpTopicRail"
+	) as GridContainer
+	var step_row := help.get_node("%HelpStepRow") as HBoxContainer
 	_check(
 		now.custom_minimum_size.y >= 48.0
 			and recovery.custom_minimum_size.y >= 48.0
 			and data.custom_minimum_size.y >= 48.0,
 		"help topic navigation remains touch sized"
+	)
+	_check(
+		topic_grid.columns == 2
+			and now.icon != null
+			and recovery.icon != null
+			and data.icon != null,
+		"help presents four icon-led topics as a two-column field manual"
+	)
+	_check(
+		step_row.get_child_count() == 3
+			and step_row.get_child(0).name == "HelpStepCard_1"
+			and (step_row.get_child(0) as Control).custom_minimum_size.y >= 68.0,
+		"each help topic renders three compact visual instruction cards"
+	)
+	_check(
+		back.icon != null and back.custom_minimum_size.y >= 48.0,
+		"help keeps an icon-led touch-ready return action"
 	)
 	_check(
 		help.get_viewport().gui_get_focus_owner() != null,
