@@ -207,6 +207,19 @@ WebP，只显示两位等级、状态符号和数量，完整奖励进入 toolti
 同时降低肖像明度、使用锁图标和“未知”文字，不依赖颜色。这样既让收集对象成为首要视觉奖励，
 也避免长段说明挤占移动横屏。
 
+### 设置与本地数据
+
+设置页参考 Activision 官方游戏设置说明中按图形、声音、控制与辅助选项分组的结构，以及
+Supercell 支持中心将数据访问/删除独立放在账户数据区域的做法。项目只采用“常用体验与数据
+风险分区、状态直接可扫读、危险动作独立”的信息结构，不复制品牌视觉。参考入口：
+`https://support.activision.com/servlet/servlet.FileDownload?file=00PU0000004cE8cMAE` 与
+`https://support.supercell.com/brawl-stars/en/account/index.html`。
+
+体验与存档页签、战术手册、应用、返回、报告、备份、导入和删除动作复用现有 Kenney PNG，
+以图标先于短标签形成扫读锚点；画质档位统一显示中文“低 / 中 / 高”。删除本地存档仍保留
+完整危险文字与二次确认，不用纯图标承载不可逆操作。844 使用双列控制台，568 缩短标签与
+控件最小宽度但不缩小 44–48 px 热区；体验、存档两态均有独立紧凑截图和边界断言。
+
 ## 组件状态
 
 | 组件 | Normal | Selected / Focus | Disabled | Reward / Warning |
@@ -264,6 +277,10 @@ WebP，只显示两位等级、状态符号和数量，完整奖励进入 toolti
   `ui-legion-844x390.png` 分别是独立双尺寸场景和主流程集成证据；同一测试还验证图鉴的
   肖像资源契约、标准四列/紧凑三列肖像墙、锁定态和渐进披露，
   `ui-codex-portraits-844x390.png` 与 `ui-codex-portraits-568x320.png` 是双尺寸证据。
+- `run_settings_screen_tests.gd` 验证图标化分区、中文画质档位、设置投影、备份校验、删除二次
+  确认以及 568×320 两列控件边界；`ui-settings-844x390.png`、
+  `ui-settings-568x320.png`、`ui-settings-storage-844x390.png` 与
+  `ui-settings-storage-568x320.png` 是体验和存档双状态证据。
 - `run_goals_screen_tests.gd` 验证三节点战役路线、唯一主挑战、次级补给横条及其语义动作；
   `ui-goals-action-844x390.png`、`ui-goals-action-568x320.png` 与
   `ui-goals-844x390.png` 是独立双尺寸和主流程集成证据；同一测试还验证成就奖章墙、

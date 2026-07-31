@@ -752,7 +752,7 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 		"storage write failure is translated into an actionable no-progress-loss recovery message"
 	)
 	_ok(export_save_button != null and export_save_button.custom_minimum_size.y >= 44.0, "SLG settings exposes a touch-sized save export")
-	_ok(import_save_button != null and import_save_button.text == "选择备份并校验", "SLG settings validates an import before overwrite")
+	_ok(import_save_button != null and import_save_button.text == "导入并校验", "SLG settings validates an import before overwrite")
 	_ok(settings_scroll != null and settings_scroll.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED, "SLG settings scrolls vertically instead of shrinking touch targets")
 	_ok(settings_data_scroll != null and settings_data_scroll.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED, "SLG settings gives local data an independent landscape column")
 	_ok(settings_columns != null and settings_columns.get_child_count() == 2, "SLG settings retains isolated experience and data surfaces")

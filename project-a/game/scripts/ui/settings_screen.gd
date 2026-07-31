@@ -6,6 +6,14 @@ signal action_requested(action_id: String)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
+const ICON_CHECK := preload("res://assets/ui/icons/kenney_game_icons/checkmark.png")
+const ICON_EXIT := preload("res://assets/ui/icons/kenney_game_icons/exit_right.png")
+const ICON_GEAR := preload("res://assets/ui/icons/kenney_game_icons/gear.png")
+const ICON_HOME := preload("res://assets/ui/icons/kenney_game_icons/home.png")
+const ICON_LOCK := preload("res://assets/ui/icons/kenney_game_icons/locked.png")
+const ICON_SIGNAL := preload("res://assets/ui/icons/kenney_game_icons/signal_3.png")
+const ICON_STAR := preload("res://assets/ui/icons/kenney_game_icons/star.png")
+const ICON_WARNING := preload("res://assets/ui/icons/kenney_game_icons/warning.png")
 const BG := Color("#090d10")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
@@ -45,6 +53,7 @@ var _active_section := "experience"
 
 
 func _ready() -> void:
+	_assign_icon_contract()
 	_apply_theme()
 	volume.value_changed.connect(_on_volume_changed)
 	music_volume.value_changed.connect(_on_music_volume_changed)
@@ -69,6 +78,29 @@ func _ready() -> void:
 	_focus_primary_after_layout()
 
 
+func _assign_icon_contract() -> void:
+	quality.set_item_text(0, "低")
+	quality.set_item_text(1, "中")
+	quality.set_item_text(2, "高")
+	_set_button_icon(experience_tab, ICON_GEAR, "音频、画面辅助与战斗偏好")
+	_set_button_icon(data_tab, ICON_LOCK, "备份、导入、本地试玩记录与删除")
+	_set_button_icon(%SettingsHelpButton, ICON_STAR, "打开图标化战术手册")
+	_set_button_icon(%SettingsExportPlaytestButton, ICON_SIGNAL, "下载不含账号标识的本地试玩报告")
+	_set_button_icon(%SettingsClearPlaytestButton, ICON_WARNING, "清空本机试玩记录")
+	_set_button_icon(%SettingsExportSaveButton, ICON_EXIT, "下载当前进度备份")
+	_set_button_icon(import_button, ICON_HOME, "选择备份，校验后再覆盖")
+	_set_button_icon(delete_button, ICON_WARNING, "删除本机进度，需要再次确认")
+	_set_button_icon(save_button, ICON_CHECK, "应用当前体验设置")
+	_set_button_icon(back_button, ICON_EXIT, "返回上一界面")
+
+
+func _set_button_icon(button: Button, icon: Texture2D, tooltip: String) -> void:
+	button.icon = icon
+	button.add_theme_constant_override("icon_max_width", 22)
+	button.expand_icon = true
+	button.tooltip_text = tooltip
+
+
 func configure(view: Dictionary) -> void:
 	_view = view.duplicate(true)
 	if is_node_ready():
@@ -77,6 +109,7 @@ func configure(view: Dictionary) -> void:
 
 func _apply_view() -> void:
 	_projecting = true
+	_apply_responsive_contract(bool(_view.get("compact", false)))
 	volume.value = clampf(float(_view.get("master_volume", 80)), 0.0, 100.0)
 	volume_value.text = "%d" % roundi(volume.value)
 	music_volume.value = clampf(float(_view.get("music_volume", 55)), 0.0, 100.0)
@@ -94,7 +127,7 @@ func _apply_view() -> void:
 	persistence_status.text = String(_view.get("persistence_copy", ""))
 	persistence_status.add_theme_color_override("font_color", GREEN if persistent else GOLD)
 	var has_import := bool(_view.get("has_import_preview", false))
-	import_button.text = "确认覆盖当前进度" if has_import else "选择备份并校验"
+	import_button.text = "确认覆盖当前进度" if has_import else "导入并校验"
 	import_preview.visible = has_import
 	import_preview.text = String(_view.get("import_preview", ""))
 	delete_button.text = (
@@ -110,6 +143,35 @@ func _apply_view() -> void:
 		_active_section = "data"
 	_select_section(_active_section)
 	_projecting = false
+
+
+func _apply_responsive_contract(compact: bool) -> void:
+	$SettingsLandscapeColumns.custom_minimum_size.y = 126.0 if compact else 150.0
+	var audio_label_width := 60.0 if compact else 82.0
+	var gameplay_label_width := 96.0 if compact else 104.0
+	var audio_control_width := 82.0 if compact else 150.0
+	var gameplay_control_width := 104.0 if compact else 150.0
+	for row_path in [
+		"SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/VolumeRow",
+		"SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/AudioColumn/MusicVolumeRow",
+	]:
+		var row := get_node(row_path) as HBoxContainer
+		(row.get_child(0) as Label).custom_minimum_size.x = audio_label_width
+		(row.get_child(1) as Control).custom_minimum_size.x = audio_control_width
+		(row.get_child(2) as Label).custom_minimum_size.x = 24.0 if compact else 28.0
+	for row_path in [
+		"SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/QualityRow",
+		"SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/ReducedRow",
+		"SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns/GameplayColumn/AutoRow",
+	]:
+		var row := get_node(row_path) as HBoxContainer
+		(row.get_child(0) as Label).custom_minimum_size.x = gameplay_label_width
+		(row.get_child(1) as Control).custom_minimum_size.x = gameplay_control_width
+	var playtest_row := get_node(
+		"SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn/PlaytestRow"
+	) as HBoxContainer
+	(playtest_row.get_child(0) as Label).custom_minimum_size.x = 136.0 if compact else 180.0
+	(playtest_row.get_child(1) as Control).custom_minimum_size.x = 76.0 if compact else 90.0
 
 
 func _select_section(section_id: String) -> void:
@@ -182,13 +244,17 @@ func _style_section_tab(button: Button, active: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(active))
-	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(active, "hover"))
-	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(active, "pressed"))
-	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(active, "focus"))
-	button.add_theme_color_override("font_color", PANEL if active else TEXT)
-	button.add_theme_color_override("font_hover_color", PANEL if active else TEXT)
-	button.add_theme_color_override("font_pressed_color", PANEL if active else TEXT)
+	var normal: StyleBox = _button_style(Color("#132326"), CYAN) if active else UiArtDirectionScript.button_style(false)
+	var hover: StyleBox = _button_style(Color("#193337"), Color.WHITE) if active else UiArtDirectionScript.button_style(false, "hover")
+	var pressed: StyleBox = _button_style(Color("#1d4447"), Color.WHITE) if active else UiArtDirectionScript.button_style(false, "pressed")
+	var focus: StyleBox = _button_style(Color("#132326"), Color.WHITE) if active else UiArtDirectionScript.button_style(false, "focus")
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", focus)
+	button.add_theme_color_override("font_color", CYAN if active else TEXT)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_pressed_color", Color.WHITE)
 
 
 func _style_button(button: Button, primary: bool) -> void:

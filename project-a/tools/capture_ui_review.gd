@@ -64,7 +64,32 @@ func _capture() -> void:
 	if not _save_viewport("res://artifacts/ui-settings-844x390.png"):
 		quit(1)
 		return
+	DisplayServer.window_set_size(Vector2i(568, 320))
+	root.content_scale_size = Vector2i(568, 320)
+	root.size = Vector2i(568, 320)
+	main.set("active_layout_profile", "compact_landscape")
+	main.call("_show_settings", 1)
+	for _frame in 6:
+		await process_frame
+	if not _save_viewport("res://artifacts/ui-settings-568x320.png"):
+		quit(1)
+		return
 	var settings_data_tab := main.find_child("SettingsDataTab", true, false) as Button
+	if settings_data_tab != null:
+		settings_data_tab.pressed.emit()
+	for _frame in 3:
+		await process_frame
+	if not _save_viewport("res://artifacts/ui-settings-storage-568x320.png"):
+		quit(1)
+		return
+	DisplayServer.window_set_size(Vector2i(844, 390))
+	root.content_scale_size = Vector2i(844, 390)
+	root.size = Vector2i(844, 390)
+	main.set("active_layout_profile", "standard_landscape")
+	main.call("_show_settings", 1)
+	for _frame in 6:
+		await process_frame
+	settings_data_tab = main.find_child("SettingsDataTab", true, false) as Button
 	if settings_data_tab != null:
 		settings_data_tab.pressed.emit()
 	for _frame in 3:

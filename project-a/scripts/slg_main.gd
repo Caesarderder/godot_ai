@@ -560,6 +560,7 @@ func _settings_view() -> Dictionary:
 			int(pending_save_import_summary.get("revision", 0)),
 		]
 	return {
+		"compact": _layout_profile() == "compact_landscape",
 		"master_volume": settings_store.master_volume,
 		"music_volume": settings_store.music_volume,
 		"effects_quality": settings_store.effects_quality,

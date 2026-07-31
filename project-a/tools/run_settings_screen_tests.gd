@@ -40,16 +40,39 @@ func _run() -> void:
 	var data_scroll := settings.get_node("SettingsLandscapeColumns/SettingsDataScroll") as ScrollContainer
 	_check(is_equal_approx(volume.value, 37.0), "master volume is projected")
 	_check(is_equal_approx(music_volume.value, 29.0), "music volume is projected")
-	_check(quality.get_item_text(quality.selected) == "high", "effects quality is projected")
+	_check(quality.get_item_text(quality.selected) == "高", "effects quality is projected in player-facing Chinese")
 	_check(reduced.button_pressed, "reduced motion is projected")
 	_check(not playtest_status.visible, "playtest details stay hidden before opt-in")
-	_check(import_button.text == "选择备份并校验", "import starts with validation intent")
+	_check(import_button.text == "导入并校验", "import starts with validation intent")
 	_check(save.has_focus(), "save action receives initial focus")
 	_check(experience_scroll.visible and not data_scroll.visible, "settings defaults to the common experience section")
 	_check(
 		experience_tab.custom_minimum_size.y >= 44.0
 			and data_tab.custom_minimum_size.y >= 44.0,
 		"settings section navigation remains touch sized"
+	)
+	_check(
+		experience_tab.icon != null
+			and data_tab.icon != null
+			and save.icon != null
+			and import_button.icon != null,
+		"settings navigation and primary actions use raster icon identity"
+	)
+	settings.size = Vector2(544, 248)
+	var compact_view := (settings.get("_view") as Dictionary).duplicate(true)
+	compact_view["compact"] = true
+	settings.call("configure", compact_view)
+	await process_frame
+	_check(
+		quality.get_global_rect().end.x <= settings.get_global_rect().end.x + 0.5
+			and reduced.get_global_rect().end.x <= settings.get_global_rect().end.x + 0.5,
+		"compact experience controls stay inside the 568x320 content width"
+	)
+	_check(
+		save.get_global_rect().end.y <= settings.get_global_rect().end.y + 0.5
+			and (settings.get_node("%SettingsBackButton") as Button).get_global_rect().end.y
+				<= settings.get_global_rect().end.y + 0.5,
+		"compact fixed actions remain fully visible without shrinking their touch height"
 	)
 
 	var changed := {"id": "", "value": null}
@@ -69,6 +92,14 @@ func _run() -> void:
 	_check(
 		data_scroll.visible and not experience_scroll.visible and not save.visible,
 		"local data is progressively disclosed without an unrelated save action"
+	)
+	var delete_button := settings.get_node("%SettingsDeleteLocalSaveButton") as Button
+	_check(
+		import_button.get_global_rect().end.x <= settings.get_global_rect().end.x + 0.5
+			and delete_button.get_global_rect().end.x <= settings.get_global_rect().end.x + 0.5
+			and (settings.get_node("%SettingsBackButton") as Button).get_global_rect().end.y
+				<= settings.get_global_rect().end.y + 0.5,
+		"compact backup, import, and destructive actions stay inside the viewport"
 	)
 	import_button.pressed.emit()
 	_check(requested["id"] == "import_save", "import emits semantic action")
@@ -91,7 +122,7 @@ func _run() -> void:
 	_check(data_scroll.visible, "data-risk state returns to the local-data section")
 	_check(import_button.text == "确认覆盖当前进度", "validated import requires confirmation")
 	_check((settings.get_node("%SettingsImportPreview") as Label).visible, "validated import preview is visible")
-	_check((settings.get_node("%SettingsDeleteLocalSaveButton") as Button).text.contains("再次点击"), "delete requires a second click")
+	_check(delete_button.text.contains("再次点击"), "delete requires a second click")
 
 	settings.queue_free()
 	await process_frame

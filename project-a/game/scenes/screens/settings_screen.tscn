@@ -17,13 +17,13 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 custom_minimum_size = Vector2(210, 44)
 layout_mode = 2
-text = "体验设置"
+text = "体验"
 
 [node name="SettingsDataTab" type="Button" parent="SettingsSectionTabs"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(210, 44)
 layout_mode = 2
-text = "本地数据"
+text = "存档"
 
 [node name="SettingsLandscapeColumns" type="HBoxContainer" parent="."]
 custom_minimum_size = Vector2(0, 150)
@@ -113,7 +113,7 @@ text = "55"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "打开玩法指南"
+text = "战术手册"
 
 [node name="GameplayColumn" type="VBoxContainer" parent="SettingsLandscapeColumns/SettingsScroll/SettingsExperiencePanel/Margin/Content/ExperienceColumns"]
 layout_mode = 2
@@ -234,7 +234,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "下载报告"
+text = "导出报告"
 
 [node name="SettingsClearPlaytestButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/PlaytestColumn/SettingsPlaytestActions"]
 unique_name_in_owner = true
@@ -262,14 +262,14 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "下载备份"
+text = "备份"
 
 [node name="SettingsImportSaveButton" type="Button" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn/BackupActions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "选择备份并校验"
+text = "导入并校验"
 
 [node name="SettingsImportPreview" type="Label" parent="SettingsLandscapeColumns/SettingsDataScroll/SettingsDataPanel/Margin/Content/DataColumns/StorageColumn"]
 unique_name_in_owner = true
@@ -291,7 +291,7 @@ theme_override_constants/separation = 10
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 48)
 layout_mode = 2
-text = "保存体验设置"
+text = "应用"
 
 [node name="SettingsBackButton" type="Button" parent="SettingsFixedActions"]
 unique_name_in_owner = true
