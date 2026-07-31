@@ -5244,7 +5244,7 @@ func _factory_material(color: Color, roughness: float) -> StandardMaterial3D:
 func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 	var nav := HBoxContainer.new()
 	nav.name = "PrimaryNavigation"
-	nav.alignment = BoxContainer.ALIGNMENT_CENTER
+	nav.alignment = BoxContainer.ALIGNMENT_END if active == Screen.BASE else BoxContainer.ALIGNMENT_CENTER
 	nav.add_theme_constant_override("separation", 4)
 	nav.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	shell.add_child(nav)
@@ -5254,13 +5254,23 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 		["军团", Screen.LEGION, _show_legion],
 		["行动", Screen.GOALS, _show_goals],
 	]
+	if active == Screen.BASE:
+		entries = [
+			["战区", Screen.MAP, _show_map],
+			["军团", Screen.LEGION, _show_legion],
+			["行动", Screen.GOALS, _show_goals],
+		]
+	var base_icons := {"战区":"◇", "军团":"▦", "行动":"◎"}
 	var notification_counts := NotificationSummaryScript.derive(
 		game.current_state(),
 		int(Time.get_unix_time_from_system())
 	)
 	for entry in entries:
-		var button := _button(String(entry[0]), entry[2], int(entry[1]) == active)
+		var label := String(base_icons.get(String(entry[0]), entry[0])) if active == Screen.BASE else String(entry[0])
+		var button := _button(label, entry[2], int(entry[1]) == active)
 		button.name = "TopNav%sButton" % String(entry[0])
+		if active == Screen.BASE:
+			button.tooltip_text = String(entry[0])
 		var badge_count := 0
 		if int(entry[1]) == Screen.BASE:
 			badge_count = int(notification_counts.get("factory_ready", 0))
@@ -5274,9 +5284,9 @@ func _add_nav(shell: VBoxContainer, active: Screen) -> void:
 				"%d 项奖励待领取" % badge_count
 				if badge_count > 0 else "暂无待领取奖励"
 			)
-		button.custom_minimum_size = Vector2(112, 52)
+		button.custom_minimum_size = Vector2(48, 48) if active == Screen.BASE else Vector2(112, 52)
 		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		button.add_theme_font_size_override("font_size", 14)
+		button.add_theme_font_size_override("font_size", 20 if active == Screen.BASE else 14)
 		button.add_theme_stylebox_override(
 			"normal",
 			UiArtDirectionScript.button_style(int(entry[1]) == active)

@@ -60,7 +60,7 @@
   "inference": "The candidate is stable enough for visual and integration judgment.",
   "result": "pass",
   "confidence": 0.99,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Does not prove player motivation."
   ],

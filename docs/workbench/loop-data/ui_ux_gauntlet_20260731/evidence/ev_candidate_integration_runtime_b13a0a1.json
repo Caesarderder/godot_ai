@@ -47,7 +47,7 @@
   "inference": "The focused map improvement did not regress the shared title/factory/map route.",
   "result": "pass",
   "confidence": 0.98,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Capture process reports pre-existing resources in use at process exit after PASS."
   ],

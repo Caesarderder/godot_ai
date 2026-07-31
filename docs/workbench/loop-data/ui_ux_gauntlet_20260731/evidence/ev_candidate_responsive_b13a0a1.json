@@ -60,7 +60,7 @@
   "inference": "Responsive constraints pass for the focused scenario.",
   "result": "pass",
   "confidence": 0.96,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Physical-phone safe areas are not represented."
   ],

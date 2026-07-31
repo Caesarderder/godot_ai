@@ -47,7 +47,7 @@
   "inference": "The player-learning gate remains human_required.",
   "result": "human_required",
   "confidence": 1.0,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Requires one fresh player using the browser Workbench flow."
   ],

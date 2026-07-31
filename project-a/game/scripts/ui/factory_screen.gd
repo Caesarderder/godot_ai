@@ -9,6 +9,8 @@ const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd
 const NotificationBadgeScript := preload(
 	"res://game/scripts/presentation/notification_badge.gd"
 )
+const FACTORY_FACILITY_ICON := preload("res://assets/ui/icons/factory/factory-facility-v1.png")
+const FACTORY_BUILD_ICON := preload("res://assets/ui/icons/factory/factory-build-v1.png")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
@@ -35,7 +37,11 @@ var _facility_badge: NotificationBadge
 func _ready() -> void:
 	_facility_badge = NotificationBadgeScript.new() as NotificationBadge
 	_facility_badge.name = "FactoryFacilityNotificationBadge"
-	facility_tab.add_child(_facility_badge)
+	tool_rail.get_parent().add_child(_facility_badge)
+	facility_tab.icon = FACTORY_FACILITY_ICON
+	build_tab.icon = FACTORY_BUILD_ICON
+	for icon_button: Button in [facility_tab, build_tab]:
+		icon_button.expand_icon = true
 	mission_tab.pressed.connect(panel_selected.emit.bind("mission"))
 	facility_tab.pressed.connect(panel_selected.emit.bind("facility"))
 	build_tab.pressed.connect(panel_selected.emit.bind("build"))
@@ -61,14 +67,15 @@ func _rebuild() -> void:
 		and not String(construction.get("active_id", "")).is_empty()
 	)
 	tool_rail.visible = not placement_active
+	_facility_badge.visible = _facility_badge.visible and not placement_active
 	mission_tab.visible = active_panel != "mission"
-	mission_tab.text = "←"
+	mission_tab.text = "×"
 	mission_tab.tooltip_text = "关闭面板"
-	facility_tab.text = "▣"
-	facility_tab.tooltip_text = "设施"
-	build_tab.text = "+"
-	build_tab.tooltip_text = "建设"
-	_apply_responsive_layout(compact, active_panel)
+	facility_tab.text = ""
+	facility_tab.tooltip_text = "设施详情"
+	build_tab.text = ""
+	build_tab.tooltip_text = "建设建筑"
+	_apply_responsive_layout(compact, active_panel, placement_active)
 	_apply_shell_style()
 	_build_resources(compact)
 	_clear(panel_host)
@@ -84,24 +91,29 @@ func _rebuild() -> void:
 			panel_host.add_child(_mission_panel())
 
 
-func _apply_responsive_layout(compact: bool, active_panel: String) -> void:
+func _apply_responsive_layout(compact: bool, active_panel: String, placement_active: bool) -> void:
 	resource_hud.offset_right = 218.0 if compact else 282.0
 	tool_rail.offset_left = -54.0 if compact else -58.0
 	tool_rail.offset_right = -6.0 if compact else -8.0
 	tool_rail.offset_top = 62.0 if compact else 66.0
+	_facility_badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_facility_badge.offset_left = -28.0
+	_facility_badge.offset_top = tool_rail.offset_top - 10.0
+	_facility_badge.offset_right = 0.0
+	_facility_badge.offset_bottom = tool_rail.offset_top + 18.0
 	var mission_mode := active_panel == "mission"
 	var build_mode := active_panel == "build"
 	if build_mode:
-		hud_frame.anchor_left = 0.5
+		hud_frame.anchor_left = 1.0 if placement_active else 0.5
 		hud_frame.anchor_top = 1.0
-		hud_frame.anchor_right = 0.5
+		hud_frame.anchor_right = 1.0 if placement_active else 0.5
 		hud_frame.anchor_bottom = 1.0
-		hud_frame.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		hud_frame.grow_horizontal = Control.GROW_DIRECTION_BEGIN if placement_active else Control.GROW_DIRECTION_BOTH
 		hud_frame.grow_vertical = Control.GROW_DIRECTION_BEGIN
-		hud_frame.custom_minimum_size.x = 508.0 if compact else 640.0
-		hud_frame.offset_left = -254.0 if compact else -320.0
-		hud_frame.offset_right = 254.0 if compact else 320.0
-		hud_frame.offset_top = -112.0
+		hud_frame.custom_minimum_size.x = (290.0 if compact else 330.0) if placement_active else (508.0 if compact else 640.0)
+		hud_frame.offset_left = (-298.0 if compact else -342.0) if placement_active else (-254.0 if compact else -320.0)
+		hud_frame.offset_right = -8.0 if placement_active else (254.0 if compact else 320.0)
+		hud_frame.offset_top = -104.0 if placement_active else -112.0
 		hud_frame.offset_bottom = -8.0
 	else:
 		hud_frame.anchor_left = 0.0 if mission_mode else 1.0
@@ -120,7 +132,7 @@ func _apply_responsive_layout(compact: bool, active_panel: String) -> void:
 	elif active_panel == "facility":
 		hud_frame.custom_minimum_size.y = 184.0
 	else:
-		hud_frame.custom_minimum_size.y = 104.0
+		hud_frame.custom_minimum_size.y = 92.0 if placement_active else 104.0
 
 
 func _build_resources(compact: bool) -> void:
@@ -220,9 +232,10 @@ func _construction_panel() -> Control:
 	var active_id := String(construction.get("active_id", ""))
 	var panel := _panel("")
 	panel.name = "ConstructionPanel"
-	var guide := _label("＋ 建设 · 选建筑后点空地" if active_id.is_empty() else "⌖ 放置建筑", 11, MUTED if active_id.is_empty() else CYAN)
-	guide.name = "ConstructionStepGuide"
-	panel.add_child(guide)
+	if active_id.is_empty():
+		var guide := _label("＋ 建设 · 选建筑后点空地", 11, MUTED)
+		guide.name = "ConstructionStepGuide"
+		panel.add_child(guide)
 	if active_id.is_empty():
 		var recovery_gift := construction.get("recovery_gift", {}) as Dictionary
 		if not recovery_gift.is_empty():

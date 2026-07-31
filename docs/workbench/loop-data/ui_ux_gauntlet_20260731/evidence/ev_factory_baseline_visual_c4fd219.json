@@ -1,0 +1,87 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "evidence_id": "ev_factory_baseline_visual_c4fd219",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "revision": "c4fd219",
+  "valid_through_revision": "c4fd219",
+  "gate_id": "gate_factory_visual",
+  "claim": "The factory reads as a 3D underground war base first, with compact contextual HUD states instead of a persistent dashboard.",
+  "scenario_id": "scenario_factory_world_hud",
+  "execution_id": "factory_hud_baseline_c4fd219",
+  "evidence_type": "capture",
+  "artifact_or_command": "project-a/artifacts/scenario-factory-hud baseline bundle",
+  "case_results": [
+    {
+      "case_id": "mission_world_first",
+      "result": "fail",
+      "assertions": [
+        "persistent left card competes with world"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/baseline/mission_world_first-844x390.png"
+      ]
+    },
+    {
+      "case_id": "contextual_facility",
+      "result": "fail",
+      "assertions": [
+        "facility panel consumes most of the right half"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/baseline/contextual_facility-844x390.png"
+      ]
+    },
+    {
+      "case_id": "construction_carousel",
+      "result": "fail",
+      "assertions": [
+        "horizontal options remain inside a large dashboard frame"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/baseline/construction_carousel-568x320.png"
+      ]
+    },
+    {
+      "case_id": "placement_decision",
+      "result": "fail",
+      "assertions": [
+        "confirmation modal covers the center world field"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-factory-hud/baseline/placement_decision-844x390.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "mission captures",
+    "facility captures",
+    "build captures",
+    "placement captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "model",
+    "name": "maker baseline audit",
+    "version": "1",
+    "independence": "non_independent"
+  },
+  "observation": "Every state is framed as a broad text panel; placement covers the visual center and no state feels like a lightweight world HUD.",
+  "inference": "Visual baseline fails and requires a bounded HUD reconstruction.",
+  "result": "fail",
+  "confidence": 0.97,
+  "freshness": "stale",
+  "limitations": [
+    "Non-independent baseline audit cannot close the mixed gate."
+  ],
+  "created_at": "2026-07-31T19:00:00+08:00"
+}

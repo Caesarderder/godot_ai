@@ -46,7 +46,7 @@
   "inference": "The candidate is responsive across focused and integrated routes.",
   "result": "pass",
   "confidence": 0.94,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Physical-device safe areas remain untested."
   ],

@@ -2,24 +2,24 @@
   "schema_version": "caesar-loop/v2",
   "run_id": "ui_ux_gauntlet_20260731",
   "state": "unit_looping",
-  "revision": "b13a0a1",
+  "revision": "30244a8",
   "iteration": 1,
   "active_work_unit": "factory world-first HUD and contextual construction flow",
   "frozen_gates": [
-    "gate_ui_visual",
-    "gate_ui_runtime",
-    "gate_ui_responsive"
+    "gate_ui_visual"
   ],
   "gate_status": {
-    "gate_factory_responsive": "pending",
-    "gate_factory_runtime": "pending",
-    "gate_factory_visual": "pending",
-    "gate_player_learning": "human_required",
-    "gate_ui_responsive": "pass",
-    "gate_ui_runtime": "pass",
+    "gate_factory_responsive": "stale",
+    "gate_factory_runtime": "stale",
+    "gate_factory_visual": "stale",
+    "gate_player_learning": "stale",
+    "gate_ui_responsive": "stale",
+    "gate_ui_runtime": "stale",
     "gate_ui_visual": "pass"
   },
-  "open_findings": [],
+  "open_findings": [
+    "finding_factory_hud_identity_001"
+  ],
   "evidence_ledger": [
     "ev_ui_gauntlet_runtime_baseline_16b05bb",
     "ev_ui_gauntlet_responsive_baseline_16b05bb",
@@ -31,7 +31,11 @@
     "ev_candidate_visual_critic_b13a0a1",
     "ev_candidate_integration_runtime_b13a0a1",
     "ev_candidate_integration_responsive_b13a0a1",
-    "ev_player_learning_human_required_b13a0a1"
+    "ev_player_learning_human_required_b13a0a1",
+    "ev_factory_baseline_runtime_c4fd219",
+    "ev_factory_baseline_visual_c4fd219",
+    "ev_factory_baseline_responsive_c4fd219",
+    "ev_factory_critic_fail_30244a8"
   ],
   "continuation_anchor": {
     "goal": "Continuously improve the real mobile UI/UX from user feedback, beginning with war-zone exploration desire while preserving the accepted title and factory-world direction.",
@@ -159,6 +163,43 @@
       "at": "2026-07-31T11:20:39Z",
       "decision": "Add a dedicated factory HUD scenario and three factory-specific gates before implementation.",
       "evidence_ids": []
+    },
+    {
+      "at": "2026-07-31T11:22:14Z",
+      "decision": "Factory focused scenario and baseline bundle added; only new factory gates are evaluated at this revision. Affected gates=['gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb"
+      ]
+    },
+    {
+      "at": "2026-07-31T11:26:56Z",
+      "decision": "Factory shipping HUD candidate changed layout and controls after the qualified baseline. Affected gates=['gate_factory_responsive', 'gate_factory_runtime', 'gate_factory_visual', 'gate_player_learning', 'gate_ui_responsive', 'gate_ui_runtime']; carried gates=['gate_ui_visual'].",
+      "evidence_ids": [
+        "ev_candidate_focused_runtime_b13a0a1",
+        "ev_candidate_integration_responsive_b13a0a1",
+        "ev_candidate_integration_runtime_b13a0a1",
+        "ev_candidate_responsive_b13a0a1",
+        "ev_candidate_visual_critic_b13a0a1",
+        "ev_candidate_visual_runtime_b13a0a1",
+        "ev_factory_baseline_responsive_c4fd219",
+        "ev_factory_baseline_runtime_c4fd219",
+        "ev_factory_baseline_visual_c4fd219",
+        "ev_player_learning_human_required_b13a0a1",
+        "ev_ui_gauntlet_human_required_16b05bb",
+        "ev_ui_gauntlet_responsive_baseline_16b05bb",
+        "ev_ui_gauntlet_runtime_baseline_16b05bb",
+        "ev_ui_gauntlet_visual_baseline_16b05bb"
+      ]
     }
   ]
 }

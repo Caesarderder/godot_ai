@@ -1,0 +1,18 @@
+{
+  "schema_version": "caesar-loop/v2",
+  "finding_id": "finding_factory_hud_identity_001",
+  "run_id": "ui_ux_gauntlet_20260731",
+  "gate_id": "gate_factory_visual",
+  "status": "open",
+  "severity": "high",
+  "player_impact": "The player sees a generic management overlay, cannot reliably identify facility/build tools, and loses the placement world under a wide confirmation strip.",
+  "observation": "Blind critic preferred the candidate but scored it 6.8/10 and failed it on topic identity, icon semantics and placement occlusion.",
+  "evidence_ids": [
+    "ev_factory_critic_fail_30244a8"
+  ],
+  "next_change": "Add two readable raster factory-tool icons, externalize notification badges, reduce generic framing, and collapse placement actions into a short corner dock.",
+  "acceptance_check": "A fresh blind critic scores the repaired candidate at least 7/10 with no blocking issue in all four factory cases.",
+  "owner": "factory HUD work-unit owner",
+  "retry_count": 0,
+  "blocked_by": ""
+}

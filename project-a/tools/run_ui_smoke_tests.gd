@@ -929,7 +929,10 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	_ok(instance.find_child("ConstructionCatalogScroll", true, false) != null, "construction catalog scrolls horizontally along the lower HUD")
 	_ok(instance.find_child("OnboardingMissionPanel", true, false) == null, "construction button opens one focused panel instead of stacking every factory system")
 	var construction_steps := instance.find_child("ConstructionStepGuide", true, false) as Label
-	_ok(construction_steps != null and construction_steps.text.contains("选建筑") and construction_steps.text.contains("点地图格子") and construction_steps.text.contains("确认"), "construction panel explains the complete three-step placement flow")
+	_ok(
+		construction_steps != null and construction_steps.text.contains("选建筑") and construction_steps.text.contains("点空地"),
+		"construction strip explains selection and direct world placement without a tutorial paragraph"
+	)
 	if choose_porcelain != null:
 		choose_porcelain.pressed.emit()
 		await _wait_frames(3)
@@ -1071,8 +1074,13 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	if restored_mission_tab != null:
 		restored_mission_tab.pressed.emit()
 		await _wait_frames(3)
-	_ok(_tree_has_text(instance, "行动 ·"), "fresh save presents onboarding as a compact action HUD")
-	_ok(_tree_has_text(instance, "建设研究所"), "fresh-save mission starts with research-lab construction")
+	_ok(_tree_has_text(instance, "当前行动"), "fresh save presents onboarding as a compact action beacon")
+	var fresh_factory_action := instance.find_child("FactoryMissionPrimaryAction", true, false) as Button
+	_ok(
+		fresh_factory_action != null
+		and (fresh_factory_action.text.contains("研究所") or fresh_factory_action.text.contains("1-1")),
+		"factory mission keeps the current construction or first-attack action in the beacon"
+	)
 	_ok(not _tree_has_text(instance, "收取一次工厂产出"), "fresh-save mission does not start with factory chores")
 	_ok(not _tree_has_text(instance, "选择并升级一名主力"), "fresh-save mission does not require growth before combat")
 	_ok(

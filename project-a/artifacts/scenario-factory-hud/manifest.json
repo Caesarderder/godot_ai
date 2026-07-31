@@ -66,12 +66,12 @@
     {
       "artifact": "artifacts/scenario-factory-hud/placement_decision-844x390.png",
       "case_id": "placement_decision",
-      "hud_area_ratio": 0.33,
+      "hud_area_ratio": 0.173,
       "hud_rect": [
-        102.0,
-        238.0,
-        640.0,
-        144.0
+        502.0,
+        261.0,
+        334.0,
+        121.0
       ],
       "resource_rect": [
         8.0,
@@ -150,12 +150,12 @@
     {
       "artifact": "artifacts/scenario-factory-hud/placement_decision-568x320.png",
       "case_id": "placement_decision",
-      "hud_area_ratio": 0.472,
+      "hud_area_ratio": 0.262,
       "hud_rect": [
-        30.0,
-        168.0,
-        508.0,
-        144.0
+        270.0,
+        191.0,
+        290.0,
+        121.0
       ],
       "resource_rect": [
         8.0,
