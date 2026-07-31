@@ -54,7 +54,8 @@
         "gate_achievement_cabinet_visual",
         "gate_growth_duel_visual",
         "gate_doctrine_deck_visual",
-        "gate_breakthrough_reveal_visual"
+        "gate_breakthrough_reveal_visual",
+        "gate_pass_runway_visual"
       ],
       "rationale": "The user explicitly challenged character identity and generic AI-looking landmarks."
     },
@@ -106,7 +107,9 @@
         "gate_doctrine_deck_visual",
         "gate_doctrine_deck_runtime",
         "gate_breakthrough_reveal_visual",
-        "gate_breakthrough_reveal_runtime"
+        "gate_breakthrough_reveal_runtime",
+        "gate_pass_runway_visual",
+        "gate_pass_runway_runtime"
       ],
       "rationale": "UI/UX is the explicit objective."
     },
@@ -177,7 +180,8 @@
         "gate_achievement_cabinet_visual",
         "gate_growth_duel_visual",
         "gate_doctrine_deck_visual",
-        "gate_breakthrough_reveal_visual"
+        "gate_breakthrough_reveal_visual",
+        "gate_pass_runway_visual"
       ],
       "rationale": "Only target-player observation can close the exploration and comprehension claim."
     },
@@ -199,7 +203,8 @@
         "gate_achievement_cabinet_responsive",
         "gate_growth_duel_responsive",
         "gate_doctrine_deck_responsive",
-        "gate_breakthrough_reveal_responsive"
+        "gate_breakthrough_reveal_responsive",
+        "gate_pass_runway_responsive"
       ],
       "rationale": "The target viewports and non-colour state encoding are explicit constraints."
     },
@@ -230,7 +235,9 @@
         "gate_doctrine_deck_runtime",
         "gate_doctrine_deck_responsive",
         "gate_breakthrough_reveal_runtime",
-        "gate_breakthrough_reveal_responsive"
+        "gate_breakthrough_reveal_responsive",
+        "gate_pass_runway_runtime",
+        "gate_pass_runway_responsive"
       ],
       "rationale": "Visual changes must not break the shipping campaign flow."
     },
@@ -2409,6 +2416,191 @@
       "limitations": [
         "Static captures cannot prove long-term roster attachment."
       ]
+    },
+    {
+      "scenario_id": "scenario_mobile_battle_pass_supply_runway",
+      "scenario_kind": "focused_feature",
+      "purpose": "Exercise the shipping GoalsScreen thirty-level battle-pass track as a touch-first horizontal reward runway.",
+      "player_question": "Can the player drag along one supply line, instantly distinguish claimed, claimable and future tiers, and collect the current rewards without reading a four-column inventory grid?",
+      "gate_ids": [
+        "gate_pass_runway_visual",
+        "gate_pass_runway_runtime",
+        "gate_pass_runway_responsive"
+      ],
+      "ownership": {
+        "scenario_surface": "project-a/tools/capture_battle_pass_runway_scenario.gd and goals screen tests",
+        "shipping_surface": "goals_screen.gd BattlePassRewardRunway composition",
+        "public_adapter": "GoalsScreen.configure plus action_requested claim_pass_level and claim_all_pass"
+      },
+      "fixture": {
+        "subject_parameter": "battle_pass_state",
+        "reuse_scope": "claimable, settled and future-focus runway states",
+        "extension_contract": "use deterministic shipping pass dictionaries; never duplicate reward catalog or durable claim rules"
+      },
+      "setup": {
+        "execution_surface": "dedicated_test_scene",
+        "entry": "instantiate goals_screen.tscn with deterministic pass views",
+        "state": "battle pass unlocked with thirty projected levels",
+        "camera_or_view": "fixed full-screen Control viewport",
+        "viewport": "844x390 and 568x320",
+        "target_device": "representative mobile landscape Web"
+      },
+      "stimulus": [
+        {
+          "stimulus_id": "show_claimable",
+          "at": "case start",
+          "action": "show first three reached levels with two available claims"
+        },
+        {
+          "stimulus_id": "show_settled",
+          "at": "after claimable",
+          "action": "show reached levels already claimed"
+        },
+        {
+          "stimulus_id": "show_future_focus",
+          "at": "after settled",
+          "action": "show a mid-season reached tier and upcoming rewards"
+        }
+      ],
+      "observations": [
+        {
+          "observation_id": "pass_manifest",
+          "source": "focused capture manifest and runtime assertions",
+          "window": "all cases",
+          "artifact": "project-a/artifacts/scenario-mobile-battle-pass-runway/manifest.json"
+        },
+        {
+          "observation_id": "pass_standard",
+          "source": "fixed 844x390 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-battle-pass-runway"
+        },
+        {
+          "observation_id": "pass_compact",
+          "source": "fixed 568x320 captures",
+          "window": "all states",
+          "artifact": "project-a/artifacts/scenario-mobile-battle-pass-runway"
+        }
+      ],
+      "coverage_matrix": [
+        {
+          "case_id": "claimable_runway",
+          "state": "two reached rewards available",
+          "stimulus_ids": [
+            "show_claimable"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "current tiers dominate",
+            "one batch claim is obvious",
+            "claimed claimable and future states are non-color encoded"
+          ],
+          "observation_ids": [
+            "pass_manifest",
+            "pass_standard",
+            "pass_compact"
+          ]
+        },
+        {
+          "case_id": "settled_runway",
+          "state": "all reached rewards already claimed",
+          "stimulus_ids": [
+            "show_settled"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "no fake claim action remains",
+            "next reward is visible",
+            "settled state is concise"
+          ],
+          "observation_ids": [
+            "pass_manifest",
+            "pass_standard",
+            "pass_compact"
+          ]
+        },
+        {
+          "case_id": "future_focus",
+          "state": "mid-season tier reached with next milestones ahead",
+          "stimulus_ids": [
+            "show_future_focus"
+          ],
+          "viewpoints": [
+            "844x390",
+            "568x320"
+          ],
+          "assertions": [
+            "runway focuses the current frontier",
+            "horizontal drag affords exploration",
+            "all thirty semantic tier nodes remain projected"
+          ],
+          "observation_ids": [
+            "pass_manifest",
+            "pass_standard",
+            "pass_compact"
+          ]
+        }
+      ],
+      "execution_policy": {
+        "preferred_mode": "single_run_matrix",
+        "preferred_launches_per_candidate": 1,
+        "max_launches_per_candidate": 2,
+        "case_isolation": "fresh GoalsScreen per state and viewport",
+        "artifact_manifest": [
+          "runtime assertions",
+          "claimable captures",
+          "settled captures",
+          "future-focus captures",
+          "case manifest",
+          "exit code"
+        ],
+        "extra_launch_triggers": [
+          "manifest incomplete",
+          "renderer capture failure",
+          "scroll focus leaks"
+        ]
+      },
+      "determinism": {
+        "level": "strict",
+        "seed": 20260731,
+        "clock": "fixed pass state",
+        "warmup": "ten process frames after configure",
+        "temporal_isolation": "fresh viewport and screen per case"
+      },
+      "fast_review_route": {
+        "command": "godot --path project-a -s tools/capture_battle_pass_runway_scenario.gd",
+        "expected_seconds": 20,
+        "outputs": [
+          "dual-size three-state runway bundle",
+          "manifest"
+        ]
+      },
+      "strict_regression_route": {
+        "command": "godot --headless --path project-a -s tools/run_goals_screen_tests.gd && godot --path project-a -s tools/capture_battle_pass_runway_scenario.gd",
+        "isolation": "fresh Godot process",
+        "outputs": [
+          "runtime assertions",
+          "capture bundle",
+          "exit code"
+        ]
+      },
+      "reset": "free each viewport and GoalsScreen after capture",
+      "failure_conditions": [
+        "tiers wrap into an inventory grid",
+        "current frontier is not visible",
+        "state depends only on color",
+        "thirty semantic levels are lost",
+        "claim action clips or requires hover"
+      ],
+      "limitations": [
+        "Static captures cannot prove long-term season motivation."
+      ]
     }
   ],
   "integration_policy": {
@@ -3024,6 +3216,60 @@
         "no interaction depends on hover"
       ],
       "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_pass_runway_visual",
+      "profile": "visual",
+      "claim": "Battle pass reads as a touch-draggable supply runway with a clear current frontier rather than a four-column inventory dashboard.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_battle_pass_supply_runway"
+      ],
+      "grader": "mixed",
+      "independent_critic": true,
+      "assertions": [
+        "one-dimensional progression is immediate",
+        "current rewards dominate",
+        "state icons do not rely on color",
+        "reward art matches the industrial resistance style"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_pass_runway_runtime",
+      "profile": "correctness",
+      "claim": "All thirty tier identities and exact individual/batch claim actions remain intact while settled tiers expose no executable claim.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_battle_pass_supply_runway"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "thirty exact tier nodes remain",
+        "individual claim emits exact level",
+        "batch claim is exact",
+        "settled state has no claim action"
+      ],
+      "freeze_on_pass": true
+    },
+    {
+      "gate_id": "gate_pass_runway_responsive",
+      "profile": "correctness",
+      "claim": "Current tier, next rewards and sole batch action remain visible and touch-operable at 844x390 and 568x320.",
+      "required": true,
+      "scenario_ids": [
+        "scenario_mobile_battle_pass_supply_runway"
+      ],
+      "grader": "runtime",
+      "independent_critic": false,
+      "assertions": [
+        "batch action remains at least 48px",
+        "runway drags horizontally",
+        "no vertical reward grid",
+        "no interaction depends on hover"
+      ],
+      "freeze_on_pass": true
     }
   ],
   "ownership": [
@@ -3091,6 +3337,12 @@
       "owner": "breakthrough hero-reveal work-unit owner",
       "surface": "BlueprintScreen breakthrough result plus focused fixture",
       "public_contract": "BlueprintScreen.configure results and action_requested",
+      "coupling": "coupled"
+    },
+    {
+      "owner": "battle-pass supply-runway work-unit owner",
+      "surface": "GoalsScreen pass composition plus focused fixture",
+      "public_contract": "GoalsScreen.configure and action_requested",
       "coupling": "coupled"
     }
   ],
