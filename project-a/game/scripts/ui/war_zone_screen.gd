@@ -107,7 +107,7 @@ func _rebuild() -> void:
 		location_label.text = _stage_location_name(String(row.get("display_name", stage_id)))
 		location_label.position = _route_point(row_index, visible_rows.size()) + Vector2(
 			-43 if _is_compact_layout() else -48,
-			23 if _is_compact_layout() and row_index % 2 == 0 else (29 if not _is_compact_layout() else 25)
+			31 if _is_compact_layout() and row_index % 2 == 0 else (29 if not _is_compact_layout() else 27)
 		)
 		location_label.size = Vector2(86, 18) if _is_compact_layout() else Vector2(96, 18)
 		location_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
