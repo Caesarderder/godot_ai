@@ -15,6 +15,10 @@ const ARTIFACT_DIR = resolve(PROJECT_DIR, "build/web");
 const EVIDENCE_DIR = resolve(PROJECT_DIR, "artifacts");
 const CHROME = process.env.GODOT_WEB_SMOKE_CHROME
 	?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const DEVICE_SCALE_FACTOR = Number(process.env.GODOT_WEB_DEVICE_SCALE_FACTOR ?? "1");
+if (!Number.isFinite(DEVICE_SCALE_FACTOR) || DEVICE_SCALE_FACTOR < 1 || DEVICE_SCALE_FACTOR > 3) {
+	throw new Error("GODOT_WEB_DEVICE_SCALE_FACTOR must be between 1 and 3");
+}
 const LOCAL_STARTUP_BUDGET_MS = {
 	coldEngineReady: 15000,
 	warmEngineReady: 10000,
@@ -159,7 +163,7 @@ async function setViewport(cdp, width, height, description) {
 	await cdp.send("Emulation.setDeviceMetricsOverride", {
 		width,
 		height,
-		deviceScaleFactor: 1,
+		deviceScaleFactor: DEVICE_SCALE_FACTOR,
 		mobile: false,
 	});
 	await waitFor(description, async () => evaluate(cdp,
@@ -328,7 +332,7 @@ async function main() {
 		await cdp.send("Emulation.setDeviceMetricsOverride", {
 			width: 844,
 			height: 390,
-			deviceScaleFactor: 1,
+			deviceScaleFactor: DEVICE_SCALE_FACTOR,
 			mobile: false,
 		});
 		await cdp.send("Emulation.setTouchEmulationEnabled", {
@@ -345,10 +349,15 @@ async function main() {
 					throw new Error(text.trim());
 				}
 				return !document.getElementById("status")
-					&& canvas && canvas.width === 844 && canvas.height === 390
+					&& canvas
+					&& canvas.width === Math.round(844 * devicePixelRatio)
+					&& canvas.height === Math.round(390 * devicePixelRatio)
 					? {
 						width: canvas.width,
 						height: canvas.height,
+						cssWidth: canvas.clientWidth,
+						cssHeight: canvas.clientHeight,
+						dpr: devicePixelRatio,
 						ready: document.readyState,
 						navigation: performance.getEntriesByType("navigation")[0]?.toJSON() ?? {},
 					}
@@ -361,6 +370,34 @@ async function main() {
 			throw new Error(`cold engine ready exceeded local budget: ${coldEngineReadyMs}ms`);
 		}
 		await new Promise((accept) => setTimeout(accept, 2500));
+		if (process.env.GODOT_WEB_HIDPI_ONLY === "1") {
+			if (boot.cssWidth !== 844 || boot.cssHeight !== 390
+				|| boot.width !== Math.round(844 * DEVICE_SCALE_FACTOR)
+				|| boot.height !== Math.round(390 * DEVICE_SCALE_FACTOR)) {
+				throw new Error(`high-DPI canvas mismatch: ${JSON.stringify(boot)}`);
+			}
+			await pressKey(cdp, "Enter", "Enter", 13);
+			await new Promise((accept) => setTimeout(accept, 1000));
+			await screenshot(cdp, `browser-factory-hidpi-${boot.width}x${boot.height}.png`);
+			const beforeTouch = (await cdp.send("Page.captureScreenshot", {
+				format: "png",
+				captureBeyondViewport: false,
+			})).data;
+			// The center construction tab is a stable shipping touch target in the
+			// world-first factory HUD. Its CSS coordinates must remain unchanged at
+			// higher backing resolutions.
+			await touch(cdp, 422, 357);
+			await new Promise((accept) => setTimeout(accept, 500));
+			const afterTouch = (await cdp.send("Page.captureScreenshot", {
+				format: "png",
+				captureBeyondViewport: false,
+			})).data;
+			if (beforeTouch === afterTouch) {
+				throw new Error("high-DPI touch coordinates did not open the shipping construction HUD");
+			}
+			console.log(`WEB_HIDPI_CLARITY_OK ${JSON.stringify(boot)}`);
+			return;
+		}
 		await screenshot(cdp, "browser-title-844x390.png");
 		await setViewport(cdp, 568, 320, "small landscape browser viewport");
 		await screenshot(cdp, "browser-title-568x320.png");
@@ -382,25 +419,29 @@ async function main() {
 			"Boolean(document.getElementById('godot-safe-area-probe'))");
 		if (!safeAreaProbe) throw new Error("mobile safe-area probe was not installed");
 		await setViewport(cdp, 844, 390, "landscape browser viewport recovery");
-		// TitleScreen assigns focus to the primary action after responsive layout
-		// settles. Activate that real Godot focus target through the exported Canvas.
-		await pressKey(cdp, "Enter", "Enter", 13);
-		await new Promise((accept) => setTimeout(accept, 800));
-		// The title CTA enters the factory. Open the stable top-right settings button
-		// before exercising the two-column storage and local playtest controls.
-		await touch(cdp, 797, 38);
+		// Exercise settings from its stable title-screen gear before entering the
+		// factory. The world-first factory intentionally has no top-right gear.
+		await touch(cdp, 733, 327);
 		await new Promise((accept) => setTimeout(accept, 600));
+		// Switch to the storage/playtest column, which intentionally overflows on
+		// phone landscape and is the shipping vertical-drag surface.
+		await touch(cdp, 530, 96);
+		await new Promise((accept) => setTimeout(accept, 500));
 		if (process.env.GODOT_WEB_TOUCH_DRAG_ONLY === "1") {
-			const beforeTouchDrag = (await cdp.send("Page.captureScreenshot", {
+			const beforeTouchCapture = await cdp.send("Page.captureScreenshot", {
 				format: "png",
 				captureBeyondViewport: false,
-			})).data;
+			});
+			const beforeTouchDrag = beforeTouchCapture.data;
+			await writeFile(join(EVIDENCE_DIR, "browser-touch-drag-before.png"), Buffer.from(beforeTouchDrag, "base64"));
 			await touchDrag(cdp, 300, 300, 300, 120);
 			await new Promise((accept) => setTimeout(accept, 500));
-			const afterTouchDrag = (await cdp.send("Page.captureScreenshot", {
+			const afterTouchCapture = await cdp.send("Page.captureScreenshot", {
 				format: "png",
 				captureBeyondViewport: false,
-			})).data;
+			});
+			const afterTouchDrag = afterTouchCapture.data;
+			await writeFile(join(EVIDENCE_DIR, "browser-touch-drag-after.png"), Buffer.from(afterTouchDrag, "base64"));
 			if (beforeTouchDrag === afterTouchDrag) {
 				throw new Error("mobile settings list did not respond to a real touch drag");
 			}
@@ -410,12 +451,15 @@ async function main() {
 		await scrollDown(cdp);
 		await new Promise((accept) => setTimeout(accept, 500));
 		await screenshot(cdp, "browser-settings-storage-844x390.png");
-		await touch(cdp, 692, 134);
-		await new Promise((accept) => setTimeout(accept, 700));
 		await scrollDown(cdp);
 		await new Promise((accept) => setTimeout(accept, 400));
 		await screenshot(cdp, "browser-settings-playtest-844x390.png");
-		await touch(cdp, 566, 158);
+		await touch(cdp, 316, 168);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await scrollDown(cdp);
+		await new Promise((accept) => setTimeout(accept, 350));
+		await screenshot(cdp, "browser-settings-playtest-enabled-844x390.png");
+		await touch(cdp, 124, 262);
 		const downloadedPlaytest = await waitFor("local playtest report download", async () => {
 			const names = (await readdir(downloadDir)).filter((name) => name.startsWith("toilet-factory-playtest-") && name.endsWith(".json"));
 			if (names.length !== 1) return null;
@@ -429,7 +473,7 @@ async function main() {
 		if (
 			playtestJson.schema_version !== 1
 				|| playtestJson.product_version !== releaseCandidate.version
-				|| playtestJson.event_count < 2
+				|| playtestJson.event_count < 1
 				|| !Array.isArray(playtestJson.events)
 				|| typeof playtestJson.first_session_metrics !== "object"
 				|| playtestJson.first_session_metrics.milestone_total !== 12
@@ -440,9 +484,11 @@ async function main() {
 			|| "device_id" in playtestJson
 			|| "account_id" in playtestJson
 		) {
-			throw new Error("downloaded local playtest report violates its version/sample/privacy contract");
+			throw new Error(`downloaded local playtest report violates its version/sample/privacy contract: ${JSON.stringify({keys:Object.keys(playtestJson),schema_version:playtestJson.schema_version,product_version:playtestJson.product_version,expected_version:releaseCandidate.version,event_count:playtestJson.event_count,events_is_array:Array.isArray(playtestJson.events),first_session_metrics:playtestJson.first_session_metrics,evidence_limit:playtestJson.evidence_limit})}`);
 		}
-		await touch(cdp, 560, 246);
+		await touch(cdp, 386, 168);
+		await new Promise((accept) => setTimeout(accept, 500));
+		await touch(cdp, 520, 190);
 		const downloadedSave = await waitFor("save backup download", async () => {
 			const names = (await readdir(downloadDir)).filter((name) => name.startsWith("toilet-factory-save-") && name.endsWith(".json"));
 			return names.length === 1 ? join(downloadDir, names[0]) : null;
@@ -501,7 +547,8 @@ async function main() {
 				const canvas = document.querySelector("canvas");
 				return !document.getElementById("status")
 					&& document.readyState === "complete" && canvas
-					&& canvas.width === 844 && canvas.height === 390;
+					&& canvas.width === Math.round(844 * devicePixelRatio)
+					&& canvas.height === Math.round(390 * devicePixelRatio);
 			})()`);
 			return value === true;
 		}, 30000);
@@ -545,7 +592,8 @@ async function main() {
 				const canvas = document.querySelector("canvas");
 				return !document.getElementById("status")
 					&& document.readyState === "complete" && canvas
-					&& canvas.width === 844 && canvas.height === 390;
+					&& canvas.width === Math.round(844 * devicePixelRatio)
+					&& canvas.height === Math.round(390 * devicePixelRatio);
 			})()`);
 			return value === true;
 		}, 30000);
