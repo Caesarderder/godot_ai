@@ -549,6 +549,16 @@ func _formation_deployed_count() -> int:
 
 
 func _recruit_panel() -> Control:
+	var results := _view.get("recruit_results", []) as Array
+	var core_choices := _view.get("recruit_core_choices", []) as Array
+	var recruit_focus := _view.get("recruit_focus", {}) as Dictionary
+	if not results.is_empty() and not core_choices.is_empty():
+		return _faction_core_choice_panel(
+			core_choices,
+			_view.get("recruit_reward_summary", {}) as Dictionary
+		)
+	if not results.is_empty() and not recruit_focus.is_empty():
+		return _faction_core_handoff_panel(recruit_focus)
 	var panel := _panel("信号招募")
 	var foundational := _view.get("foundational_signal", {}) as Dictionary
 	if bool(foundational.get("unlocked", false)):
@@ -592,9 +602,7 @@ func _recruit_panel() -> Control:
 	ten.pressed.connect(action_requested.emit.bind("recruit", {"count": 10}))
 	actions.add_child(ten)
 	panel.add_child(actions)
-	var results := _view.get("recruit_results", []) as Array
 	if not results.is_empty():
-		var core_choices := _view.get("recruit_core_choices", []) as Array
 		var result_panel := _panel(
 			"" if not core_choices.is_empty() else "本次信号响应"
 		)
@@ -755,6 +763,148 @@ func _recruit_panel() -> Control:
 		result_panel.add_child(grid)
 		panel.add_child(result_panel)
 	return panel
+
+
+func _faction_core_choice_panel(choices: Array, summary: Dictionary) -> Control:
+	var compact := bool(_view.get("compact", false))
+	var result_panel := _panel("")
+	result_panel.name = "SignalRecruitResultPanel"
+	result_panel.add_theme_constant_override("separation", 5)
+	var heading := HBoxContainer.new()
+	heading.add_theme_constant_override("separation", 8)
+	result_panel.add_child(heading)
+	var heading_label := _label("选择阵营核心", 14, CYAN)
+	# Wrapped labels report almost no horizontal minimum size. In an HBox the
+	# expanding haul summary could therefore squeeze this title into one glyph
+	# per line, consuming most of a phone's vertical viewport.
+	heading_label.custom_minimum_size.x = 108 if compact else 124
+	heading_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.add_child(heading_label)
+	var haul := _label(
+		"图纸 %d  ◆  碎片 +%d" % [
+			int(summary.get("new_blueprints", 0)),
+			int(summary.get("fragment_total", 0)),
+		],
+		11,
+		MUTED
+	)
+	haul.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	haul.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	haul.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.add_child(haul)
+	var choice_panel := HBoxContainer.new()
+	choice_panel.name = "RecruitFactionCoreChoice"
+	choice_panel.add_theme_constant_override("separation", 6)
+	result_panel.add_child(choice_panel)
+	for choice_value in choices:
+		choice_panel.add_child(_faction_core_choice_card(choice_value as Dictionary, compact))
+	var journey := _label("研发  →  入队  →  3场磨合  →  挑战强敌", 10, MUTED)
+	journey.name = "RecruitFactionJourneyPromise"
+	journey.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	journey.autowrap_mode = TextServer.AUTOWRAP_OFF
+	result_panel.add_child(journey)
+	return result_panel
+
+
+func _faction_core_choice_card(choice: Dictionary, compact: bool) -> Control:
+	var archetype_id := String(choice.get("archetype_id", ""))
+	var faction := String(choice.get("faction", ""))
+	var accent := _faction_accent(faction)
+	var card := _panel("")
+	card.name = "RecruitFactionChoiceCard_%s" % archetype_id
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size.x = 0
+	card.add_theme_constant_override("separation", 3)
+	card.panel_style = _box(Color("#111a20"), accent)
+	card.tooltip_text = "%s · %s\n%s\n2★ %s\n选定后：研发 → 入队 → 3场磨合 → 挑战强敌" % [
+		String(choice.get("display_name", "")),
+		faction,
+		String(choice.get("synergy_summary", "")),
+		String(choice.get("next_star_effect", "")),
+	]
+	var identity := HBoxContainer.new()
+	identity.add_theme_constant_override("separation", 6)
+	card.add_child(identity)
+	var portrait := TextureRect.new()
+	portrait.name = "FactionChoicePortrait_%s" % archetype_id
+	portrait.custom_minimum_size = Vector2(74 if compact else 96, 72 if compact else 92)
+	portrait.texture = _hero_portrait(archetype_id)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	identity.add_child(portrait)
+	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.alignment = BoxContainer.ALIGNMENT_CENTER
+	copy.add_theme_constant_override("separation", 1)
+	identity.add_child(copy)
+	var name := _label(String(choice.get("display_name", "")), 13 if compact else 14, TEXT)
+	name.max_lines_visible = 1
+	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name.autowrap_mode = TextServer.AUTOWRAP_OFF
+	copy.add_child(name)
+	copy.add_child(_label(String(choice.get("playstyle", "")), 13, GOLD))
+	var synergy := _label(String(choice.get("synergy_summary", "")), 10, accent)
+	synergy.max_lines_visible = 1
+	synergy.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	synergy.autowrap_mode = TextServer.AUTOWRAP_OFF
+	copy.add_child(synergy)
+	copy.add_child(_icon_copy(
+		RECRUIT_STAR_ICON,
+		"2★  %s" % String(choice.get("next_star_effect", "")),
+		CYAN
+	))
+	var choose := _button("选定  ·  %s" % String(choice.get("playstyle", "")), true)
+	choose.name = "ChooseFactionCore_%s" % archetype_id
+	choose.custom_minimum_size.y = 48
+	choose.tooltip_text = "选择%s作为阵营核心 · %s" % [
+		String(choice.get("display_name", "")),
+		String(choice.get("synergy_summary", "")),
+	]
+	choose.pressed.connect(action_requested.emit.bind(
+		"choose_faction_core",
+		{"archetype_id": archetype_id}
+	))
+	card.add_child(choose)
+	return card
+
+
+func _faction_core_handoff_panel(focus: Dictionary) -> Control:
+	var compact := bool(_view.get("compact", false))
+	var result_panel := _panel("")
+	result_panel.name = "SignalRecruitResultPanel"
+	var card := _panel("")
+	card.name = "RecruitFactionFocus"
+	card.panel_style = _box(Color("#111a20"), _faction_accent(String(focus.get("faction", ""))))
+	result_panel.add_child(card)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	card.add_child(row)
+	var portrait := TextureRect.new()
+	portrait.name = "RecruitFactionFocusPortrait"
+	portrait.custom_minimum_size = Vector2(86 if compact else 116, 82 if compact else 108)
+	portrait.texture = _hero_portrait(String(focus.get("archetype_id", "")))
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(portrait)
+	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.alignment = BoxContainer.ALIGNMENT_CENTER
+	copy.add_theme_constant_override("separation", 2)
+	row.add_child(copy)
+	copy.add_child(_label(String(focus.get("display_name", "")), 17, TEXT))
+	copy.add_child(_label(String(focus.get("faction", "")), 12, GOLD))
+	copy.add_child(_icon_copy(RECRUIT_STAR_ICON, "2★  %s" % String(focus.get("next_star_effect", "")), CYAN))
+	var focus_action := String(focus.get("action", ""))
+	if not focus_action.is_empty():
+		var next_button := _button(String(focus.get("action_label", "前往研究")), true)
+		next_button.name = "RecruitFocusActionButton"
+		next_button.custom_minimum_size.y = 48
+		next_button.pressed.connect(action_requested.emit.bind(focus_action, {
+			"hero_id": String(focus.get("hero_id", "")),
+			"archetype_id": String(focus.get("archetype_id", "")),
+		}))
+		copy.add_child(next_button)
+	return result_panel
 
 
 func _icon_copy(icon: Texture2D, copy: String, color: Color) -> Control:

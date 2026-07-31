@@ -231,9 +231,9 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_check(
-		_tree_has_text(legion, "真正参与精锐与传奇保底")
-			and not _tree_has_text(legion, "A/S 保底"),
-		"recruitment guarantee copy uses Chinese rating names only"
+		_tree_has_text(legion, "选择阵营核心")
+			and not _tree_has_text(legion, "真正参与精锐与传奇保底"),
+		"mobile faction decision defers recruitment probability copy"
 	)
 	var reveal_card := legion.find_child(
 		"RecruitFactionChoiceCard_assault",
@@ -256,7 +256,7 @@ func _run() -> void:
 		"the candidate reveal settles at a fully readable stable layout"
 	)
 	_check(
-		_tree_has_text(legion, "信号锁定  ·  新图纸 2  ·  碎片 +60"),
+		_tree_has_text(legion, "图纸 2  ◆  碎片 +60"),
 		"faction choice first names the concrete ten-pull haul"
 	)
 	_check(
@@ -267,9 +267,10 @@ func _run() -> void:
 		"faction choice keeps the concrete journey in progressive disclosure"
 	)
 	_check(
-		_tree_has_text(legion, "标准  冲锋马桶人")
-			and reveal_card.find_children("*", "TextureRect", true, false).size() >= 2,
-		"faction choice frames each candidate as an icon-led blueprint card"
+		_tree_has_text(legion, "冲锋马桶人")
+			and legion.find_child("FactionChoicePortrait_assault", true, false) is TextureRect
+			and legion.find_child("FactionChoicePortrait_rocket", true, false) is TextureRect,
+		"faction choice frames both candidates with real character portraits"
 	)
 	var reduced_view := (legion.get("_view") as Dictionary).duplicate(true)
 	reduced_view["reduced_motion"] = true
@@ -289,11 +290,15 @@ func _run() -> void:
 			and reveal_card.scale.is_equal_approx(Vector2.ONE),
 		"reduced motion bypasses the reveal and keeps the complete result immediately visible"
 	)
-	_check(_tree_has_text(legion, "冲锋马桶人专属碎片 +20"), "duplicate signal result projects archetype-specific fragments")
 	_check(not _tree_has_text(legion, "设计数据"), "recruitment no longer projects blueprint data as a resource")
-	_check(_tree_has_text(legion, "阵营核心 · 高速突袭"), "recruit result identifies the faction core")
+	var focus_view := reduced_view.duplicate(true)
+	focus_view["recruit_core_choices"] = []
+	focus_view["recruit_reveal"] = false
+	legion.configure(focus_view)
+	await process_frame
+	_check(_tree_has_text(legion, "高速突袭"), "selected handoff identifies the faction core")
 	_check(
-		_tree_has_text(legion, "2★新能力：")
+		_tree_has_text(legion, "2★")
 			and _tree_has_text(legion, "攻击会顺劈附近敌人"),
 		"recruit result previews the concrete two-star combat ability"
 	)

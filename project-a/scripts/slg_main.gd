@@ -1340,9 +1340,9 @@ func _show_legion() -> void:
 	_clear()
 	var shell := _shell("军团整备区", "比较职责、战力变化与下一成长，再决定谁上阵")
 	if legion_tab == "codex":
-		var header := shell.get_node_or_null("AppShellHeader") as Control
-		if header != null:
-			header.visible = false
+		var codex_header := shell.get_node_or_null("AppShellHeader") as Control
+		if codex_header != null:
+			codex_header.visible = false
 	var legion := LegionScreenScene.instantiate() as LegionScreen
 	legion.tab_selected.connect(func(_tab_id: String) -> void: _play_ui_click())
 	legion.tab_selected.connect(_set_legion_tab)
@@ -1351,6 +1351,16 @@ func _show_legion() -> void:
 	legion.action_requested.connect(_on_legion_action_requested)
 	shell.add_child(legion)
 	var legion_view := _legion_view()
+	if (
+		legion_tab == "recruit"
+		and (
+			not (legion_view.get("recruit_core_choices", []) as Array).is_empty()
+			or not (legion_view.get("recruit_focus", {}) as Dictionary).is_empty()
+		)
+	):
+		var recruit_header := shell.get_node_or_null("AppShellHeader") as Control
+		if recruit_header != null:
+			recruit_header.visible = false
 	legion.configure(legion_view)
 	if bool(legion_view.get("recruit_reveal", false)):
 		last_recruit_results.clear()
