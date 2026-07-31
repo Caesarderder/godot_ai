@@ -1230,7 +1230,13 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 	var pass_cards: Array[Node] = []
 	_collect_name_prefix(instance, "MetaPassLevel_", pass_cards)
 	_ok(pass_cards.size() == 30, "pass tab renders all thirty reward levels")
-	_ok(_tree_has_button(instance, "一键领取 3 项奖励"), "pass tab exposes batch claim for all reached levels")
+	var pass_batch_claim := instance.find_child("MetaPassBatchClaim", true, false) as Button
+	_ok(
+		pass_batch_claim != null
+			and pass_batch_claim.text == "领取 ×3"
+			and pass_batch_claim.tooltip_text == "一键领取 3 项奖励",
+		"pass tab exposes a concise batch claim with complete reward semantics"
+	)
 	var goals_scroll := instance.find_child("GoalsContentScroll", true, false) as ScrollContainer
 	if goals_scroll != null:
 		goals_scroll.scroll_vertical = 160

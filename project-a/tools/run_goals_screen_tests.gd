@@ -125,7 +125,28 @@ func _run() -> void:
 	var pass_cards: Array[Node] = []
 	_collect_prefix(goals, "MetaPassLevel_", pass_cards)
 	_check(pass_cards.size() == 30, "pass tab renders the full thirty-level track")
-	_check(_tree_has_text(goals, "一键领取 3 项奖励"), "pass tab exposes batch claim")
+	_check(
+		goals.find_child("BattlePassRewardRunway", true, false) != null,
+		"pass tab renders a dedicated reward runway"
+	)
+	var pass_claim := goals.find_child("MetaPassBatchClaim", true, false) as Button
+	_check(
+		pass_claim != null
+			and pass_claim.text == "领取 ×3"
+			and pass_claim.icon != null,
+		"pass tab exposes one icon-led batch claim"
+	)
+	var first_pass_level := goals.find_child("MetaPassLevel_1", true, false) as Button
+	_check(
+		first_pass_level != null
+			and first_pass_level.icon != null
+			and first_pass_level.custom_minimum_size.y >= 72.0,
+		"pass reward tier uses a compact raster reward card"
+	)
+	_check(
+		_fits_compact_screen(goals.find_child("MetaPassLevel_3", true, false) as Control),
+		"current compact reward tiers fit inside 568x320"
+	)
 	var commander := goals.find_child("CommanderProgressPanel", true, false)
 	_check(commander != null, "long-term tabs retain commander progression")
 	goals.call("configure", _achievements_view())

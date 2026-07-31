@@ -36,6 +36,20 @@ func _capture() -> void:
 	):
 		quit(1)
 		return
+	if not await _capture_size(
+		Vector2i(844, 390),
+		"res://artifacts/ui-battle-pass-runway-844x390.png",
+		_pass_view(false)
+	):
+		quit(1)
+		return
+	if not await _capture_size(
+		Vector2i(568, 320),
+		"res://artifacts/ui-battle-pass-runway-568x320.png",
+		_pass_view(true)
+	):
+		quit(1)
+		return
 	print("GOALS REVIEW CAPTURE PASS")
 	quit(0)
 
@@ -212,4 +226,43 @@ func _achievement_view(compact: bool) -> Dictionary:
 				"claimed": false,
 			},
 		],
+	}
+
+
+func _pass_view(compact: bool) -> Dictionary:
+	var levels: Array[Dictionary] = []
+	for level in range(1, 31):
+		levels.append({
+			"level": level,
+			"claimed": level == 1,
+			"claimable": level in [2, 3],
+			"reward": {
+				"toilet_coins": 30,
+				"porcelain": 30 if level % 3 == 0 else 0,
+				"recruit_tickets": 2 if level == 5 else 0,
+				"hero_shards": 4 if level == 8 else 0,
+			},
+		})
+	return {
+		"compact": compact,
+		"short": true,
+		"tab": "pass",
+		"notification_counts": {
+			"goals_action": 0,
+			"goals_pass": 2,
+			"goals_achievements": 0,
+		},
+		"commander": {
+			"level": 5,
+			"xp": 300,
+			"next_xp": 450,
+			"claimable": 0,
+		},
+		"pass_unlocked": true,
+		"pass": {
+			"merit": 350,
+			"reached": 3,
+			"claimable": 2,
+			"levels": levels,
+		},
 	}

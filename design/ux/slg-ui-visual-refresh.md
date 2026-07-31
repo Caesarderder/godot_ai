@@ -146,6 +146,17 @@
 名称、数值进度和领取状态；已完成、进行中与已领取同时通过描边、明度和文字区分。批量领取
 是唯一金色主行动，红色通知数不再承担成就状态本身。
 
+战令子页采用 Supercell 官方《Clash Royale》Pass Royale 与《Brawl Stars》Brawl Pass
+共同使用的 reward track 原则：奖励必须依附连续 tier、已领取/当前可领取/未到达状态同时
+可见，当前战功与下一批奖励保持同屏。项目是免费学习型战令，仅采用“轨道先于列表、奖励图标
+先于名称、当前 tier 可定位”的结构，不复制付费轨、角色、宝箱造型或具体构图。参考入口：
+`https://support.supercell.com/clash-royale/en/articles/pass-royale-11.html` 与
+`https://support.supercell.com/brawl-stars/en/articles/brawl-pass-quests-7.html`。
+
+30 级战令改为 844 五列、568 四列的纵向奖励跑道；卡片复用金币、工业、补给箱和军团数据
+WebP，只显示两位等级、状态符号和数量，完整奖励进入 tooltip。金色只标记当前可领取 tier
+与唯一批量领取按钮；已领取降低明度，未到达保持深色。跑道允许纵向滚动，不使用横向滚动。
+
 ### 科技蓝图
 
 蓝图屏参考 Wargaming 官方《World of Tanks Blitz》科技树的前置研究关系与已研究/未研究状态
@@ -233,7 +244,10 @@
   `ui-goals-844x390.png` 是独立双尺寸和主流程集成证据；同一测试还验证成就奖章墙、
   栅格徽章、批量领取和 568×320 边界，`ui-achievement-medals-844x390.png`、
   `ui-achievement-medals-568x320.png` 与 `ui-achievements-844x390.png`
-  是专项及主流程成就证据。
+  是专项及主流程成就证据；战令断言覆盖 30 级奖励跑道、图标奖励语义、领取动作和当前
+  compact tiers 边界，`ui-battle-pass-runway-844x390.png`、
+  `ui-battle-pass-runway-568x320.png` 与 `ui-pass-844x390.png`
+  是专项及主流程战令证据。
 - `run_blueprint_screen_tests.gd` 验证分支图标、核心节点、路径连接、设计状态、语义动作与
   568×320 边界；`ui-blueprint-branch-844x390.png`、
   `ui-blueprint-branch-568x320.png` 与 `ui-blueprint-tree-844x390.png`

@@ -2472,6 +2472,7 @@ func _goals_view(state: RefCounted) -> Dictionary:
 			commander_claimable += 1
 	return {
 		"compact": _layout_profile() == "compact_landscape",
+		"short": get_viewport().get_visible_rect().size.y <= 390.0,
 		"notification_counts": NotificationSummaryScript.derive(
 			state,
 			int(Time.get_unix_time_from_system())
@@ -5451,6 +5452,9 @@ func _remember_scroll_positions() -> void:
 
 
 func _restore_scroll_positions(generation: int) -> void:
+	await get_tree().process_frame
+	# Dynamic icon tracks need one additional layout pass before their vertical
+	# range is final; restoring earlier silently clamps the saved offset to zero.
 	await get_tree().process_frame
 	if generation != ui_rebuild_generation:
 		return

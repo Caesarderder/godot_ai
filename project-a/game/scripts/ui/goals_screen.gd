@@ -22,6 +22,8 @@ const ICON_CHAPTER := preload("res://assets/ui/goals/chapter_stronghold.webp")
 const ICON_OPERATION := preload("res://assets/ui/goals/current_operation.webp")
 const ICON_HURDLE := preload("res://assets/ui/goals/wall_hurdle.webp")
 const ICON_SUPPLY := preload("res://assets/ui/goals/supply_crate.webp")
+const ICON_REWARD_GOLD := preload("res://assets/ui/battle_result/loot_coin.webp")
+const ICON_REWARD_DATA := preload("res://assets/ui/battle_result/legion_data.webp")
 const ICON_ACHIEVEMENT_FORTRESS := preload(
 	"res://assets/ui/achievements/captured_fortress.webp"
 )
@@ -464,25 +466,42 @@ func _build_pass() -> void:
 		return
 	var pass_view := _view.get("pass", {}) as Dictionary
 	var panel := _panel("")
+	panel.name = "BattlePassRewardRunway"
 	var overview := HBoxContainer.new()
-	overview.add_theme_constant_override("separation", 12)
+	overview.add_theme_constant_override("separation", 8)
 	panel.add_child(overview)
+	var pass_icon := TextureRect.new()
+	pass_icon.texture = ICON_SUPPLY
+	pass_icon.custom_minimum_size = Vector2(48, 48)
+	pass_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pass_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	overview.add_child(pass_icon)
 	var summary := VBoxContainer.new()
 	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	summary.add_theme_constant_override("separation", 3)
-	summary.add_child(_label("免费战役战令 · %d/30" % int(pass_view.get("reached", 0)), 17, GOLD))
-	summary.add_child(_label(
-		"%d / 3000 战功 · 赛季结束不重置英雄、工厂或招募保底" % int(pass_view.get("merit", 0)),
-		12,
-		MUTED
-	))
+	var pass_title := _label(
+		"战役补给线 · %d/30" % int(pass_view.get("reached", 0)),
+		17,
+		TEXT
+	)
+	pass_title.tooltip_text = "免费战役战令 · 赛季结束不重置永久成长"
+	summary.add_child(pass_title)
+	var merit_copy := _label(
+		"%d / 3000 战功" % int(pass_view.get("merit", 0)),
+		11,
+		CYAN
+	)
+	summary.add_child(merit_copy)
 	summary.add_child(_progress(float(pass_view.get("merit", 0)), 3000.0, GOLD))
 	overview.add_child(summary)
 	var claimable := int(pass_view.get("claimable", 0))
 	if claimable > 0:
-		var batch := _button("一键领取 %d 项奖励" % claimable, true)
+		var batch := _button("领取 ×%d" % claimable, true)
 		batch.name = "MetaPassBatchClaim"
-		batch.custom_minimum_size.x = 210
+		batch.icon = ICON_SUPPLY
+		batch.expand_icon = true
+		batch.custom_minimum_size.x = 154
+		batch.tooltip_text = "一键领取 %d 项奖励" % claimable
 		batch.pressed.connect(action_requested.emit.bind("claim_all_pass", {}))
 		overview.add_child(batch)
 	else:
@@ -492,27 +511,71 @@ func _build_pass() -> void:
 		overview.add_child(settled)
 	var track := HFlowContainer.new()
 	track.name = "MetaPassRewardTrack"
-	track.add_theme_constant_override("h_separation", 6)
+	track.add_theme_constant_override("h_separation", 5)
 	track.add_theme_constant_override("v_separation", 6)
+	var compact := bool(_view.get("compact", false))
+	var short_screen := bool(_view.get("short", false))
 	for level_value in pass_view.get("levels", []):
 		var level := level_value as Dictionary
+		var reward := level.get("reward", {}) as Dictionary
+		var claimed := bool(level.get("claimed", false))
+		var claimable_level := bool(level.get("claimable", false))
+		var status_mark := "✓" if claimed else ("!" if claimable_level else "·")
 		var card := _button(
-			"%d级%s\n%s" % [
+			"%02d  %s\n×%d" % [
 				int(level.get("level", 0)),
-				" ✓" if bool(level.get("claimed", false)) else "",
-				_reward_copy(level.get("reward", {}) as Dictionary),
+				status_mark,
+				_pass_reward_amount(reward),
 			],
 			false
 		)
 		card.name = "MetaPassLevel_%d" % int(level.get("level", 0))
-		card.disabled = not bool(level.get("claimable", false))
-		card.custom_minimum_size = Vector2(205, 52)
+		card.icon = _pass_reward_icon(reward)
+		card.expand_icon = true
+		card.add_theme_constant_override("icon_max_width", 48)
+		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		card.disabled = not claimable_level
+		card.custom_minimum_size = Vector2(
+			128 if compact else 150,
+			56 if short_screen else (72 if compact else 92)
+		)
+		card.tooltip_text = "%d级 · %s · %s" % [
+			int(level.get("level", 0)),
+			_reward_copy(reward),
+			"已领取" if claimed else ("可领取" if claimable_level else "未到达"),
+		]
+		if claimed:
+			card.modulate = Color(0.68, 0.82, 0.82, 0.76)
+		elif claimable_level:
+			card.add_theme_stylebox_override(
+				"normal",
+				UiArtDirectionScript.button_style(true)
+			)
+			card.add_theme_color_override("font_color", Color("#14110c"))
 		card.pressed.connect(action_requested.emit.bind("claim_pass_level", {
 			"level": int(level.get("level", 0)),
 		}))
 		track.add_child(card)
 	panel.add_child(track)
 	content.add_child(panel)
+
+
+func _pass_reward_icon(reward: Dictionary) -> Texture2D:
+	if int(reward.get("recruit_tickets", 0)) > 0:
+		return ICON_SUPPLY
+	if int(reward.get("hero_shards", 0)) > 0:
+		return ICON_REWARD_DATA
+	if int(reward.get("porcelain", 0)) > 0:
+		return ICON_ACHIEVEMENT_FACTORY
+	return ICON_REWARD_GOLD
+
+
+func _pass_reward_amount(reward: Dictionary) -> int:
+	for key in ["recruit_tickets", "hero_shards", "porcelain", "toilet_coins"]:
+		var amount := int(reward.get(key, 0))
+		if amount > 0:
+			return amount
+	return 0
 
 
 func _build_achievements() -> void:
