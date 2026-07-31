@@ -68,12 +68,13 @@ func _run() -> void:
 	_check(not (legion.get_node("TaskTabs") as HBoxContainer).visible, "first formation hides unrelated recruit and roster tabs")
 	var candidate := legion.find_child("FormationCandidate_hero_armored", true, false) as Button
 	_check(candidate != null and not candidate.disabled, "a replacement candidate is actionable")
-	var request := {"action": "", "hero_id": "", "stage_id": ""}
+	var request := {"action": "", "hero_id": "", "stage_id": "", "archetype_id": ""}
 	var selection := {"hero_id": ""}
 	legion.action_requested.connect(func(action_id: String, payload: Dictionary) -> void:
 		request["action"] = action_id
 		request["hero_id"] = String(payload.get("hero_id", ""))
 		request["stage_id"] = String(payload.get("stage_id", ""))
+		request["archetype_id"] = String(payload.get("archetype_id", ""))
 	)
 	legion.hero_selected.connect(func(hero_id: String) -> void:
 		selection["hero_id"] = hero_id
@@ -314,6 +315,7 @@ func _run() -> void:
 		"first_formation": {"active": false},
 		"first_growth_choice": {"active": false},
 		"boss_ready": {"active": false},
+		"codex_focus_id": "gman",
 		"codex": [
 			{
 				"archetype_id": "gman",
@@ -327,6 +329,9 @@ func _run() -> void:
 				"archetype_id": "assault",
 				"display_name": "冲锋马桶人",
 				"rating": "B",
+				"recipe_id": "recipe_assault",
+				"role_copy": "前线突破",
+				"faction": "快攻破城",
 				"description": "快速接敌",
 				"status": "blueprint_owned",
 				"status_copy": "已获得图纸 · 等待研究所研发",
@@ -335,6 +340,7 @@ func _run() -> void:
 				"archetype_id": "parasite",
 				"display_name": "寄生母体马桶人",
 				"rating": "S",
+				"role_copy": "召唤策反",
 				"description": "召唤寄生幼体",
 				"status": "undiscovered",
 				"status_copy": "尚未获得设计图纸",
@@ -343,40 +349,50 @@ func _run() -> void:
 	})
 	await process_frame
 	_check(legion.find_child("ToiletRoleCodex", true, false) != null, "legion exposes a dedicated toilet-role codex")
-	var codex_grid := legion.find_child("ToiletRoleCodexGrid", true, false) as GridContainer
-	var assault_codex := legion.find_child("Codex_assault", true, false) as Control
+	var codex_strip := legion.find_child("ToiletRoleCodexGrid", true, false) as HBoxContainer
+	var assault_codex := legion.find_child("Codex_assault", true, false) as Button
 	var parasite_codex := legion.find_child("Codex_parasite", true, false) as Control
 	_check(
-		codex_grid != null and codex_grid.columns == 4 and codex_grid.get_child_count() == 3,
-		"standard codex uses a four-column portrait wall without dropping entries"
+		codex_strip != null and codex_strip.get_child_count() == 3,
+		"standard codex keeps every character in one horizontal portrait gallery"
 	)
 	_check(
 		assault_codex != null
-			and assault_codex.find_child("CodexPortrait_assault", true, false) != null
-			and _tree_has_text(assault_codex, "冲锋马桶人")
-			and _tree_has_text(assault_codex, "标准  ·  图纸"),
-		"codex presents the standard blueprint as a portrait card"
+			and assault_codex.find_child("CodexPortrait_assault", true, false) != null,
+		"codex presents the standard blueprint as a portrait-led gallery choice"
 	)
 	_check(
 		parasite_codex != null
-			and parasite_codex.find_child("CodexPortrait_parasite", true, false) != null
-			and _tree_has_text(parasite_codex, "寄生母体马桶人")
-			and _tree_has_text(parasite_codex, "传奇  ·  未知"),
-		"codex presents the locked legendary as a dimmed portrait card"
+			and parasite_codex.find_child("CodexPortrait_parasite", true, false) != null,
+		"codex presents the locked legendary as a dimmed portrait choice"
 	)
 	_check(
 		assault_codex.tooltip_text.contains("已获得图纸 · 等待研究所研发"),
 		"codex preserves complete blueprint status in progressive disclosure"
+	)
+	assault_codex.pressed.emit()
+	await process_frame
+	_check(
+		legion.find_child("CodexFocusPortrait_assault", true, false) is TextureRect,
+		"selecting a gallery portrait rebuilds the large focused identity"
+	)
+	var research_button := legion.find_child("CodexResearchButton", true, false) as Button
+	_check(research_button != null and research_button.size.y >= 44.0, "blueprint focus exposes one touch-ready research action")
+	if research_button != null:
+		research_button.pressed.emit()
+	_check(
+		request["action"] == "open_research" and request["archetype_id"] == "assault",
+		"codex research preserves the exact archetype route"
 	)
 	var compact_codex_view := (legion.get("_view") as Dictionary).duplicate(true)
 	compact_codex_view["compact"] = true
 	legion.size = Vector2(544, 168)
 	legion.configure(compact_codex_view)
 	await process_frame
-	codex_grid = legion.find_child("ToiletRoleCodexGrid", true, false) as GridContainer
+	codex_strip = legion.find_child("ToiletRoleCodexGrid", true, false) as HBoxContainer
 	_check(
-		codex_grid != null and codex_grid.columns == 3 and codex_grid.get_child_count() == 3,
-		"compact codex switches to three columns and keeps every portrait reachable"
+		codex_strip != null and codex_strip.get_child_count() == 3,
+		"compact codex preserves every portrait in the horizontal gallery"
 	)
 	# The App Shell leaves roughly 238 px for LegionScreen at the 844x390 target:
 	# 48 px task tabs plus about 190 px of page content above the persistent nav.

@@ -59,6 +59,7 @@ const SLOT_NAMES := {
 
 var _view: Dictionary = {}
 var _selected_hero_id := ""
+var _selected_codex_id := ""
 var _roster_hero_list: VBoxContainer
 var _recruit_reveal_tween: Tween
 var _recruit_reveal_generation := 0
@@ -80,7 +81,9 @@ func _ready() -> void:
 func configure(view: Dictionary) -> void:
 	_view = view.duplicate(true)
 	_selected_hero_id = String(_view.get("selected_hero_id", _selected_hero_id))
+	_selected_codex_id = String(_view.get("codex_focus_id", _selected_codex_id))
 	_ensure_selected_hero()
+	_ensure_selected_codex()
 	if is_node_ready():
 		_rebuild()
 
@@ -778,16 +781,36 @@ func _codex_panel() -> Control:
 	for entry_value in entries:
 		if String((entry_value as Dictionary).get("status", "undiscovered")) != "undiscovered":
 			known_count += 1
-	var panel := _panel("角色信号档案  ·  %d/%d" % [known_count, entries.size()])
+	var compact := bool(_view.get("compact", false))
+	var panel := _panel("")
 	panel.name = "ToiletRoleCodex"
-	var grid := GridContainer.new()
-	grid.name = "ToiletRoleCodexGrid"
-	grid.columns = 3 if bool(_view.get("compact", false)) else 4
-	grid.add_theme_constant_override("h_separation", 6)
-	grid.add_theme_constant_override("v_separation", 6)
+	panel.add_theme_constant_override("separation", 5)
+	var heading := HBoxContainer.new()
+	heading.add_theme_constant_override("separation", 8)
+	panel.add_child(heading)
+	var heading_label := _label("信号档案", 13, CYAN)
+	heading_label.custom_minimum_size.x = 84
+	heading_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.add_child(heading_label)
+	var progress := _label("%d / %d" % [known_count, entries.size()], 12, TEXT)
+	progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	heading.add_child(progress)
+	var focus := _selected_codex_entry(entries)
+	if not focus.is_empty():
+		panel.add_child(_codex_focus_panel(focus, compact))
+	var gallery := ScrollContainer.new()
+	gallery.name = "ToiletRoleCodexGallery"
+	gallery.custom_minimum_size.y = 58 if compact else 78
+	gallery.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	gallery.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(gallery)
+	var strip := HBoxContainer.new()
+	strip.name = "ToiletRoleCodexGrid"
+	strip.add_theme_constant_override("separation", 5)
+	gallery.add_child(strip)
 	for entry_value in entries:
-		grid.add_child(_codex_portrait_card(entry_value as Dictionary))
-	panel.add_child(grid)
+		strip.add_child(_codex_portrait_card(entry_value as Dictionary))
 	return panel
 
 
@@ -796,19 +819,19 @@ func _codex_portrait_card(entry: Dictionary) -> Control:
 	var rating := String(entry.get("rating", "B"))
 	var status := String(entry.get("status", "undiscovered"))
 	var rating_color := GOLD if rating == "S" else (CYAN if rating == "A" else GREEN)
-	var status_color := (
-		GREEN if status == "researched"
-		else (CYAN if status == "blueprint_owned" else MUTED)
-	)
 	var compact := bool(_view.get("compact", false))
-	var card := PanelContainer.new()
+	var selected := archetype_id == _selected_codex_id
+	var card := Button.new()
 	card.name = "Codex_%s" % archetype_id
-	card.custom_minimum_size.y = 104 if compact else 122
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.add_theme_stylebox_override("panel", _box(
+	card.custom_minimum_size = Vector2(54 if compact else 72, 54 if compact else 72)
+	card.focus_mode = Control.FOCUS_ALL
+	card.add_theme_stylebox_override("normal", _box(
 		Color("#10171c"),
-		rating_color if status != "undiscovered" else Color("#303940")
+		CYAN if selected else (rating_color if status != "undiscovered" else Color("#303940"))
 	))
+	card.add_theme_stylebox_override("hover", _box(Color("#16242a"), CYAN))
+	card.add_theme_stylebox_override("pressed", _box(Color("#1a2d32"), Color.WHITE))
+	card.add_theme_stylebox_override("focus", _box(Color("#16242a"), Color.WHITE))
 	card.tooltip_text = "%s · %s · %s\n%s\n%s · 专属碎片 %d\n%s" % [
 		_rating_label(rating),
 		String(entry.get("display_name", "未知马桶人")),
@@ -818,58 +841,123 @@ func _codex_portrait_card(entry: Dictionary) -> Control:
 		int(entry.get("fragments", 0)),
 		String(entry.get("status_copy", "尚未获得设计图纸")),
 	]
-	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 2)
-	card.add_child(stack)
-	var portrait_frame := Control.new()
-	portrait_frame.custom_minimum_size.y = 40 if compact else 76
-	portrait_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	stack.add_child(portrait_frame)
 	var portrait := TextureRect.new()
 	portrait.name = "CodexPortrait_%s" % archetype_id
 	portrait.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	portrait.offset_left = 6
+	portrait.offset_top = 5
+	portrait.offset_right = -6
+	portrait.offset_bottom = -5
 	portrait.texture = load("res://assets/ui/codex/%s.webp" % archetype_id) as Texture2D
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait.modulate = Color(0.24, 0.28, 0.30, 0.68) if status == "undiscovered" else Color.WHITE
+	portrait.modulate = Color(0.18, 0.22, 0.24, 0.72) if status == "undiscovered" else Color.WHITE
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	portrait_frame.add_child(portrait)
-	if status == "undiscovered":
-		var lock_icon := TextureRect.new()
-		lock_icon.custom_minimum_size = Vector2(28, 28)
-		lock_icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-		lock_icon.position -= Vector2(14, 14)
-		lock_icon.texture = CODEX_LOCK_ICON
-		lock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		lock_icon.modulate = Color(0.85, 0.87, 0.86, 0.9)
-		lock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait_frame.add_child(lock_icon)
-	var name_label := _label(String(entry.get("display_name", "未知型号")), 12, TEXT)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.max_lines_visible = 1
-	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	stack.add_child(name_label)
-	var footer := HBoxContainer.new()
-	footer.alignment = BoxContainer.ALIGNMENT_CENTER
-	footer.add_theme_constant_override("separation", 4)
-	stack.add_child(footer)
-	var star := TextureRect.new()
-	star.custom_minimum_size = Vector2(14, 14)
-	star.texture = CODEX_STAR_ICON
-	star.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	star.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	star.modulate = rating_color
-	footer.add_child(star)
-	footer.add_child(_label(
-		"%s  ·  %s" % [
-			_rating_label(rating),
-			"入列" if status == "researched" else ("图纸" if status == "blueprint_owned" else "未知"),
-		],
-		10,
-		status_color
-	))
+	card.add_child(portrait)
+	var state_icon := TextureRect.new()
+	state_icon.name = "CodexState_%s" % archetype_id
+	state_icon.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	state_icon.position = Vector2(-24, 5)
+	state_icon.size = Vector2(18, 18)
+	state_icon.texture = (
+		CODEX_LOCK_ICON if status == "undiscovered"
+		else (ROSTER_TAB_ICON if status == "blueprint_owned" else CODEX_STAR_ICON)
+	)
+	state_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	state_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	state_icon.modulate = MUTED if status == "undiscovered" else (CYAN if status == "blueprint_owned" else GREEN)
+	state_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(state_icon)
+	card.pressed.connect(_select_codex_entry.bind(archetype_id))
 	return card
+
+
+func _codex_focus_panel(entry: Dictionary, compact: bool) -> Control:
+	var status := String(entry.get("status", "undiscovered"))
+	var archetype_id := String(entry.get("archetype_id", "unknown"))
+	var rating := String(entry.get("rating", "B"))
+	var row := HBoxContainer.new()
+	row.name = "CodexFocusPanel"
+	row.custom_minimum_size.y = 82 if compact else 126
+	row.add_theme_constant_override("separation", 9)
+	var portrait_frame := PanelContainer.new()
+	portrait_frame.custom_minimum_size = Vector2(88 if compact else 138, 82 if compact else 126)
+	portrait_frame.add_theme_stylebox_override("panel", _box(
+		Color("#0b1419"),
+		CYAN if status == "blueprint_owned" else (GREEN if status == "researched" else LINE)
+	))
+	row.add_child(portrait_frame)
+	var portrait := TextureRect.new()
+	portrait.name = "CodexFocusPortrait_%s" % archetype_id
+	portrait.texture = load("res://assets/ui/codex/%s.webp" % archetype_id) as Texture2D
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.modulate = Color(0.18, 0.22, 0.24, 0.72) if status == "undiscovered" else Color.WHITE
+	portrait_frame.add_child(portrait)
+	var detail := VBoxContainer.new()
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.add_theme_constant_override("separation", 3)
+	row.add_child(detail)
+	var name := String(entry.get("display_name", "未知信号"))
+	if status == "undiscovered":
+		name = "未知信号"
+	detail.add_child(_label(name, 18 if not compact else 15, TEXT))
+	var status_copy := (
+		"永久入列" if status == "researched"
+		else ("图纸待研发" if status == "blueprint_owned" else "尚未发现")
+	)
+	detail.add_child(_label(
+		"%s  ◆  %s  ◆  %s" % [
+			_rating_label(rating),
+			String(entry.get("role_copy", "未知职责")) if status != "undiscovered" else "信号受阻",
+			status_copy,
+		],
+		11,
+		GREEN if status == "researched" else (CYAN if status == "blueprint_owned" else MUTED)
+	))
+	if status != "undiscovered":
+		detail.add_child(_label(String(entry.get("faction", "独立战术")), 12, GOLD))
+	if status == "blueprint_owned":
+		var action := _button("前往研发", true)
+		action.name = "CodexResearchButton"
+		action.custom_minimum_size.y = 44
+		action.pressed.connect(action_requested.emit.bind("open_research", {
+			"archetype_id": archetype_id,
+			"recipe_id": String(entry.get("recipe_id", "")),
+		}))
+		detail.add_child(action)
+	elif status == "researched":
+		detail.add_child(_label("专属碎片  %d" % int(entry.get("fragments", 0)), 11, MUTED))
+	else:
+		detail.add_child(_label("继续攻城以捕获设计信号", 11, MUTED))
+	return row
+
+
+func _ensure_selected_codex() -> void:
+	var entries := _view.get("codex", []) as Array
+	if entries.is_empty():
+		_selected_codex_id = ""
+		return
+	for entry_value in entries:
+		if String((entry_value as Dictionary).get("archetype_id", "")) == _selected_codex_id:
+			return
+	_selected_codex_id = String((entries[0] as Dictionary).get("archetype_id", ""))
+
+
+func _selected_codex_entry(entries: Array) -> Dictionary:
+	for entry_value in entries:
+		var entry := entry_value as Dictionary
+		if String(entry.get("archetype_id", "")) == _selected_codex_id:
+			return entry
+	return {}
+
+
+func _select_codex_entry(archetype_id: String) -> void:
+	if archetype_id == _selected_codex_id:
+		return
+	_selected_codex_id = archetype_id
+	_view["codex_focus_id"] = archetype_id
+	_rebuild()
 
 
 func _roster_panel() -> Control:
