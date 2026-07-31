@@ -4899,6 +4899,7 @@ func _build_factory_world() -> void:
 		)
 		warning.position = Vector3(0.0, 2.58, -0.62)
 		utility_root.add_child(warning)
+	_add_factory_resistance_emblem()
 	_add_factory_paths()
 	_add_factory_grid()
 	for facility_id in game.current_state().factory.facility_placements:
@@ -4955,9 +4956,27 @@ func _add_construction_preview() -> void:
 	world_host.add_child(preview)
 	var valid := not _is_factory_cell_occupied(construction_cell)
 	var color: Color = FACTORY_BUILDING_COLORS[construction_facility_id] if valid else RED
-	var ghost := _factory_box(Vector3(2.3, 1.7, 1.9), Color(color, 0.55))
-	ghost.position.y = 1.0
+	var ghost_color := Color(color, 0.48)
+	var ghost := _factory_box(Vector3(2.3, 1.45, 1.9), ghost_color)
+	ghost.position.y = 0.86
 	preview.add_child(ghost)
+	_add_building_silhouette(preview, construction_facility_id, ghost_color, 1.45)
+
+
+func _add_factory_resistance_emblem() -> void:
+	var emblem := Node3D.new()
+	emblem.name = "FactoryResistanceEmblem"
+	emblem.position = Vector3(0.0, 0.14, -4.7)
+	world_host.add_child(emblem)
+	var diamond := _factory_box(Vector3(1.55, 0.05, 1.55), Color("#183f43"))
+	diamond.rotation_degrees.y = 45.0
+	emblem.add_child(diamond)
+	var bowl := _factory_cylinder(0.48, 0.26, 0.08, Color("#d9ded8"))
+	bowl.position = Vector3(0.0, 0.06, -0.08)
+	emblem.add_child(bowl)
+	var signal_bar := _factory_box(Vector3(0.16, 0.07, 0.72), CYAN)
+	signal_bar.position = Vector3(0.0, 0.08, 0.28)
+	emblem.add_child(signal_bar)
 
 
 func _add_factory_paths() -> void:
@@ -5112,6 +5131,10 @@ func _sync_factory_world_labels() -> void:
 			building.global_position + Vector3(0.0, 3.25, 0.0)
 		)
 		var desired := projected - Vector2(marker.size.x * 0.5, marker.size.y * 0.5)
+		# Keep the resistance commander's face readable instead of pinning its
+		# interaction marker directly across the landmark silhouette.
+		if facility_id == "command_center":
+			desired += Vector2(72.0, 38.0)
 		var resource_hud := ui_root.find_child("FactoryResourceHUD", true, false) as Control
 		var factory_hud := ui_root.find_child("FactoryHudFrame", true, false) as Control
 		if (
@@ -5133,11 +5156,35 @@ func _sync_factory_world_labels() -> void:
 func _add_building_silhouette(root: Node3D, facility_id: String, color: Color, height: float) -> void:
 	match facility_id:
 		"command_center":
-			var tower := _factory_cylinder(0.45, 0.45, 1.8, color.lightened(0.12))
-			tower.position = Vector3(0.0, height + 1.15, 0.0)
-			root.add_child(tower)
-			var beacon := _factory_cylinder(0.1, 0.1, 1.2, CYAN)
-			beacon.position = Vector3(0.0, height + 2.55, 0.0)
+			var porcelain := Color("#d9ded8")
+			var cistern := _factory_box(Vector3(1.85, 1.25, 0.72), porcelain)
+			cistern.position = Vector3(0.0, height + 0.62, 0.42)
+			root.add_child(cistern)
+			var bowl := _factory_sphere(Vector3(1.18, 0.58, 0.92), porcelain)
+			bowl.position = Vector3(0.0, height + 0.22, -0.48)
+			root.add_child(bowl)
+			var rim := _factory_cylinder(0.92, 0.78, 0.18, Color("#f0f1ec"))
+			rim.position = Vector3(0.0, height + 0.64, -0.48)
+			root.add_child(rim)
+			var neck := _factory_cylinder(0.27, 0.31, 0.62, Color("#a8765d"))
+			neck.position = Vector3(0.0, height + 1.02, -0.48)
+			root.add_child(neck)
+			var head := _factory_sphere(Vector3(0.52, 0.68, 0.50), Color("#b98669"))
+			head.position = Vector3(0.0, height + 1.55, -0.48)
+			root.add_child(head)
+			var visor := _factory_box(Vector3(0.78, 0.20, 0.14), Color("#58e1d4"))
+			visor.position = Vector3(0.0, height + 1.63, -0.94)
+			root.add_child(visor)
+			for pipe_x in [-1.22, 1.22]:
+				var pipe_leg := _factory_cylinder(0.14, 0.18, 2.55, Color("#58747a"))
+				pipe_leg.position = Vector3(pipe_x, height + 1.25, 0.18)
+				root.add_child(pipe_leg)
+			var pipe_top := _factory_cylinder(0.14, 0.14, 2.45, Color("#58747a"))
+			pipe_top.rotation_degrees.z = 90.0
+			pipe_top.position = Vector3(0.0, height + 2.48, 0.18)
+			root.add_child(pipe_top)
+			var beacon := _factory_cylinder(0.10, 0.10, 0.85, CYAN)
+			beacon.position = Vector3(0.0, height + 2.92, 0.18)
 			root.add_child(beacon)
 		"porcelain_plant":
 			for x in [-0.65, 0.65]:
@@ -5229,6 +5276,19 @@ func _factory_cylinder(top_radius: float, bottom_radius: float, height: float, c
 	mesh.radial_segments = 10
 	instance.mesh = mesh
 	instance.material_override = _factory_material(color, 0.78)
+	return instance
+
+
+func _factory_sphere(scale_value: Vector3, color: Color) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 1.0
+	mesh.height = 2.0
+	mesh.radial_segments = 12
+	mesh.rings = 6
+	instance.mesh = mesh
+	instance.scale = scale_value
+	instance.material_override = _factory_material(color, 0.74)
 	return instance
 
 
