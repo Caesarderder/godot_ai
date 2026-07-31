@@ -155,6 +155,6 @@ func _case_view(case_id: String, compact: bool) -> Dictionary:
 			}],
 		},
 		"new_player_welfare": {"unlocked": false, "claimable": false, "claimed": false},
-		"missions_unlocked": false,
+		"missions_unlocked": case_id != "locked_missions",
 		"mission_lock": {"title":"行动任务","level":1,"required_level":2,"stage_copy":"通关 1-1","stage_complete":true},
 	}

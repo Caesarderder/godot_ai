@@ -131,7 +131,8 @@ func _build_action() -> void:
 	))
 	content.add_child(_action_reward_rail(
 		_view.get("starter_gifts", {}) as Dictionary,
-		_view.get("new_player_welfare", {}) as Dictionary
+		_view.get("new_player_welfare", {}) as Dictionary,
+		bool(_view.get("missions_unlocked", false))
 	))
 
 
@@ -383,7 +384,11 @@ func _route_connector(color: Color) -> Control:
 	return connector
 
 
-func _action_reward_rail(starter_view: Dictionary, welfare: Dictionary) -> Control:
+func _action_reward_rail(
+	starter_view: Dictionary,
+	welfare: Dictionary,
+	missions_unlocked: bool
+) -> Control:
 	var panel := PanelContainer.new()
 	panel.name = "ActionRewardRail"
 	panel.add_theme_stylebox_override("panel", UiArtDirectionScript.panel_style())
@@ -426,7 +431,7 @@ func _action_reward_rail(starter_view: Dictionary, welfare: Dictionary) -> Contr
 			preview.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			preview.tooltip_text = claim_copy
 			row.add_child(preview)
-	if not has_claimable:
+	if not has_claimable and not missions_unlocked:
 		var mission_lock := HBoxContainer.new()
 		mission_lock.name = "MissionLockBadge"
 		mission_lock.custom_minimum_size.x = 62
