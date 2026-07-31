@@ -122,6 +122,18 @@
 冷青描边而不争夺主强调。战力与下一目标压缩为一行持续语境，候选比较只在玩家点选阵位后
 进入滚动详情。568×320 使用短页签和短目标名，但保留完整阵位语义与至少 48 px 热区。
 
+### 目标与行动
+
+行动页采用 Supercell 官方《Clash Royale》Trophy Road 的信息原则：进度以连续路径、里程碑与
+关口表达，奖励附着于路径但不取代推进目标。项目只采用“路线先于清单、关口明确、奖励可预览”
+的结构，不复制其角色、图标、配色或具体构图。参考入口：
+`https://support.supercell.com/clash-royale/en/articles/trophy-road-5.html`。
+
+行动页首屏固定为“章节据点 → 当前行动 → 当前关口”的战役路线，节点使用 64×64 WebP 工业
+徽章，不再用大段文字模拟地图。当前关口旁只保留一枚金色挑战按钮；礼包与庆典奖励压缩为
+次级补给横条。页签保持冷青选中态，避免与主行动争夺金色强调。生成源经过 Godot 工具脚本
+键色、裁切、缩放和有损 WebP 导出，单枚约 2KB，避免把生成大图带进运行时。
+
 ## 组件状态
 
 | 组件 | Normal | Selected / Focus | Disabled | Reward / Warning |
@@ -176,3 +188,6 @@
 - `run_legion_screen_tests.gd` 验证标准与 568 紧凑阵型的六个阵位、四个页签、信号和培养路径；
   `ui-legion-formation-844x390.png`、`ui-legion-formation-568x320.png` 与
   `ui-legion-844x390.png` 分别是独立双尺寸场景和主流程集成证据。
+- `run_goals_screen_tests.gd` 验证三节点战役路线、唯一主挑战、次级补给横条及其语义动作；
+  `ui-goals-action-844x390.png`、`ui-goals-action-568x320.png` 与
+  `ui-goals-844x390.png` 是独立双尺寸和主流程集成证据。

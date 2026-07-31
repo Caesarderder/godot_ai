@@ -17,6 +17,8 @@ func _run() -> void:
 	goals.call("configure", _action_view())
 	await process_frame
 	_check(goals.find_child("GoalHierarchyPanel", true, false) != null, "action tab owns one macro-to-micro chain")
+	_check(goals.find_child("CampaignRoute", true, false) != null, "action tab renders campaign progress as a route")
+	_check(goals.find_child("ActionRewardRail", true, false) != null, "rewards stay in a compact secondary rail")
 	_check(_tree_has_text(goals, "大目标 · 摧毁 E11 联盟核心巨炮"), "macro goal remains visible")
 	_check(_tree_has_text(goals, "中目标 · 行动三：撞击高墙"), "medium operation remains visible")
 	_check(_tree_has_text(goals, "小目标 · 完成 1-4 首次挑战"), "small executable goal remains visible")
@@ -31,6 +33,11 @@ func _run() -> void:
 	)
 	var cta := goals.find_child("GoalHierarchyPrimaryCTA", true, false) as Button
 	_check(_fits_compact_width(cta), "action CTA fits the 568px compact landscape fixture")
+	_check(cta != null and cta.custom_minimum_size.y >= 48.0, "action CTA keeps a 48px touch target")
+	_check(
+		_fits_compact_screen(goals.find_child("ActionRewardRail", true, false) as Control),
+		"reward rail fits the 568x320 compact landscape fixture"
+	)
 	if cta != null:
 		cta.pressed.emit()
 	_check(action_request["id"] == "follow_task", "primary CTA emits a semantic follow request")
@@ -152,6 +159,7 @@ func _run() -> void:
 
 func _action_view() -> Dictionary:
 	return {
+		"compact": true,
 		"tab": "action",
 		"hierarchy": {
 			"macro": "摧毁 E11 联盟核心巨炮，完成第一章",
@@ -268,6 +276,13 @@ func _fits_compact_width(control: Control) -> bool:
 		return false
 	var rect := control.get_global_rect()
 	return rect.position.x >= 0.0 and rect.end.x <= 568.0
+
+
+func _fits_compact_screen(control: Control) -> bool:
+	if not _fits_compact_width(control):
+		return false
+	var rect := control.get_global_rect()
+	return rect.position.y >= 0.0 and rect.end.y <= 320.0
 
 
 func _collect_prefix(node: Node, prefix: String, output: Array[Node]) -> void:

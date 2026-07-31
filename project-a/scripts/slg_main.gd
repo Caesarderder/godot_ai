@@ -2471,6 +2471,7 @@ func _goals_view(state: RefCounted) -> Dictionary:
 		if not state.meta_progression.commander_claimed_levels.has(str(reward_level)):
 			commander_claimable += 1
 	return {
+		"compact": _layout_profile() == "compact_landscape",
 		"notification_counts": NotificationSummaryScript.derive(
 			state,
 			int(Time.get_unix_time_from_system())

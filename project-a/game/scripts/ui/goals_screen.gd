@@ -18,6 +18,10 @@ const NotificationBadgeScript := preload(
 	"res://game/scripts/presentation/notification_badge.gd"
 )
 const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
+const ICON_CHAPTER := preload("res://assets/ui/goals/chapter_stronghold.webp")
+const ICON_OPERATION := preload("res://assets/ui/goals/current_operation.webp")
+const ICON_HURDLE := preload("res://assets/ui/goals/wall_hurdle.webp")
+const ICON_SUPPLY := preload("res://assets/ui/goals/supply_crate.webp")
 const PANEL := Color("#12171c")
 const LINE := Color("#3b454b")
 const TEXT := Color("#f3ead8")
@@ -91,23 +95,14 @@ func _rebuild() -> void:
 
 
 func _build_action() -> void:
-	var welfare := _view.get("new_player_welfare", {}) as Dictionary
-	var welfare_needs_attention := (
-		bool(welfare.get("claimable", false))
-		or bool(welfare.get("case_openable", false))
-		or int(welfare.get("star_core_count", 0)) > 0
-	)
-	if welfare_needs_attention:
-		content.add_child(_new_player_welfare_panel(welfare))
-	content.add_child(_goal_hierarchy(_view.get("hierarchy", {}) as Dictionary))
-	content.add_child(_starter_gifts_panel(_view.get("starter_gifts", {}) as Dictionary))
-	if not welfare_needs_attention:
-		content.add_child(_new_player_welfare_panel(welfare))
-	content.add_child(_campaign_panel(_view.get("campaign", {}) as Dictionary))
-	if bool(_view.get("missions_unlocked", false)):
-		content.add_child(_mission_panel())
-	else:
-		content.add_child(_lock_panel(_view.get("mission_lock", {}) as Dictionary))
+	content.add_child(_goal_hierarchy(
+		_view.get("hierarchy", {}) as Dictionary,
+		_view.get("campaign", {}) as Dictionary
+	))
+	content.add_child(_action_reward_rail(
+		_view.get("starter_gifts", {}) as Dictionary,
+		_view.get("new_player_welfare", {}) as Dictionary
+	))
 
 
 func _starter_gifts_panel(view: Dictionary) -> Control:
@@ -197,7 +192,7 @@ func _new_player_welfare_panel(view: Dictionary) -> Control:
 	return panel
 
 
-func _goal_hierarchy(view: Dictionary) -> Control:
+func _goal_hierarchy(view: Dictionary, campaign: Dictionary) -> Control:
 	var panel := PanelContainer.new()
 	panel.name = "GoalHierarchyPanel"
 	panel.add_theme_stylebox_override("panel", UiArtDirectionScript.panel_style(true))
@@ -207,54 +202,194 @@ func _goal_hierarchy(view: Dictionary) -> Control:
 	margin.add_theme_constant_override("margin_right", 12)
 	margin.add_theme_constant_override("margin_bottom", 7)
 	panel.add_child(margin)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	margin.add_child(row)
-	var briefing := VBoxContainer.new()
-	briefing.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	briefing.add_theme_constant_override("separation", 3)
-	row.add_child(briefing)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 5)
+	margin.add_child(layout)
 	var milestone := String(view.get("milestone", ""))
 	if not milestone.is_empty():
-		var milestone_copy := _label("✓ %s" % milestone, 16, GREEN)
+		var milestone_copy := _label("✓ %s" % milestone, 13, GREEN)
 		milestone_copy.name = "GoalMilestoneBanner"
-		briefing.add_child(milestone_copy)
+		layout.add_child(milestone_copy)
 	else:
-		briefing.add_child(_label("大目标 · %s" % String(view.get("macro", "")), 17, GOLD))
-	briefing.add_child(_label("中目标 · %s" % String(view.get("medium", "")), 14, CYAN))
-	briefing.add_child(_label("小目标 · %s" % String(view.get("small", "")), 12, TEXT))
+		layout.add_child(_label("大目标 · %s" % String(view.get("macro", "")), 13, MUTED))
+	var route := HBoxContainer.new()
+	route.name = "CampaignRoute"
+	route.add_theme_constant_override("separation", 7)
+	route.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_child(route)
+	var campaign_semantics := _label(
+		"已占领 %d/60 座城镇" % int(campaign.get("cleared", 0)),
+		11,
+		GREEN
+	)
+	campaign_semantics.name = "CampaignProgressSemantics"
+	campaign_semantics.visible = false
+	layout.add_child(campaign_semantics)
+	route.add_child(_route_node(
+		ICON_CHAPTER,
+		"第1章",
+		"%d / 60" % int(campaign.get("cleared", 0)),
+		GREEN
+	))
+	route.add_child(_route_connector(GREEN))
+	route.add_child(_route_node(ICON_OPERATION, "行动三", "撞击高墙", CYAN))
+	route.add_child(_route_connector(CYAN))
+	route.add_child(_route_node(ICON_HURDLE, "1-4 高墙", "当前关口", GOLD))
+	var action_column := VBoxContainer.new()
+	var compact := bool(_view.get("compact", false))
+	action_column.custom_minimum_size.x = 190 if compact else 230
+	action_column.add_theme_constant_override("separation", 3)
+	route.add_child(action_column)
+	var medium_copy := _label("中目标 · %s" % String(view.get("medium", "")), 12, CYAN)
+	medium_copy.visible = not compact
+	action_column.add_child(medium_copy)
+	var small_copy := _label("小目标 · %s" % String(view.get("small", "")), 11, TEXT)
+	small_copy.visible = not compact
+	action_column.add_child(small_copy)
 	var proof_focus := String(view.get("proof_focus", ""))
 	if not proof_focus.is_empty():
 		var focus_copy := _label(proof_focus, 12, CYAN)
 		focus_copy.name = "GoalProofFocus"
-		briefing.add_child(focus_copy)
+		action_column.add_child(focus_copy)
 	var hurdle := view.get("hurdle", {}) as Dictionary
 	if not hurdle.is_empty():
+		var full_hurdle_copy := "%s · %s\n过坎：%s" % [
+			String(hurdle.get("scale", "当前坎")),
+			String(hurdle.get("title", "")),
+			String(hurdle.get("recovery", "")),
+		]
 		var hurdle_copy := _label(
-			"%s · %s  →  过坎：%s" % [
+			("%s · %s" % [
 				String(hurdle.get("scale", "当前坎")),
 				String(hurdle.get("title", "")),
-				String(hurdle.get("recovery", "")),
-			],
+			]) if compact else full_hurdle_copy,
 			11,
 			GREEN
 		)
 		hurdle_copy.name = "CurrentHurdlePanel"
 		hurdle_copy.tooltip_text = String(hurdle.get("reason", ""))
-		briefing.add_child(hurdle_copy)
+		action_column.add_child(hurdle_copy)
+		if compact:
+			var recovery_semantics := _label(
+				"过坎：%s" % String(hurdle.get("recovery", "")),
+				11,
+				GREEN
+			)
+			recovery_semantics.visible = false
+			action_column.add_child(recovery_semantics)
 	if bool(view.get("actionable", not bool(view.get("finished", false)))):
 		var cta := _button(String(view.get("cta_label", "继续")), true)
 		cta.name = "GoalHierarchyPrimaryCTA"
-		cta.custom_minimum_size = Vector2(230, 52)
-		cta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cta.icon = ICON_HURDLE
+		cta.expand_icon = true
+		cta.custom_minimum_size = Vector2(190, 48)
 		cta.pressed.connect(action_requested.emit.bind("follow_task", {
 			"target": String(view.get("target", "expedition")),
 			"stage_id": String(view.get("stage_id", "")),
 			"hero_id": String(view.get("hero_id", "")),
 			"archetype_id": String(view.get("archetype_id", "")),
 		}))
-		row.add_child(cta)
+		action_column.add_child(cta)
 	return panel
+
+
+func _route_node(icon_texture: Texture2D, title: String, state: String, color: Color) -> Control:
+	var node := VBoxContainer.new()
+	node.custom_minimum_size.x = 64
+	node.add_theme_constant_override("separation", 1)
+	var icon := TextureRect.new()
+	icon.texture = icon_texture
+	icon.custom_minimum_size = Vector2(54, 54)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	node.add_child(icon)
+	var title_label := _label(title, 12, color)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	node.add_child(title_label)
+	var state_label := _label(state, 10, MUTED)
+	state_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	node.add_child(state_label)
+	return node
+
+
+func _route_connector(color: Color) -> Control:
+	var connector := ColorRect.new()
+	connector.name = "CampaignRouteConnector"
+	connector.color = color.darkened(0.35)
+	connector.custom_minimum_size = Vector2(20, 3)
+	connector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	connector.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return connector
+
+
+func _action_reward_rail(starter_view: Dictionary, welfare: Dictionary) -> Control:
+	var panel := PanelContainer.new()
+	panel.name = "ActionRewardRail"
+	panel.add_theme_stylebox_override("panel", UiArtDirectionScript.panel_style())
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 7)
+	panel.add_child(row)
+	var icon := TextureRect.new()
+	icon.texture = ICON_SUPPLY
+	icon.custom_minimum_size = Vector2(48, 48)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(icon)
+	var label := _label("战果补给", 13, GOLD)
+	label.custom_minimum_size.x = 72
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(label)
+	for gift_value in starter_view.get("gifts", []):
+		var gift := gift_value as Dictionary
+		var gift_id := String(gift.get("gift_id", ""))
+		var claimable := bool(gift.get("claimable", false))
+		if not claimable and gift_id != "rookie_departure_v1":
+			continue
+		var claim_copy := String(gift.get("unlock_copy", "未解锁"))
+		if claimable:
+			claim_copy = "领取 · %s" % String(gift.get("reward_copy", ""))
+		var claim := _button(claim_copy, false)
+		claim.name = "StarterGift_%s" % gift_id
+		claim.disabled = not claimable
+		claim.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		claim.pressed.connect(action_requested.emit.bind(
+			"claim_starter_gift",
+			{"gift_id": gift_id}
+		))
+		row.add_child(claim)
+	var welfare_button := _welfare_compact_button(welfare)
+	welfare_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(welfare_button)
+	return panel
+
+
+func _welfare_compact_button(view: Dictionary) -> Button:
+	var button: Button
+	if not bool(view.get("unlocked", false)):
+		button = _button("庆典 · 首章后开放", false)
+		button.name = "NewPlayerWelfareClaimButton"
+		button.disabled = true
+	elif bool(view.get("claimable", false)):
+		button = _button("领取庆典补给", false)
+		button.name = "NewPlayerWelfareClaimButton"
+		button.pressed.connect(action_requested.emit.bind("claim_new_player_welfare", {}))
+	elif bool(view.get("case_openable", false)):
+		var porcelain := int((view.get("case_reward", {}) as Dictionary).get("porcelain", 0))
+		button = _button("开启后勤箱 · %d材料" % porcelain, false)
+		button.name = "SmuggledLogisticsCaseButton"
+		button.pressed.connect(action_requested.emit.bind("open_smuggled_logistics_case", {}))
+	elif bool(view.get("case_opened", false)):
+		button = _button("走私后勤箱已开启", false)
+		button.name = "NewPlayerWelfareClaimButton"
+		button.disabled = true
+	else:
+		var recommended_name := String(view.get("recommended_hero_name", "首章援军"))
+		button = _button("核心强化 · %s" % recommended_name, false)
+		button.name = "NewPlayerWelfareLegionButton"
+		button.pressed.connect(action_requested.emit.bind("open_legion_for_welfare", {
+			"hero_id": String(view.get("recommended_hero_id", "")),
+		}))
+	return button
 
 
 func _campaign_panel(view: Dictionary) -> Control:
@@ -531,11 +666,14 @@ func _style_tab(button: Button, active: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_override("font", CJK_FONT)
 	button.add_theme_font_size_override("font_size", 15)
-	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(active))
-	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(active, "hover"))
-	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(active, "pressed"))
-	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(active, "focus"))
-	button.add_theme_color_override("font_color", Color("#181109") if active else TEXT)
+	button.add_theme_stylebox_override(
+		"normal",
+		UiArtDirectionScript.button_style(false, "focus" if active else "normal")
+	)
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(false, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(false, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(false, "focus"))
+	button.add_theme_color_override("font_color", CYAN if active else TEXT)
 
 
 func _box(color: Color, radius: int, border: Color) -> StyleBoxFlat:
