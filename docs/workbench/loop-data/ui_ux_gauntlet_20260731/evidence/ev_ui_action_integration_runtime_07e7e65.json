@@ -44,7 +44,7 @@
   "inference": "Shared UI path remains functional at the current revision.",
   "result": "pass",
   "confidence": 0.96,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Resource cleanup warning requires separate lifecycle diagnosis if it persists outside this UI suite."
   ],

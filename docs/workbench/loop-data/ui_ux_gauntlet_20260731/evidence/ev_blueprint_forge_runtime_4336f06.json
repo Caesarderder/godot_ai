@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_blueprint_forge_runtime_4336f06",
   "revision": "4336f06",
-  "valid_through_revision": "07e7e65",
+  "valid_through_revision": "ecb65b2",
   "gate_id": "gate_blueprint_forge_runtime",
   "claim": "Blueprint selection, start research and claim handoff preserve stable recipe identities and durable commands.",
   "scenario_id": "scenario_blueprint_character_forge",

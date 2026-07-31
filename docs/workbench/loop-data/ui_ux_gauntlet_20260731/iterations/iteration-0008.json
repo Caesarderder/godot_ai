@@ -1,0 +1,30 @@
+{
+  "iteration": 8,
+  "work_unit": "mobile achievement medal cabinet",
+  "status": "completion_candidate",
+  "changed_files": [
+    "project-a/game/scripts/ui/goals_screen.gd",
+    "project-a/tools/capture_achievement_medal_cabinet_scenario.gd",
+    "project-a/tools/run_goals_screen_tests.gd",
+    "project-a/tools/run_ui_smoke_tests.gd"
+  ],
+  "evidence_ids": [
+    "ev_achievement_cabinet_runtime_ecb65b2",
+    "ev_achievement_cabinet_responsive_ecb65b2",
+    "ev_achievement_cabinet_visual_critic_ecb65b2"
+  ],
+  "resolved_findings": [],
+  "new_findings": [],
+  "failed_checks": [],
+  "rejected_approaches": [
+    "two-column 255px achievement cards that require scrolling",
+    "settled state that collapses to an empty panel",
+    "detail strip placed below the mobile fold",
+    "text-only locked state without medal silhouettes",
+    "first candidate whose locked state scored 6.4 and failed the visual gate"
+  ],
+  "next_action": "Integrate the accepted medal cabinet and select the next unfrozen mobile UI/UX gap.",
+  "blocker": null,
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

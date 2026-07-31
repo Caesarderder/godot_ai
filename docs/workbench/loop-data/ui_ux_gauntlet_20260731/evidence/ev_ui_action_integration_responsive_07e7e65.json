@@ -45,7 +45,7 @@
   "inference": "Affected shared responsive gate passes.",
   "result": "pass",
   "confidence": 0.96,
-  "freshness": "current",
+  "freshness": "stale",
   "limitations": [
     "Focused shipping screen capture does not emulate dynamic browser chrome."
   ],

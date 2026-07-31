@@ -1,0 +1,79 @@
+{
+  "evidence_id": "ev_achievement_cabinet_responsive_ecb65b2",
+  "revision": "ecb65b2",
+  "valid_through_revision": "ecb65b2",
+  "gate_id": "gate_achievement_cabinet_responsive",
+  "claim": "Medal identity, state and the sole primary action remain visible and touch-sized at 844x390 and 568x320.",
+  "scenario_id": "scenario_mobile_achievement_medal_cabinet",
+  "execution_id": "achievement_cabinet_dual_size_ecb65b2",
+  "evidence_type": "capture",
+  "artifact_or_command": "cd project-a && godot --path . -s tools/capture_achievement_medal_cabinet_scenario.gd",
+  "case_results": [
+    {
+      "case_id": "mixed_claimable",
+      "result": "pass",
+      "assertions": [
+        "six medals and sole batch action fit without scrolling",
+        "medal targets remain at least 64 px"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-achievement-cabinet/mixed_claimable-844x390.png",
+        "project-a/artifacts/scenario-mobile-achievement-cabinet/mixed_claimable-568x320.png"
+      ]
+    },
+    {
+      "case_id": "settled_collection",
+      "result": "pass",
+      "assertions": [
+        "claimed and progressing medals remain visible in one screen"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-achievement-cabinet/settled_collection-844x390.png",
+        "project-a/artifacts/scenario-mobile-achievement-cabinet/settled_collection-568x320.png"
+      ]
+    },
+    {
+      "case_id": "locked_cabinet",
+      "result": "pass",
+      "assertions": [
+        "lock emblem, two conditions and six dimmed medals fit without a CTA"
+      ],
+      "artifacts": [
+        "project-a/artifacts/scenario-mobile-achievement-cabinet/locked_cabinet-844x390.png",
+        "project-a/artifacts/scenario-mobile-achievement-cabinet/locked_cabinet-568x320.png"
+      ]
+    }
+  ],
+  "artifact_manifest": [
+    "runtime assertions",
+    "mixed captures",
+    "settled captures",
+    "locked captures",
+    "case manifest",
+    "exit code"
+  ],
+  "environment": {
+    "engine": "Godot 4.6.3",
+    "platform": "macOS Compatibility",
+    "device": "Apple M4",
+    "viewport": "844x390 and 568x320",
+    "seed": 20260731,
+    "build_mode": "debug"
+  },
+  "grader": {
+    "kind": "runtime",
+    "name": "dual-size achievement cabinet audit",
+    "version": "1",
+    "independence": "not_applicable"
+  },
+  "observation": "Two consecutive capture runs produced identical SHA-256 hashes for all six images; every state stays in the first viewport without scroll bars.",
+  "inference": "Focused responsive gate passes at both required mobile landscape sizes.",
+  "result": "pass",
+  "confidence": 0.98,
+  "freshness": "current",
+  "limitations": [
+    "Dynamic browser safe area not measured."
+  ],
+  "schema_version": "caesar-loop/v2",
+  "run_id": "ui_ux_gauntlet_20260731"
+}

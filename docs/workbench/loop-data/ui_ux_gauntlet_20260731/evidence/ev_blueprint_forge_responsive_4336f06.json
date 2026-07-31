@@ -1,7 +1,7 @@
 {
   "evidence_id": "ev_blueprint_forge_responsive_4336f06",
   "revision": "4336f06",
-  "valid_through_revision": "07e7e65",
+  "valid_through_revision": "ecb65b2",
   "gate_id": "gate_blueprint_forge_responsive",
   "claim": "Character art, research state and the sole primary action remain visible and touch-sized at 844x390 and 568x320.",
   "scenario_id": "scenario_blueprint_character_forge",
