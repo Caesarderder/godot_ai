@@ -5157,23 +5157,32 @@ func _add_building_silhouette(root: Node3D, facility_id: String, color: Color, h
 	match facility_id:
 		"command_center":
 			var porcelain := Color("#d9ded8")
-			var cistern := _factory_box(Vector3(1.85, 1.25, 0.72), porcelain)
-			cistern.position = Vector3(0.0, height + 0.62, 0.42)
+			var cistern := _factory_box(Vector3(1.85, 0.72, 0.78), porcelain)
+			cistern.position = Vector3(0.0, height + 0.34, 0.68)
 			root.add_child(cistern)
-			var bowl := _factory_sphere(Vector3(1.18, 0.58, 0.92), porcelain)
-			bowl.position = Vector3(0.0, height + 0.22, -0.48)
+			var bowl := _factory_sphere(Vector3(1.38, 0.62, 1.18), porcelain)
+			bowl.position = Vector3(0.0, height + 0.18, -0.62)
 			root.add_child(bowl)
-			var rim := _factory_cylinder(0.92, 0.78, 0.18, Color("#f0f1ec"))
-			rim.position = Vector3(0.0, height + 0.64, -0.48)
+			var rim := _factory_torus(0.72, 1.28, Color("#f6f5ef"))
+			rim.scale.z = 1.25
+			rim.position = Vector3(0.0, height + 0.72, -0.68)
 			root.add_child(rim)
-			var neck := _factory_cylinder(0.27, 0.31, 0.62, Color("#a8765d"))
-			neck.position = Vector3(0.0, height + 1.02, -0.48)
+			var raised_seat := _factory_torus(0.54, 0.94, Color("#f6f5ef"))
+			raised_seat.rotation_degrees.x = 72.0
+			raised_seat.scale.y = 1.18
+			raised_seat.position = Vector3(0.0, height + 1.36, 0.12)
+			root.add_child(raised_seat)
+			var water := _factory_cylinder(0.72, 0.72, 0.10, Color("#176a70"))
+			water.position = Vector3(0.0, height + 0.69, -0.68)
+			root.add_child(water)
+			var neck := _factory_cylinder(0.31, 0.36, 0.72, Color("#a8765d"))
+			neck.position = Vector3(0.0, height + 1.08, -0.68)
 			root.add_child(neck)
-			var head := _factory_sphere(Vector3(0.52, 0.68, 0.50), Color("#b98669"))
-			head.position = Vector3(0.0, height + 1.55, -0.48)
+			var head := _factory_sphere(Vector3(0.72, 0.86, 0.68), Color("#b98669"))
+			head.position = Vector3(0.0, height + 1.72, -0.68)
 			root.add_child(head)
-			var visor := _factory_box(Vector3(0.78, 0.20, 0.14), Color("#58e1d4"))
-			visor.position = Vector3(0.0, height + 1.63, -0.94)
+			var visor := _factory_box(Vector3(1.16, 0.27, 0.16), Color("#58e1d4"))
+			visor.position = Vector3(0.0, height + 1.82, -1.30)
 			root.add_child(visor)
 			for pipe_x in [-1.22, 1.22]:
 				var pipe_leg := _factory_cylinder(0.14, 0.18, 2.55, Color("#58747a"))
@@ -5289,6 +5298,18 @@ func _factory_sphere(scale_value: Vector3, color: Color) -> MeshInstance3D:
 	instance.mesh = mesh
 	instance.scale = scale_value
 	instance.material_override = _factory_material(color, 0.74)
+	return instance
+
+
+func _factory_torus(inner_radius: float, outer_radius: float, color: Color) -> MeshInstance3D:
+	var instance := MeshInstance3D.new()
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = inner_radius
+	mesh.outer_radius = outer_radius
+	mesh.rings = 16
+	mesh.ring_segments = 8
+	instance.mesh = mesh
+	instance.material_override = _factory_material(color, 0.68)
 	return instance
 
 

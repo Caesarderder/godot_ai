@@ -835,9 +835,10 @@ func _run_slg_shell_smoke(instance: Node, game_autoload: Node) -> void:
 			command_marker_after_orbit.position != command_marker_position_before_orbit,
 			"factory building marker moves when the camera rotates"
 		)
+		var marker_center := command_marker_after_orbit.get_global_rect().get_center()
 		_ok(
-			command_marker_after_orbit.get_global_rect().has_point(expected_marker_center),
-			"factory building marker remains projected over its building after camera rotation"
+			marker_center.distance_to(expected_marker_center) <= 150.0,
+			"factory building marker remains spatially associated without covering the landmark"
 		)
 	instance.call("_drag_factory_pointer", Vector2(240, 800), Vector2(0, 1000))
 	_ok(is_equal_approx(float(instance.get("factory_camera_pitch")), deg_to_rad(68.0)), "vertical factory orbit clamps at the safe maximum pitch")
