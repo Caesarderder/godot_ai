@@ -57,17 +57,17 @@ func _run() -> void:
 		"result celebrates only resources that actually increased"
 	)
 	_check(
-		result_screen.combat_summary.visible
+		not result_screen.combat_summary.visible
 			and result_screen.combat_summary.text.contains("摧毁 4 座设施")
 			and result_screen.combat_summary.text.contains("前排承伤 68%"),
-		"all-fields result keeps combat facts and contribution together in the visible causal summary"
+		"all-fields result preserves combat facts and contribution in the semantic summary"
 	)
 	_check(
-		result_screen.hurdle_proof.visible
-			and result_screen.debrief.visible
+		not result_screen.hurdle_proof.visible
+			and not result_screen.debrief.visible
 			and result_screen.hurdle_proof.text.contains("单人首战失败 → 三人反攻成功")
 			and result_screen.debrief.text.contains("护盾挡下巨炮后完成反击"),
-		"all-fields result keeps both hurdle proof and battle debrief visible"
+		"icon-led result preserves both hurdle proof and battle debrief semantics"
 	)
 	for merged_fragment in [
 		"3名主力各 +30 经验",
@@ -77,25 +77,37 @@ func _run() -> void:
 		"研究所建造资格已取得",
 	]:
 		_check(
-			result_screen.mission_progress.visible
+			not result_screen.mission_progress.visible
 				and result_screen.mission_progress.text.contains(merged_fragment),
 			"all-fields result preserves merged progression fact: %s" % merged_fragment
 		)
-	for causal_row in [
-		result_screen.hurdle_proof,
-		result_screen.debrief,
-		result_screen.combat_summary,
-	]:
-		var row := causal_row as Control
+	var visual_rewards := result_screen.find_child("ResultRewardChips", true, false) as Control
+	var visual_facts := result_screen.find_child("ResultBattleFacts", true, false) as Control
+	var visual_highlight := result_screen.find_child("ResultHighlight", true, false) as Control
+	_check(
+		visual_rewards != null and visual_rewards.get_child_count() == 1,
+		"the one positive headline reward renders as one icon-led chip"
+	)
+	_check(
+		visual_facts != null and visual_facts.get_child_count() == 3,
+		"battle summary renders exactly three scannable fact chips"
+	)
+	for visual_row in [visual_rewards, visual_facts, visual_highlight]:
 		_check(
-			row.is_visible_in_tree()
-				and row.get_global_rect().end.y <= result_screen.get_global_rect().end.y + 0.5,
-			"main causal row remains readable inside 844x390: %s" % row.name
+			visual_row != null
+				and visual_row.is_visible_in_tree()
+				and visual_row.get_global_rect().end.x
+					<= result_screen.get_global_rect().end.x + 0.5
+				and visual_row.get_global_rect().end.y
+					<= result_screen.get_global_rect().end.y + 0.5,
+			"icon-led result row remains inside 844x390: %s" % (
+				visual_row.name if visual_row != null else "missing"
+			)
 		)
-		_check(
-			row.get_global_rect().end.x <= result_screen.get_global_rect().end.x + 0.5,
-			"main causal row remains horizontally inside 844x390: %s" % row.name
-		)
+	_check(
+		result_screen.find_child("OutcomeIcon", true, false) != null,
+		"outcome uses an authored medal or warning icon"
+	)
 	var columns := result_screen.get_node("Columns") as Control
 	var next_panel := result_screen.get_node("Columns/NextPanel") as Control
 	_check(
@@ -136,6 +148,42 @@ func _run() -> void:
 		not result_screen.reward_headline.visible,
 		"a zero-resource result removes the empty reward headline instead of showing +0"
 	)
+	result_screen.configure({
+		"compact": true,
+		"outcome_banner": "胜利 · 核心巨炮已摧毁",
+		"outcome_color": "green",
+		"reward_headline": "金币 +58    军团数据 +8",
+		"combat_summary": "战斗复盘 · 77秒 · 击破7个目标 · 消灭8名守军",
+		"debrief": "护盾挡下巨炮后完成反击",
+		"safety": "全员无损返回 · 无维修消耗",
+		"qualification": "第2章战线已开放",
+		"primary_label": "领取开服庆典礼包",
+		"primary_action": "welfare",
+	})
+	root.size = Vector2i(568, 320)
+	result_screen.size = Vector2(568, 320)
+	await process_frame
+	await process_frame
+	var compact_primary := result_screen.find_child("PrimaryAction", true, false) as Button
+	var compact_base := result_screen.find_child("BaseAction", true, false) as Button
+	_check(
+		compact_primary.get_global_rect().size.y >= 48.0
+			and _within_rect(compact_primary, Rect2(Vector2.ZERO, Vector2(568, 320))),
+		"compact result keeps the primary continuation action inside 568x320"
+	)
+	_check(
+		compact_base.visible
+			and compact_base.get_global_rect().size.y >= 34.0
+			and _within_rect(compact_base, Rect2(Vector2.ZERO, Vector2(568, 320))),
+		"compact result keeps the secondary base action inside 568x320"
+	)
+	_check(
+		_within_rect(
+			result_screen.find_child("ResultBattleFacts", true, false) as Control,
+			Rect2(Vector2.ZERO, Vector2(568, 320))
+		),
+		"compact result keeps the three battle facts inside 568x320"
+	)
 	result_screen.queue_free()
 	await process_frame
 	if failures.is_empty():
@@ -160,3 +208,15 @@ func _tree_has_text(node: Node, fragment: String) -> bool:
 		if _tree_has_text(child, fragment):
 			return true
 	return false
+
+
+func _within_rect(control: Control, bounds: Rect2) -> bool:
+	if control == null or not control.is_visible_in_tree():
+		return false
+	var rect := control.get_global_rect()
+	return (
+		rect.position.x >= bounds.position.x - 0.5
+		and rect.position.y >= bounds.position.y - 0.5
+		and rect.end.x <= bounds.end.x + 0.5
+		and rect.end.y <= bounds.end.y + 0.5
+	)

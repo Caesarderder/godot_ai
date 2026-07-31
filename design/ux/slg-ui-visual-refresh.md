@@ -148,6 +148,20 @@
 职责、主动能力与三阶成长短标签，完整说明进入提示语义；金色只给予当前研发动作。568×320
 隐藏与 App Shell 主导航重复的返回按钮，并保证两个设计节点和研发动作同时留在首屏。
 
+### 战斗结算
+
+战报参考 Supercell 官方《Brawl Stars》战斗结束先突出 Game Highlight、随后展示关键统计的
+原则，以及《Clash of Clans》把星级、破坏度与战利品作为结果核心指标的做法。项目只采用
+“结果情绪先于日志、关键表现可视化、战利品直接可扫读”的结构，不复制角色、星级造型或具体
+构图。参考入口：
+`https://support.supercell.com/brawl-stars/en/articles/battle-end-game-highlight.html` 与
+`https://supercell.com/en/games/clashofclans/blog/news/clan-wars-explained-part-2-battle-day/`。
+
+结果页使用胜利勋章或破损盾牌先表达胜负；实际增加的金币与军团数据分别形成图标筹码，零收益
+不占位。战绩固定为用时、击破、消灭三枚徽章，贡献与关键反制合并成一条“本场高光”。下一步
+只保留一条短资格和一枚金色 CTA，安全返回是次级动作。完整复盘、经验与解锁事实仍保留在
+语义节点和 tooltip 中，不再作为持续占屏的报告段落。
+
 ## 组件状态
 
 | 组件 | Normal | Selected / Focus | Disabled | Reward / Warning |
@@ -209,3 +223,7 @@
   568×320 边界；`ui-blueprint-branch-844x390.png`、
   `ui-blueprint-branch-568x320.png` 与 `ui-blueprint-tree-844x390.png`
   是独立双尺寸和主流程集成证据。
+- `run_battle_result_screen_tests.gd` 验证胜负图标、实际奖励筹码、三项战绩、高光、语义事实、
+  结算动作与 568×320 边界；`ui-battle-result-victory-844x390.png`、
+  `ui-battle-result-victory-568x320.png`、`ui-battle-result-defeat-568x320.png`
+  与 `ui-boss-result-844x390.png` 是专项和主流程集成证据。

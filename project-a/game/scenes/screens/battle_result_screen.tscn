@@ -11,10 +11,22 @@ script = ExtResource("1_script")
 [node name="OutcomeBanner" type="PanelContainer" parent="."]
 layout_mode = 2
 
-[node name="OutcomeText" type="Label" parent="OutcomeBanner"]
+[node name="OutcomeRow" type="HBoxContainer" parent="OutcomeBanner"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="OutcomeIcon" type="TextureRect" parent="OutcomeBanner/OutcomeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OutcomeText" type="Label" parent="OutcomeBanner/OutcomeRow"]
 unique_name_in_owner = true
 layout_mode = 2
-horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Columns" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -40,6 +52,12 @@ theme_override_constants/separation = 4
 [node name="ReportTitle" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 layout_mode = 2
 text = "本局战果"
+visible = false
+
+[node name="ResultVisuals" type="VBoxContainer" parent="Columns/ReportPanel/ReportMargin/Report"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="RewardHeadline" type="Label" parent="Columns/ReportPanel/ReportMargin/Report"]
 unique_name_in_owner = true
@@ -114,7 +132,15 @@ theme_override_constants/separation = 5
 
 [node name="NextTitle" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
 layout_mode = 2
-text = "下一步"
+text = "下一指令"
+
+[node name="NextOutcomeIcon" type="TextureRect" parent="Columns/NextPanel/NextMargin/Next"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Safety" type="Label" parent="Columns/NextPanel/NextMargin/Next"]
 unique_name_in_owner = true

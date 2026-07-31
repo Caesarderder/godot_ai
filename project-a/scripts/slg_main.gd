@@ -3270,6 +3270,10 @@ func _show_result() -> void:
 		)
 	var result_screen := BattleResultScreenScene.instantiate()
 	result_screen.configure({
+		"compact": (
+			_layout_profile() == "compact_landscape"
+			or get_viewport().get_visible_rect().size.y <= 390.0
+		),
 		"outcome_banner": (
 				"首章胜利 · 你的成长选择扭转了战局"
 			if chapter_one_complete

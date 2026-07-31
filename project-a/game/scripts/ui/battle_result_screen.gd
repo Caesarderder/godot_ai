@@ -4,6 +4,13 @@ extends VBoxContainer
 signal action_requested(action_id: String, payload: Dictionary)
 
 const CJK_FONT := preload("res://assets/fonts/NotoSansCJKsc-Regular.otf")
+const UiArtDirectionScript := preload("res://game/scripts/ui/ui_art_direction.gd")
+const ICON_VICTORY := preload("res://assets/ui/battle_result/victory_medal.webp")
+const ICON_DEFEAT := preload("res://assets/ui/battle_result/defeat_shield.webp")
+const ICON_GOLD := preload("res://assets/ui/battle_result/loot_coin.webp")
+const ICON_DATA := preload("res://assets/ui/battle_result/legion_data.webp")
+const ICON_TIME := preload("res://assets/ui/battle_result/battle_time.webp")
+const ICON_TARGET := preload("res://assets/ui/battle_result/destroyed_target.webp")
 const PANEL := Color("#12171c")
 const PANEL_2 := Color("#1a2228")
 const LINE := Color("#3b454b")
@@ -15,6 +22,9 @@ const RED := Color("#d95c4f")
 const GREEN := Color("#78b982")
 
 @onready var outcome_text: Label = %OutcomeText
+@onready var outcome_icon: TextureRect = %OutcomeIcon
+@onready var next_outcome_icon: TextureRect = %NextOutcomeIcon
+@onready var result_visuals: VBoxContainer = %ResultVisuals
 @onready var reward_headline: Label = %RewardHeadline
 @onready var hero_experience: Label = %HeroExperience
 @onready var materials: Label = %Materials
@@ -52,8 +62,23 @@ func configure(view: Dictionary) -> void:
 
 
 func _apply_view() -> void:
+	var compact := bool(_view.get("compact", false))
+	$Columns/NextPanel.custom_minimum_size.x = 205.0 if compact else 280.0
+	base_action.text = "返回基地" if compact else "返回基地 · 稍后继续"
+	outcome_icon.custom_minimum_size = Vector2(42, 42) if compact else Vector2(52, 52)
+	next_outcome_icon.custom_minimum_size = Vector2(38, 38) if compact else Vector2(56, 56)
+	$Columns/NextPanel/NextMargin.add_theme_constant_override("margin_top", 5 if compact else 8)
+	$Columns/NextPanel/NextMargin.add_theme_constant_override("margin_bottom", 5 if compact else 8)
+	$Columns/NextPanel/NextMargin/Next.add_theme_constant_override("separation", 3 if compact else 5)
+	primary_action.custom_minimum_size.y = 48.0
+	factory_action.custom_minimum_size.y = 34.0 if compact else 48.0
+	base_action.custom_minimum_size.y = 34.0 if compact else 48.0
 	outcome_text.text = String(_view.get("outcome_banner", "战斗结束"))
-	var outcome_color := _semantic_color(String(_view.get("outcome_color", "gold")))
+	var outcome_id := String(_view.get("outcome_color", "gold"))
+	var outcome_color := _semantic_color(outcome_id)
+	var outcome_texture := ICON_DEFEAT if outcome_id == "red" else ICON_VICTORY
+	outcome_icon.texture = outcome_texture
+	next_outcome_icon.texture = outcome_texture
 	outcome_text.add_theme_color_override("font_color", outcome_color)
 	var banner_style := StyleBoxFlat.new()
 	banner_style.bg_color = Color(outcome_color, 0.12)
@@ -95,7 +120,28 @@ func _apply_view() -> void:
 	for merged_source in [hero_experience, unlocked_hero, materials, breakthrough]:
 		merged_source.visible = false
 	_prioritize_report_rows()
+	_build_visual_report()
+	for semantic_row in [
+		reward_headline,
+		mission_progress,
+		combat_summary,
+		hurdle_proof,
+		debrief,
+		growth,
+	]:
+		semantic_row.visible = false
+	var safety_full := safety.text
+	safety.text = _compact_line(safety_full, 15 if compact else 22)
+	safety.tooltip_text = safety_full
+	var qualification_full := qualification.text
+	qualification.text = _compact_line(
+		qualification_full.get_slice("\n", 0),
+		17 if compact else 26
+	)
+	qualification.tooltip_text = qualification_full
 	primary_action.text = String(_view.get("primary_label", "继续"))
+	primary_action.icon = outcome_texture
+	primary_action.expand_icon = true
 	primary_action.visible = not primary_action.text.is_empty()
 	# Generic factory navigation competes with the causal recovery/continuation
 	# action. It is opt-in only; factory onboarding already uses the primary CTA.
@@ -144,20 +190,127 @@ func _apply_theme() -> void:
 
 func _style_button(button: Button, primary: bool) -> void:
 	button.focus_mode = Control.FOCUS_ALL
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color("#244546") if primary else PANEL_2
-	normal.border_color = CYAN if primary else LINE
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(8)
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color("#315a5b") if primary else Color("#24333a")
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("pressed", hover)
-	var focus := hover.duplicate() as StyleBoxFlat
-	focus.border_color = Color.WHITE
-	focus.set_border_width_all(2)
-	button.add_theme_stylebox_override("focus", focus)
+	button.add_theme_stylebox_override("normal", UiArtDirectionScript.button_style(primary))
+	button.add_theme_stylebox_override("hover", UiArtDirectionScript.button_style(primary, "hover"))
+	button.add_theme_stylebox_override("pressed", UiArtDirectionScript.button_style(primary, "pressed"))
+	button.add_theme_stylebox_override("focus", UiArtDirectionScript.button_style(primary, "focus"))
+	button.add_theme_color_override("font_color", Color("#14110c") if primary else TEXT)
+
+
+func _build_visual_report() -> void:
+	_clear_children(result_visuals)
+	var rewards := HBoxContainer.new()
+	rewards.name = "ResultRewardChips"
+	rewards.add_theme_constant_override("separation", 7)
+	result_visuals.add_child(rewards)
+	var reward_copy := String(_view.get("reward_headline", ""))
+	var gold_gain := _extract_number(reward_copy, "金币\\s*\\+(\\d+)")
+	var data_gain := _extract_number(reward_copy, "军团数据\\s*\\+(\\d+)")
+	if gold_gain >= 0:
+		rewards.add_child(_metric_chip(ICON_GOLD, "+%d" % gold_gain, "金币", GOLD, 116))
+	if data_gain >= 0:
+		rewards.add_child(_metric_chip(ICON_DATA, "+%d" % data_gain, "军团数据", CYAN, 132))
+	rewards.visible = rewards.get_child_count() > 0
+	var facts := HBoxContainer.new()
+	facts.name = "ResultBattleFacts"
+	facts.add_theme_constant_override("separation", 7)
+	result_visuals.add_child(facts)
+	var combat_copy := String(_view.get("combat_summary", ""))
+	var seconds := _extract_number(combat_copy, "(\\d+)秒")
+	var structures := _extract_number(combat_copy, "(?:击破|摧毁)\\s*(\\d+)")
+	var enemies := _extract_number(combat_copy, "(?:消灭|击败)\\s*(\\d+)")
+	facts.add_child(_metric_chip(ICON_TIME, "--" if seconds < 0 else str(seconds), "秒", MUTED, 92))
+	facts.add_child(_metric_chip(ICON_TARGET, "--" if structures < 0 else str(structures), "击破", GREEN, 92))
+	facts.add_child(_metric_chip(ICON_DEFEAT, "--" if enemies < 0 else str(enemies), "消灭", TEXT, 92))
+	var highlight_source := String(_view.get("debrief", ""))
+	if highlight_source.is_empty():
+		highlight_source = String(_view.get("hurdle_proof", ""))
+	if not highlight_source.is_empty():
+		var highlight := HBoxContainer.new()
+		highlight.name = "ResultHighlight"
+		highlight.add_theme_constant_override("separation", 7)
+		var icon := TextureRect.new()
+		icon.texture = ICON_VICTORY if String(_view.get("outcome_color", "gold")) != "red" else ICON_DEFEAT
+		icon.custom_minimum_size = Vector2(38, 38)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		highlight.add_child(icon)
+		var copy := Label.new()
+		copy.name = "ResultHighlightCopy"
+		copy.text = "本场高光 · %s" % _compact_line(
+			highlight_source.replace("战斗复盘 · ", ""),
+			25
+		)
+		copy.tooltip_text = highlight_source
+		copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		copy.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		copy.add_theme_font_override("font", CJK_FONT)
+		copy.add_theme_font_size_override("font_size", 12)
+		copy.add_theme_color_override("font_color", GREEN)
+		copy.clip_text = true
+		copy.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		highlight.add_child(copy)
+		result_visuals.add_child(highlight)
+
+
+func _metric_chip(
+	texture: Texture2D,
+	value: String,
+	label_copy: String,
+	color: Color,
+	minimum_width: float
+) -> Control:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(minimum_width, 54)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", UiArtDirectionScript.panel_style())
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 5)
+	panel.add_child(row)
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.custom_minimum_size = Vector2(42, 42)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(icon)
+	var copy := VBoxContainer.new()
+	copy.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(copy)
+	var value_label := Label.new()
+	value_label.text = value
+	value_label.add_theme_font_override("font", CJK_FONT)
+	value_label.add_theme_font_size_override("font_size", 18)
+	value_label.add_theme_color_override("font_color", color)
+	copy.add_child(value_label)
+	var caption := Label.new()
+	caption.text = label_copy
+	caption.add_theme_font_override("font", CJK_FONT)
+	caption.add_theme_font_size_override("font_size", 10)
+	caption.add_theme_color_override("font_color", MUTED)
+	copy.add_child(caption)
+	return panel
+
+
+func _extract_number(source: String, pattern: String) -> int:
+	var regex := RegEx.new()
+	if regex.compile(pattern) != OK:
+		return -1
+	var match := regex.search(source)
+	if match == null:
+		return -1
+	return int(match.get_string(1))
+
+
+func _compact_line(source: String, limit: int) -> String:
+	var compact := source.strip_edges()
+	if compact.length() <= limit:
+		return compact
+	return "%s…" % compact.substr(0, limit - 1)
+
+
+func _clear_children(parent: Node) -> void:
+	for child in parent.get_children():
+		child.free()
 
 
 func _set_optional(label: Label, value: String) -> void:
