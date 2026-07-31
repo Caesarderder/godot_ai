@@ -1,0 +1,28 @@
+{
+  "artifacts": [
+    "mixed_reveal-844x390.png",
+    "mixed_reveal-568x320.png",
+    "resource_heavy_reveal-844x390.png",
+    "resource_heavy_reveal-568x320.png",
+    "reduced_motion_reveal-844x390.png",
+    "reduced_motion_reveal-568x320.png"
+  ],
+  "assertions": [
+    "all ten reward identities remain projected",
+    "result emits exact open_legion handoff",
+    "resolved result exposes no repeat breakthrough claim",
+    "handoff remains at least 48 logical pixels"
+  ],
+  "cases": [
+    "mixed_reveal",
+    "resource_heavy_reveal",
+    "reduced_motion_reveal"
+  ],
+  "exit_code": 0,
+  "fixture": "shipping BlueprintScreen through configure and action_requested",
+  "scenario_id": "scenario_mobile_breakthrough_hero_reveal",
+  "viewports": [
+    "844x390",
+    "568x320"
+  ]
+}
