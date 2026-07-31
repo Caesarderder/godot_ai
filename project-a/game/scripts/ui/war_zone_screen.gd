@@ -16,7 +16,7 @@ const MUTED := Color("#9c9990")
 const CYAN := Color("#58c9c2")
 const GOLD := Color("#e5a84b")
 const LANDMARK_GLYPHS: Array[String] = ["◇", "△", "▣", "▲", "◆"]
-const ROUTE_Y_FACTORS: Array[float] = [0.30, 0.335, 0.31, 0.27, 0.33]
+const ROUTE_Y_FACTORS: Array[float] = [0.36, 0.285, 0.35, 0.245, 0.32]
 
 @onready var chapter_nav: HBoxContainer = %ChapterNav
 @onready var stage_strip: Control = %StageNodeStrip
@@ -79,12 +79,16 @@ func _rebuild() -> void:
 		var stage_id := String(row.get("stage_id", ""))
 		var stage_number := stage_id.trim_prefix("stage_").replace("_", "-")
 		var landmark: String = LANDMARK_GLYPHS[row_index]
-		var stage_state: String = landmark if bool(row.get("unlocked", false)) else "%s ×" % landmark
+		var unlocked := bool(row.get("unlocked", false))
+		var recovered := String(row.get("status", "")) == "已夺回"
+		var stage_state: String = "%s ●" % landmark if unlocked else "%s ?" % landmark
 		if String(row.get("status", "")) == "已夺回":
 			stage_state = "%s ✓" % landmark
 		var stage_button := _stage_node_button(
 			"%s\n%s" % [stage_number, stage_state],
-			stage_id == _selected_stage_id
+			stage_id == _selected_stage_id,
+			recovered,
+			unlocked
 		)
 		stage_button.name = "StageNode_%s" % stage_id
 		var node_size := Vector2(46, 42) if _is_compact_layout() else Vector2(58, 50)
@@ -164,18 +168,25 @@ func _draw() -> void:
 	var viewport_size := size
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
-	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color("#07131b"))
+	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color("#050b12"))
 	var horizon_y := viewport_size.y * 0.56
-	draw_rect(Rect2(0, horizon_y, viewport_size.x, viewport_size.y - horizon_y), Color("#0a1c23"))
+	_draw_sky_atmosphere(viewport_size, horizon_y)
+	_draw_territory_fields(viewport_size, horizon_y)
 	_draw_city_silhouette(viewport_size, horizon_y)
 	_draw_tactical_grid(viewport_size, horizon_y)
 	var route_points := PackedVector2Array()
 	for index in range(5):
 		route_points.append(_route_point(index, 5))
 	if route_points.size() >= 2:
-		draw_polyline(route_points, Color("#071014"), 10.0, true)
-		draw_polyline(route_points, Color(CYAN, 0.25), 6.0, true)
-		draw_polyline(route_points, Color(CYAN, 0.78), 2.0, true)
+		var selected_index := clampi(_selected_stage_index(), 0, 4)
+		for index in range(route_points.size() - 1):
+			var segment := PackedVector2Array([route_points[index], route_points[index + 1]])
+			var secured := index < selected_index
+			var frontier := index == selected_index
+			var route_color := Color("#62e7d8") if secured else (Color("#f4b657") if frontier else Color("#74433b"))
+			draw_polyline(segment, Color("#02080c"), 13.0, true)
+			draw_polyline(segment, Color(route_color, 0.22), 8.0, true)
+			draw_polyline(segment, Color(route_color, 0.92 if secured or frontier else 0.48), 2.5, true)
 	for index in range(route_points.size()):
 		var point := route_points[index]
 		var active := index == clampi(_selected_stage_index(), 0, 4)
@@ -186,18 +197,61 @@ func _draw() -> void:
 			2.0,
 			true
 		)
-		draw_circle(point, 31.0 if active else 27.0, Color(CYAN, 0.08 if not active else 0.15))
+		var hostile := index > clampi(_selected_stage_index(), 0, 4)
+		var node_color := Color("#f08b58") if hostile else CYAN
+		draw_circle(point, 34.0 if active else 28.0, Color(node_color, 0.07 if not active else 0.18))
 		draw_arc(
 			point,
 			35.0 if active else 31.0,
 			0.0,
 			TAU,
 			32,
-			Color(CYAN, 0.74 if active else 0.25),
+			Color(node_color, 0.78 if active else 0.28),
 			2.0,
 			true
 		)
 		_draw_landmark(index, point, active, horizon_y)
+	_draw_frontier_searchlights(viewport_size, horizon_y)
+
+
+func _draw_sky_atmosphere(viewport_size: Vector2, horizon_y: float) -> void:
+	for band in range(8):
+		var t := float(band) / 7.0
+		var band_y := horizon_y * t
+		draw_rect(
+			Rect2(0, band_y, viewport_size.x, horizon_y / 7.0 + 2.0),
+			Color("#07121d").lerp(Color("#15313a"), t)
+		)
+	var hostile_center := Vector2(viewport_size.x * 0.82, horizon_y * 0.63)
+	for radius in range(150, 20, -18):
+		draw_circle(hostile_center, float(radius), Color("#e56b3e", 0.006 + (150.0 - radius) * 0.00008))
+	draw_circle(Vector2(viewport_size.x * 0.78, horizon_y * 0.22), 13.0, Color("#d7e7e6", 0.28))
+	draw_circle(Vector2(viewport_size.x * 0.78, horizon_y * 0.22), 19.0, Color("#89d4d0", 0.04))
+
+
+func _draw_territory_fields(viewport_size: Vector2, horizon_y: float) -> void:
+	var selected_x := _route_point(clampi(_selected_stage_index(), 0, 4), 5).x
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(0, horizon_y * 0.58), Vector2(selected_x, horizon_y * 0.72),
+		Vector2(selected_x, viewport_size.y), Vector2(0, viewport_size.y),
+	]), Color("#2cc7c0", 0.035))
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(selected_x, horizon_y * 0.72), Vector2(viewport_size.x, horizon_y * 0.45),
+		Vector2(viewport_size.x, viewport_size.y), Vector2(selected_x, viewport_size.y),
+	]), Color("#d85d3f", 0.045))
+
+
+func _draw_frontier_searchlights(viewport_size: Vector2, horizon_y: float) -> void:
+	var source_a := Vector2(viewport_size.x * 0.83, horizon_y * 0.47)
+	var source_b := Vector2(viewport_size.x * 0.94, horizon_y * 0.39)
+	draw_colored_polygon(PackedVector2Array([
+		source_a, Vector2(viewport_size.x * 0.58, horizon_y), Vector2(viewport_size.x * 0.69, horizon_y)
+	]), Color("#ffd2a3", 0.055))
+	draw_colored_polygon(PackedVector2Array([
+		source_b, Vector2(viewport_size.x * 0.70, horizon_y * 0.92), Vector2(viewport_size.x * 0.80, horizon_y)
+	]), Color("#ffb273", 0.05))
+	draw_circle(source_a, 3.5, Color("#ffca8a", 0.8))
+	draw_circle(source_b, 3.5, Color("#ffca8a", 0.8))
 
 
 func _build_chapter_switcher() -> void:
@@ -285,20 +339,27 @@ func _draw_landmark(
 
 
 func _draw_city_silhouette(viewport_size: Vector2, horizon_y: float) -> void:
-	var block_width := viewport_size.x / 14.0
-	for index in range(14):
-		var height := 18.0 + float((index * 17) % 5) * 8.0
+	var block_width := viewport_size.x / 18.0
+	for index in range(18):
+		var height := 14.0 + float((index * 11 + 3) % 7) * 7.0
 		var rect := Rect2(
-			index * block_width - 2.0,
+			index * block_width - 3.0,
 			horizon_y - height,
-			block_width + 3.0,
+			block_width + 5.0,
 			height
 		)
-		draw_rect(rect, Color("#102b33"))
+		var hostile_side := index >= 12
+		draw_rect(rect, Color("#17242a") if hostile_side else Color("#0d252c"))
+		if index % 5 == 2:
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(rect.position.x, rect.position.y),
+				Vector2(rect.position.x + rect.size.x * 0.62, rect.position.y - 9.0),
+				Vector2(rect.end.x, rect.position.y + 3.0),
+			]), Color("#111d22"))
 		if index % 3 == 1:
 			draw_rect(
 				Rect2(rect.position + Vector2(block_width * 0.24, 8), Vector2(4, 3)),
-				Color(GOLD, 0.48)
+				Color("#ef754d", 0.58) if hostile_side else Color(CYAN, 0.35)
 			)
 		if index % 4 == 2:
 			draw_line(
@@ -310,15 +371,15 @@ func _draw_city_silhouette(viewport_size: Vector2, horizon_y: float) -> void:
 
 
 func _draw_tactical_grid(viewport_size: Vector2, horizon_y: float) -> void:
-	for index in range(6):
+	for index in range(4):
 		var y := lerpf(horizon_y + 14.0, viewport_size.y - 5.0, float(index) / 5.0)
-		draw_line(Vector2(0, y), Vector2(viewport_size.x, y), Color(CYAN, 0.09), 1.0)
-	for index in range(9):
-		var x := viewport_size.x * float(index) / 8.0
+		draw_line(Vector2(0, y), Vector2(viewport_size.x, y), Color(CYAN, 0.045), 1.0)
+	for index in range(6):
+		var x := viewport_size.x * float(index) / 5.0
 		draw_line(
 			Vector2(viewport_size.x * 0.5, horizon_y),
 			Vector2(x, viewport_size.y),
-			Color(CYAN, 0.07),
+			Color(CYAN, 0.035),
 			1.0
 		)
 
@@ -385,7 +446,7 @@ func _button(value: String, selected: bool) -> Button:
 	return button
 
 
-func _stage_node_button(value: String, selected: bool) -> Button:
+func _stage_node_button(value: String, selected: bool, recovered: bool, unlocked: bool) -> Button:
 	var button := Button.new()
 	button.text = value
 	button.focus_mode = Control.FOCUS_ALL
@@ -394,20 +455,24 @@ func _stage_node_button(value: String, selected: bool) -> Button:
 	for state in ["normal", "hover", "pressed", "focus"]:
 		button.add_theme_stylebox_override(
 			state,
-			_stage_node_style(selected, state)
+			_stage_node_style(selected, recovered, unlocked, state)
 		)
-	button.add_theme_stylebox_override("disabled", _stage_node_style(false, "disabled"))
-	button.add_theme_color_override("font_color", CYAN if selected else TEXT)
-	button.add_theme_color_override("font_hover_color", CYAN)
+	button.add_theme_stylebox_override("disabled", _stage_node_style(false, recovered, false, "disabled"))
+	var state_color := CYAN if recovered else (GOLD if unlocked else Color("#c37a61"))
+	button.add_theme_color_override("font_color", Color.WHITE if selected else state_color)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
 	button.add_theme_color_override("font_pressed_color", TEXT)
 	button.add_theme_color_override("font_disabled_color", Color(MUTED, 0.72))
 	return button
 
 
-func _stage_node_style(selected: bool, state: String) -> StyleBoxFlat:
+func _stage_node_style(selected: bool, recovered: bool, unlocked: bool, state: String) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#10242b", 0.97) if not selected else Color("#0d3036", 0.98)
-	style.border_color = CYAN if selected else Color(CYAN, 0.35)
+	var state_color := CYAN if recovered else (GOLD if unlocked else Color("#b9654e"))
+	style.bg_color = Color("#10242b", 0.97) if recovered else Color("#251b1b", 0.96)
+	if selected:
+		style.bg_color = Color("#3b2a1d", 0.98)
+	style.border_color = Color.WHITE if selected else Color(state_color, 0.58)
 	style.set_border_width_all(2 if selected else 1)
 	style.set_corner_radius_all(24)
 	if state == "hover":

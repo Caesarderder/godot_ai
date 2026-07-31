@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "artifact": "artifacts/scenario-war-zone-exploration/war-zone-844x390.png",
+      "case_id": "territorial_progress",
+      "cleared_stages": [
+        "stage_1_1",
+        "stage_1_2"
+      ],
+      "locked_stages": [
+        "stage_1_4",
+        "stage_1_5"
+      ],
+      "selected_stage": "stage_1_3",
+      "viewport": [
+        844,
+        390
+      ]
+    },
+    {
+      "artifact": "artifacts/scenario-war-zone-exploration/war-zone-568x320.png",
+      "case_id": "compact_frontier",
+      "cleared_stages": [
+        "stage_1_1",
+        "stage_1_2"
+      ],
+      "locked_stages": [
+        "stage_1_4",
+        "stage_1_5"
+      ],
+      "selected_stage": "stage_1_3",
+      "viewport": [
+        568,
+        320
+      ]
+    }
+  ],
+  "complete": true,
+  "scenario_id": "scenario_war_zone_exploration",
+  "subject": "chapter_1_frontier"
+}
